@@ -146,7 +146,17 @@ const TRANSLATIONS = {
     copyAll: '전체 결과',
     libraryEmpty: '저장된 프로젝트가 없습니다.',
     libPrompt: '스타일 프롬프트',
-    libLyrics: '가사'
+    libLyrics: '가사',
+    thDate: '작성일',
+    thTitle: '제목',
+    thGenre: '장르',
+    thLanguage: '언어',
+    thActions: '관리',
+    thNumber: '번호',
+    searchPlaceholder: '제목, 장르 또는 프롬프트 검색...',
+    prevPage: '이전',
+    nextPage: '다음',
+    pageInfo: '페이지 {current} / {total}'
   },
   EN: {
     studio: 'Studio',
@@ -260,7 +270,17 @@ const TRANSLATIONS = {
     copyAll: 'All Results',
     libraryEmpty: 'No saved projects found.',
     libPrompt: 'Style Prompt',
-    libLyrics: 'Lyrics'
+    libLyrics: 'Lyrics',
+    thDate: 'Date',
+    thTitle: 'Title',
+    thGenre: 'Genre',
+    thLanguage: 'Language',
+    thActions: 'Actions',
+    thNumber: 'No.',
+    searchPlaceholder: 'Search title, genre, or prompt...',
+    prevPage: 'Prev',
+    nextPage: 'Next',
+    pageInfo: 'Page {current} of {total}'
   }
 };
 
@@ -1222,12 +1242,12 @@ function RangeInput({ label, value, onChange, min = 60, max = 200, step = 1, uni
         />
       </div>
       {presets && (
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex gap-1 mt-3 w-full">
           {presets.map((preset, idx) => (
             <button
               key={idx}
               onClick={() => onChange(preset.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${numericValue === preset.value ? 'bg-[#FF3366] text-white border border-[#FF3366]' : 'bg-[#1A1A1A] text-[#A1A1AA] hover:bg-[#2A2A2A] hover:text-white border border-[#2E2E2E]'}`}
+              className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-lg transition-all ${numericValue === preset.value ? 'bg-gradient-to-r from-[#FF3366] to-[#9213ec] text-white shadow-md shadow-[#FF3366]/20' : 'bg-[#1A1A1A] text-[#A1A1AA] hover:bg-[#2A2A2A] hover:text-[#EDEDED] border border-[#2E2E2E] hover:border-[#4A4A4A]'}`}
             >
               {preset.label}
             </button>
@@ -1260,52 +1280,161 @@ function ResultField({ label, value, placeholder, minHeight, onChange, onCopy, w
 }
 
 function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  const filteredHistory = useMemo(() => {
+    if (!searchTerm.trim()) return history;
+    const lower = searchTerm.toLowerCase();
+    return history.filter(item => 
+      (item.title || t.untitledProject).toLowerCase().includes(lower) ||
+      (item.prompt || '').toLowerCase().includes(lower) ||
+      (item.form?.genre || '').toLowerCase().includes(lower)
+    );
+  }, [history, searchTerm, t.untitledProject]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage) || 1;
+  const currentItems = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <div className="mx-auto max-w-[1600px] px-5 py-8">
-      <h1 className="mb-6 text-2xl font-bold text-[#EDEDED] flex items-center gap-2">
-        <span className="inline-block h-6 w-1.5 rounded-full bg-[#FF3366]"></span>
-        {t.library}
-      </h1>
+    <div className="mx-auto max-w-[1200px] px-5 py-8">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-[#EDEDED] flex items-center gap-2 shrink-0">
+          <span className="inline-block h-6 w-1.5 rounded-full bg-[#FF3366]"></span>
+          {t.library}
+        </h1>
+        
+        <div className="relative w-full sm:w-72">
+          <input 
+            type="text" 
+            className="input pl-10 h-[42px] text-sm w-full" 
+            placeholder={t.searchPlaceholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#71717A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
       
-      {history.length === 0 ? (
+      {filteredHistory.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#2E2E2E] bg-[#1A1A1A] py-20 text-center">
           <svg className="mb-4 h-12 w-12 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          <p className="text-lg font-medium text-[#A1A1AA]">{t.libraryEmpty}</p>
+          <p className="text-lg font-medium text-[#A1A1AA]">
+            {history.length === 0 ? t.libraryEmpty : '검색 결과가 없습니다.'}
+          </p>
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {history.map(item => (
-            <div key={item.id} className="group flex flex-col overflow-hidden rounded-xl border border-[#2E2E2E] bg-[#1A1A1A] transition-all hover:border-[#FF3366]/50 hover:shadow-lg hover:shadow-[#FF3366]/5">
-              <div className="border-b border-[#2E2E2E] bg-[#121212]/50 p-4">
-                <h3 className="truncate text-lg font-bold text-[#EDEDED] group-hover:text-[#FF3366] transition-colors">{item.title || t.untitledProject}</h3>
-                <div className="mt-2 flex items-center justify-between text-[11px] font-medium text-[#71717A]">
-                  <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                  <div className="flex gap-2">
-                    {item.form?.genre && <span className="rounded-full bg-[#2E2E2E] px-2 py-0.5 text-[#EDEDED] border border-[#4A4A4A] truncate max-w-[80px]" title={item.form.genre}>{item.form.genre}</span>}
-                    {item.form?.language && <span className="rounded-full bg-[#2E2E2E] px-2 py-0.5 text-[#EDEDED] border border-[#4A4A4A]">{item.form.language}</span>}
-                  </div>
+        <div className="flex flex-col gap-4">
+          <div className="overflow-x-auto rounded-xl border border-[#2E2E2E] bg-[#1A1A1A] shadow-lg shadow-black/20">
+            <table className="w-full text-left text-sm text-[#A1A1AA]">
+              <thead className="border-b border-[#2E2E2E] bg-[#121212]/80 text-xs uppercase tracking-wider text-[#71717A]">
+                <tr>
+                  <th className="px-5 py-4 font-bold w-12 text-center">{t.thNumber}</th>
+                  <th className="px-5 py-4 font-bold">{t.thDate}</th>
+                  <th className="px-5 py-4 font-bold w-[45%]">{t.thTitle}</th>
+                  <th className="px-5 py-4 font-bold">{t.thGenre}</th>
+                  <th className="px-5 py-4 font-bold">{t.thLanguage}</th>
+                  <th className="px-5 py-4 font-bold text-right">{t.thActions}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#2E2E2E]">
+                {currentItems.map((item, index) => {
+                  const absoluteIndex = filteredHistory.length - ((currentPage - 1) * itemsPerPage + index);
+                  return (
+                  <tr key={item.id} className="transition-colors hover:bg-[#121212]/40 group">
+                    <td className="px-5 py-4 whitespace-nowrap text-center text-[#71717A] font-medium">
+                      {absoluteIndex}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-[#D4D4D8]">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <button 
+                        onClick={() => openHistoryItem(item)} 
+                        className="text-base font-bold text-[#EDEDED] transition-colors group-hover:text-[#FF3366] text-left block w-full truncate"
+                        title={item.title || t.untitledProject}
+                      >
+                        {item.title || t.untitledProject}
+                      </button>
+                      {item.prompt && (
+                        <p className="mt-1.5 text-xs text-[#71717A] line-clamp-1 group-hover:text-[#A1A1AA] transition-colors">{item.prompt}</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {item.form?.genre && (
+                        <span className="rounded-md bg-[#2E2E2E] px-2.5 py-1 text-xs font-medium text-[#EDEDED] border border-[#4A4A4A] truncate max-w-[140px] inline-block align-middle">
+                          {item.form.genre}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {item.form?.language && (
+                        <span className="rounded-md bg-[#2E2E2E] px-2.5 py-1 text-xs font-medium text-[#EDEDED] border border-[#4A4A4A] inline-block align-middle">
+                          {item.form.language}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-right">
+                      <button 
+                        onClick={() => deleteHistoryItem(item.id)} 
+                        className="text-[#A1A1AA] transition-all hover:text-red-500 font-medium px-3 py-1.5 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+                      >
+                        {t.delete}
+                      </button>
+                    </td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-2">
+              <p className="text-sm text-[#71717A]">
+                {t.pageInfo.replace('{current}', currentPage).replace('{total}', totalPages)}
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="secondary-btn !py-2 !px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t.prevPage}
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-8 w-8 rounded-lg text-sm font-bold transition-all ${
+                        currentPage === page 
+                          ? 'bg-[#FF3366] text-white' 
+                          : 'text-[#A1A1AA] hover:bg-[#2A2A2A] hover:text-[#EDEDED]'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
                 </div>
-              </div>
-              
-              <div className="flex-grow p-4">
-                <div className="mb-4">
-                  <h4 className="mb-1 text-[10px] font-black text-[#A1A1AA] tracking-wider uppercase">{t.libPrompt}</h4>
-                  <p className="line-clamp-3 text-sm text-[#D4D4D8]">{item.prompt || '-'}</p>
-                </div>
-                <div>
-                  <h4 className="mb-1 text-[10px] font-black text-[#A1A1AA] tracking-wider uppercase">{t.libLyrics}</h4>
-                  <p className="line-clamp-4 text-sm text-[#D4D4D8] whitespace-pre-line">{item.lyrics || '-'}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-px bg-[#2E2E2E] border-t border-[#2E2E2E]">
-                <button onClick={() => openHistoryItem(item)} className="bg-[#1A1A1A] p-2.5 text-sm font-bold text-[#EDEDED] transition-colors hover:bg-[#FF3366] hover:text-white">{t.open}</button>
-                <button onClick={() => deleteHistoryItem(item.id)} className="bg-[#1A1A1A] p-2.5 text-sm font-bold text-[#A1A1AA] transition-colors hover:bg-red-500/10 hover:text-red-500">{t.delete}</button>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="secondary-btn !py-2 !px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t.nextPage}
+                </button>
               </div>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
