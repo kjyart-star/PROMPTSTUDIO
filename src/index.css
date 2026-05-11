@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f7f3ea;
+  color: #171717;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@layer components {
+  .field-label {
+    @apply mb-1 block text-xs font-bold uppercase tracking-[0.08em] text-[#62594b];
+  }
+
+  .input {
+    @apply w-full rounded-md border border-[#d8d0c0] bg-[#fffdf8] px-3 py-2 text-sm text-[#171717] outline-none transition focus:border-[#b23a48] focus:ring-2 focus:ring-[#b23a48]/20;
+  }
+
+  .primary-btn {
+    @apply rounded-md bg-[#b23a48] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#8f2f3c];
+  }
+
+  .secondary-btn {
+    @apply rounded-md border border-[#d8d0c0] bg-white px-4 py-2 text-sm font-bold text-[#2a241c] transition hover:bg-[#fff6e5];
+  }
+
+  .google-btn {
+    @apply rounded-md border border-[#d8d0c0] bg-white px-4 py-2 text-sm font-bold text-[#2a241c] transition hover:border-[#b23a48] hover:bg-[#fff6e5];
+  }
+
+  .copy-btn {
+    @apply rounded-md border border-[#d8d0c0] bg-white px-2 py-1 text-xs font-bold text-[#2a241c] transition hover:bg-[#fff6e5];
+  }
+
+  .seg-btn {
+    @apply rounded-md border border-[#d8d0c0] bg-white px-3 py-2 text-sm font-bold text-[#4b4338] transition hover:bg-[#fff6e5];
+  }
+
+  .seg-btn-active {
+    @apply border-[#b23a48] bg-[#b23a48] text-white hover:bg-[#b23a48];
+  }
+}
