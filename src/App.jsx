@@ -109,6 +109,9 @@ const TRANSLATIONS = {
     vocalStyle: '보컬 톤/스타일 (Vocal Style)',
     vocalStylePlaceholder: '예: 허스키한, 맑은, 부드러운',
     vocalGroup: '보컬 구성 (Vocal Group)',
+    songType: '곡 유형 (Song Type)',
+    bgmType: 'BGM 용도 (BGM Type)',
+    musicLength: '음악 길이 (Length)',
     tempo: '템포 (BPM/Tempo)',
     tempoVerySlow: '아주 느리게',
     tempoSlow: '느리게',
@@ -234,6 +237,9 @@ const TRANSLATIONS = {
     vocalStyle: 'Vocal Style',
     vocalStylePlaceholder: 'ex: Husky, Clear, Soft',
     vocalGroup: 'Vocal Group',
+    songType: 'Song Type',
+    bgmType: 'BGM Type',
+    musicLength: 'Music Length',
     tempo: 'Tempo (BPM)',
     tempoVerySlow: 'Very Slow',
     tempoSlow: 'Slow',
@@ -292,14 +298,20 @@ const getOptions = (lang) => {
       language: [{ value: '한국어', label: 'Korean' }, { value: '영어', label: 'English' }, { value: '일본어', label: 'Japanese' }],
       vocalGroup: [{ value: '솔로', label: 'Solo' }, { value: '중창', label: 'Duet' }, { value: '합창', label: 'Choir' }, { value: '그룹', label: 'Group' }],
       vocalGender: [{ value: '여성', label: 'Female' }, { value: '남성', label: 'Male' }, { value: '혼성/기타', label: 'Mixed/Other' }],
-      vocalFeaturing: [{ value: '없음', label: 'None' }, { value: '남성 피쳐링', label: 'Male Ft.' }, { value: '여성 피쳐링', label: 'Female Ft.' }]
+      vocalFeaturing: [{ value: '없음', label: 'None' }, { value: '남성 피쳐링', label: 'Male Ft.' }, { value: '여성 피쳐링', label: 'Female Ft.' }],
+      songType: [{ value: 'vocal', label: 'Vocal Song' }, { value: 'instrumental', label: 'Instrumental / BGM' }],
+      bgmType: [{ value: '영화음악', label: 'Film Score' }, { value: '홍보음악', label: 'Promotional' }, { value: '광고음악', label: 'Commercial' }, { value: '애니메이션', label: 'Animation' }, { value: '게임음악', label: 'Game Music' }, { value: '유튜브/기타', label: 'YouTube/Other' }],
+      musicLength: [{ value: '15초', label: '15s' }, { value: '30초', label: '30s' }, { value: '1분', label: '1m' }, { value: '2분', label: '2m' }, { value: '3분 이상', label: '3m+' }]
     };
   }
   return {
     language: [{ value: '한국어', label: '한국어' }, { value: '영어', label: '영어' }, { value: '일본어', label: '일본어' }],
     vocalGroup: [{ value: '솔로', label: '솔로' }, { value: '중창', label: '중창' }, { value: '합창', label: '합창' }, { value: '그룹', label: '그룹' }],
     vocalGender: [{ value: '여성', label: '여성' }, { value: '남성', label: '남성' }, { value: '혼성/기타', label: '혼성/기타' }],
-    vocalFeaturing: [{ value: '없음', label: '없음' }, { value: '남성 피쳐링', label: '남자 피쳐링' }, { value: '여성 피쳐링', label: '여자 피쳐링' }]
+    vocalFeaturing: [{ value: '없음', label: '없음' }, { value: '남성 피쳐링', label: '남자 피쳐링' }, { value: '여성 피쳐링', label: '여자 피쳐링' }],
+    songType: [{ value: 'vocal', label: '가사 있는 곡' }, { value: 'instrumental', label: '가사 없는 연주곡 (BGM)' }],
+    bgmType: [{ value: '영화음악', label: '영화음악' }, { value: '홍보음악', label: '홍보음악' }, { value: '광고음악', label: '광고음악' }, { value: '애니메이션', label: '애니메이션' }, { value: '게임음악', label: '게임음악' }, { value: '유튜브/기타', label: '유튜브/기타' }],
+    musicLength: [{ value: '15초', label: '15초' }, { value: '30초', label: '30초' }, { value: '1분', label: '1분' }, { value: '2분', label: '2분' }, { value: '3분 이상', label: '3분 이상' }]
   };
 };
 
@@ -314,6 +326,9 @@ const INITIAL_FORM = {
   vocalFeaturing: '없음',
   vocal: 'soft vocal, airy harmony',
   vocalGroup: '솔로',
+  songType: 'vocal',
+  bgmType: '영화음악',
+  musicLength: '1분',
   tempo: 120,
   targetTool: 'Suno',
   structure: 'Verse 1, Pre-Chorus, Chorus, Verse 2, Chorus, Bridge, Final Chorus',
@@ -423,6 +438,20 @@ const getSupabaseCallbackUrl = (supabaseUrl) => {
 };
 
 const makeFallback = (form, guideText) => {
+  if (form.songType === 'instrumental') {
+    const prompt = [
+      form.genre,
+      form.mood,
+      'instrumental',
+      `${form.bgmType} style`,
+      `${form.tempo} BPM`,
+      'polished production',
+      form.extra
+    ].filter(Boolean).join(', ');
+
+    return `STYLE PROMPT\n${prompt}\n\nTITLE\n${form.title || 'Untitled BGM'}\n\nLYRICS\n[Instrumental]\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 길이: ${form.musicLength}\n- 용도: ${form.bgmType}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
+  }
+
   const prompt = [
     form.genre,
     form.mood,
@@ -490,18 +519,24 @@ const composeGeneratedText = (resultParts) => [
 
 const buildInstructionPrompt = (form, guideText) => `너는 음악 생성 AI용 프롬프트와 가사를 만드는 전문 작사가/프로듀서다.
 
-목표: ${form.targetTool}에 바로 넣을 수 있는 스타일 프롬프트와 완성형 가사를 작성한다.
+목표: ${form.targetTool}에 바로 넣을 수 있는 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 작성한다.
 
 곡 정보:
 - 제목: ${form.title}
 - 주제: ${form.theme}
 - 장르: ${form.genre}
 - 분위기: ${form.mood}
-- 언어: ${form.language}
+- 곡 유형: ${form.songType === 'instrumental' ? '가사 없는 연주곡/BGM (Instrumental)' : '보컬 곡'}
+${form.songType === 'instrumental' ? 
+`- 용도: ${form.bgmType || '영화음악'}
+- 음악 길이: ${form.musicLength || '1분'}` 
+: 
+`- 언어: ${form.language}
 - 보컬 성별: ${form.vocalGender || '여성'}
 - 피쳐링: ${form.vocalFeaturing || '없음'}
 - 보컬 톤: ${form.vocal}
-- 보컬 구성: ${form.vocalGroup}
+- 보컬 구성: ${form.vocalGroup}`
+}
 - 템포: ${form.tempo} BPM
 - 구조: ${form.structure}
 - 추가 요청: ${form.extra}
@@ -511,13 +546,13 @@ ${guideText || '등록된 추가 지침 없음'}
 
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
-영어 중심의 음악 스타일 프롬프트 1개
+영어 중심의 음악 스타일 프롬프트 1개${form.songType === 'instrumental' ? ' (반드시 instrumental, no vocal 태그 포함)' : ''}
 
 TITLE
 곡 제목
 
 LYRICS
-섹션 태그가 포함된 완성 가사
+${form.songType === 'instrumental' ? '[Instrumental] 만 작성하고 다른 텍스트는 작성하지 마세요.' : '섹션 태그가 포함된 완성 가사'}
 
 NOTES
 짧은 제작 메모 3개`;
@@ -682,14 +717,25 @@ function App() {
     setResultParts((current) => ({ ...current, [key]: value }));
   };
 
+  const generateSample = async () => {
+    const fallbackText = makeFallback(form, guideText);
+    const parsedParts = parseGeneratedText(fallbackText);
+    setResultParts(parsedParts);
+    setStatus(t.statusSampleGenerated);
+    await saveHistory(parsedParts);
+  };
+
   const generate = async () => {
     const prompt = buildInstructionPrompt(form, guideText);
     setIsGenerating(true);
     setStatus(t.statusGenerating);
     try {
       if (!settings.apiKey.trim()) {
-        setGeneratedText(makeFallback(form, guideText));
+        const fallbackText = makeFallback(form, guideText);
+        const parsedParts = parseGeneratedText(fallbackText);
+        setResultParts(parsedParts);
         setStatus(t.statusSampleGenerated);
+        await saveHistory(parsedParts);
         return;
       }
       const nextResult = settings.provider === 'openai'
@@ -697,10 +743,14 @@ function App() {
         : settings.provider === 'gemini'
           ? await callGemini(settings, prompt)
           : await callClaude(settings, prompt);
-      setGeneratedText(nextResult.trim() || makeFallback(form, guideText));
+      const textToSave = nextResult.trim() || makeFallback(form, guideText);
+      const parsedParts = parseGeneratedText(textToSave);
+      setResultParts(parsedParts);
       setStatus(`${provider.name} ${t.statusGenerated}`);
+      await saveHistory(parsedParts);
     } catch (error) {
-      setGeneratedText(`${makeFallback(form, guideText)}\n\nAPI ERROR\n${error.message}`);
+      const errorText = `${makeFallback(form, guideText)}\n\nAPI ERROR\n${error.message}`;
+      setResultParts(parseGeneratedText(errorText));
       setStatus(t.statusError);
     } finally {
       setIsGenerating(false);
@@ -800,12 +850,13 @@ function App() {
     setHistory(data || []);
   };
 
-  const saveHistory = async () => {
+  const saveHistory = async (explicitResultParts = null) => {
+    const parts = explicitResultParts || resultParts;
     const payload = {
-      title: resultParts.title.trim() || form.title || 'Untitled',
-      prompt: resultParts.prompt,
-      lyrics: resultParts.lyrics,
-      notes: resultParts.notes,
+      title: parts.title?.trim() || form.title || 'Untitled',
+      prompt: parts.prompt,
+      lyrics: parts.lyrics,
+      notes: parts.notes,
       form,
     };
 
@@ -862,7 +913,10 @@ function App() {
           vocalFeaturing: item.form.vocalFeaturing || current.vocalFeaturing || '없음',
           vocal: item.form.vocal || current.vocal,
           vocalGroup: item.form.vocalGroup || current.vocalGroup,
-          tempo: item.form.tempo || current.tempo
+          tempo: item.form.tempo || current.tempo,
+          songType: item.form.songType || current.songType || 'vocal',
+          bgmType: item.form.bgmType || current.bgmType || '영화음악',
+          musicLength: item.form.musicLength || current.musicLength || '1분'
         }));
       }
       setResultParts(current => ({
@@ -1091,13 +1145,29 @@ function App() {
             <div className="grid gap-5 md:grid-cols-2">
               <TextInput label={t.songTitle} value={form.title} onChange={(value) => updateForm('title', value)} placeholder={t.songTitlePlaceholder} />
               <TextInput label={t.targetTool} value={form.targetTool} onChange={(value) => updateForm('targetTool', value)} placeholder={t.targetToolPlaceholder} />
+              <div className="md:col-span-2">
+                <ButtonGroupInput label={t.songType} value={form.songType || 'vocal'} options={getOptions(uiLanguage).songType} onChange={(value) => updateForm('songType', value)} />
+              </div>
               <TextInput label={t.genre} value={form.genre} onChange={(value) => updateForm('genre', value)} placeholder={t.genrePlaceholder} />
               <TextInput label={t.mood} value={form.mood} onChange={(value) => updateForm('mood', value)} placeholder={t.moodPlaceholder} />
-              <ButtonGroupInput label={t.lyricsLanguage} value={form.language} options={getOptions(uiLanguage).language} onChange={(value) => updateForm('language', value)} />
-              <ButtonGroupInput label={t.vocalGender} value={form.vocalGender || '여성'} options={getOptions(uiLanguage).vocalGender} onChange={(value) => updateForm('vocalGender', value)} />
-              <ButtonGroupInput label={t.vocalFeaturing} value={form.vocalFeaturing || '없음'} options={getOptions(uiLanguage).vocalFeaturing} onChange={(value) => updateForm('vocalFeaturing', value)} />
-              <TextInput label={t.vocalStyle} value={form.vocal} onChange={(value) => updateForm('vocal', value)} placeholder={t.vocalStylePlaceholder} />
-              <SelectInput label={t.vocalGroup} value={form.vocalGroup} options={getOptions(uiLanguage).vocalGroup} onChange={(value) => updateForm('vocalGroup', value)} />
+              
+              {form.songType !== 'instrumental' && (
+                <>
+                  <ButtonGroupInput label={t.lyricsLanguage} value={form.language} options={getOptions(uiLanguage).language} onChange={(value) => updateForm('language', value)} />
+                  <ButtonGroupInput label={t.vocalGender} value={form.vocalGender || '여성'} options={getOptions(uiLanguage).vocalGender} onChange={(value) => updateForm('vocalGender', value)} />
+                  <ButtonGroupInput label={t.vocalFeaturing} value={form.vocalFeaturing || '없음'} options={getOptions(uiLanguage).vocalFeaturing} onChange={(value) => updateForm('vocalFeaturing', value)} />
+                  <TextInput label={t.vocalStyle} value={form.vocal} onChange={(value) => updateForm('vocal', value)} placeholder={t.vocalStylePlaceholder} />
+                  <SelectInput label={t.vocalGroup} value={form.vocalGroup} options={getOptions(uiLanguage).vocalGroup} onChange={(value) => updateForm('vocalGroup', value)} />
+                </>
+              )}
+
+              {form.songType === 'instrumental' && (
+                <>
+                  <SelectInput label={t.bgmType} value={form.bgmType || '영화음악'} options={getOptions(uiLanguage).bgmType} onChange={(value) => updateForm('bgmType', value)} />
+                  <ButtonGroupInput label={t.musicLength} value={form.musicLength || '1분'} options={getOptions(uiLanguage).musicLength} onChange={(value) => updateForm('musicLength', value)} />
+                </>
+              )}
+
               <div className="md:col-span-2">
                 <RangeInput 
                   label={t.tempo} 
@@ -1114,9 +1184,11 @@ function App() {
                   ]}
                 />
               </div>
-              <div className="md:col-span-2">
-                <TextInput label={t.structure} value={form.structure} onChange={(value) => updateForm('structure', value)} placeholder="예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]" />
-              </div>
+              {form.songType !== 'instrumental' && (
+                <div className="md:col-span-2">
+                  <TextInput label={t.structure} value={form.structure} onChange={(value) => updateForm('structure', value)} placeholder={t.structurePlaceholder || "예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]"} />
+                </div>
+              )}
             </div>
             
             <div className="mt-6 flex-grow flex flex-col gap-5">
@@ -1142,7 +1214,7 @@ function App() {
                 <span className="relative z-10 font-black tracking-wide">{isGenerating ? t.generating : t.generateBtn}</span>
                 {!isGenerating && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[100%] group-hover:animate-[shimmer_1.5s_infinite]"></div>}
               </button>
-              <button className="secondary-btn w-32 font-bold" onClick={() => setGeneratedText(makeFallback(form, guideText))}>{t.generateSampleBtn}</button>
+              <button className="secondary-btn w-32 font-bold" onClick={generateSample}>{t.generateSampleBtn}</button>
             </div>
           </Panel>
         </section>
