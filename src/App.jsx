@@ -126,6 +126,8 @@ const TRANSLATIONS = {
     extraRequests: '추가 요청 (Extra Requests)',
     extraSub: '특정 악기, 특수 효과 등',
     extraPlaceholder: '예: 코러스에 일렉기타 솔로 추가, 리버브 이펙트 강조',
+    excludeElements: '제외 요소 (Negative Prompt)',
+    excludePlaceholder: '예: lo-fi, noise, bad vocals (선택 사항)',
     
     generating: 'AI가 프롬프트를 생성 중입니다...',
     generateBtn: 'GENERATE PROMPT & LYRICS',
@@ -140,6 +142,8 @@ const TRANSLATIONS = {
     lyricsPlaceholder: '섹션 태그가 포함된 가사가 여기에 표시됩니다. 직접 수정하여 최종 완성하세요.',
     notesLabel: 'AI 메모 (Suggestions)',
     notesPlaceholder: '제작 메모 또는 AI의 추가 제안이 표시됩니다.',
+    negativePromptLabel: '제외 프롬프트 (Negative Prompt)',
+    negativePromptPlaceholder: '제외할 스타일 프롬프트가 여기에 생성됩니다.',
     copyAllBtn: '클립보드에 전체 복사',
     clearResultBtn: '결과 지우기',
     copyTooltip: '복사하기',
@@ -147,6 +151,7 @@ const TRANSLATIONS = {
     copyTitle: '제목',
     copyLyrics: '가사',
     copyNotes: '메모',
+    copyNegativePrompt: '제외 프롬프트',
     copyAll: '전체 결과',
     libraryEmpty: '저장된 프로젝트가 없습니다.',
     libPrompt: '스타일 프롬프트',
@@ -254,6 +259,8 @@ const TRANSLATIONS = {
     extraRequests: 'Extra Requests',
     extraSub: 'Specific instruments, effects, etc.',
     extraPlaceholder: 'ex: Add electric guitar solo in chorus, emphasize reverb',
+    excludeElements: 'Exclude Elements (Negative Prompt)',
+    excludePlaceholder: 'ex: lo-fi, noise, bad vocals (optional)',
     
     generating: 'AI is generating prompt...',
     generateBtn: 'GENERATE PROMPT & LYRICS',
@@ -268,6 +275,8 @@ const TRANSLATIONS = {
     lyricsPlaceholder: 'Lyrics with section tags will appear here. Edit to finalize.',
     notesLabel: 'AI Suggestions (Notes)',
     notesPlaceholder: 'Production notes or AI suggestions will appear here.',
+    negativePromptLabel: 'Negative Prompt',
+    negativePromptPlaceholder: 'Negative style prompt will appear here.',
     copyAllBtn: 'Copy All to Clipboard',
     clearResultBtn: 'Clear Results',
     copyTooltip: 'Copy',
@@ -275,6 +284,7 @@ const TRANSLATIONS = {
     copyTitle: 'Title',
     copyLyrics: 'Lyrics',
     copyNotes: 'Notes',
+    copyNegativePrompt: 'Negative Prompt',
     copyAll: 'All Results',
     libraryEmpty: 'No saved projects found.',
     libPrompt: 'Style Prompt',
@@ -333,6 +343,7 @@ const INITIAL_FORM = {
   targetTool: 'Suno',
   structure: 'Verse 1, Pre-Chorus, Chorus, Verse 2, Chorus, Bridge, Final Chorus',
   extra: '후렴에 영어 한 문장 훅을 섞어줘. 선정적 표현 없이 대중적인 가사로.',
+  exclude: '',
 };
 
 const STORAGE_KEYS = {
@@ -448,8 +459,9 @@ const makeFallback = (form, guideText) => {
       'polished production',
       form.extra
     ].filter(Boolean).join(', ');
+    const negativePrompt = form.exclude || 'noise, bad quality, vocal, voice, singing, speaking';
 
-    return `STYLE PROMPT\n${prompt}\n\nTITLE\n${form.title || 'Untitled BGM'}\n\nLYRICS\n[Instrumental]\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 길이: ${form.musicLength}\n- 용도: ${form.bgmType}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
+    return `STYLE PROMPT\n${prompt}\n\nNEGATIVE PROMPT\n${negativePrompt}\n\nTITLE\n${form.title || 'Untitled BGM'}\n\nLYRICS\n[Instrumental]\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 길이: ${form.musicLength}\n- 용도: ${form.bgmType}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
   }
 
   const prompt = [
@@ -466,12 +478,14 @@ const makeFallback = (form, guideText) => {
   ]
     .filter(Boolean)
     .join(', ');
+  const negativePrompt = form.exclude || 'lo-fi, bad vocals, poor recording, out of tune';
 
-  return `STYLE PROMPT\n${prompt}\n\nTITLE\n${form.title || 'Untitled'}\n\nLYRICS\n[Verse 1]\n젖은 유리창 위로 네 이름이 번져\n신호등 불빛마다 마음이 멈춰 서\n돌아갈 길은 없다는 걸 알면서도\n나는 같은 거리를 다시 지나가\n\n[Pre-Chorus]\n라디오 끝에 남은 작은 숨처럼\n아직도 넌 내 밤을 흔들어\n\n[Chorus]\nRain on the midnight road\n너를 잊는 법을 몰라\n흐려진 불빛 사이로\n우리의 계절이 또 지나가\nRain on the midnight road\n끝내 말하지 못한 말\n빗소리 안에 묻어둘게\n오늘도 널 지나쳐 가\n\n[Verse 2]\n텅 빈 조수석 위로 새벽이 내려\n익숙한 골목마다 추억이 켜져\n괜찮아질 거라는 흔한 말 대신\n가만히 속도를 낮춰 숨을 쉬어\n\n[Bridge]\n언젠가 이 노래가 끝나면\n나도 웃으며 널 놓을 수 있을까\n\n[Final Chorus]\nRain on the midnight road\n너를 잊는 법을 배워\n희미한 불빛 너머로\n새로운 아침이 날 부르나 봐\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 가사 언어: ${form.language}\n- 보컬 구성: ${form.vocalGroup}\n- 구조: ${form.structure}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
+  return `STYLE PROMPT\n${prompt}\n\nNEGATIVE PROMPT\n${negativePrompt}\n\nTITLE\n${form.title || 'Untitled'}\n\nLYRICS\n[Verse 1]\n젖은 유리창 위로 네 이름이 번져\n신호등 불빛마다 마음이 멈춰 서\n돌아갈 길은 없다는 걸 알면서도\n나는 같은 거리를 다시 지나가\n\n[Pre-Chorus]\n라디오 끝에 남은 작은 숨처럼\n아직도 넌 내 밤을 흔들어\n\n[Chorus]\nRain on the midnight road\n너를 잊는 법을 몰라\n흐려진 불빛 사이로\n우리의 계절이 또 지나가\nRain on the midnight road\n끝내 말하지 못한 말\n빗소리 안에 묻어둘게\n오늘도 널 지나쳐 가\n\n[Verse 2]\n텅 빈 조수석 위로 새벽이 내려\n익숙한 골목마다 추억이 켜져\n괜찮아질 거라는 흔한 말 대신\n가만히 속도를 낮춰 숨을 쉬어\n\n[Bridge]\n언젠가 이 노래가 끝나면\n나도 웃으며 널 놓을 수 있을까\n\n[Final Chorus]\nRain on the midnight road\n너를 잊는 법을 배워\n희미한 불빛 너머로\n새로운 아침이 날 부르나 봐\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 가사 언어: ${form.language}\n- 보컬 구성: ${form.vocalGroup}\n- 구조: ${form.structure}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
 };
 
 const EMPTY_RESULT = {
   prompt: '',
+  negativePrompt: '',
   title: '',
   lyrics: '',
   notes: '',
@@ -482,7 +496,7 @@ const parseGeneratedText = (text) => {
   const source = text.trim();
   if (!source) return EMPTY_RESULT;
 
-  const sectionNames = ['STYLE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR'];
+  const sectionNames = ['STYLE PROMPT', 'NEGATIVE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR'];
   const pattern = new RegExp(`^(${sectionNames.join('|')})\\s*$`, 'gim');
   const matches = [...source.matchAll(pattern)];
   const sections = {};
@@ -500,6 +514,7 @@ const parseGeneratedText = (text) => {
 
   return {
     prompt: sections['STYLE PROMPT'] || '',
+    negativePrompt: sections['NEGATIVE PROMPT'] || '',
     title: sections.TITLE || '',
     lyrics: sections.LYRICS || '',
     notes: [sections.NOTES, sections['API ERROR'] && `API ERROR\n${sections['API ERROR']}`].filter(Boolean).join('\n\n'),
@@ -509,11 +524,12 @@ const parseGeneratedText = (text) => {
 
 const composeGeneratedText = (resultParts) => [
   ['STYLE PROMPT', resultParts.prompt],
+  ['NEGATIVE PROMPT', resultParts.negativePrompt],
   ['TITLE', resultParts.title],
   ['LYRICS', resultParts.lyrics],
   ['NOTES', resultParts.notes],
 ]
-  .filter(([, value]) => value.trim())
+  .filter(([, value]) => value && value.trim())
   .map(([label, value]) => `${label}\n${value.trim()}`)
   .join('\n\n');
 
@@ -540,6 +556,7 @@ ${form.songType === 'instrumental' ?
 - 템포: ${form.tempo} BPM
 - 구조: ${form.structure}
 - 추가 요청: ${form.extra}
+- 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}
 
 등록 지침서:
 ${guideText || '등록된 추가 지침 없음'}
@@ -547,6 +564,9 @@ ${guideText || '등록된 추가 지침 없음'}
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
 영어 중심의 음악 스타일 프롬프트 1개${form.songType === 'instrumental' ? ' (반드시 instrumental, no vocal 태그 포함)' : ''}
+
+NEGATIVE PROMPT
+제외할 요소들을 적은 부정 프롬프트 (영어 쉼표 구분)
 
 TITLE
 곡 제목
@@ -1207,6 +1227,14 @@ function App() {
                 </label>
                 <textarea className="input min-h-[100px] resize-none" value={form.extra} onChange={(event) => updateForm('extra', event.target.value)} placeholder={t.extraPlaceholder} />
               </div>
+
+              <div className="flex flex-col">
+                <label className="field-label flex items-center justify-between">
+                  <span>{t.excludeElements}</span>
+                  <span className="text-[10px] font-normal text-[#71717A]">{t.excludePlaceholder}</span>
+                </label>
+                <textarea className="input min-h-[60px] resize-none" value={form.exclude} onChange={(event) => updateForm('exclude', event.target.value)} placeholder={t.excludePlaceholder} />
+              </div>
             </div>
 
             <div className="mt-8 flex gap-3 pt-5 border-t border-[#2E2E2E]">
@@ -1230,6 +1258,15 @@ function App() {
                 placeholder={t.promptPlaceholder}
                 onChange={(value) => updateResultPart('prompt', value)}
                 onCopy={() => copyText(t.copyPrompt, resultParts.prompt)}
+                tooltip={t.copyTooltip}
+              />
+              <ResultField
+                label={t.negativePromptLabel}
+                value={resultParts.negativePrompt}
+                minHeight="h-20"
+                placeholder={t.negativePromptPlaceholder}
+                onChange={(value) => updateResultPart('negativePrompt', value)}
+                onCopy={() => copyText(t.copyNegativePrompt, resultParts.negativePrompt)}
                 tooltip={t.copyTooltip}
               />
               <ResultField
