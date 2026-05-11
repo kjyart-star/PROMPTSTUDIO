@@ -629,7 +629,7 @@ ${guideText || '등록된 추가 지침 없음'}
 
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
-Translate all concepts to English and output ONLY ENGLISH comma-separated keywords.${form.songType === 'instrumental' ? ' (Must include "instrumental, no vocal")' : ''}
+사용자가 입력한 장르, 분위기, 보컬, 템포(${form.tempo} BPM) 등을 단순히 번역하는 것에 그치지 말고, 어울리는 악기 구성(예: rhythm guitars, strings stabs, syncopated drums), 리듬/그루브(예: swing jazz groove, bouncy bassline), 구체적인 템포(예: tempo ${form.tempo}bpm), 곡의 무드와 구조(예: urban night mood, dynamic song structure) 등 음악적 요소를 풍부하고 전문적인 10~15개의 영어 쉼표 구분 키워드(English comma-separated keywords)로 확장하여 작성하세요.${form.songType === 'instrumental' ? ' (Must include "instrumental, no vocal")' : ''}
 
 NEGATIVE PROMPT
 제외할 요소들을 적은 부정 프롬프트 (영어 쉼표 구분)
