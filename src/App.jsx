@@ -1531,7 +1531,7 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                   <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.vocalStyle}</h3>
                   <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">
                     {selectedItem.form?.vocal || '-'}
-                    {selectedItem.form?.vocalFeaturing && selectedItem.form?.vocalFeaturing !== '없음' ? \` (Ft. \${selectedItem.form.vocalFeaturing})\` : ''}
+                    {selectedItem.form?.vocalFeaturing && selectedItem.form?.vocalFeaturing !== '없음' ? ` (Ft. ${selectedItem.form.vocalFeaturing})` : ''}
                   </p>
                 </div>
               </div>
