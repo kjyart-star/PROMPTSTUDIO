@@ -988,8 +988,12 @@ function App() {
       setStatus(`${provider.name} ${t.statusGenerated}`);
       await saveHistory(parsedParts);
     } catch (error) {
-      const errorText = `${makeFallback(form, guideText)}\n\nAPI ERROR\n${error.message}`;
-      setResultParts(parseGeneratedText(errorText));
+      const fallbackText = makeFallback(form, guideText);
+      const parsedParts = parseGeneratedText(fallbackText);
+      parsedParts.notes = parsedParts.notes 
+        ? `${parsedParts.notes}\n\n[API 통신 오류]\n${error.message}`
+        : `[API 통신 오류]\n${error.message}`;
+      setResultParts(parsedParts);
       setStatus(t.statusError);
     } finally {
       setIsGenerating(false);
