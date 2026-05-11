@@ -596,6 +596,10 @@ const composeGeneratedText = (resultParts) => [
 
 const buildInstructionPrompt = (form, guideText) => `너는 음악 생성 AI용 프롬프트와 가사를 만드는 전문 작사가/프로듀서다.
 
+[중요 규칙]
+1. STYLE PROMPT는 무조건 100% 영어로만 작성해야 한다. (한글 절대 사용 금지)
+2. 출력 형식의 순서와 이름을 정확히 지킨다.
+
 목표: ${form.targetTool}에 바로 넣을 수 있는 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 작성한다.
 
 곡 정보:
@@ -624,7 +628,7 @@ ${guideText || '등록된 추가 지침 없음'}
 
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
-영어 중심의 음악 스타일 프롬프트 1개${form.songType === 'instrumental' ? ' (반드시 instrumental, no vocal 태그 포함)' : ''}
+반드시 100% 영어로만 작성된 음악 스타일 프롬프트 1개 (절대 한글을 포함하지 마세요)${form.songType === 'instrumental' ? ' (반드시 instrumental, no vocal 태그 포함)' : ''}
 
 NEGATIVE PROMPT
 제외할 요소들을 적은 부정 프롬프트 (영어 쉼표 구분)
