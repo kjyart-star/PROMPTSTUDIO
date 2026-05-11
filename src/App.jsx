@@ -558,7 +558,7 @@ const parseGeneratedText = (text) => {
   if (!source) return EMPTY_RESULT;
 
   const sectionNames = ['STYLE PROMPT', 'NEGATIVE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR'];
-  const pattern = new RegExp(`^(${sectionNames.join('|')})\\s*$`, 'gim');
+  const pattern = new RegExp(`^[\\s#\\*\\-]*(${sectionNames.join('|')})[\\s:]*$`, 'gim');
   const matches = [...source.matchAll(pattern)];
   const sections = {};
 
