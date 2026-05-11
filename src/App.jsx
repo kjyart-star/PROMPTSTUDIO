@@ -644,7 +644,8 @@ NOTES
 짧은 제작 메모 3개`;
 
 async function callOpenAI(settings, prompt, globalKey) {
-  const apiKey = globalKey || import.meta.env.VITE_OPENAI_API_KEY || settings.apiKey;
+  let apiKey = (globalKey || import.meta.env.VITE_OPENAI_API_KEY || settings.apiKey || '').trim();
+  apiKey = apiKey.replace(/^["']|["']$/g, ''); // 쌍따옴표/홑따옴표가 잘못 들어간 경우 제거
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
