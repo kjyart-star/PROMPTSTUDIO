@@ -105,6 +105,7 @@ const TRANSLATIONS = {
     moodPlaceholder: '예: 몽환적인, 에너제틱한',
     lyricsLanguage: '가사 언어 (Language)',
     vocalGender: '보컬 성별 (Gender)',
+    vocalFeaturing: '보컬 피쳐링 (Featuring)',
     vocalStyle: '보컬 톤/스타일 (Vocal Style)',
     vocalStylePlaceholder: '예: 허스키한, 맑은, 부드러운',
     vocalGroup: '보컬 구성 (Vocal Group)',
@@ -229,6 +230,7 @@ const TRANSLATIONS = {
     moodPlaceholder: 'ex: Nostalgic, Energetic',
     lyricsLanguage: 'Lyrics Language',
     vocalGender: 'Vocal Gender',
+    vocalFeaturing: 'Vocal Featuring',
     vocalStyle: 'Vocal Style',
     vocalStylePlaceholder: 'ex: Husky, Clear, Soft',
     vocalGroup: 'Vocal Group',
@@ -289,13 +291,15 @@ const getOptions = (lang) => {
     return {
       language: [{ value: '한국어', label: 'Korean' }, { value: '영어', label: 'English' }, { value: '일본어', label: 'Japanese' }],
       vocalGroup: [{ value: '솔로', label: 'Solo' }, { value: '중창', label: 'Duet' }, { value: '합창', label: 'Choir' }, { value: '그룹', label: 'Group' }],
-      vocalGender: [{ value: '여성', label: 'Female' }, { value: '남성', label: 'Male' }, { value: '혼성/기타', label: 'Mixed/Other' }]
+      vocalGender: [{ value: '여성', label: 'Female' }, { value: '남성', label: 'Male' }, { value: '혼성/기타', label: 'Mixed/Other' }],
+      vocalFeaturing: [{ value: '없음', label: 'None' }, { value: '남성 피쳐링', label: 'Male Ft.' }, { value: '여성 피쳐링', label: 'Female Ft.' }]
     };
   }
   return {
     language: [{ value: '한국어', label: '한국어' }, { value: '영어', label: '영어' }, { value: '일본어', label: '일본어' }],
     vocalGroup: [{ value: '솔로', label: '솔로' }, { value: '중창', label: '중창' }, { value: '합창', label: '합창' }, { value: '그룹', label: '그룹' }],
-    vocalGender: [{ value: '여성', label: '여성' }, { value: '남성', label: '남성' }, { value: '혼성/기타', label: '혼성/기타' }]
+    vocalGender: [{ value: '여성', label: '여성' }, { value: '남성', label: '남성' }, { value: '혼성/기타', label: '혼성/기타' }],
+    vocalFeaturing: [{ value: '없음', label: '없음' }, { value: '남성 피쳐링', label: '남자 피쳐링' }, { value: '여성 피쳐링', label: '여자 피쳐링' }]
   };
 };
 
@@ -307,6 +311,7 @@ const INITIAL_FORM = {
   mood: 'nostalgic, rainy, warm, cinematic',
   language: '한국어',
   vocalGender: '여성',
+  vocalFeaturing: '없음',
   vocal: 'soft vocal, airy harmony',
   vocalGroup: '솔로',
   tempo: 120,
@@ -422,6 +427,7 @@ const makeFallback = (form, guideText) => {
     form.genre,
     form.mood,
     form.vocalGender === '여성' ? 'female vocal' : form.vocalGender === '남성' ? 'male vocal' : form.vocalGender,
+    form.vocalFeaturing !== '없음' ? (form.vocalFeaturing === '남성 피쳐링' ? 'featuring male vocal' : 'featuring female vocal') : '',
     form.vocal,
     `${form.vocalGroup} vocal arrangement`,
     `${form.tempo} BPM`,
@@ -493,6 +499,7 @@ const buildInstructionPrompt = (form, guideText) => `너는 음악 생성 AI용 
 - 분위기: ${form.mood}
 - 언어: ${form.language}
 - 보컬 성별: ${form.vocalGender || '여성'}
+- 피쳐링: ${form.vocalFeaturing || '없음'}
 - 보컬 톤: ${form.vocal}
 - 보컬 구성: ${form.vocalGroup}
 - 템포: ${form.tempo} BPM
@@ -850,7 +857,9 @@ function App() {
           ...current,
           genre: item.form.genre || current.genre,
           mood: item.form.mood || current.mood,
+          language: item.form.language || current.language,
           vocalGender: item.form.vocalGender || current.vocalGender,
+          vocalFeaturing: item.form.vocalFeaturing || current.vocalFeaturing || '없음',
           vocal: item.form.vocal || current.vocal,
           vocalGroup: item.form.vocalGroup || current.vocalGroup,
           tempo: item.form.tempo || current.tempo
@@ -1086,6 +1095,7 @@ function App() {
               <TextInput label={t.mood} value={form.mood} onChange={(value) => updateForm('mood', value)} placeholder={t.moodPlaceholder} />
               <ButtonGroupInput label={t.lyricsLanguage} value={form.language} options={getOptions(uiLanguage).language} onChange={(value) => updateForm('language', value)} />
               <ButtonGroupInput label={t.vocalGender} value={form.vocalGender || '여성'} options={getOptions(uiLanguage).vocalGender} onChange={(value) => updateForm('vocalGender', value)} />
+              <ButtonGroupInput label={t.vocalFeaturing} value={form.vocalFeaturing || '없음'} options={getOptions(uiLanguage).vocalFeaturing} onChange={(value) => updateForm('vocalFeaturing', value)} />
               <TextInput label={t.vocalStyle} value={form.vocal} onChange={(value) => updateForm('vocal', value)} placeholder={t.vocalStylePlaceholder} />
               <SelectInput label={t.vocalGroup} value={form.vocalGroup} options={getOptions(uiLanguage).vocalGroup} onChange={(value) => updateForm('vocalGroup', value)} />
               <div className="md:col-span-2">
@@ -1519,7 +1529,10 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                 </div>
                 <div>
                   <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.vocalStyle}</h3>
-                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">{selectedItem.form?.vocal || '-'}</p>
+                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">
+                    {selectedItem.form?.vocal || '-'}
+                    {selectedItem.form?.vocalFeaturing && selectedItem.form?.vocalFeaturing !== '없음' ? \` (Ft. \${selectedItem.form.vocalFeaturing})\` : ''}
+                  </p>
                 </div>
               </div>
             </div>
