@@ -834,15 +834,49 @@ function App() {
     loadHistory();
   };
 
-  const openHistoryItem = (item) => {
-    setResultParts({
-      prompt: item.prompt || '',
-      title: item.title || '',
-      lyrics: item.lyrics || '',
-      notes: item.notes || '',
-      raw: '',
-    });
-    if (item.form) setForm((current) => ({ ...current, ...item.form }));
+  const openHistoryItem = (item, mode = 'all') => {
+    if (mode === 'all') {
+      setResultParts({
+        prompt: item.prompt || '',
+        title: item.title || '',
+        lyrics: item.lyrics || '',
+        notes: item.notes || '',
+        raw: '',
+      });
+      if (item.form) setForm((current) => ({ ...current, ...item.form }));
+    } else if (mode === 'style') {
+      if (item.form) {
+        setForm(current => ({
+          ...current,
+          genre: item.form.genre || current.genre,
+          mood: item.form.mood || current.mood,
+          vocalGender: item.form.vocalGender || current.vocalGender,
+          vocal: item.form.vocal || current.vocal,
+          vocalGroup: item.form.vocalGroup || current.vocalGroup,
+          tempo: item.form.tempo || current.tempo
+        }));
+      }
+      setResultParts(current => ({
+        ...current,
+        prompt: item.prompt || ''
+      }));
+    } else if (mode === 'lyrics') {
+      if (item.form) {
+        setForm(current => ({
+          ...current,
+          title: item.form.title || current.title,
+          theme: item.form.theme || current.theme,
+          structure: item.form.structure || current.structure,
+          extra: item.form.extra || current.extra
+        }));
+      }
+      setResultParts(current => ({
+        ...current,
+        title: item.title || '',
+        lyrics: item.lyrics || '',
+        notes: item.notes || ''
+      }));
+    }
     setStatus(t.statusHistoryOpened);
   };
 
@@ -1156,7 +1190,7 @@ function App() {
         </section>
       </div>
       ) : (
-        <LibraryView history={history} t={t} openHistoryItem={(item) => { openHistoryItem(item); setCurrentTab('studio'); }} deleteHistoryItem={deleteHistoryItem} />
+        <LibraryView history={history} t={t} openHistoryItem={(item, mode) => { openHistoryItem(item, mode); setCurrentTab('studio'); }} deleteHistoryItem={deleteHistoryItem} />
       )}
     </main>
   );
@@ -1282,6 +1316,7 @@ function ResultField({ label, value, placeholder, minHeight, onChange, onCopy, w
 function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
   const itemsPerPage = 15;
 
   const filteredHistory = useMemo(() => {
@@ -1307,6 +1342,9 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
         <h1 className="text-2xl font-bold text-[#EDEDED] flex items-center gap-2 shrink-0">
           <span className="inline-block h-6 w-1.5 rounded-full bg-[#FF3366]"></span>
           {t.library}
+          <span className="ml-2 text-sm font-medium text-[#A1A1AA] bg-[#1A1A1A] border border-[#2E2E2E] px-2.5 py-0.5 rounded-full">
+            {filteredHistory.length}
+          </span>
         </h1>
         
         <div className="relative w-full sm:w-72">
@@ -1359,7 +1397,7 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                     </td>
                     <td className="px-5 py-4">
                       <button 
-                        onClick={() => openHistoryItem(item)} 
+                        onClick={() => setSelectedItem(item)} 
                         className="text-base font-bold text-[#EDEDED] transition-colors group-hover:text-[#FF3366] text-left block w-full truncate"
                         title={item.title || t.untitledProject}
                       >
@@ -1435,6 +1473,78 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelectedItem(null)}>
+          <div className="w-full max-w-2xl rounded-2xl border border-[#2E2E2E] bg-[#121212] shadow-2xl flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#2E2E2E] px-6 py-4">
+              <h2 className="text-xl font-bold text-[#EDEDED] truncate">{selectedItem.title || t.untitledProject}</h2>
+              <button onClick={() => setSelectedItem(null)} className="text-[#A1A1AA] hover:text-white transition-colors">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.copyPrompt}</h3>
+                  <div className="rounded-xl bg-[#1A1A1A] p-4 border border-[#2E2E2E] whitespace-pre-wrap text-sm text-[#D4D4D8] flex-1 max-h-48 overflow-y-auto">
+                    {selectedItem.prompt || '내용 없음'}
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.copyLyrics}</h3>
+                  <div className="rounded-xl bg-[#1A1A1A] p-4 border border-[#2E2E2E] whitespace-pre-wrap text-sm text-[#D4D4D8] flex-1 max-h-48 overflow-y-auto">
+                    {selectedItem.lyrics || '내용 없음'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.thGenre}</h3>
+                  <p className="text-sm text-[#EDEDED] bg-[#1A1A1A] px-3 py-2 rounded-lg border border-[#2E2E2E] truncate">{selectedItem.form?.genre || '-'}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.mood}</h3>
+                  <p className="text-sm text-[#EDEDED] bg-[#1A1A1A] px-3 py-2 rounded-lg border border-[#2E2E2E] truncate">{selectedItem.form?.mood || '-'}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.theme}</h3>
+                  <p className="text-sm text-[#EDEDED] bg-[#1A1A1A] px-3 py-2 rounded-lg border border-[#2E2E2E] truncate">{selectedItem.form?.theme || '-'}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#71717A] mb-2">{t.vocalStyle}</h3>
+                  <p className="text-sm text-[#EDEDED] bg-[#1A1A1A] px-3 py-2 rounded-lg border border-[#2E2E2E] truncate">{selectedItem.form?.vocal || '-'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-[#2E2E2E] p-4 flex flex-wrap gap-3 justify-end bg-[#1A1A1A] rounded-b-2xl">
+              <button 
+                onClick={() => { openHistoryItem(selectedItem, 'style'); setSelectedItem(null); }}
+                className="px-4 py-2 text-sm font-medium text-[#A1A1AA] bg-[#2A2A2A] hover:bg-[#3A3A3A] hover:text-white rounded-lg transition-colors border border-[#3E3E3E]"
+              >
+                스타일 프롬프트만 재사용
+              </button>
+              <button 
+                onClick={() => { openHistoryItem(selectedItem, 'lyrics'); setSelectedItem(null); }}
+                className="px-4 py-2 text-sm font-medium text-[#A1A1AA] bg-[#2A2A2A] hover:bg-[#3A3A3A] hover:text-white rounded-lg transition-colors border border-[#3E3E3E]"
+              >
+                가사만 재사용
+              </button>
+              <button 
+                onClick={() => { openHistoryItem(selectedItem, 'all'); setSelectedItem(null); }}
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#FF3366] to-[#9213ec] hover:opacity-90 rounded-lg transition-opacity shadow-md shadow-[#FF3366]/20"
+              >
+                전체 재사용
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
