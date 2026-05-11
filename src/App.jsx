@@ -597,9 +597,9 @@ const composeGeneratedText = (resultParts) => [
 const buildInstructionPrompt = (form, guideText) => `너는 음악 생성 AI용 프롬프트와 가사를 만드는 전문 작사가/프로듀서다.
 
 [CRITICAL RULE]
-1. "STYLE PROMPT" 섹션은 입력된 모든 내용(장르, 분위기 등)을 **반드시 영어 단어로 번역하여** 100% 영어 쉼표 구분 키워드로만 작성해야 합니다. (예: "팝, 신나는" -> "pop, upbeat"). 
-   한글이 한 글자라도 포함되면 절대 안 됩니다! (TRANSLATE ALL KOREAN CONCEPTS TO ENGLISH KEYWORDS).
-2. 출력 형식의 순서와 이름을 정확히 지킨다.
+1. "STYLE PROMPT" 및 "NEGATIVE PROMPT" 섹션은 **반드시 영어로만** 작성해야 합니다 (100% 영어 쉼표 구분 키워드).
+2. "LYRICS", "TITLE", "NOTES" 섹션은 사용자가 지정한 [언어: ${form.language}]에 맞추어 작성해야 합니다. (한국어라면 반드시 한국어로 작성).
+3. 출력 형식의 순서와 이름을 정확히 지킨다.
 
 목표: ${form.targetTool}에 바로 넣을 수 있는 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 작성한다.
 
