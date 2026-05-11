@@ -624,7 +624,8 @@ ${form.songType === 'instrumental' ?
 - 추가 요청: ${form.extra}
 - 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}
 
-등록 지침서:
+[사용자 정의 지침서 (최우선 순위)]
+아래 지침서의 내용을 프롬프트 및 가사 작성에 **가장 중요하게** 반영하세요:
 ${guideText || '등록된 추가 지침 없음'}
 
 출력 형식은 반드시 아래 순서를 따른다.
