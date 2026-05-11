@@ -34,7 +34,14 @@ export default {
       keyframes: {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(100vw)' },
+          '100%': { transform: 'translateX(-100%)' },
         }
+      },
+      animation: {
+        marquee: 'marquee 20s linear infinite',
       }
     },
   },

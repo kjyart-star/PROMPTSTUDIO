@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const PROVIDERS = {
   openai: {
     name: 'GPT',
-    models: ['gpt-4.1-mini', 'gpt-4.1', 'gpt-4o-mini'],
+    models: ['gpt-4o-mini', 'gpt-4o', 'o3-mini'],
     keyLabel: 'OpenAI API Key',
   },
   gemini: {
     name: 'Gemini',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    models: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
     keyLabel: 'Google AI API Key',
   },
   claude: {
     name: 'Claude',
-    models: ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'],
+    models: ['claude-3-5-haiku-latest', 'claude-3-5-sonnet-latest', 'claude-3-7-sonnet-latest'],
     keyLabel: 'Anthropic API Key',
   },
 };
@@ -93,6 +96,10 @@ const TRANSLATIONS = {
     newGuideTitlePlaceholder: '새 지침서 제목',
     newGuideBodyPlaceholder: '작사 규칙, 금지어, 브랜드 톤, 구조 등을 입력',
     registerGuide: '지침서 등록하기',
+    uploadGuideline: '문서 업로드 (PDF/TXT)',
+    uploadPlaceholder: '드래그하거나 클릭하여 파일 선택',
+    parsingFile: '문서 읽는 중...',
+    parsingError: '문서를 읽을 수 없습니다.',
     
     panelInput: '곡 정보 및 프롬프트 설정',
     songTitle: '곡 제목 (Title)',
@@ -165,7 +172,17 @@ const TRANSLATIONS = {
     searchPlaceholder: '제목, 장르 또는 프롬프트 검색...',
     prevPage: '이전',
     nextPage: '다음',
-    pageInfo: '페이지 {current} / {total}'
+    pageInfo: '페이지 {current} / {total}',
+    
+    admin: '관리자',
+    announcements: '공지사항',
+    systemGuide: '고유 지침서',
+    adminNotice: '모든 유저에게 표시될 공지사항입니다.',
+    manageUsers: '유저 관리',
+    manageGuides: '고유 지침서 관리',
+    addAnnouncement: '공지사항 등록',
+    addGuide: '지침서 등록',
+    postAnnouncement: '작성 완료',
   },
   EN: {
     studio: 'Studio',
@@ -226,6 +243,10 @@ const TRANSLATIONS = {
     newGuideTitlePlaceholder: 'New Guideline Title',
     newGuideBodyPlaceholder: 'Enter writing rules, forbidden words, brand tone, structure, etc.',
     registerGuide: 'Register Guideline',
+    uploadGuideline: 'Upload Document (PDF/TXT)',
+    uploadPlaceholder: 'Drag or click to select file',
+    parsingFile: 'Reading document...',
+    parsingError: 'Cannot read document.',
     
     panelInput: 'Song Info & Prompt Settings',
     songTitle: 'Title',
@@ -298,7 +319,17 @@ const TRANSLATIONS = {
     searchPlaceholder: 'Search title, genre, or prompt...',
     prevPage: 'Prev',
     nextPage: 'Next',
-    pageInfo: 'Page {current} of {total}'
+    pageInfo: 'Page {current} of {total}',
+    
+    admin: 'Admin',
+    announcements: 'Announcements',
+    systemGuide: 'System Guidelines',
+    adminNotice: 'Announcements will be displayed to all users.',
+    manageUsers: 'Manage Users',
+    manageGuides: 'Manage System Guidelines',
+    addAnnouncement: 'Add Announcement',
+    addGuide: 'Add Guideline',
+    postAnnouncement: 'Post',
   }
 };
 
@@ -381,7 +412,37 @@ with check (auth.uid() = user_id);
 
 create policy "Users can delete own song history"
 on song_history for delete
-using (auth.uid() = user_id);`;
+using (auth.uid() = user_id);
+
+create table if not exists announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  content text not null,
+  created_at timestamptz default now()
+);
+alter table announcements enable row level security;
+create policy "Enable read access for all users" on announcements for select using (true);
+create policy "Enable all access for authenticated users" on announcements for all using (auth.role() = 'authenticated');
+
+create table if not exists system_guides (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+alter table system_guides enable row level security;
+create policy "Enable read access for all users" on system_guides for select using (true);
+create policy "Enable all access for authenticated users" on system_guides for all using (auth.role() = 'authenticated');
+
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  is_admin boolean default false,
+  created_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "Enable read access for all users" on profiles for select using (true);
+create policy "Enable all access for authenticated users" on profiles for all using (auth.role() = 'authenticated');`;
 
 const readJson = (key, fallback) => {
   try {
@@ -577,22 +638,23 @@ ${form.songType === 'instrumental' ? '[Instrumental] 만 작성하고 다른 텍
 NOTES
 짧은 제작 메모 3개`;
 
-async function callOpenAI(settings, prompt) {
-  const response = await fetch('https://api.openai.com/v1/responses', {
+async function callOpenAI(settings, prompt, globalKey) {
+  const apiKey = globalKey || import.meta.env.VITE_OPENAI_API_KEY || settings.apiKey;
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${settings.apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: settings.model,
-      input: prompt,
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.85,
     }),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data?.error?.message || 'OpenAI 호출 실패');
-  return data.output_text || data.output?.flatMap((item) => item.content || []).map((part) => part.text).join('\n') || '';
+  return data.choices?.[0]?.message?.content || '';
 }
 
 async function callGemini(settings, prompt) {
@@ -650,6 +712,93 @@ function App() {
   const [history, setHistory] = useState([]);
   const [status, setStatus] = useState('대기 중'); // Will be localized dynamically
   const [isGenerating, setIsGenerating] = useState(false);
+  const fileInputRef = useRef(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [systemGuides, setSystemGuides] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [lastReadAnnouncementAt, setLastReadAnnouncementAt] = useState(() => localStorage.getItem('lastReadAnnouncementAt') || null);
+  const [draftAnnouncement, setDraftAnnouncement] = useState({ title: '', content: '' });
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
+  const [editingGuideId, setEditingGuideId] = useState(null);
+  const [editingLocalGuideId, setEditingLocalGuideId] = useState(null);
+  const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false);
+  const [isAnnouncementsModalOpen, setIsAnnouncementsModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+  const authDropdownRef = useRef(null);
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [globalOpenAIKey, setGlobalOpenAIKey] = useState('');
+  const [adminOpenAIKey, setAdminOpenAIKey] = useState('');
+
+  const hasUnreadAnnouncements = announcements.length > 0 && 
+    (!lastReadAnnouncementAt || new Date(announcements[0].created_at) > new Date(lastReadAnnouncementAt));
+
+  const handleOpenAnnouncements = () => {
+    setIsAnnouncementsModalOpen(true);
+    if (announcements.length > 0) {
+      const latestAt = announcements[0].created_at;
+      localStorage.setItem('lastReadAnnouncementAt', latestAt);
+      setLastReadAnnouncementAt(latestAt);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (authDropdownRef.current && !authDropdownRef.current.contains(event.target)) {
+        setIsAuthMenuOpen(false);
+      }
+    };
+
+    if (isAuthMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAuthMenuOpen]);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsParsing(true);
+    try {
+      let text = '';
+      if (file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map(item => item.str).join(' ');
+          fullText += pageText + '\\n';
+        }
+        text = fullText;
+      } else if (file.type === 'text/plain') {
+        text = await file.text();
+      } else {
+        alert(t.parsingError);
+        setIsParsing(false);
+        return;
+      }
+
+      setDraftGuide({
+        title: file.name.replace(/\\.[^/.]+$/, ""),
+        body: text.trim()
+      });
+    } catch (error) {
+      console.error(error);
+      alert(t.parsingError);
+    } finally {
+      setIsParsing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const provider = PROVIDERS[settings.provider];
   useEffect(() => {
@@ -661,10 +810,12 @@ function App() {
     if (!supabaseConfig.url.trim() || !supabaseConfig.anonKey.trim()) return null;
     return createClient(supabaseConfig.url.trim(), supabaseConfig.anonKey.trim());
   }, [supabaseConfig]);
-  const guideText = useMemo(
-    () => guides.filter((guide) => activeGuideIds.includes(guide.id)).map((guide) => `## ${guide.title}\n${guide.body}`).join('\n\n'),
-    [guides, activeGuideIds]
-  );
+  const guideText = useMemo(() => {
+    const activeLocal = guides.filter((g) => activeGuideIds.includes(g.id));
+    const activeSystem = systemGuides.filter((g) => activeGuideIds.includes(g.id));
+    return [...activeSystem, ...activeLocal].map((g) => `## ${g.title}\n${g.body}`).join('\n\n');
+  }, [guides, systemGuides, activeGuideIds]);
+
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
@@ -681,20 +832,77 @@ function App() {
   useEffect(() => {
     if (!supabase) {
       setUser(null);
+      setIsAdmin(false);
+      setSystemGuides([]);
+      setAnnouncements([]);
       setHistory(readJson(STORAGE_KEYS.localHistory, []));
       return undefined;
     }
 
+    const fetchPublicData = async () => {
+      const { data: sg } = await supabase.from('system_guides').select('*').order('created_at', { ascending: false });
+      if (sg) {
+        setSystemGuides(sg);
+        setActiveGuideIds((curr) => {
+          const newIds = sg.map(g => g.id).filter(id => !curr.includes(id));
+          return [...curr, ...newIds];
+        });
+      }
+      const { data: anns } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+      if (anns) setAnnouncements(anns);
+      
+      const { data: ss } = await supabase.from('system_settings').select('*').eq('key', 'openai_api_key').maybeSingle();
+      if (ss?.value) {
+        setGlobalOpenAIKey(ss.value);
+        setAdminOpenAIKey(ss.value);
+      }
+    };
+    fetchPublicData();
+
+    const fetchProfile = async (u) => {
+      if (!u) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', u.id).single();
+      if (profile) {
+        setIsAdmin(profile.is_admin);
+        if (profile.is_admin) {
+          loadAdminUsers();
+        }
+      } else {
+        await supabase.from('profiles').insert({ id: u.id, email: u.email, is_admin: false });
+        setIsAdmin(false);
+      }
+    };
+
+    const loadAdminUsers = async () => {
+      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (data) setAdminUsers(data);
+    };
+
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user || null);
+      const currentUser = data.session?.user || null;
+      setUser(currentUser);
+      fetchProfile(currentUser);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      fetchProfile(currentUser);
     });
 
     return () => listener.subscription.unsubscribe();
   }, [supabase]);
+
+  const toggleAdminRole = async (userId, currentRole) => {
+    if (!supabase || !isAdmin) return;
+    const { error } = await supabase.from('profiles').update({ is_admin: !currentRole }).eq('id', userId);
+    if (!error) {
+      setAdminUsers(adminUsers.map(u => u.id === userId ? { ...u, is_admin: !currentRole } : u));
+    }
+  };
 
   useEffect(() => {
     if (supabase && user) {
@@ -718,9 +926,14 @@ function App() {
 
   const addGuide = () => {
     if (!draftGuide.title.trim() || !draftGuide.body.trim()) return;
-    const id = `guide-${Date.now()}`;
-    setGuides((current) => [...current, { id, title: draftGuide.title.trim(), body: draftGuide.body.trim() }]);
-    setActiveGuideIds((current) => [...current, id]);
+    if (editingLocalGuideId) {
+      setGuides((current) => current.map(g => g.id === editingLocalGuideId ? { ...g, title: draftGuide.title.trim(), body: draftGuide.body.trim() } : g));
+      setEditingLocalGuideId(null);
+    } else {
+      const id = `guide-${Date.now()}`;
+      setGuides((current) => [...current, { id, title: draftGuide.title.trim(), body: draftGuide.body.trim() }]);
+      setActiveGuideIds((current) => [...current, id]);
+    }
     setDraftGuide({ title: '', body: '' });
   };
 
@@ -750,7 +963,8 @@ function App() {
     setIsGenerating(true);
     setStatus(t.statusGenerating);
     try {
-      if (!settings.apiKey.trim()) {
+      const isGlobalOpenAI = settings.provider === 'openai' && (globalOpenAIKey || import.meta.env.VITE_OPENAI_API_KEY);
+      if (!settings.apiKey.trim() && !isGlobalOpenAI) {
         const fallbackText = makeFallback(form, guideText);
         const parsedParts = parseGeneratedText(fallbackText);
         setResultParts(parsedParts);
@@ -759,7 +973,7 @@ function App() {
         return;
       }
       const nextResult = settings.provider === 'openai'
-        ? await callOpenAI(settings, prompt)
+        ? await callOpenAI(settings, prompt, globalOpenAIKey)
         : settings.provider === 'gemini'
           ? await callGemini(settings, prompt)
           : await callClaude(settings, prompt);
@@ -841,10 +1055,154 @@ function App() {
     }
   };
 
-  const signOut = async () => {
+  const signOut = () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
-    setStatus(t.statusLogout);
+    setIsAuthMenuOpen(false);
+    setConfirmDialog({
+      isOpen: true,
+      title: '로그아웃',
+      message: '정말 로그아웃 하시겠습니까?',
+      onConfirm: async () => {
+        await supabase.auth.signOut();
+        setStatus(t.statusLogout);
+      }
+    });
+  };
+
+  const handlePostAnnouncement = async () => {
+    if (!isAdmin || !draftAnnouncement.title || !draftAnnouncement.content) return;
+    
+    if (editingAnnouncementId) {
+      const { data, error } = await supabase.from('announcements')
+        .update({ title: draftAnnouncement.title, content: draftAnnouncement.content })
+        .eq('id', editingAnnouncementId)
+        .select();
+        
+      if (!error && data) {
+        setAnnouncements(announcements.map(a => a.id === editingAnnouncementId ? data[0] : a));
+        setDraftAnnouncement({ title: '', content: '' });
+        setEditingAnnouncementId(null);
+        setStatus('공지사항이 수정되었습니다.');
+      }
+    } else {
+      const { data, error } = await supabase.from('announcements').insert({
+        title: draftAnnouncement.title,
+        content: draftAnnouncement.content
+      }).select();
+      if (!error && data) {
+        setAnnouncements([data[0], ...announcements]);
+        setDraftAnnouncement({ title: '', content: '' });
+        setStatus(t.postAnnouncement);
+      }
+    }
+  };
+
+  const handleEditAnnouncement = (ann) => {
+    setDraftAnnouncement({ title: ann.title, content: ann.content });
+    setEditingAnnouncementId(ann.id);
+  };
+
+  const handleWithdraw = () => {
+    if (!supabase || !user) return;
+    setIsAuthMenuOpen(false);
+    setConfirmDialog({
+      isOpen: true,
+      title: '계정 삭제',
+      message: '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.',
+      onConfirm: async () => {
+        const { error } = await supabase.rpc('delete_user');
+        if (error) {
+          setStatus(`탈퇴 실패: ${error.message}`);
+        } else {
+          await supabase.auth.signOut();
+          setStatus('회원 탈퇴가 완료되었습니다.');
+        }
+      }
+    });
+  };
+
+  const handleDeleteAnnouncement = (id) => {
+    if (!isAdmin) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: '공지사항 삭제',
+      message: '정말 이 공지사항을 삭제하시겠습니까?',
+      onConfirm: async () => {
+        const { error } = await supabase.from('announcements').delete().eq('id', id);
+        if (!error) {
+          setAnnouncements(announcements.filter(a => a.id !== id));
+          setStatus(t.statusHistoryDeleted);
+        }
+      }
+    });
+  };
+
+  const handlePostSystemGuide = async () => {
+    if (!isAdmin || !draftGuide.title || !draftGuide.body) return;
+    
+    if (editingGuideId) {
+      const { data, error } = await supabase.from('system_guides')
+        .update({ title: draftGuide.title, body: draftGuide.body })
+        .eq('id', editingGuideId)
+        .select();
+      if (!error && data) {
+        setSystemGuides(systemGuides.map(g => g.id === editingGuideId ? data[0] : g));
+        setDraftGuide({ title: '', body: '' });
+        setEditingGuideId(null);
+        setStatus('지침서가 수정되었습니다.');
+      }
+    } else {
+      const { data, error } = await supabase.from('system_guides').insert({
+        title: draftGuide.title,
+        body: draftGuide.body
+      }).select();
+      if (!error && data) {
+        setSystemGuides([data[0], ...systemGuides]);
+        setDraftGuide({ title: '', body: '' });
+        setStatus('지침서가 등록되었습니다.');
+      }
+    }
+  };
+
+  const handleDeleteSystemGuide = (id) => {
+    if (!isAdmin) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: '지침서 삭제',
+      message: '정말 이 지침서를 삭제하시겠습니까?',
+      onConfirm: async () => {
+        const { error } = await supabase.from('system_guides').delete().eq('id', id);
+        if (!error) {
+          setSystemGuides(systemGuides.filter(g => g.id !== id));
+          setActiveGuideIds(activeGuideIds.filter(gid => gid !== id));
+          setStatus(t.statusHistoryDeleted);
+        }
+      }
+    });
+  };
+
+  const handleSaveAdminOpenAIKey = async () => {
+    if (!supabase) return;
+    if (!adminOpenAIKey.trim()) {
+      const { error } = await supabase.from('system_settings').delete().eq('key', 'openai_api_key');
+      if (!error) {
+        setGlobalOpenAIKey('');
+        setStatus('전역 OpenAI API 키가 삭제되었습니다.');
+      } else {
+        setStatus('키 삭제 실패: ' + error.message);
+      }
+      return;
+    }
+    
+    const { error } = await supabase.from('system_settings')
+      .upsert({ key: 'openai_api_key', value: adminOpenAIKey.trim() }, { onConflict: 'key' });
+      
+    if (!error) {
+      setGlobalOpenAIKey(adminOpenAIKey.trim());
+      setStatus('전역 OpenAI API 키가 저장되었습니다.');
+    } else {
+      setStatus('키 저장 실패: ' + error.message);
+    }
   };
 
   const loadHistory = async () => {
@@ -877,7 +1235,10 @@ function App() {
       prompt: parts.prompt,
       lyrics: parts.lyrics,
       notes: parts.notes,
-      form,
+      form: {
+        ...form,
+        negativePrompt: parts.negativePrompt
+      },
     };
 
     if (!supabase) {
@@ -916,6 +1277,7 @@ function App() {
     if (mode === 'all') {
       setResultParts({
         prompt: item.prompt || '',
+        negativePrompt: item.negativePrompt || item.form?.negativePrompt || '',
         title: item.title || '',
         lyrics: item.lyrics || '',
         notes: item.notes || '',
@@ -941,7 +1303,8 @@ function App() {
       }
       setResultParts(current => ({
         ...current,
-        prompt: item.prompt || ''
+        prompt: item.prompt || '',
+        negativePrompt: item.negativePrompt || item.form?.negativePrompt || ''
       }));
     } else if (mode === 'lyrics') {
       if (item.form) {
@@ -997,7 +1360,9 @@ function App() {
             <nav className="hidden md:flex items-center gap-6">
               <button onClick={() => setCurrentTab('studio')} className={`text-sm font-semibold transition-colors ${currentTab === 'studio' ? 'text-[#FF3366]' : 'text-[#A1A1AA] hover:text-[#EDEDED]'}`}>{t.studio}</button>
               <button onClick={() => setCurrentTab('library')} className={`text-sm font-semibold transition-colors ${currentTab === 'library' ? 'text-[#FF3366]' : 'text-[#A1A1AA] hover:text-[#EDEDED]'}`}>{t.library}</button>
-              <button className="text-sm font-medium text-[#A1A1AA] transition-colors hover:text-[#EDEDED] cursor-not-allowed">{t.explore}</button>
+              {isAdmin && (
+                <button onClick={() => setCurrentTab('admin')} className={`text-sm font-semibold transition-colors ${currentTab === 'admin' ? 'text-[#FF3366]' : 'text-[#A1A1AA] hover:text-[#EDEDED]'}`}>{t.admin}</button>
+              )}
             </nav>
           </div>
 
@@ -1025,24 +1390,188 @@ function App() {
             <div className="h-4 w-px bg-[#2E2E2E]"></div>
 
             {/* Notification Icon */}
-            <button className="relative text-[#A1A1AA] hover:text-white transition-colors">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-              <span className="absolute top-0 right-0.5 h-1.5 w-1.5 rounded-full bg-[#FF3366] shadow-[0_0_5px_#FF3366]"></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={handleOpenAnnouncements}
+                className="relative text-[#A1A1AA] hover:text-white transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                {hasUnreadAnnouncements && (
+                  <span className="absolute top-0 right-0.5 h-1.5 w-1.5 rounded-full bg-[#FF3366] shadow-[0_0_5px_#FF3366]"></span>
+                )}
+              </button>
+            </div>
 
-            {/* User Profile / Login */}
-            {user ? (
-              <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-sm font-bold text-white shadow-lg ring-2 ring-[#0A0A0A] ring-offset-1 ring-offset-[#2E2E2E]">
-                {user.email[0].toUpperCase()}
-              </button>
-            ) : (
-              <button onClick={signInWithGoogle} className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1A1A] border border-[#2E2E2E] text-sm text-[#A1A1AA] hover:text-white hover:border-[#FF3366] transition-all">
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-              </button>
-            )}
+            {/* User Profile / Login Dropdown */}
+            <div className="relative" ref={authDropdownRef}>
+              {user ? (
+                <button 
+                  onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-sm font-bold text-white shadow-lg ring-2 ring-[#0A0A0A] ring-offset-1 ring-offset-[#2E2E2E] hover:ring-[#FF3366]/50 transition-all"
+                >
+                  {user.email[0].toUpperCase()}
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1A1A1A] border border-[#2E2E2E] text-sm text-[#A1A1AA] hover:text-white hover:border-[#FF3366] transition-all"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </button>
+              )}
+
+              {/* Auth Dropdown Menu */}
+              {isAuthMenuOpen && (
+                <div className="absolute right-0 mt-3 w-72 rounded-2xl border border-[#2E2E2E] bg-[#0A0A0A]/95 p-3 shadow-2xl shadow-black/50 backdrop-blur-xl z-50 ring-1 ring-white/5">
+                  {user ? (
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-3 border-b border-[#2E2E2E]/50 pb-4 mb-2 px-2 pt-1">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] shadow-inner ring-1 ring-white/10">
+                          <span className="text-lg font-bold text-white shadow-sm">{user.email[0].toUpperCase()}</span>
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-[9px] text-emerald-500 font-bold tracking-wider">ONLINE</span>
+                          </div>
+                          <p className="text-sm font-medium text-[#EDEDED] truncate" title={user.email}>{user.email}</p>
+                          {isAdmin && (
+                            <span className="inline-flex w-fit mt-1 text-[9px] bg-gradient-to-r from-[#FF3366]/20 to-[#9213ec]/20 border border-[#FF3366]/30 text-[#FF3366] px-1.5 py-0.5 rounded font-bold tracking-wider">
+                              ADMINISTRATOR
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <button 
+                          onClick={() => signOut()} 
+                          className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm font-medium text-[#A1A1AA] hover:text-white hover:bg-[#2E2E2E]/50 rounded-xl transition-all group"
+                        >
+                          <svg className="w-4 h-4 text-[#71717A] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                          로그아웃
+                        </button>
+                        
+                        <button 
+                          onClick={() => handleWithdraw()} 
+                          className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm font-medium text-[#71717A] hover:text-[#FF3366] hover:bg-[#FF3366]/10 rounded-xl transition-all group"
+                        >
+                          <svg className="w-4 h-4 text-[#71717A] group-hover:text-[#FF3366] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          계정 삭제
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex gap-2 border-b border-[#2E2E2E] pb-2">
+                        <button onClick={() => setAuthMode('login')} className={`flex-1 pb-1 text-sm font-semibold border-b-2 transition-colors ${authMode === 'login' ? 'border-[#FF3366] text-white' : 'border-transparent text-[#71717A] hover:text-[#A1A1AA]'}`}>로그인</button>
+                        <button onClick={() => setAuthMode('signup')} className={`flex-1 pb-1 text-sm font-semibold border-b-2 transition-colors ${authMode === 'signup' ? 'border-[#FF3366] text-white' : 'border-transparent text-[#71717A] hover:text-[#A1A1AA]'}`}>회원가입</button>
+                      </div>
+                      <input type="email" placeholder="이메일" className="input text-sm !py-2" value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} />
+                      <input type="password" placeholder="비밀번호" className="input text-sm !py-2" value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} />
+                      
+                      {authMode === 'login' ? (
+                        <button onClick={() => { signIn(); setIsAuthMenuOpen(false); }} className="primary-btn w-full !py-2 text-sm font-semibold">로그인</button>
+                      ) : (
+                        <button onClick={() => { signUp(); setIsAuthMenuOpen(false); }} className="primary-btn w-full !py-2 text-sm font-semibold">회원가입</button>
+                      )}
+                      
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-[#2E2E2E]"></div>
+                        <span className="flex-shrink-0 mx-3 text-[#71717A] text-[10px]">OR</span>
+                        <div className="flex-grow border-t border-[#2E2E2E]"></div>
+                      </div>
+                      
+                      <button onClick={() => { signInWithGoogle(); setIsAuthMenuOpen(false); }} className="google-btn w-full text-sm !py-2 shadow-md">
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /><path fill="none" d="M1 1h22v22H1z" /></svg>
+                        Google 로그인
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Announcements Modal for Users */}
+      {isAnnouncementsModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setIsAnnouncementsModalOpen(false)}>
+          <div className="w-full max-w-lg rounded-2xl border border-[#2E2E2E] bg-[#121212] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-[#2E2E2E] p-4 bg-[#0A0A0A]">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF3366] text-white text-xs font-bold">!</span>
+                공지사항
+              </h3>
+              <button onClick={() => setIsAnnouncementsModalOpen(false)} className="text-[#A1A1AA] hover:text-white">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex-col gap-4 p-5 overflow-y-auto custom-scrollbar flex-1">
+              {announcements.length === 0 ? (
+                <div className="text-center text-[#71717A] py-10">등록된 공지사항이 없습니다.</div>
+              ) : (
+                announcements.map((ann) => (
+                  <div key={ann.id} className="border-b border-[#2E2E2E] pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+                    <h4 className="text-sm font-bold text-[#EDEDED] mb-2">{ann.title}</h4>
+                    <p className="text-sm text-[#A1A1AA] whitespace-pre-wrap leading-relaxed">{ann.content}</p>
+                    <div className="mt-2 text-[10px] text-[#71717A]">{new Date(ann.created_at).toLocaleString()}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirm Dialog Modal */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all" onClick={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-gradient-to-b from-[#1A1A1A] to-[#121212] shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <h3 className="text-xl font-extrabold text-white mb-2 tracking-tight">{confirmDialog.title}</h3>
+              <p className="text-[#A1A1AA] text-sm leading-relaxed">{confirmDialog.message}</p>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-[#0A0A0A]/50 border-t border-white/5">
+              <button 
+                onClick={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-[#EDEDED] bg-white/5 hover:bg-white/10 transition-colors focus:outline-none"
+              >
+                취소
+              </button>
+              <button 
+                onClick={() => { confirmDialog.onConfirm(); setConfirmDialog({ ...confirmDialog, isOpen: false }); }}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF3366] to-[#FF5588] hover:from-[#E62E5C] hover:to-[#FF3366] shadow-[0_0_15px_rgba(255,51,102,0.3)] transition-all focus:outline-none"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {hasUnreadAnnouncements && (
+        <div className="bg-[#FF3366]/10 border-b border-[#FF3366]/20 py-2 px-5">
+          <div className="mx-auto max-w-[1600px] flex items-center gap-3">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF3366] text-white text-[10px] font-bold">!</span>
+            <div className="flex-1 overflow-hidden relative h-5">
+              <div className="absolute whitespace-nowrap animate-marquee text-sm text-[#EDEDED] font-medium">
+                {announcements.map((a, i) => (
+                  <span key={a.id} className="mr-12">
+                    <strong className="text-[#FF3366] mr-2">[{t.announcements}]</strong>
+                    {a.title}: {a.content}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {currentTab === 'studio' ? (
       <div className="mx-auto grid max-w-[1600px] gap-6 px-5 py-5 lg:grid-cols-[300px_1fr_340px] xl:grid-cols-[340px_1fr_460px]">
@@ -1061,100 +1590,65 @@ function App() {
             <select className="input" value={settings.model} onChange={(event) => setSettings({ ...settings, model: event.target.value })}>
               {provider.models.map((model) => <option key={model}>{model}</option>)}
             </select>
-            <label className="field-label mt-4">{provider.keyLabel}</label>
-            <input className="input" type="password" value={settings.apiKey} onChange={(event) => setSettings({ ...settings, apiKey: event.target.value })} placeholder={t.apiKeyPlaceholder} />
-          </Panel>
-
-          <Panel title={t.panelLoginSave}>
-            {user ? (
-              <div className="rounded-xl border border-[#2E2E2E] bg-[#121212]/80 p-4 text-sm text-[#EDEDED] shadow-inner">
-                <div className="flex items-center gap-3 truncate font-bold">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-sm text-white shadow-lg shadow-[#FF3366]/20">
-                    {user.email[0].toUpperCase()}
-                  </div>
-                  <span className="truncate">{user.email}</span>
-                </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <button className="secondary-btn" onClick={loadHistory}>{t.refresh}</button>
-                  <button className="secondary-btn border-[#FF3366]/20 text-[#FF3366] hover:bg-[#FF3366]/10" onClick={signOut}>{t.logout}</button>
-                </div>
-              </div>
+            {settings.provider === 'openai' ? (
+              <>
+                <label className="field-label mt-4">{provider.keyLabel}</label>
+                <input 
+                  className="input opacity-50 cursor-not-allowed" 
+                  type="password" 
+                  value="************************" 
+                  disabled 
+                />
+                <p className="text-[11px] text-[#A1A1AA] mt-1.5 ml-1">✓ 기본 시스템에 연동되어 별도의 API 키가 필요하지 않습니다.</p>
+              </>
             ) : (
-              <div className="space-y-4">
-                <button className="google-btn w-full shadow-lg" onClick={signInWithGoogle}>{t.googleLogin}</button>
-                
-                <div className="relative flex items-center py-2">
-                  <div className="flex-grow border-t border-[#2E2E2E]"></div>
-                  <span className="mx-3 flex-shrink-0 text-[11px] font-bold tracking-wider text-[#A1A1AA] uppercase">{t.orEmail}</span>
-                  <div className="flex-grow border-t border-[#2E2E2E]"></div>
-                </div>
-
-                <div className="grid gap-2.5">
-                  <input className="input" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} placeholder={t.emailPlaceholder} />
-                  <input className="input" type="password" value={authForm.password} onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })} placeholder={t.passwordPlaceholder} />
-                </div>
-                <div className="grid grid-cols-2 gap-2.5 mt-1">
-                  <button className="primary-btn" onClick={signIn}>{t.login}</button>
-                  <button className="secondary-btn" onClick={signUp}>{t.signUp}</button>
-                </div>
-              </div>
+              <>
+                <label className="field-label mt-4">{provider.keyLabel}</label>
+                <input className="input" type="password" value={settings.apiKey} onChange={(event) => setSettings({ ...settings, apiKey: event.target.value })} placeholder={t.apiKeyPlaceholder} />
+              </>
             )}
           </Panel>
 
-          <Panel title={t.panelHistory}>
-            <div className="mb-4 grid grid-cols-2 gap-2.5">
-              <button className="primary-btn shadow-md shadow-[#FF3366]/10" onClick={saveHistory} disabled={!composeGeneratedText(resultParts)}>{t.saveCurrentSong}</button>
-              <button className="secondary-btn" onClick={loadHistory} disabled={isCloudMode && !user}>{t.refreshList}</button>
-            </div>
-            <div className="max-h-64 space-y-2.5 overflow-auto pr-2 custom-scrollbar">
-              {history.length ? history.map((item) => (
-                <div key={item.id} className="group relative rounded-xl border border-[#2E2E2E] bg-[#121212]/80 p-3.5 transition-all duration-300 hover:border-[#FF3366]/50 hover:bg-[#1A1A1A] hover:shadow-lg hover:shadow-[#FF3366]/5">
-                  <button className="block w-full text-left text-sm font-bold text-[#EDEDED] transition-colors group-hover:text-[#FF3366]" onClick={() => openHistoryItem(item)}>
-                    {item.title || t.untitledProject}
-                  </button>
-                  <div className="mt-1.5 text-[11px] font-medium text-[#71717A] tracking-wide">{new Date(item.created_at).toLocaleString()}</div>
-                  <div className="mt-3 flex gap-2">
-                    <button className="copy-btn flex-1" onClick={() => openHistoryItem(item)}>{t.open}</button>
-                    <button className="copy-btn flex-1 hover:bg-red-500/10 hover:text-red-400" onClick={() => deleteHistoryItem(item.id)}>{t.delete}</button>
-                  </div>
-                </div>
-              )) : (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#2E2E2E] bg-[#121212]/30 px-4 py-8 text-center">
-                  <svg className="mb-2 h-6 w-6 text-[#4A4A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  <p className="text-xs leading-5 text-[#71717A]">
-                    {isCloudMode ? t.historyEmptyCloud : t.historyEmptyLocal}
-                  </p>
-                </div>
-              )}
-            </div>
-          </Panel>
+
+
+
 
           <Panel title={t.panelGuides}>
             <div className="space-y-2.5 max-h-60 overflow-auto pr-2 custom-scrollbar">
               {guides.map((guide) => (
                 <div key={guide.id} className="rounded-xl border border-[#2E2E2E] bg-[#121212]/80 p-3.5 transition-all hover:border-[#4A4A4A] hover:bg-[#1A1A1A]">
-                  <label className="flex cursor-pointer items-start gap-3 text-sm font-semibold text-[#EDEDED]">
-                    <div className="relative flex items-center pt-0.5">
-                      <input type="checkbox" className="peer h-4 w-4 appearance-none rounded border border-[#4A4A4A] bg-[#121212] checked:border-[#FF3366] checked:bg-[#FF3366] transition-all" checked={activeGuideIds.includes(guide.id)} onChange={(event) => {
-                        setActiveGuideIds((current) => event.target.checked ? [...current, guide.id] : current.filter((id) => id !== guide.id));
-                      }} />
-                      <svg className="absolute left-1/2 top-1/2 mt-[1px] h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <div className="flex justify-between items-start gap-2">
+                    <label className="flex cursor-pointer items-start gap-3 text-sm font-semibold text-[#EDEDED] flex-1">
+                      <div className="relative flex items-center pt-0.5">
+                        <input type="checkbox" className="peer h-4 w-4 appearance-none rounded border border-[#4A4A4A] bg-[#121212] checked:border-[#FF3366] checked:bg-[#FF3366] transition-all" checked={activeGuideIds.includes(guide.id)} onChange={(event) => {
+                          setActiveGuideIds((current) => event.target.checked ? [...current, guide.id] : current.filter((id) => id !== guide.id));
+                        }} />
+                        <svg className="absolute left-1/2 top-1/2 mt-[1px] h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <span className="leading-snug">{guide.title}</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button className="text-[11px] font-bold tracking-wide text-[#71717A] hover:text-[#EDEDED] transition-colors" onClick={() => {
+                        setEditingLocalGuideId(guide.id);
+                        setDraftGuide({ title: guide.title, body: guide.body });
+                      }}>수정</button>
+                      <button className="text-[11px] font-bold uppercase tracking-wide text-[#71717A] hover:text-[#FF3366] transition-colors" onClick={() => removeGuide(guide.id)}>{t.remove}</button>
                     </div>
-                    <span className="leading-snug">{guide.title}</span>
-                  </label>
-                  <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-[#A1A1AA] pl-7">{guide.body}</p>
-                  <div className="mt-2.5 flex justify-end">
-                    <button className="text-[11px] font-bold uppercase tracking-wide text-[#71717A] hover:text-[#FF3366] transition-colors" onClick={() => removeGuide(guide.id)}>{t.remove}</button>
                   </div>
+                  <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-[#A1A1AA] pl-7">{guide.body}</p>
                 </div>
               ))}
             </div>
             <div className="mt-4 space-y-3 border-t border-[#2E2E2E] pt-4">
-              <input className="input text-sm" value={draftGuide.title} onChange={(event) => setDraftGuide({ ...draftGuide, title: event.target.value })} placeholder={t.newGuideTitlePlaceholder} />
-              <textarea className="input min-h-[80px] text-sm" value={draftGuide.body} onChange={(event) => setDraftGuide({ ...draftGuide, body: event.target.value })} placeholder={t.newGuideBodyPlaceholder} />
-              <button className="secondary-btn w-full" onClick={addGuide}>{t.registerGuide}</button>
+              <input className="input text-sm" value={draftGuide.title} onChange={(event) => setDraftGuide({ ...draftGuide, title: event.target.value })} placeholder={t.newGuideTitlePlaceholder} disabled={isParsing} />
+              <textarea className="input min-h-[80px] text-sm" value={draftGuide.body} onChange={(event) => setDraftGuide({ ...draftGuide, body: event.target.value })} placeholder={t.newGuideBodyPlaceholder} disabled={isParsing} />
+              
+              <div className="flex gap-2">
+                {editingLocalGuideId && (
+                  <button className="secondary-btn w-1/3" onClick={() => { setEditingLocalGuideId(null); setDraftGuide({ title: '', body: '' }); }} disabled={isParsing}>취소</button>
+                )}
+                <button className="secondary-btn flex-1" onClick={addGuide} disabled={isParsing}>{editingLocalGuideId ? '수정 저장' : t.registerGuide}</button>
+              </div>
             </div>
           </Panel>
         </section>
@@ -1308,9 +1802,200 @@ function App() {
           </Panel>
         </section>
       </div>
-      ) : (
+      ) : currentTab === 'library' ? (
         <LibraryView history={history} t={t} openHistoryItem={(item, mode) => { openHistoryItem(item, mode); setCurrentTab('studio'); }} deleteHistoryItem={deleteHistoryItem} />
-      )}
+      ) : currentTab === 'admin' && isAdmin ? (
+        <div className="mx-auto max-w-[1200px] px-5 py-8">
+          <h2 className="text-2xl font-bold mb-8">{t.admin}</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Panel title={t.manageGuides}>
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl border border-[#2E2E2E] bg-[#121212] p-4">
+                  <h4 className="text-sm font-semibold text-[#EDEDED] mb-3">{editingGuideId ? '지침서 수정' : '새 지침서 작성'}</h4>
+                  <input
+                    type="text"
+                    placeholder={t.newGuideTitlePlaceholder}
+                    className="w-full mb-3 rounded-lg bg-[#0A0A0A] p-3 text-sm text-[#EDEDED] outline-none border border-[#3E3E3E] focus:border-[#FF3366]"
+                    value={draftGuide.title}
+                    onChange={(e) => setDraftGuide({ ...draftGuide, title: e.target.value })}
+                  />
+                  <textarea
+                    placeholder={t.newGuideBodyPlaceholder}
+                    className="h-32 w-full resize-none rounded-lg bg-[#0A0A0A] p-3 text-sm text-[#EDEDED] outline-none border border-[#3E3E3E] focus:border-[#FF3366]"
+                    value={draftGuide.body}
+                    onChange={(e) => setDraftGuide({ ...draftGuide, body: e.target.value })}
+                  />
+                  
+                  <div className="flex justify-end gap-2 mt-3">
+                    {editingGuideId && (
+                      <button 
+                        onClick={() => {
+                          setEditingGuideId(null);
+                          setDraftGuide({ title: '', body: '' });
+                        }} 
+                        className="secondary-btn !py-2 !px-4 text-sm font-semibold"
+                      >
+                        취소
+                      </button>
+                    )}
+                    <button onClick={handlePostSystemGuide} className="primary-btn !py-2 !px-4 text-sm font-semibold shadow-md">
+                      {editingGuideId ? '수정 저장' : t.addGuide}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  {systemGuides.map((guide) => (
+                    <div key={guide.id} className="rounded-xl bg-[#0A0A0A] border border-[#2E2E2E] p-4 flex flex-col gap-2 relative group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-white">{guide.title}</span>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => {
+                              setEditingGuideId(guide.id);
+                              setDraftGuide({ title: guide.title, body: guide.body });
+                            }} 
+                            className="text-xs text-[#71717A] hover:text-[#EDEDED] transition-colors"
+                          >
+                            수정
+                          </button>
+                          <button onClick={() => handleDeleteSystemGuide(guide.id)} className="text-xs text-[#71717A] hover:text-[#FF3366] transition-colors">{t.delete}</button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#A1A1AA] line-clamp-2">{guide.body}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title={t.announcements}>
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl border border-[#2E2E2E] bg-[#121212] p-4">
+                  <h4 className="text-sm font-semibold text-[#EDEDED] mb-3">{editingAnnouncementId ? '공지사항 수정' : '새 공지사항 작성'}</h4>
+                  <input
+                    type="text"
+                    placeholder="제목"
+                    className="w-full mb-3 rounded-lg bg-[#0A0A0A] p-3 text-sm text-[#EDEDED] outline-none border border-[#3E3E3E] focus:border-[#FF3366]"
+                    value={draftAnnouncement.title}
+                    onChange={(e) => setDraftAnnouncement({ ...draftAnnouncement, title: e.target.value })}
+                  />
+                  <textarea
+                    placeholder="공지사항 내용"
+                    className="h-32 w-full mb-3 resize-none rounded-lg bg-[#0A0A0A] p-3 text-sm text-[#EDEDED] outline-none border border-[#3E3E3E] focus:border-[#FF3366]"
+                    value={draftAnnouncement.content}
+                    onChange={(e) => setDraftAnnouncement({ ...draftAnnouncement, content: e.target.value })}
+                  />
+                  <div className="flex justify-end gap-2">
+                    {editingAnnouncementId && (
+                      <button 
+                        onClick={() => { setEditingAnnouncementId(null); setDraftAnnouncement({title: '', content: ''}); }} 
+                        className="secondary-btn !py-2 !px-4 text-sm font-semibold"
+                      >
+                        취소
+                      </button>
+                    )}
+                    <button onClick={handlePostAnnouncement} className="primary-btn !py-2 !px-4 text-sm font-semibold shadow-md">
+                      {editingAnnouncementId ? '수정 저장' : t.addAnnouncement}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-2 flex flex-col gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                  {announcements.map((ann) => (
+                    <div key={ann.id} className="rounded-xl bg-[#0A0A0A] border border-[#2E2E2E] p-4 flex flex-col gap-3 relative group transition-colors hover:border-[#4A4A4A]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <span className="text-sm font-bold text-[#EDEDED] block mb-1">{ann.title}</span>
+                          <span className="text-[10px] text-[#71717A]">{new Date(ann.created_at).toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleEditAnnouncement(ann)} className="text-xs text-[#A1A1AA] hover:text-white transition-colors bg-[#2E2E2E] px-2 py-1 rounded">수정</button>
+                          <button onClick={() => handleDeleteAnnouncement(ann.id)} className="text-xs text-[#A1A1AA] hover:text-[#FF3366] transition-colors bg-[#2E2E2E] hover:bg-[#FF3366]/20 px-2 py-1 rounded">{t.delete}</button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#A1A1AA] line-clamp-3 bg-[#121212] p-2 rounded-lg border border-[#2E2E2E]/50 whitespace-pre-wrap">{ann.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title={t.manageMembers || "Member Management"}>
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-[#A1A1AA] mb-2">Manage user roles and permissions.</p>
+                <div className="mt-2 flex flex-col gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                  {adminUsers.map((member) => (
+                    <div key={member.id} className="rounded-xl bg-[#0A0A0A] border border-[#2E2E2E] p-4 flex flex-col gap-2 relative group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[#EDEDED]">{member.email}</span>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs px-2 py-1 rounded-md font-bold ${member.is_admin ? 'bg-[#FF3366]/20 text-[#FF3366]' : 'bg-[#2E2E2E] text-[#A1A1AA]'}`}>
+                            {member.is_admin ? 'ADMIN' : 'USER'}
+                          </span>
+                          {member.id !== user?.id && (
+                            <button 
+                              onClick={() => toggleAdminRole(member.id, member.is_admin)} 
+                              className="text-xs text-[#71717A] hover:text-[#FF3366] transition-colors underline"
+                            >
+                              {member.is_admin ? 'Demote' : 'Promote'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-[#5C454D]">Joined: {new Date(member.created_at).toLocaleDateString()}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Panel>
+
+            <Panel title="Global OpenAI API Key">
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-[#A1A1AA] mb-2">전역으로 사용할 OpenAI API 키를 설정합니다. 여기에 키를 입력하면 모든 사용자가 기본으로 이 키를 사용하게 됩니다.</p>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="sk-..."
+                    className="flex-1 rounded-lg bg-[#0A0A0A] p-3 text-sm text-[#EDEDED] outline-none border border-[#3E3E3E] focus:border-[#FF3366]"
+                    value={adminOpenAIKey}
+                    onChange={(e) => setAdminOpenAIKey(e.target.value)}
+                  />
+                  <button 
+                    onClick={() => {
+                      if (adminOpenAIKey) {
+                        navigator.clipboard.writeText(adminOpenAIKey);
+                        alert('API 키가 클립보드에 복사되었습니다.');
+                      }
+                    }}
+                    className="px-4 rounded-lg bg-[#1A1A1A] text-[#A1A1AA] hover:text-white hover:bg-[#2A2A2A] transition-colors border border-[#3E3E3E] flex items-center justify-center gap-2"
+                    title="API 키 복사"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span className="text-sm font-medium">복사</span>
+                  </button>
+                </div>
+                <div className="flex justify-end gap-2">
+                  {globalOpenAIKey && (
+                    <button 
+                      onClick={() => {
+                        setAdminOpenAIKey('');
+                      }} 
+                      className="secondary-btn !py-2 !px-4 text-sm font-semibold"
+                    >
+                      초기화 및 삭제
+                    </button>
+                  )}
+                  <button onClick={handleSaveAdminOpenAIKey} className="primary-btn !py-2 !px-4 text-sm font-semibold shadow-md">저장하기</button>
+                </div>
+              </div>
+            </Panel>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
