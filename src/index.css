@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,53 +10,46 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f7f3ea;
-  color: #171717;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0F0A0C;
+  color: #EAE0E3;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
+button, input, textarea, select { font: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2D1B22; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #3D242D; }
 
 @layer components {
   .field-label {
-    @apply mb-1 block text-xs font-bold uppercase tracking-[0.08em] text-[#62594b];
+    @apply mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#9B828A];
   }
 
   .input {
-    @apply w-full rounded-md border border-[#d8d0c0] bg-[#fffdf8] px-3 py-2 text-sm text-[#171717] outline-none transition focus:border-[#b23a48] focus:ring-2 focus:ring-[#b23a48]/20;
+    @apply w-full rounded-lg border border-[#3D242D] bg-[#1D1216] px-4 py-3 text-sm text-[#EAE0E3] outline-none transition-all duration-200 focus:border-[#FF2D55] focus:bg-[#25171C] focus:ring-1 focus:ring-[#FF2D55] placeholder:text-[#5C454D];
   }
 
   .primary-btn {
-    @apply rounded-md bg-[#b23a48] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#8f2f3c];
+    @apply flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF2D55] via-[#D22B8B] to-[#8A2BE2] px-6 py-4 text-base font-bold text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_0_25px_rgba(255,45,85,0.4)] active:scale-[0.98] disabled:hover:scale-100 disabled:hover:shadow-none;
   }
 
   .secondary-btn {
-    @apply rounded-md border border-[#d8d0c0] bg-white px-4 py-2 text-sm font-bold text-[#2a241c] transition hover:bg-[#fff6e5];
+    @apply flex items-center justify-center gap-2 rounded-lg border border-[#3D242D] bg-[#1D1216] px-4 py-2.5 text-sm font-semibold text-[#EAE0E3] transition-all duration-200 hover:border-[#FF2D55] hover:bg-[#25171C] active:scale-[0.98];
   }
 
   .google-btn {
-    @apply rounded-md border border-[#d8d0c0] bg-white px-4 py-2 text-sm font-bold text-[#2a241c] transition hover:border-[#b23a48] hover:bg-[#fff6e5];
+    @apply flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-100 active:scale-[0.98];
   }
 
-  .copy-btn {
-    @apply rounded-md border border-[#d8d0c0] bg-white px-2 py-1 text-xs font-bold text-[#2a241c] transition hover:bg-[#fff6e5];
+  .icon-btn {
+    @apply flex h-8 w-8 items-center justify-center rounded-md border border-[#3D242D] bg-[#1D1216] text-[#9B828A] transition-all duration-200 hover:border-[#FF2D55] hover:text-[#FF2D55];
   }
 
-  .seg-btn {
-    @apply rounded-md border border-[#d8d0c0] bg-white px-3 py-2 text-sm font-bold text-[#4b4338] transition hover:bg-[#fff6e5];
-  }
-
-  .seg-btn-active {
-    @apply border-[#b23a48] bg-[#b23a48] text-white hover:bg-[#b23a48];
+  .panel-title {
+    @apply mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#FF2D55];
   }
 }

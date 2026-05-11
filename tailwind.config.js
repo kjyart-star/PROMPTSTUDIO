@@ -31,6 +31,11 @@ export default {
         'glow-break': '0 0 15px rgba(125, 97, 255, 0.2)',
         'glow-pink': '0 0 15px rgba(255, 46, 151, 0.2)',
       },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      }
     },
   },
   plugins: [],
