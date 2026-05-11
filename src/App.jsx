@@ -106,10 +106,8 @@ const TRANSLATIONS = {
     songTitlePlaceholder: '예: Neon City Lights',
     targetTool: '대상 툴 (Target AI)',
     targetToolPlaceholder: '예: Suno, Udio',
-    genre: '장르 (Genre)',
-    genrePlaceholder: '예: Synthwave, K-pop',
-    mood: '분위기 (Mood)',
-    moodPlaceholder: '예: 몽환적인, 에너제틱한',
+    styleDesc: '스타일 설명 (Style Description)',
+    styleDescPlaceholder: '예: Synthwave, K-pop, 몽환적인, 에너제틱한',
     lyricsLanguage: '가사 언어 (Language)',
     vocalGender: '보컬 성별 (Gender)',
     vocalFeaturing: '보컬 피쳐링 (Featuring)',
@@ -125,11 +123,6 @@ const TRANSLATIONS = {
     tempoNormal: '보통',
     tempoFast: '빠르게',
     tempoVeryFast: '아주 빠르게',
-    structure: '구조 (Structure)',
-    structurePlaceholder: '예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]',
-    theme: '주제 및 네러티브 (Theme & Narrative)',
-    themeSub: '곡이 전달하고자 하는 이야기',
-    themePlaceholder: '이 노래가 어떤 이야기를 담고 있는지 자세히 적어주세요.',
     extraRequests: '추가 요청 (Extra Requests)',
     extraSub: '특정 악기, 특수 효과 등',
     extraPlaceholder: '예: 코러스에 일렉기타 솔로 추가, 리버브 이펙트 강조',
@@ -165,11 +158,11 @@ const TRANSLATIONS = {
     libLyrics: '가사',
     thDate: '작성일',
     thTitle: '제목',
-    thGenre: '장르',
+    thStyleDesc: '스타일 설명',
     thLanguage: '언어',
     thActions: '관리',
     thNumber: '번호',
-    searchPlaceholder: '제목, 장르 또는 프롬프트 검색...',
+    searchPlaceholder: '제목, 스타일 설명 검색...',
     prevPage: '이전',
     nextPage: '다음',
     pageInfo: '페이지 {current} / {total}',
@@ -253,10 +246,8 @@ const TRANSLATIONS = {
     songTitlePlaceholder: 'ex: Neon City Lights',
     targetTool: 'Target AI',
     targetToolPlaceholder: 'ex: Suno, Udio',
-    genre: 'Genre',
-    genrePlaceholder: 'ex: Synthwave, K-pop',
-    mood: 'Mood',
-    moodPlaceholder: 'ex: Nostalgic, Energetic',
+    styleDesc: 'Style Description',
+    styleDescPlaceholder: 'ex: Synthwave, K-pop, Nostalgic, Energetic',
     lyricsLanguage: 'Lyrics Language',
     vocalGender: 'Vocal Gender',
     vocalFeaturing: 'Vocal Featuring',
@@ -272,11 +263,6 @@ const TRANSLATIONS = {
     tempoNormal: 'Normal',
     tempoFast: 'Fast',
     tempoVeryFast: 'Very Fast',
-    structure: 'Structure',
-    structurePlaceholder: 'ex: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]',
-    theme: 'Theme & Narrative',
-    themeSub: 'The story the song conveys',
-    themePlaceholder: 'Describe the story this song tells in detail.',
     extraRequests: 'Extra Requests',
     extraSub: 'Specific instruments, effects, etc.',
     extraPlaceholder: 'ex: Add electric guitar solo in chorus, emphasize reverb',
@@ -312,11 +298,11 @@ const TRANSLATIONS = {
     libLyrics: 'Lyrics',
     thDate: 'Date',
     thTitle: 'Title',
-    thGenre: 'Genre',
+    thStyleDesc: 'Style Description',
     thLanguage: 'Language',
     thActions: 'Actions',
     thNumber: 'No.',
-    searchPlaceholder: 'Search title, genre, or prompt...',
+    searchPlaceholder: 'Search title, style or prompt...',
     prevPage: 'Prev',
     nextPage: 'Next',
     pageInfo: 'Page {current} of {total}',
@@ -337,7 +323,7 @@ const getOptions = (lang) => {
   if (lang === 'EN') {
     return {
       language: [{ value: '한국어', label: 'Korean' }, { value: '영어', label: 'English' }, { value: '일본어', label: 'Japanese' }],
-      vocalGroup: [{ value: '솔로', label: 'Solo' }, { value: '중창', label: 'Duet' }, { value: '합창', label: 'Choir' }, { value: '그룹', label: 'Group' }],
+      vocalGroup: [{ value: '솔로', label: 'Solo' }, { value: '듀엣', label: 'Duet' }, { value: '듀오', label: 'Duo' }, { value: '중창', label: 'Vocal Ensemble' }, { value: '합창', label: 'Choir' }, { value: '그룹', label: 'Group' }],
       vocalGender: [{ value: '여성', label: 'Female' }, { value: '남성', label: 'Male' }, { value: '혼성/기타', label: 'Mixed/Other' }],
       vocalFeaturing: [{ value: '없음', label: 'None' }, { value: '남성 피쳐링', label: 'Male Ft.' }, { value: '여성 피쳐링', label: 'Female Ft.' }],
       songType: [{ value: 'vocal', label: 'Vocal Song' }, { value: 'instrumental', label: 'Instrumental / BGM' }],
@@ -347,7 +333,7 @@ const getOptions = (lang) => {
   }
   return {
     language: [{ value: '한국어', label: '한국어' }, { value: '영어', label: '영어' }, { value: '일본어', label: '일본어' }],
-    vocalGroup: [{ value: '솔로', label: '솔로' }, { value: '중창', label: '중창' }, { value: '합창', label: '합창' }, { value: '그룹', label: '그룹' }],
+    vocalGroup: [{ value: '솔로', label: '솔로' }, { value: '듀엣', label: '듀엣 (Duet)' }, { value: '듀오', label: '듀오 (Duo)' }, { value: '중창', label: '중창' }, { value: '합창', label: '합창' }, { value: '그룹', label: '그룹' }],
     vocalGender: [{ value: '여성', label: '여성' }, { value: '남성', label: '남성' }, { value: '혼성/기타', label: '혼성/기타' }],
     vocalFeaturing: [{ value: '없음', label: '없음' }, { value: '남성 피쳐링', label: '남자 피쳐링' }, { value: '여성 피쳐링', label: '여자 피쳐링' }],
     songType: [{ value: 'vocal', label: '가사 있는 곡' }, { value: 'instrumental', label: '가사 없는 연주곡 (BGM)' }],
@@ -359,9 +345,7 @@ const getOptions = (lang) => {
 
 const INITIAL_FORM = {
   title: '비 오는 밤의 드라이브',
-  theme: '헤어진 뒤에도 잊히지 않는 밤길의 감정',
-  genre: 'Korean city pop, synth pop',
-  mood: 'nostalgic, rainy, warm, cinematic',
+  styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic',
   language: '한국어',
   vocalGender: '여성',
   vocalFeaturing: '없음',
@@ -372,7 +356,6 @@ const INITIAL_FORM = {
   musicLength: '1분',
   tempo: 120,
   targetTool: 'Suno',
-  structure: 'Verse 1, Pre-Chorus, Chorus, Verse 2, Chorus, Bridge, Final Chorus',
   extra: '후렴에 영어 한 문장 훅을 섞어줘. 선정적 표현 없이 대중적인 가사로.',
   exclude: '',
 };
@@ -380,6 +363,7 @@ const INITIAL_FORM = {
 const STORAGE_KEYS = {
   settings: 'songprompt-ai-settings-v1',
   guides: 'songprompt-guides-v1',
+  activeGuides: 'songprompt-active-guides-v1',
   supabase: 'songprompt-supabase-v1',
   localHistory: 'songprompt-local-history-v1',
 };
@@ -512,8 +496,7 @@ const getSupabaseCallbackUrl = (supabaseUrl) => {
 const makeFallback = (form, guideText) => {
   if (form.songType === 'instrumental') {
     const prompt = [
-      form.genre,
-      form.mood,
+      form.styleDesc,
       'instrumental',
       `${form.bgmType} style`,
       `${form.tempo} BPM`,
@@ -526,8 +509,7 @@ const makeFallback = (form, guideText) => {
   }
 
   const prompt = [
-    form.genre,
-    form.mood,
+    form.styleDesc,
     form.vocalGender === '여성' ? 'female vocal' : form.vocalGender === '남성' ? 'male vocal' : form.vocalGender,
     form.vocalFeaturing !== '없음' ? (form.vocalFeaturing === '남성 피쳐링' ? 'featuring male vocal' : 'featuring female vocal') : '',
     form.vocal,
@@ -541,7 +523,7 @@ const makeFallback = (form, guideText) => {
     .join(', ');
   const negativePrompt = form.exclude || 'lo-fi, bad vocals, poor recording, out of tune';
 
-  return `STYLE PROMPT\n${prompt}\n\nNEGATIVE PROMPT\n${negativePrompt}\n\nTITLE\n${form.title || 'Untitled'}\n\nLYRICS\n[Verse 1]\n젖은 유리창 위로 네 이름이 번져\n신호등 불빛마다 마음이 멈춰 서\n돌아갈 길은 없다는 걸 알면서도\n나는 같은 거리를 다시 지나가\n\n[Pre-Chorus]\n라디오 끝에 남은 작은 숨처럼\n아직도 넌 내 밤을 흔들어\n\n[Chorus]\nRain on the midnight road\n너를 잊는 법을 몰라\n흐려진 불빛 사이로\n우리의 계절이 또 지나가\nRain on the midnight road\n끝내 말하지 못한 말\n빗소리 안에 묻어둘게\n오늘도 널 지나쳐 가\n\n[Verse 2]\n텅 빈 조수석 위로 새벽이 내려\n익숙한 골목마다 추억이 켜져\n괜찮아질 거라는 흔한 말 대신\n가만히 속도를 낮춰 숨을 쉬어\n\n[Bridge]\n언젠가 이 노래가 끝나면\n나도 웃으며 널 놓을 수 있을까\n\n[Final Chorus]\nRain on the midnight road\n너를 잊는 법을 배워\n희미한 불빛 너머로\n새로운 아침이 날 부르나 봐\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 가사 언어: ${form.language}\n- 보컬 구성: ${form.vocalGroup}\n- 구조: ${form.structure}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
+  return `STYLE PROMPT\n${prompt}\n\nNEGATIVE PROMPT\n${negativePrompt}\n\nTITLE\n${form.title || 'Untitled'}\n\nLYRICS\n[Verse 1]\n젖은 유리창 위로 네 이름이 번져\n신호등 불빛마다 마음이 멈춰 서\n돌아갈 길은 없다는 걸 알면서도\n나는 같은 거리를 다시 지나가\n\n[Pre-Chorus]\n라디오 끝에 남은 작은 숨처럼\n아직도 넌 내 밤을 흔들어\n\n[Chorus]\nRain on the midnight road\n너를 잊는 법을 몰라\n흐려진 불빛 사이로\n우리의 계절이 또 지나가\nRain on the midnight road\n끝내 말하지 못한 말\n빗소리 안에 묻어둘게\n오늘도 널 지나쳐 가\n\n[Verse 2]\n텅 빈 조수석 위로 새벽이 내려\n익숙한 골목마다 추억이 켜져\n괜찮아질 거라는 흔한 말 대신\n가만히 속도를 낮춰 숨을 쉬어\n\n[Bridge]\n언젠가 이 노래가 끝나면\n나도 웃으며 널 놓을 수 있을까\n\n[Final Chorus]\nRain on the midnight road\n너를 잊는 법을 배워\n희미한 불빛 너머로\n새로운 아침이 날 부르나 봐\n\nNOTES\n- 대상 툴: ${form.targetTool}\n- 가사 언어: ${form.language}\n- 보컬 구성: ${form.vocalGroup}\n- 반영 지침: ${guideText ? '등록 지침 포함' : '기본 작법'}`;
 };
 
 const EMPTY_RESULT = {
@@ -558,7 +540,7 @@ const parseGeneratedText = (text) => {
   if (!source) return EMPTY_RESULT;
 
   const sectionNames = ['STYLE PROMPT', 'NEGATIVE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR'];
-  const pattern = new RegExp(`^[\\s#\\*\\-]*(${sectionNames.join('|')})[\\s:]*$`, 'gim');
+  const pattern = new RegExp(`^[\\s#\\*\\-]*(${sectionNames.join('|')})[\\s:\\*\\-]*$`, 'gim');
   const matches = [...source.matchAll(pattern)];
   const sections = {};
 
@@ -596,18 +578,27 @@ const composeGeneratedText = (resultParts) => [
 
 const buildInstructionPrompt = (form, guideText) => `너는 음악 생성 AI용 프롬프트와 가사를 만드는 전문 작사가/프로듀서다.
 
-[CRITICAL RULE]
-1. "STYLE PROMPT" 및 "NEGATIVE PROMPT" 섹션은 **반드시 영어로만** 작성해야 합니다 (100% 영어 쉼표 구분 키워드).
-2. "LYRICS", "TITLE", "NOTES" 섹션은 사용자가 지정한 [언어: ${form.language}]에 맞추어 작성해야 합니다. (한국어라면 반드시 한국어로 작성).
-3. 출력 형식의 순서와 이름을 정확히 지킨다.
+[사용자 정의 지침서 (1순위 반영)]
+${guideText ? `아래 내용은 사용자가 설정한 고유 지침입니다. 프롬프트 및 가사 생성 시 **절대적으로 준수**하세요:\n${guideText}` : '등록된 추가 지침 없음'}
 
-목표: ${form.targetTool}에 바로 넣을 수 있는 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 작성한다.
+[우선순위 원칙 (PRIORITY RULES)]
+모든 내용 생성 시 다음의 우선순위를 기본으로 가장 강력하게 적용해야 합니다:
+1순위: [사용자 정의 지침서]의 내용
+2순위: 곡 제목 (분위기와 주제의 핵심 뼈대)
+3순위: 스타일 설명 (전반적인 장르와 무드)
+다른 어떤 설정(보컬, 템포 등)보다 이 세 가지 핵심 요소가 프롬프트의 전반적인 방향성과 결과물을 지배하도록 작성하세요.
+
+[CRITICAL RULE]
+1. "STYLE PROMPT" 및 "NEGATIVE PROMPT" 섹션은 **반드시 100% 영어 쉼표 구분 키워드(English comma-separated keywords)로만** 작성해야 합니다. 절대 문장으로 작성하지 마세요.
+2. "LYRICS", "TITLE", "NOTES" 섹션은 사용자가 지정한 [언어: ${form.language}]에 맞추어 작성해야 합니다.
+3. 음악이 촌스럽거나 뻔하게 들리지 않도록, 최고 수준의 전문적인 프로듀싱 키워드와 세련된 사운드 질감을 적극적으로 추가하세요.
+4. 출력 형식의 순서와 이름을 정확히 지키세요.
+
+목표: ${form.targetTool}에 바로 복사하여 붙여넣을 수 있는 극도로 정교하고 트렌디한 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 생성한다.
 
 곡 정보:
 - 제목: ${form.title}
-- 주제: ${form.theme}
-- 장르: ${form.genre}
-- 분위기: ${form.mood}
+- 스타일 설명: ${form.styleDesc}
 - 곡 유형: ${form.songType === 'instrumental' ? '가사 없는 연주곡/BGM (Instrumental)' : '보컬 곡'}
 ${form.songType === 'instrumental' ? 
 `- 용도: ${form.bgmType || '영화음악'}
@@ -620,20 +611,17 @@ ${form.songType === 'instrumental' ?
 - 보컬 구성: ${form.vocalGroup}`
 }
 - 템포: ${form.tempo} BPM
-- 구조: ${form.structure}
 - 추가 요청: ${form.extra}
 - 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}
 
-[사용자 정의 지침서 (최우선 순위)]
-아래 지침서의 내용을 프롬프트 및 가사 작성에 **가장 중요하게** 반영하세요:
-${guideText || '등록된 추가 지침 없음'}
-
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
-사용자가 입력한 장르, 분위기, 보컬, 템포(${form.tempo} BPM) 등을 단순히 번역하는 것에 그치지 말고, 어울리는 악기 구성(예: rhythm guitars, strings stabs, syncopated drums), 리듬/그루브(예: swing jazz groove, bouncy bassline), 구체적인 템포(예: tempo ${form.tempo}bpm), 곡의 무드와 구조(예: urban night mood, dynamic song structure) 등 음악적 요소를 풍부하고 전문적인 10~15개의 영어 쉼표 구분 키워드(English comma-separated keywords)로 확장하여 작성하세요.${form.songType === 'instrumental' ? ' (Must include "instrumental, no vocal")' : ''}
+사용자가 제공한 정보(스타일, 템포, 보컬 등)를 바탕으로, 단순히 번역하는 것을 넘어 곡에 가장 잘 어울리는 구체적인 악기(instruments), 리듬/그루브(rhythm/groove), 특정 템포(예: tempo ${form.tempo} bpm), 프로듀싱 스타일(production style) 등을 포함한 15~20개의 고품질 영어 키워드를 쉼표(,)로 구분하여 나열하세요. 문장이 아닌 키워드 나열 형식이어야 합니다.
+예시: k-hip hop, swing jazz groove, funky rhythm guitars, orchestral strings stabs, energetic brass hits, bouncy bassline, vinyl scratches, syncopated drums, tempo ${form.tempo} bpm, urban night mood, polished production
+${form.songType === 'instrumental' ? '(반드시 맨 처음에 "instrumental, no vocal," 을 포함할 것)' : ''}
 
 NEGATIVE PROMPT
-제외할 요소들을 적은 부정 프롬프트 (영어 쉼표 구분)
+제외할 요소를 영어 쉼표 구분 키워드로 나열.
 
 TITLE
 곡 제목
@@ -710,7 +698,7 @@ function App() {
     apiKey: '',
   }));
   const [guides, setGuides] = useState(() => readJson(STORAGE_KEYS.guides, DEFAULT_GUIDES));
-  const [activeGuideIds, setActiveGuideIds] = useState(['suno-clear', 'hook-first']);
+  const [activeGuideIds, setActiveGuideIds] = useState(() => readJson(STORAGE_KEYS.activeGuides, ['suno-clear', 'hook-first']));
   const [draftGuide, setDraftGuide] = useState({ title: '', body: '' });
   const [resultParts, setResultParts] = useState(EMPTY_RESULT);
   const [supabaseConfig, setSupabaseConfig] = useState(getInitialSupabaseConfig);
@@ -831,6 +819,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.guides, JSON.stringify(guides));
   }, [guides]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.activeGuides, JSON.stringify(activeGuideIds));
+  }, [activeGuideIds]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.supabase, JSON.stringify(supabaseConfig));
@@ -1299,8 +1291,7 @@ function App() {
       if (item.form) {
         setForm(current => ({
           ...current,
-          genre: item.form.genre || current.genre,
-          mood: item.form.mood || current.mood,
+          styleDesc: item.form.styleDesc || [item.form.genre, item.form.mood].filter(Boolean).join(', ') || current.styleDesc,
           language: item.form.language || current.language,
           vocalGender: item.form.vocalGender || current.vocalGender,
           vocalFeaturing: item.form.vocalFeaturing || current.vocalFeaturing || '없음',
@@ -1321,9 +1312,8 @@ function App() {
       if (item.form) {
         setForm(current => ({
           ...current,
+          targetTool: item.form.targetTool || current.targetTool,
           title: item.form.title || current.title,
-          theme: item.form.theme || current.theme,
-          structure: item.form.structure || current.structure,
           extra: item.form.extra || current.extra
         }));
       }
@@ -1673,8 +1663,9 @@ function App() {
               <div className="md:col-span-2">
                 <ButtonGroupInput label={t.songType} value={form.songType || 'vocal'} options={getOptions(uiLanguage).songType} onChange={(value) => updateForm('songType', value)} />
               </div>
-              <TextInput label={t.genre} value={form.genre} onChange={(value) => updateForm('genre', value)} placeholder={t.genrePlaceholder} />
-              <TextInput label={t.mood} value={form.mood} onChange={(value) => updateForm('mood', value)} placeholder={t.moodPlaceholder} />
+              <div className="md:col-span-2">
+                <TextInput label={t.styleDesc} value={form.styleDesc} onChange={(value) => updateForm('styleDesc', value)} placeholder={t.styleDescPlaceholder} />
+              </div>
               
               {form.songType !== 'instrumental' && (
                 <>
@@ -1709,28 +1700,15 @@ function App() {
                   ]}
                 />
               </div>
-              {form.songType !== 'instrumental' && (
-                <div className="md:col-span-2">
-                  <TextInput label={t.structure} value={form.structure} onChange={(value) => updateForm('structure', value)} placeholder={t.structurePlaceholder || "예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]"} />
-                </div>
-              )}
             </div>
             
             <div className="mt-6 flex-grow flex flex-col gap-5">
               <div className="flex flex-col flex-grow">
                 <label className="field-label flex items-center justify-between">
-                  <span>{t.theme}</span>
-                  <span className="text-[10px] font-normal text-[#71717A]">{t.themeSub}</span>
-                </label>
-                <textarea className="input flex-grow min-h-[140px] resize-none" value={form.theme} onChange={(event) => updateForm('theme', event.target.value)} placeholder={t.themePlaceholder} />
-              </div>
-              
-              <div className="flex flex-col">
-                <label className="field-label flex items-center justify-between">
                   <span>{t.extraRequests}</span>
                   <span className="text-[10px] font-normal text-[#71717A]">{t.extraSub}</span>
                 </label>
-                <textarea className="input min-h-[100px] resize-none" value={form.extra} onChange={(event) => updateForm('extra', event.target.value)} placeholder={t.extraPlaceholder} />
+                <textarea className="input flex-grow min-h-[140px] resize-none" value={form.extra} onChange={(event) => updateForm('extra', event.target.value)} placeholder={t.extraPlaceholder} />
               </div>
 
               <div className="flex flex-col">
@@ -2108,14 +2086,36 @@ function RangeInput({ label, value, onChange, min = 60, max = 200, step = 1, uni
 }
 
 function ResultField({ label, value, placeholder, minHeight, onChange, onCopy, wrapperClassName = "mb-4", tooltip = "복사하기" }) {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    onCopy();
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
   return (
     <div className={wrapperClassName}>
       <div className="mb-1 flex items-center justify-between gap-2">
         <label className="field-label mb-0">{label}</label>
-        <button className="copy-btn flex items-center justify-center p-1.5" onClick={onCopy} disabled={!value.trim()} title={tooltip}>
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
+        <button 
+          className={`copy-btn flex items-center justify-center p-1.5 transition-all duration-300 ${isCopied ? 'text-[#FF3366] bg-[#FF3366]/10 rounded' : ''}`} 
+          onClick={handleCopy} 
+          disabled={!value.trim()} 
+          title={isCopied ? "복사완료!" : tooltip}
+        >
+          {isCopied ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              COPIED
+            </span>
+          ) : (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          )}
         </button>
       </div>
       <textarea
@@ -2140,7 +2140,7 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
     return history.filter(item => 
       (item.title || t.untitledProject).toLowerCase().includes(lower) ||
       (item.prompt || '').toLowerCase().includes(lower) ||
-      (item.form?.genre || '').toLowerCase().includes(lower)
+      (item.form?.styleDesc || item.form?.genre || '').toLowerCase().includes(lower)
     );
   }, [history, searchTerm, t.untitledProject]);
 
@@ -2194,7 +2194,7 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                   <th className="px-5 py-4 font-bold w-12 text-center">{t.thNumber}</th>
                   <th className="px-5 py-4 font-bold">{t.thDate}</th>
                   <th className="px-5 py-4 font-bold w-[45%]">{t.thTitle}</th>
-                  <th className="px-5 py-4 font-bold">{t.thGenre}</th>
+                  <th className="px-5 py-4 font-bold">{t.styleDesc}</th>
                   <th className="px-5 py-4 font-bold">{t.thLanguage}</th>
                   <th className="px-5 py-4 font-bold text-right">{t.thActions}</th>
                 </tr>
@@ -2223,9 +2223,9 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                       )}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
-                      {item.form?.genre && (
+                      {(item.form?.styleDesc || item.form?.genre) && (
                         <span className="rounded-md bg-[#2E2E2E] px-2.5 py-1 text-xs font-medium text-[#EDEDED] border border-[#4A4A4A] truncate max-w-[140px] inline-block align-middle">
-                          {item.form.genre}
+                          {item.form?.styleDesc || item.form?.genre}
                         </span>
                       )}
                     </td>
@@ -2320,17 +2320,9 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#1A1A1A]/50 p-5 rounded-xl border border-[#2E2E2E]/50">
-                <div>
-                  <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.thGenre}</h3>
-                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">{selectedItem.form?.genre || '-'}</p>
-                </div>
-                <div>
-                  <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.mood}</h3>
-                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">{selectedItem.form?.mood || '-'}</p>
-                </div>
-                <div>
-                  <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.theme}</h3>
-                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">{selectedItem.form?.theme || '-'}</p>
+                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                  <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.styleDesc}</h3>
+                  <p className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words">{selectedItem.form?.styleDesc || [selectedItem.form?.genre, selectedItem.form?.mood].filter(Boolean).join(', ') || '-'}</p>
                 </div>
                 <div>
                   <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">{t.vocalStyle}</h3>
@@ -2340,6 +2332,15 @@ function LibraryView({ history, t, openHistoryItem, deleteHistoryItem }) {
                   </p>
                 </div>
               </div>
+
+              {selectedItem.notes && (
+                <div className="bg-[#1A1A1A]/50 p-5 rounded-xl border border-[#2E2E2E]/50">
+                  <h3 className="text-xs font-semibold text-[#71717A] mb-2 uppercase">AI 메모</h3>
+                  <div className="text-sm text-[#EDEDED] bg-[#222] px-4 py-3 rounded-lg border border-[#333] break-words whitespace-pre-wrap max-h-[150px] overflow-y-auto custom-scrollbar">
+                    {selectedItem.notes}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="border-t border-[#2E2E2E] p-5 sm:px-8 flex flex-wrap gap-4 justify-end bg-[#151515] rounded-b-2xl">
