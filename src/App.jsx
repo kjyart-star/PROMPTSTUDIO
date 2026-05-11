@@ -109,6 +109,11 @@ const TRANSLATIONS = {
     vocalStylePlaceholder: '예: 허스키한, 맑은, 부드러운',
     vocalGroup: '보컬 구성 (Vocal Group)',
     tempo: '템포 (BPM/Tempo)',
+    tempoVerySlow: '아주 느리게',
+    tempoSlow: '느리게',
+    tempoNormal: '보통',
+    tempoFast: '빠르게',
+    tempoVeryFast: '아주 빠르게',
     structure: '구조 (Structure)',
     structurePlaceholder: '예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]',
     theme: '주제 및 네러티브 (Theme & Narrative)',
@@ -218,6 +223,11 @@ const TRANSLATIONS = {
     vocalStylePlaceholder: 'ex: Husky, Clear, Soft',
     vocalGroup: 'Vocal Group',
     tempo: 'Tempo (BPM)',
+    tempoVerySlow: 'Very Slow',
+    tempoSlow: 'Slow',
+    tempoNormal: 'Normal',
+    tempoFast: 'Fast',
+    tempoVeryFast: 'Very Fast',
     structure: 'Structure',
     structurePlaceholder: 'ex: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]',
     theme: 'Theme & Narrative',
@@ -1025,7 +1035,20 @@ function App() {
               <TextInput label={t.vocalStyle} value={form.vocal} onChange={(value) => updateForm('vocal', value)} placeholder={t.vocalStylePlaceholder} />
               <SelectInput label={t.vocalGroup} value={form.vocalGroup} options={getOptions(uiLanguage).vocalGroup} onChange={(value) => updateForm('vocalGroup', value)} />
               <div className="md:col-span-2">
-                <RangeInput label={t.tempo} value={form.tempo} onChange={(value) => updateForm('tempo', value)} min={60} max={200} />
+                <RangeInput 
+                  label={t.tempo} 
+                  value={form.tempo} 
+                  onChange={(value) => updateForm('tempo', value)} 
+                  min={60} 
+                  max={200} 
+                  presets={[
+                    { label: t.tempoVerySlow, value: 60 },
+                    { label: t.tempoSlow, value: 90 },
+                    { label: t.tempoNormal, value: 120 },
+                    { label: t.tempoFast, value: 150 },
+                    { label: t.tempoVeryFast, value: 180 }
+                  ]}
+                />
               </div>
               <div className="md:col-span-2">
                 <TextInput label={t.structure} value={form.structure} onChange={(value) => updateForm('structure', value)} placeholder="예: [Intro] - [Verse 1] - [Chorus] - [Drop] - [Outro]" />
@@ -1174,7 +1197,7 @@ function ButtonGroupInput({ label, value, options, onChange }) {
   );
 }
 
-function RangeInput({ label, value, onChange, min = 60, max = 200, step = 1, unit = "BPM" }) {
+function RangeInput({ label, value, onChange, min = 60, max = 200, step = 1, unit = "BPM", presets = null }) {
   const numericValue = typeof value === 'number' && !isNaN(value) ? value : parseInt(value, 10) || 120;
   
   const handleChange = (e) => {
@@ -1198,6 +1221,19 @@ function RangeInput({ label, value, onChange, min = 60, max = 200, step = 1, uni
           className="w-full h-1.5 bg-[#2E2E2E] rounded-lg appearance-none cursor-pointer outline-none hover:bg-[#4A4A4A] transition-colors accent-[#FF3366]" 
         />
       </div>
+      {presets && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {presets.map((preset, idx) => (
+            <button
+              key={idx}
+              onClick={() => onChange(preset.value)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${numericValue === preset.value ? 'bg-[#FF3366] text-white border border-[#FF3366]' : 'bg-[#1A1A1A] text-[#A1A1AA] hover:bg-[#2A2A2A] hover:text-white border border-[#2E2E2E]'}`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
