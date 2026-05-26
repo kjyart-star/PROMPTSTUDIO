@@ -398,35 +398,122 @@ create policy "Users can delete own song history"
 on song_history for delete
 using (auth.uid() = user_id);
 
-create table if not exists announcements (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  content text not null,
-  created_at timestamptz default now()
+-- Profiles Table
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null,
+  is_admin boolean default false,
+  created_at timestamptz not null default now()
 );
-alter table announcements enable row level security;
-create policy "Enable read access for all users" on announcements for select using (true);
-create policy "Enable all access for authenticated users" on announcements for all using (auth.role() = 'authenticated');
 
+alter table profiles enable row level security;
+
+create policy "Enable read access for all authenticated users"
+on profiles for select
+using (auth.role() = 'authenticated');
+
+create policy "Users can insert own profile"
+on profiles for insert
+with check (auth.uid() = id and is_admin = false);
+
+create policy "Users can update own profile"
+on profiles for update
+using (auth.uid() = id)
+with check (
+  (is_admin = false) or 
+  exists (
+    select 1 from profiles
+    where profiles.id = auth.uid() and profiles.is_admin = true
+  )
+);
+
+create policy "Admins can update any profile"
+on profiles for update
+using (
+  exists (
+    select 1 from profiles
+    where profiles.id = auth.uid() and profiles.is_admin = true
+  )
+);
+
+-- System Guides Table
 create table if not exists system_guides (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   body text not null,
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
-alter table system_guides enable row level security;
-create policy "Enable read access for all users" on system_guides for select using (true);
-create policy "Enable all access for authenticated users" on system_guides for all using (auth.role() = 'authenticated');
 
-create table if not exists profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text,
-  is_admin boolean default false,
-  created_at timestamptz default now()
+alter table system_guides enable row level security;
+
+create policy "Enable read access for all users"
+on system_guides for select
+using (true);
+
+create policy "Enable all access for admins only"
+on system_guides for all
+using (
+  exists (
+    select 1 from profiles
+    where profiles.id = auth.uid() and profiles.is_admin = true
+  )
 );
-alter table profiles enable row level security;
-create policy "Enable read access for all users" on profiles for select using (true);
-create policy "Enable all access for authenticated users" on profiles for all using (auth.role() = 'authenticated');`;
+
+-- Announcements Table
+create table if not exists announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table announcements enable row level security;
+
+create policy "Enable read access for all users"
+on announcements for select
+using (true);
+
+create policy "Enable all access for admins only"
+on announcements for all
+using (
+  exists (
+    select 1 from profiles
+    where profiles.id = auth.uid() and profiles.is_admin = true
+  )
+);
+
+-- System Settings Table (Global API Keys, etc.)
+create table if not exists system_settings (
+  key text primary key,
+  value text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table system_settings enable row level security;
+
+create policy "Enable read access for all users"
+on system_settings for select
+using (true);
+
+create policy "Enable all access for admins only"
+on system_settings for all
+using (
+  exists (
+    select 1 from profiles
+    where profiles.id = auth.uid() and profiles.is_admin = true
+  )
+);
+
+-- User Withdrawal Function
+create or replace function delete_user()
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;`;
 
 const readJson = (key, fallback) => {
   try {
@@ -445,8 +532,8 @@ const getInitialSupabaseConfig = () => {
   const saved = readJson(STORAGE_KEYS.supabase, {});
   return {
     dashboardUrl: saved.dashboardUrl || '',
-    url: saved.url || ENV_SUPABASE.url,
-    anonKey: saved.anonKey || ENV_SUPABASE.anonKey,
+    url: ENV_SUPABASE.url || saved.url || '',
+    anonKey: ENV_SUPABASE.anonKey || saved.anonKey || '',
   };
 };
 
@@ -839,21 +926,34 @@ function App() {
     }
 
     const fetchPublicData = async () => {
-      const { data: sg } = await supabase.from('system_guides').select('*').order('created_at', { ascending: false });
-      if (sg) {
-        setSystemGuides(sg);
-        setActiveGuideIds((curr) => {
-          const newIds = sg.map(g => g.id).filter(id => !curr.includes(id));
-          return [...curr, ...newIds];
-        });
+      try {
+        const { data: sg } = await supabase.from('system_guides').select('*').order('created_at', { ascending: false });
+        if (sg) {
+          setSystemGuides(sg);
+          setActiveGuideIds((curr) => {
+            const newIds = sg.map(g => g.id).filter(id => !curr.includes(id));
+            return [...curr, ...newIds];
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching system guides:", e);
       }
-      const { data: anns } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-      if (anns) setAnnouncements(anns);
+
+      try {
+        const { data: anns } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+        if (anns) setAnnouncements(anns);
+      } catch (e) {
+        console.error("Error fetching announcements:", e);
+      }
       
-      const { data: ss } = await supabase.from('system_settings').select('*').eq('key', 'openai_api_key').maybeSingle();
-      if (ss?.value) {
-        setGlobalOpenAIKey(ss.value);
-        setAdminOpenAIKey(ss.value);
+      try {
+        const { data: ss } = await supabase.from('system_settings').select('*').eq('key', 'openai_api_key').maybeSingle();
+        if (ss?.value) {
+          setGlobalOpenAIKey(ss.value);
+          setAdminOpenAIKey(ss.value);
+        }
+      } catch (e) {
+        console.error("Error fetching system settings:", e);
       }
     };
     fetchPublicData();
@@ -884,12 +984,20 @@ function App() {
       const currentUser = data.session?.user || null;
       setUser(currentUser);
       fetchProfile(currentUser);
+      if (currentUser) {
+        setStatus(t.statusLoginSuccess);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user || null;
       setUser(currentUser);
       fetchProfile(currentUser);
+      if (currentUser) {
+        setStatus(t.statusLoginSuccess);
+      } else {
+        setStatus(t.statusLogout);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -1244,7 +1352,7 @@ function App() {
       },
     };
 
-    if (!supabase) {
+    if (!supabase || !user) {
       const localItem = {
         ...payload,
         id: `local-${Date.now()}`,
@@ -1253,12 +1361,11 @@ function App() {
       const nextHistory = [localItem, ...readJson(STORAGE_KEYS.localHistory, [])].slice(0, 50);
       writeJson(STORAGE_KEYS.localHistory, nextHistory);
       setHistory(nextHistory);
-      setStatus(t.statusHistoryLocalSaved);
-      return;
-    }
-
-    if (!user) {
-      setStatus(t.statusHistoryCloudSaveReq);
+      if (!supabase) {
+        setStatus(t.statusHistoryLocalSaved);
+      } else {
+        setStatus(`${t.statusHistoryLocalSaved} (${t.statusHistoryCloudSaveReq})`);
+      }
       return;
     }
 
@@ -1410,7 +1517,7 @@ function App() {
                   onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-sm font-bold text-white shadow-lg ring-2 ring-[#0A0A0A] ring-offset-1 ring-offset-[#2E2E2E] hover:ring-[#FF3366]/50 transition-all"
                 >
-                  {user.email[0].toUpperCase()}
+                  {(user.email || 'U')[0].toUpperCase()}
                 </button>
               ) : (
                 <button 
@@ -1428,7 +1535,7 @@ function App() {
                     <div className="flex flex-col">
                       <div className="flex items-center gap-3 border-b border-[#2E2E2E]/50 pb-4 mb-2 px-2 pt-1">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3366] to-[#9213ec] shadow-inner ring-1 ring-white/10">
-                          <span className="text-lg font-bold text-white shadow-sm">{user.email[0].toUpperCase()}</span>
+                          <span className="text-lg font-bold text-white shadow-sm">{(user.email || 'U')[0].toUpperCase()}</span>
                         </div>
                         <div className="flex flex-col overflow-hidden">
                           <div className="flex items-center gap-1.5 mb-0.5">
@@ -1438,7 +1545,7 @@ function App() {
                             </span>
                             <span className="text-[9px] text-emerald-500 font-bold tracking-wider">ONLINE</span>
                           </div>
-                          <p className="text-sm font-medium text-[#EDEDED] truncate" title={user.email}>{user.email}</p>
+                          <p className="text-sm font-medium text-[#EDEDED] truncate" title={user.email || 'User'}>{user.email || 'User'}</p>
                           {isAdmin && (
                             <span className="inline-flex w-fit mt-1 text-[9px] bg-gradient-to-r from-[#FF3366]/20 to-[#9213ec]/20 border border-[#FF3366]/30 text-[#FF3366] px-1.5 py-0.5 rounded font-bold tracking-wider">
                               ADMINISTRATOR
@@ -1641,6 +1748,30 @@ function App() {
               ))}
             </div>
             <div className="mt-4 space-y-3 border-t border-[#2E2E2E] pt-4">
+              {/* Document Upload Area */}
+              <div className="flex flex-col gap-1.5">
+                <label className="field-label flex justify-between items-center">
+                  <span>{t.uploadGuideline}</span>
+                  {isParsing && <span className="text-xs text-[#FF3366] animate-pulse">{t.parsingFile}</span>}
+                </label>
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative flex flex-col items-center justify-center border border-dashed border-[#3D242D] bg-[#1D1216]/40 hover:border-[#FF2D55] hover:bg-[#25171C]/50 rounded-xl p-4 cursor-pointer transition-all duration-200"
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileUpload} 
+                    accept=".pdf,.txt" 
+                    className="hidden" 
+                  />
+                  <svg className="w-5 h-5 text-[#9B828A] group-hover:text-[#FF2D55] mb-1.5 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="text-xs text-[#9B828A] group-hover:text-[#EAE0E3] transition-colors">{t.uploadPlaceholder}</span>
+                </div>
+              </div>
+
               <input className="input text-sm" value={draftGuide.title} onChange={(event) => setDraftGuide({ ...draftGuide, title: event.target.value })} placeholder={t.newGuideTitlePlaceholder} disabled={isParsing} />
               <textarea className="input min-h-[80px] text-sm" value={draftGuide.body} onChange={(event) => setDraftGuide({ ...draftGuide, body: event.target.value })} placeholder={t.newGuideBodyPlaceholder} disabled={isParsing} />
               
@@ -2015,7 +2146,11 @@ function SelectInput({ label, value, options, onChange }) {
     <label className="block">
       <span className="field-label">{label}</span>
       <select className="input" value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => typeof option === 'string' ? <option key={option.value} value={option}>{option}</option> : <option key={option.value} value={option.value}>{option.label}</option>)}
+        {options.map((option) => {
+          const optVal = typeof option === 'string' ? option : option.value;
+          const optLabel = typeof option === 'string' ? option : option.label;
+          return <option key={optVal} value={optVal}>{optLabel}</option>;
+        })}
       </select>
     </label>
   );
