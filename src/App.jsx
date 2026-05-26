@@ -403,6 +403,7 @@ create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   is_admin boolean default false,
+  active_guide_ids text[] default '{}'::text[],
   created_at timestamptz not null default now()
 );
 
@@ -458,6 +459,33 @@ using (
     where profiles.id = auth.uid() and profiles.is_admin = true
   )
 );
+
+-- User Guides Table
+create table if not exists user_guides (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table user_guides enable row level security;
+
+create policy "Users can read own guides"
+on user_guides for select
+using (auth.uid() = user_id);
+
+create policy "Users can insert own guides"
+on user_guides for insert
+with check (auth.uid() = user_id);
+
+create policy "Users can update own guides"
+on user_guides for update
+using (auth.uid() = user_id);
+
+create policy "Users can delete own guides"
+on user_guides for delete
+using (auth.uid() = user_id);
 
 -- Announcements Table
 create table if not exists announcements (
@@ -904,12 +932,16 @@ function App() {
   }, [settings]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.guides, JSON.stringify(guides));
-  }, [guides]);
+    if (!supabase || !user) {
+      localStorage.setItem(STORAGE_KEYS.guides, JSON.stringify(guides));
+    }
+  }, [guides, supabase, user]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.activeGuides, JSON.stringify(activeGuideIds));
-  }, [activeGuideIds]);
+    if (!supabase || !user) {
+      localStorage.setItem(STORAGE_KEYS.activeGuides, JSON.stringify(activeGuideIds));
+    }
+  }, [activeGuideIds, supabase, user]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.supabase, JSON.stringify(supabaseConfig));
@@ -922,6 +954,8 @@ function App() {
       setSystemGuides([]);
       setAnnouncements([]);
       setHistory(readJson(STORAGE_KEYS.localHistory, []));
+      setGuides(readJson(STORAGE_KEYS.guides, DEFAULT_GUIDES));
+      setActiveGuideIds(readJson(STORAGE_KEYS.activeGuides, ['suno-clear', 'hook-first']));
       return undefined;
     }
 
@@ -961,17 +995,36 @@ function App() {
     const fetchProfile = async (u) => {
       if (!u) {
         setIsAdmin(false);
+        setGuides(readJson(STORAGE_KEYS.guides, DEFAULT_GUIDES));
+        setActiveGuideIds(readJson(STORAGE_KEYS.activeGuides, ['suno-clear', 'hook-first']));
         return;
       }
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', u.id).single();
-      if (profile) {
-        setIsAdmin(profile.is_admin);
-        if (profile.is_admin) {
-          loadAdminUsers();
+      try {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', u.id).single();
+        if (profile) {
+          setIsAdmin(profile.is_admin);
+          if (profile.active_guide_ids) {
+            setActiveGuideIds(profile.active_guide_ids);
+          }
+          if (profile.is_admin) {
+            loadAdminUsers();
+          }
+        } else {
+          await supabase.from('profiles').insert({ id: u.id, email: u.email, is_admin: false, active_guide_ids: ['suno-clear', 'hook-first'] });
+          setIsAdmin(false);
+          setActiveGuideIds(['suno-clear', 'hook-first']);
         }
-      } else {
-        await supabase.from('profiles').insert({ id: u.id, email: u.email, is_admin: false });
-        setIsAdmin(false);
+      } catch (e) {
+        console.error("Error fetching user profile:", e);
+      }
+
+      try {
+        const { data: ug } = await supabase.from('user_guides').select('*').order('created_at', { ascending: false });
+        if (ug) {
+          setGuides(ug);
+        }
+      } catch (e) {
+        console.error("Error fetching user guides:", e);
       }
     };
 
@@ -1014,10 +1067,14 @@ function App() {
   useEffect(() => {
     if (supabase && user) {
       loadHistory();
-    } else if (supabase && !user) {
-      setHistory([]);
     } else {
-      setHistory(readJson(STORAGE_KEYS.localHistory, []));
+      if (supabase && !user) {
+        setHistory([]);
+      } else {
+        setHistory(readJson(STORAGE_KEYS.localHistory, []));
+      }
+      setGuides(readJson(STORAGE_KEYS.guides, DEFAULT_GUIDES));
+      setActiveGuideIds(readJson(STORAGE_KEYS.activeGuides, ['suno-clear', 'hook-first']));
     }
   }, [supabase, user]);
 
@@ -1031,22 +1088,68 @@ function App() {
     }));
   };
 
-  const addGuide = () => {
+  const addGuide = async () => {
     if (!draftGuide.title.trim() || !draftGuide.body.trim()) return;
-    if (editingLocalGuideId) {
-      setGuides((current) => current.map(g => g.id === editingLocalGuideId ? { ...g, title: draftGuide.title.trim(), body: draftGuide.body.trim() } : g));
-      setEditingLocalGuideId(null);
+
+    if (supabase && user) {
+      if (editingLocalGuideId) {
+        const { error } = await supabase.from('user_guides')
+          .update({ title: draftGuide.title.trim(), body: draftGuide.body.trim() })
+          .eq('id', editingLocalGuideId)
+          .eq('user_id', user.id);
+        if (!error) {
+          setGuides((current) => current.map(g => g.id === editingLocalGuideId ? { ...g, title: draftGuide.title.trim(), body: draftGuide.body.trim() } : g));
+          setEditingLocalGuideId(null);
+          setStatus("지침서가 수정되었습니다.");
+        } else {
+          setStatus("지침서 수정 실패: " + error.message);
+        }
+      } else {
+        const { data, error } = await supabase.from('user_guides').insert({
+          title: draftGuide.title.trim(),
+          body: draftGuide.body.trim(),
+          user_id: user.id
+        }).select();
+        if (!error && data) {
+          const newGuide = data[0];
+          setGuides((current) => [...current, newGuide]);
+          const nextActive = [...activeGuideIds, newGuide.id];
+          setActiveGuideIds(nextActive);
+          await supabase.from('profiles').update({ active_guide_ids: nextActive }).eq('id', user.id);
+          setStatus("지침서가 등록되었습니다.");
+        } else {
+          setStatus("지침서 등록 실패: " + error.message);
+        }
+      }
     } else {
-      const id = `guide-${Date.now()}`;
-      setGuides((current) => [...current, { id, title: draftGuide.title.trim(), body: draftGuide.body.trim() }]);
-      setActiveGuideIds((current) => [...current, id]);
+      if (editingLocalGuideId) {
+        setGuides((current) => current.map(g => g.id === editingLocalGuideId ? { ...g, title: draftGuide.title.trim(), body: draftGuide.body.trim() } : g));
+        setEditingLocalGuideId(null);
+      } else {
+        const id = `guide-${Date.now()}`;
+        setGuides((current) => [...current, { id, title: draftGuide.title.trim(), body: draftGuide.body.trim() }]);
+        setActiveGuideIds((current) => [...current, id]);
+      }
     }
     setDraftGuide({ title: '', body: '' });
   };
 
-  const removeGuide = (id) => {
-    setGuides((current) => current.filter((guide) => guide.id !== id));
-    setActiveGuideIds((current) => current.filter((guideId) => guideId !== id));
+  const removeGuide = async (id) => {
+    if (supabase && user) {
+      const { error } = await supabase.from('user_guides').delete().eq('id', id).eq('user_id', user.id);
+      if (!error) {
+        setGuides((current) => current.filter((guide) => guide.id !== id));
+        const nextActive = activeGuideIds.filter((guideId) => guideId !== id);
+        setActiveGuideIds(nextActive);
+        await supabase.from('profiles').update({ active_guide_ids: nextActive }).eq('id', user.id);
+        setStatus("지침서가 삭제되었습니다.");
+      } else {
+        setStatus("지침서 삭제 실패: " + error.message);
+      }
+    } else {
+      setGuides((current) => current.filter((guide) => guide.id !== id));
+      setActiveGuideIds((current) => current.filter((guideId) => guideId !== id));
+    }
   };
 
   const setGeneratedText = (text) => {
@@ -1728,8 +1831,14 @@ function App() {
                   <div className="flex justify-between items-start gap-2">
                     <label className="flex cursor-pointer items-start gap-3 text-sm font-semibold text-[#EDEDED] flex-1">
                       <div className="relative flex items-center pt-0.5">
-                        <input type="checkbox" className="peer h-4 w-4 appearance-none rounded border border-[#4A4A4A] bg-[#121212] checked:border-[#FF3366] checked:bg-[#FF3366] transition-all" checked={activeGuideIds.includes(guide.id)} onChange={(event) => {
-                          setActiveGuideIds((current) => event.target.checked ? [...current, guide.id] : current.filter((id) => id !== guide.id));
+                        <input type="checkbox" className="peer h-4 w-4 appearance-none rounded border border-[#4A4A4A] bg-[#121212] checked:border-[#FF3366] checked:bg-[#FF3366] transition-all" checked={activeGuideIds.includes(guide.id)} onChange={async (event) => {
+                          const nextActive = event.target.checked 
+                            ? [...activeGuideIds, guide.id] 
+                            : activeGuideIds.filter((id) => id !== guide.id);
+                          setActiveGuideIds(nextActive);
+                          if (supabase && user) {
+                            await supabase.from('profiles').update({ active_guide_ids: nextActive }).eq('id', user.id);
+                          }
                         }} />
                         <svg className="absolute left-1/2 top-1/2 mt-[1px] h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </div>

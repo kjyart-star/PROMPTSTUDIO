@@ -29,6 +29,7 @@ create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   is_admin boolean default false,
+  active_guide_ids text[] default '{}'::text[],
   created_at timestamptz not null default now()
 );
 
@@ -84,6 +85,33 @@ using (
     where profiles.id = auth.uid() and profiles.is_admin = true
   )
 );
+
+-- User Guides Table
+create table if not exists user_guides (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table user_guides enable row level security;
+
+create policy "Users can read own guides"
+on user_guides for select
+using (auth.uid() = user_id);
+
+create policy "Users can insert own guides"
+on user_guides for insert
+with check (auth.uid() = user_id);
+
+create policy "Users can update own guides"
+on user_guides for update
+using (auth.uid() = user_id);
+
+create policy "Users can delete own guides"
+on user_guides for delete
+using (auth.uid() = user_id);
 
 -- Announcements Table
 create table if not exists announcements (
