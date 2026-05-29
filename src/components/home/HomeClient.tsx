@@ -555,11 +555,20 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
     const el = containerRef.current
     if (el) {
       el.addEventListener('scroll', checkScroll)
+      window.addEventListener('resize', checkScroll)
       checkScroll()
-      const timer = setTimeout(checkScroll, 300)
+      
+      // Re-check scroll multiple times to handle dynamic content/font rendering layout updates
+      const t1 = setTimeout(checkScroll, 100)
+      const t2 = setTimeout(checkScroll, 500)
+      const t3 = setTimeout(checkScroll, 1000)
+      
       return () => {
         el.removeEventListener('scroll', checkScroll)
-        clearTimeout(timer)
+        window.removeEventListener('resize', checkScroll)
+        clearTimeout(t1)
+        clearTimeout(t2)
+        clearTimeout(t3)
       }
     }
   }, [items])
@@ -567,7 +576,8 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
   const scroll = (direction: 'left' | 'right') => {
     if (containerRef.current) {
       const { clientWidth } = containerRef.current
-      const scrollAmount = direction === 'left' ? -clientWidth : clientWidth
+      // Scroll by 85% of client width to keep some visual context overlap
+      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85
       containerRef.current.scrollBy({
         left: scrollAmount,
         behavior: 'smooth'
@@ -581,9 +591,9 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
       {showLeftArrow && (
         <button
           onClick={() => scroll('left')}
-          className="absolute -left-5 top-1/2 -translate-y-1/2 z-20 bg-[#121214]/80 hover:bg-[#1f1f23] border border-white/5 text-white rounded-full p-2.5 shadow-xl hover:scale-105 active:scale-95 transition-all hidden md:flex items-center justify-center cursor-pointer"
+          className="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 z-20 bg-[#121214]/80 hover:bg-[#1f1f23] border border-white/5 text-white rounded-full p-2 md:p-2.5 shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
         >
-          <ChevronLeft className="w-5 h-5 stroke-[2.5px]" />
+          <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5px]" />
         </button>
       )}
 
@@ -599,9 +609,9 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
       {showRightArrow && (
         <button
           onClick={() => scroll('right')}
-          className="absolute -right-5 top-1/2 -translate-y-1/2 z-20 bg-[#121214]/80 hover:bg-[#1f1f23] border border-white/5 text-white rounded-full p-2.5 shadow-xl hover:scale-105 active:scale-95 transition-all hidden md:flex items-center justify-center cursor-pointer"
+          className="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 z-20 bg-[#121214]/80 hover:bg-[#1f1f23] border border-white/5 text-white rounded-full p-2 md:p-2.5 shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
         >
-          <ChevronRight className="w-5 h-5 stroke-[2.5px]" />
+          <ChevronRight className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5px]" />
         </button>
       )}
     </div>
@@ -1401,8 +1411,8 @@ export function HomeClient({
           {uiLanguage === 'KO' ? '인기 카테고리' : 'TOP Categories'}
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-          {[
+        <Carousel
+          items={[
             { name: 'K-Pop', koName: '케이팝', gradient: 'from-pink-600/20 to-fuchsia-600/20 hover:border-pink-500/40 text-pink-300' },
             { name: 'Pop', koName: '팝', gradient: 'from-emerald-600/20 to-teal-600/20 hover:border-emerald-500/40 text-emerald-300' },
             { name: 'Hip Hop', koName: '힙합', gradient: 'from-amber-600/20 to-orange-600/20 hover:border-amber-500/40 text-amber-300' },
@@ -1411,29 +1421,49 @@ export function HomeClient({
             { name: 'Rock', koName: '락', gradient: 'from-red-700/20 to-stone-800/20 hover:border-red-500/40 text-red-300' },
             { name: 'Jazz', koName: '재즈', gradient: 'from-indigo-600/20 to-violet-600/20 hover:border-indigo-500/40 text-indigo-300' },
             { name: 'Classical', koName: '클래식', gradient: 'from-slate-600/20 to-zinc-700/20 hover:border-slate-500/40 text-zinc-300' },
-          ].map((cat) => (
-            <Link
-              key={cat.name}
-              href={`/charts?genre=${cat.name}`}
-              className={`relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${cat.gradient} p-5 flex flex-col justify-between aspect-square hover:scale-[1.03] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-300 cursor-pointer group`}
+            { name: 'J-Pop', koName: '제이팝', gradient: 'from-sky-600/20 to-indigo-600/20 hover:border-sky-500/40 text-sky-300' },
+            { name: 'Gospel', koName: '가스펠', gradient: 'from-yellow-600/20 to-amber-700/20 hover:border-yellow-500/40 text-yellow-300' },
+            { name: 'Country', koName: '컨트리', gradient: 'from-amber-700/20 to-yellow-800/20 hover:border-amber-600/40 text-amber-400' },
+            { name: 'Latin', koName: '라틴', gradient: 'from-orange-600/20 to-red-500/20 hover:border-orange-500/40 text-orange-300' },
+            { name: 'Afrobeats', koName: '아프로비트', gradient: 'from-yellow-500/20 to-red-600/20 hover:border-yellow-400/40 text-yellow-200' },
+            { name: 'Folk', koName: '포크', gradient: 'from-green-700/20 to-emerald-800/20 hover:border-green-600/40 text-green-300' },
+            { name: 'Blues', koName: '블루스', gradient: 'from-blue-800/20 to-indigo-900/20 hover:border-blue-700/40 text-blue-300' },
+            { name: 'House', koName: '하우스', gradient: 'from-purple-600/20 to-pink-700/20 hover:border-purple-500/40 text-purple-300' },
+            { name: 'Punk', koName: '펑크락', gradient: 'from-red-600/20 to-orange-700/20 hover:border-red-500/40 text-red-300' },
+            { name: 'Dance', koName: '댄스', gradient: 'from-fuchsia-500/20 to-rose-600/20 hover:border-fuchsia-400/40 text-fuchsia-200' },
+            { name: 'Reggae', koName: '레게', gradient: 'from-green-600/20 to-yellow-600/20 hover:border-green-500/40 text-green-200' },
+            { name: 'Metal', koName: '메탈', gradient: 'from-zinc-700/20 to-neutral-900/20 hover:border-zinc-500/40 text-zinc-400' },
+            { name: 'Soundtrack', koName: '사운드트랙', gradient: 'from-violet-700/20 to-fuchsia-900/20 hover:border-violet-600/40 text-violet-300' },
+            { name: 'Ambient', koName: '엠비언트', gradient: 'from-teal-700/20 to-cyan-800/20 hover:border-teal-600/40 text-teal-300' },
+            { name: 'Chill', koName: '칠아웃', gradient: 'from-blue-600/20 to-teal-600/20 hover:border-blue-500/40 text-blue-200' }
+          ]}
+          renderItem={(cat) => (
+            <div 
+              key={cat.name} 
+              className="flex-none w-[45%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/4)] lg:w-[calc((100%-168px)/8)] transition-all duration-300"
             >
-              <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
-                <ChevronRight className="w-4 h-4" />
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
-              </div>
-              <div className="text-left">
-                <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
-                  {uiLanguage === 'KO' ? cat.koName : cat.name}
-                </p>
-                <p className="text-[9px] font-mono text-zinc-400 mt-0.5 tracking-wider uppercase">
-                  {cat.name}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
+              <Link
+                href={`/charts?genre=${cat.name}`}
+                className={`relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${cat.gradient} p-5 flex flex-col justify-between aspect-square hover:scale-[1.03] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-300 cursor-pointer group w-full`}
+              >
+                <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                  <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
+                    {uiLanguage === 'KO' ? cat.koName : cat.name}
+                  </p>
+                  <p className="text-[9px] font-mono text-zinc-400 mt-0.5 tracking-wider uppercase">
+                    {cat.name}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          )}
+        />
       </section>
 
       </div>
