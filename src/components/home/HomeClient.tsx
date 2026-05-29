@@ -1015,7 +1015,7 @@ export function HomeClient({
             return (
               <div
                 key={album.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-96px)/5)] flex flex-col justify-between group transition-all duration-300"
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-168px)/8)] flex flex-col justify-between group transition-all duration-300"
               >
                 <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
                   <Link 
@@ -1098,7 +1098,7 @@ export function HomeClient({
             return (
               <div
                 key={album.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-96px)/5)] flex flex-col justify-between group transition-all duration-300"
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-168px)/8)] flex flex-col justify-between group transition-all duration-300"
               >
                 <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
                   <Link 
@@ -1184,7 +1184,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-96px)/5)] flex flex-col justify-between group transition-all duration-300"
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-168px)/8)] flex flex-col justify-between group transition-all duration-300"
               >
                 <div 
                   onClick={() => {
@@ -1298,7 +1298,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-96px)/5)] flex flex-col justify-between group transition-all duration-300"
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-168px)/8)] flex flex-col justify-between group transition-all duration-300"
               >
                 <div 
                   onClick={() => {
