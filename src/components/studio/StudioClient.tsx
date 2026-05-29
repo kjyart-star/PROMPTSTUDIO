@@ -7,6 +7,7 @@ import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight,
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { GENRES } from '@/lib/constants'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 
@@ -787,6 +788,38 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const supabase = createClient()
   const options = useMemo(() => getOptions(uiLanguage), [uiLanguage])
+
+  const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
+    if (!url) return
+    try {
+      let downloadUrl = url;
+      if (downloadUrl && !downloadUrl.startsWith('http') && !downloadUrl.startsWith('dummy-') && !downloadUrl.startsWith('sample-') && !downloadUrl.startsWith('hook-') && !downloadUrl.startsWith('featured-')) {
+        try {
+          const { data, error } = await supabase.storage
+            .from('tracks')
+            .createSignedUrl(downloadUrl, 3600)
+          if (!error && data) {
+            downloadUrl = data.signedUrl;
+          }
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      let proxyUrl = `/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(filename)}`
+      if (imageUrl) {
+        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
+      }
+      const a = document.createElement('a')
+      a.href = proxyUrl
+      a.download = `${filename}.mp3`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (e) {
+      console.error(e)
+      window.open(url, '_blank')
+    }
+  }
 
   // 로컬 스토리지 데이터 로드 (언어 및 기본 설정만)
   useEffect(() => {
@@ -2119,6 +2152,39 @@ function LibraryView({
 
   // usePlayerStore hook
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+  const supabase = createClient()
+
+  const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
+    if (!url) return
+    try {
+      let downloadUrl = url;
+      if (downloadUrl && !downloadUrl.startsWith('http') && !downloadUrl.startsWith('dummy-') && !downloadUrl.startsWith('sample-') && !downloadUrl.startsWith('hook-') && !downloadUrl.startsWith('featured-')) {
+        try {
+          const { data, error } = await supabase.storage
+            .from('tracks')
+            .createSignedUrl(downloadUrl, 3600)
+          if (!error && data) {
+            downloadUrl = data.signedUrl;
+          }
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      let proxyUrl = `/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(filename)}`
+      if (imageUrl) {
+        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
+      }
+      const a = document.createElement('a')
+      a.href = proxyUrl
+      a.download = `${filename}.mp3`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (e) {
+      console.error(e)
+      window.open(url, '_blank')
+    }
+  }
 
 
 
@@ -2302,6 +2368,7 @@ function LibraryView({
       waveform_data: null,
       lyrics: item.lyrics || null,
       style_prompt: item.prompt || item.promptText || null,
+      image_url: item.image_url || '/default-album.png',
       bpm: null,
       song_key: null,
       prompt_meta: null,
@@ -2782,15 +2849,15 @@ Rain on the midnight road
             <table className="w-full text-left text-xs text-zinc-400 border-collapse">
               <thead>
                 <tr className="border-t border-b border-zinc-800 text-[11px] font-extrabold uppercase tracking-wider text-zinc-500">
-                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '번호' : '번호'}</th>
-                  <th className="px-6 py-4.5 w-36">{uiLanguage === 'KO' ? '작성일' : '작성일'}</th>
+                  <th className="px-6 py-4.5 w-14 text-center">{uiLanguage === 'KO' ? '번호' : '번호'}</th>
+                  <th className="px-6 py-4.5 w-24">{uiLanguage === 'KO' ? '작성일' : '작성일'}</th>
                   <th className="px-6 py-4.5">{uiLanguage === 'KO' ? '제목' : '제목'}</th>
-                  <th className="px-6 py-4.5 w-64">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : '스타일 설명 (STYLE DESCRIPTION)'}</th>
-                  <th className="px-6 py-4.5 w-24">{uiLanguage === 'KO' ? '언어' : '언어'}</th>
-                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '재생 시간' : 'Duration'}</th>
-                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '좋아요' : '좋아요'}</th>
-                  <th className="px-6 py-4.5 w-28 text-center">{uiLanguage === 'KO' ? '공개 여부' : 'Public'}</th>
-                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '관리' : '관리'}</th>
+                  <th className="px-6 py-4.5 w-32">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : '스타일 설명 (STYLE DESCRIPTION)'}</th>
+                  <th className="px-6 py-4.5 w-20">{uiLanguage === 'KO' ? '언어' : '언어'}</th>
+                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '재생 시간' : 'Duration'}</th>
+                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '좋아요' : '좋아요'}</th>
+                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '공개 여부' : 'Public'}</th>
+                  <th className="px-6 py-4.5 w-32 text-center">{uiLanguage === 'KO' ? '관리' : '관리'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-900/50">
@@ -2798,8 +2865,8 @@ Rain on the midnight road
                   const absoluteIndex = filteredHistory.length - ((currentPage - 1) * itemsPerPage + index)
                   
                   const styleDescText = item.promptText || ''
-                  const displayStyle = styleDescText.length > 20 
-                    ? styleDescText.slice(0, 18) + '...' 
+                  const displayStyle = styleDescText.length > 10 
+                    ? styleDescText.slice(0, 8) + '...' 
                     : styleDescText || '-'
                     
                   const cleanLang = item.langText 
@@ -2871,8 +2938,8 @@ Rain on the midnight road
                                 </span>
                               )}
                             </div>
-                            <span className="block text-[11px] text-zinc-500 font-medium line-clamp-1 leading-normal max-w-md truncate">
-                              {styleDescText.length > 45 ? styleDescText.slice(0, 42) + '...' : styleDescText}
+                            <span className="block text-[11px] text-zinc-500 font-medium line-clamp-1 leading-normal max-w-xs truncate">
+                              {styleDescText.length > 20 ? styleDescText.slice(0, 18) + '...' : styleDescText}
                             </span>
                           </div>
                         </div>
@@ -2940,6 +3007,14 @@ Rain on the midnight road
                       {/* 관리 (삭제 및 플레이리스트 추가) */}
                       <td className="px-6 py-5 whitespace-nowrap text-center relative" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => handleDownloadTrack(item.audio_url || item.file_url, item.title, item.image_url)}
+                            className="text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
+                            title={uiLanguage === 'KO' ? '다운로드' : 'Download'}
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+
                           <button
                             onClick={() => setActivePlaylistMenuId(activePlaylistMenuId === item.id ? null : item.id)}
                             className="text-zinc-500 hover:text-white p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
@@ -3287,8 +3362,10 @@ Rain on the midnight road
                   className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
                 >
                   <option value="">{uiLanguage === 'KO' ? '장르 선택' : 'Select Genre'}</option>
-                  {['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Jazz', 'Classical', 'City Pop', 'Trot', 'Ballad', 'Dance', 'Folk', 'Other'].map(g => (
-                    <option key={g} value={g}>{g}</option>
+                  {GENRES.map(g => (
+                    <option key={g.name} value={g.name}>
+                      {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
+                    </option>
                   ))}
                 </select>
               </div>

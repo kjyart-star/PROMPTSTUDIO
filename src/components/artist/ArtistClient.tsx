@@ -202,6 +202,57 @@ export function ArtistClient({
   }, [artist])
 
   useEffect(() => {
+    try {
+      const savedFollows = localStorage.getItem('profile-followed-artists')
+      if (savedFollows) {
+        const parsed = JSON.parse(savedFollows)
+        const found = parsed.some((item: any) => item.id === artist.id)
+        setIsFollowed(found)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [artist])
+
+  const toggleFollowArtist = async () => {
+    try {
+      const savedFollowsRaw = localStorage.getItem('profile-followed-artists')
+      let parsedFollows = savedFollowsRaw ? JSON.parse(savedFollowsRaw) : []
+      const alreadyFollowed = parsedFollows.some((item: any) => item.id === artist.id)
+      
+      const nextFollowed = !alreadyFollowed
+      setIsFollowed(nextFollowed)
+      
+      setProfileFollowers(prev => nextFollowed ? prev + 1 : Math.max(0, prev - 1))
+
+      if (nextFollowed) {
+        parsedFollows.push({
+          id: artist.id,
+          name: artist.name,
+          slug: artist.slug || '',
+          avatar_url: artist.avatar_url || '',
+          bio: artist.bio || ''
+        })
+      } else {
+        parsedFollows = parsedFollows.filter((item: any) => item.id !== artist.id)
+      }
+      localStorage.setItem('profile-followed-artists', JSON.stringify(parsedFollows))
+
+      const { data: { user: myUser } } = await supabase.auth.getUser()
+      if (myUser) {
+        const extraKey = `profile-extra-${myUser.id}`
+        const myExtraRaw = localStorage.getItem(extraKey)
+        let myExtra = myExtraRaw ? JSON.parse(myExtraRaw) : {}
+        let currentFollowing = myExtra.following !== undefined ? Number(myExtra.following) : 0
+        myExtra.following = nextFollowed ? currentFollowing + 1 : Math.max(0, currentFollowing - 1)
+        localStorage.setItem(extraKey, JSON.stringify(myExtra))
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
     const checkRedirect = async () => {
       if (artist.is_user) {
         const { data: { user } } = await supabase.auth.getUser()
@@ -326,7 +377,7 @@ export function ArtistClient({
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="flex items-center gap-4 md:gap-6">
                 {/* Circular Avatar */}
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary/50 shadow-[0_0_20px_rgba(227,254,6,0.3)] overflow-hidden shrink-0 bg-[#0e150e]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary/50 overflow-hidden shrink-0 bg-[#0e150e]">
                   {artist.avatar_url ? (
                     <img src={artist.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -367,13 +418,10 @@ export function ArtistClient({
               
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => {
-                    setIsFollowed(prev => !prev);
-                    setProfileFollowers(prev => isFollowed ? prev - 1 : prev + 1);
-                  }}
+                  onClick={toggleFollowArtist}
                   className={`px-6 py-2.5 rounded-full text-xs font-extrabold transition-all duration-300 border backdrop-blur-sm ${
                     isFollowed 
-                      ? 'bg-primary text-[#0b0c0b] border-primary shadow-[0_0_15px_rgba(227,254,6,0.3)]' 
+                      ? 'bg-primary text-[#0b0c0b] border-primary' 
                       : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
                   }`}
                 >
@@ -594,7 +642,7 @@ export function ArtistClient({
                 Play
               </button>
               <button
-                onClick={() => setIsFollowed(!isFollowed)}
+                onClick={toggleFollowArtist}
                 className={`px-6 py-3 rounded-full border border-white/20 font-black text-xs uppercase tracking-widest transition-all active:scale-95 cursor-pointer ${
                   isFollowed ? 'bg-white/10 text-white' : 'bg-transparent text-zinc-300 hover:border-white'
                 }`}

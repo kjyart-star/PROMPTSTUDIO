@@ -550,18 +550,34 @@ export function NowPlayingPanel() {
           {/* Padded Content Area */}
           <div className="px-5 pb-8 pt-4 flex flex-col gap-6">
             {/* Title & Heart Button Row */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="text-xl font-extrabold text-on-surface tracking-tight hover:underline cursor-pointer truncate">
-                  {track.title}
-                </h3>
-                <Link
-                  href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
-                  onClick={() => setNowPlayingOpen(false)}
-                  className="block text-sm font-bold text-on-surface-variant/80 hover:text-on-surface hover:underline truncate mt-0.5"
-                >
-                  {track.album?.artist?.name || 'Suno AI'}
-                </Link>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Original Track Thumbnail */}
+                {track.image_url && (
+                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-zinc-800 bg-zinc-950 shadow-md">
+                    <img 
+                      src={track.image_url} 
+                      alt="Original Track Cover" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/default-album.png";
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <h3 className="text-xl font-extrabold text-on-surface tracking-tight hover:underline cursor-pointer truncate">
+                    {track.title}
+                  </h3>
+                  <Link
+                    href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
+                    onClick={() => setNowPlayingOpen(false)}
+                    className="block text-sm font-bold text-on-surface-variant/80 hover:text-on-surface hover:underline truncate mt-0.5"
+                  >
+                    {track.album?.artist?.name || 'Suno AI'}
+                  </Link>
+                </div>
               </div>
               <button 
                 onClick={handleLikeClick}
@@ -835,7 +851,7 @@ export function NowPlayingPanel() {
                   promptModal.onConfirm(promptInputValue);
                   setPromptModal(null);
                 }}
-                className="bg-[#e3fe06] hover:bg-[#baff00] active:scale-95 text-black px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-[0_4px_12px_rgba(227,254,6,0.2)]"
+                className="bg-[#e3fe06] hover:bg-[#baff00] active:scale-95 text-black px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md"
               >
                 {lang === 'KO' ? '생성' : 'Create'}
               </button>

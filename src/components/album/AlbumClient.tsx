@@ -286,7 +286,7 @@ export function AlbumClient({
             <button
               onClick={handlePlayAll}
               disabled={tracks.length === 0}
-              className="px-6 py-2.5 rounded-full bg-primary hover:bg-[#e3fe06] text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-[0_0_20px_rgba(227,254,6,0.25)] hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-primary hover:bg-[#e3fe06] text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               전체 재생

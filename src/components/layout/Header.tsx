@@ -130,7 +130,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
           {/* Left: Logo & Navigation */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 cursor-pointer">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-white font-bold text-xl shadow-lg shadow-[#FF3366]/20">P</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF3366] to-[#9213ec] text-white font-bold text-xl shadow-lg">P</span>
               <span className="text-lg font-black tracking-widest text-[#EDEDED]">PROMPT<span className="text-[#FF3366]">STUDIO</span></span>
             </Link>
             
@@ -164,7 +164,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
             {/* Status (Online Status Badge) */}
             {user && (
               <div className="hidden sm:flex items-center rounded-full border border-slate-800 bg-slate-900/60 px-3.5 py-1.5 text-xs font-semibold text-slate-300 gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10B981]"></span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 로그인 완료
               </div>
             )}
@@ -195,7 +195,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
               >
                 <Bell className="h-5 w-5" />
                 {hasUnread && (
-                  <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#FF3366] shadow-[0_0_6px_#FF3366]"></span>
+                  <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#FF3366]"></span>
                 )}
               </button>
             </div>
@@ -340,7 +340,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
               </button>
               <button 
                 onClick={confirmWithdraw}
-                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF3366] to-[#FF5588] hover:from-[#E62E5C] hover:to-[#FF3366] shadow-[0_0_15px_rgba(255,51,102,0.3)] transition-all focus:outline-none cursor-pointer"
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF3366] to-[#FF5588] hover:from-[#E62E5C] hover:to-[#FF3366] transition-all focus:outline-none cursor-pointer"
               >
                 확인
               </button>

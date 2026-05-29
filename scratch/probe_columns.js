@@ -1,7 +1,7 @@
-const url = 'https://qdldfwzygnxlstxqojtq.supabase.co/rest/v1/song_history?select=non_existent_column'
+const url = 'https://qdldfwzygnxlstxqojtq.supabase.co/rest/v1/song_history?limit=1'
 const apiKey = 'sb_publishable_U6hlom2lANKeWHRBGb2RXw_wVn_2iw-'
 
-async function check() {
+async function probe() {
   try {
     const res = await fetch(url, {
       headers: {
@@ -10,9 +10,13 @@ async function check() {
       }
     })
     const data = await res.json()
-    console.log('Error message:', data)
+    if (data && data.length > 0) {
+      console.log('Columns in song_history:', Object.keys(data[0]))
+    } else {
+      console.log('No data found in song_history')
+    }
   } catch (err) {
     console.error('Error:', err)
   }
 }
-check()
+probe()

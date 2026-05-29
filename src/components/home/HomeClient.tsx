@@ -982,13 +982,18 @@ export function HomeClient({
 
         {/* AI 아티스트 */}
         <div className="space-y-6">
-          <div className="pb-2">
-            <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-              <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-                <Users className="w-2.5 h-2.5 text-primary" />
-              </span>
-              주목받는 AI 아티스트
-            </h2>
+          <div className="flex items-center justify-between pb-2">
+            <Link href="/charts/artists" className="group/title flex items-center gap-2 cursor-pointer">
+              <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant group-hover/title:text-primary uppercase tracking-widest transition-colors">
+                <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10 group-hover/title:border-primary/50 transition-colors">
+                  <Users className="w-2.5 h-2.5 text-primary" />
+                </span>
+                주목받는 AI 아티스트
+              </h2>
+            </Link>
+            <Link href="/charts/artists" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
+              아티스트 전체보기
+            </Link>
           </div>
 
           <div className="space-y-2.5">

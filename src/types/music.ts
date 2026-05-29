@@ -62,4 +62,5 @@ export interface Track {
   lyricist?: string;
   composer?: string;
   arranger?: string;
+  image_url?: string;
 }

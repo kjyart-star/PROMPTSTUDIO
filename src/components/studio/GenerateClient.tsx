@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus } from 'lucide-react'
+import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { GENRES } from '@/lib/constants'
 
 interface GenerateClientProps {
   user: any
@@ -85,6 +86,25 @@ export function GenerateClient({
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [userCredits, setUserCredits] = useState<number>(120)
   const [profile, setProfile] = useState<any>(null)
+
+  const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
+    if (!url) return
+    try {
+      let proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
+      if (imageUrl) {
+        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
+      }
+      const a = document.createElement('a')
+      a.href = proxyUrl
+      a.download = `${filename}.mp3`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (e) {
+      console.error(e)
+      window.open(url, '_blank')
+    }
+  }
 
   useEffect(() => {
     if (!user) return
@@ -775,7 +795,7 @@ export function GenerateClient({
                         <div 
                           className={`h-full transition-all duration-1000 ${
                             task.status === 'completed' 
-                              ? 'bg-primary shadow-[0_0_8px_#e3fe06]' 
+                              ? 'bg-primary shadow-sm' 
                               : task.status === 'failed'
                                 ? 'bg-red-500'
                                 : 'bg-gradient-to-r from-[#c2d905] to-primary'
@@ -990,6 +1010,15 @@ export function GenerateClient({
                             />
                           </button>
 
+                          {/* 다운로드 버튼 */}
+                          <button
+                            onClick={() => handleDownloadTrack(track.audio_url, track.title, track.image_url)}
+                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
+                            title={uiLanguage === 'KO' ? '다운로드' : 'Download'}
+                          >
+                            <Download className="w-3.5 h-3.5 text-zinc-500 hover:text-primary transition-colors" />
+                          </button>
+
                           {/* 재생 버튼 */}
                           <button
                             onClick={() => {
@@ -999,6 +1028,7 @@ export function GenerateClient({
                                 file_url: track.audio_url,
                                 duration_sec: 180,
                                 album_id: 'studio-generated',
+                                image_url: track.image_url || '/default-album.png',
                                 album: {
                                   id: 'studio-generated',
                                   title: 'Studio Generation',
@@ -1071,16 +1101,11 @@ export function GenerateClient({
                 className="w-full bg-[#242429] border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
               >
                 <option value="">-- 장르 선택 --</option>
-                <option value="팝">팝 (Pop)</option>
-                <option value="힙합">힙합 (Hip-Hop)</option>
-                <option value="락">락 (Rock)</option>
-                <option value="댄스">댄스 (Dance)</option>
-                <option value="R&B">R&B</option>
-                <option value="일렉트로닉">일렉트로닉 (Electronic)</option>
-                <option value="발라드">발라드 (Ballad)</option>
-                <option value="재즈">재즈 (Jazz)</option>
-                <option value="클래식">클래식 (Classic)</option>
-                <option value="기타">기타 (Other)</option>
+                {GENRES.map(g => (
+                  <option key={g.name} value={g.name}>
+                    {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
 

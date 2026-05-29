@@ -334,21 +334,21 @@ export function SettingsClient({ user }: SettingsClientProps) {
         <div className="flex flex-col gap-1 md:col-span-1 text-left">
           <button 
             onClick={() => setActiveSettingSection('credits')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] shadow-[0_0_12px_rgba(114,254,143,0.15)] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <CreditCard className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '크레딧 관리' : 'Credit Management'}</span>
           </button>
           <button 
             onClick={() => setActiveSettingSection('profile')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] shadow-[0_0_12px_rgba(114,254,143,0.15)] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <User className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '프로필 관리' : 'Profile Management'}</span>
           </button>
           <button 
             onClick={() => setActiveSettingSection('preferences')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] shadow-[0_0_12px_rgba(114,254,143,0.15)] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <Sliders className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '환경설정' : 'Preferences'}</span>

@@ -202,7 +202,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Search className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '검색' : 'Search'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : 'Category'}</span>
             </Link>
             
             <Link 
@@ -229,19 +229,6 @@ export function PublicLayoutClient({
             >
               <Library className="w-5 h-5 text-current" />
               <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : 'Playlist'}</span>
-            </Link>
-
-            <Link 
-              href="/library?playlistId=recommended" 
-              onClick={() => setActiveTab('recommended')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
-                activeTab === 'recommended'
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              <ListMusic className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '추천 플레이리스트' : 'Recommended'}</span>
             </Link>
 
             <Link 
@@ -363,7 +350,7 @@ export function PublicLayoutClient({
                 >
                   <Bell className="w-5 h-5" />
                   {hasUnread && (
-                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#e3fe06] shadow-[0_0_6px_#e3fe06]"></span>
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#e3fe06]"></span>
                   )}
                 </button>
               </div>
@@ -511,7 +498,7 @@ export function PublicLayoutClient({
           }`}
         >
           <Search className="w-5 h-5 text-current" />
-          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '검색' : 'Search'}</span>
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '카테고리' : 'Category'}</span>
         </Link>
         <Link 
           href="/library" 
@@ -597,7 +584,7 @@ export function PublicLayoutClient({
               </button>
               <button 
                 onClick={confirmWithdraw}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-[#070709] bg-[#e3fe06] hover:brightness-105 shadow-md shadow-[#e3fe06]/15 transition-all focus:outline-none cursor-pointer"
+                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-[#070709] bg-[#e3fe06] hover:brightness-105 shadow-md transition-all focus:outline-none cursor-pointer"
               >
                 {uiLanguage === 'KO' ? '확인' : 'Confirm'}
               </button>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Track, Album, Artist } from '@/types/music'
 import { Play, Pause, Heart, Trophy, ArrowUp, ArrowDown, Minus, RefreshCw, Music } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -279,21 +280,39 @@ export function ChartClient({
           )}
         </div>
 
-        {/* 탭 컨트롤 */}
-        <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl">
-          {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
+        {/* 대분류 토글 및 기간 탭 */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          {/* 음원 vs 아티스트 토글 */}
+          <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl shrink-0">
             <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer capitalize ${
-                periodType === tab
-                  ? 'bg-primary text-[#080d08] shadow shadow-primary/10'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
             >
-              {tab === 'daily' ? '일간' : tab === 'weekly' ? '주간' : '월간'}
+              음원 차트
             </button>
-          ))}
+            <Link
+              href="/charts/artists"
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
+            >
+              아티스트 차트
+            </Link>
+          </div>
+
+          {/* 탭 컨트롤 */}
+          <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl shrink-0">
+            {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer capitalize ${
+                  periodType === tab
+                    ? 'bg-primary text-[#080d08] shadow shadow-primary/10'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                {tab === 'daily' ? '일간' : tab === 'weekly' ? '주간' : '월간'}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
