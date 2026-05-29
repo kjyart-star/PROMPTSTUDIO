@@ -1193,7 +1193,7 @@ export function HomeClient({
 
         <Carousel
           items={displayRecommendedTracks.slice(0, 12)}
-          containerClassName="grid grid-rows-2 grid-flow-col gap-x-6 gap-y-4 overflow-x-auto scrollbar-none scroll-smooth pb-4"
+          containerClassName="grid grid-rows-2 grid-flow-col gap-x-6 gap-y-4 auto-cols-[85%] sm:auto-cols-[calc((100%-24px)/2)] md:auto-cols-[calc((100%-24px)/2)] lg:auto-cols-[calc((100%-48px)/3)] overflow-x-auto scrollbar-none scroll-smooth pb-4"
           renderItem={(track) => {
             const isCurrent = currentTrack?.id === track.id
             const playCount = track.play_count || (track.id.startsWith('dummy-') ? (track.title.length * 900 + 1500) : 0)
@@ -1209,7 +1209,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className={`flex-none w-[85%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
+                className={`w-full p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
                   isCurrent ? 'bg-primary/10 border-primary/30' : 'bg-[#091009]/80 border-[#1a2c1a]/50 hover:border-primary/40 hover:bg-[#111c11]/85'
                 }`}
                 onClick={() => {
