@@ -17,7 +17,18 @@ export function SettingsClient({ user }: SettingsClientProps) {
   const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
   
   // Data States
-  const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
+  const [profile, setProfile] = useState<{ 
+    display_name?: string, 
+    avatar_url?: string,
+    banner_url?: string,
+    bio?: string,
+    tags?: string[],
+    followers?: number,
+    following?: number,
+    plays?: number,
+    likes?: number,
+    handle?: string
+  } | null>(null)
   const [userCredits, setUserCredits] = useState<number>(120)
   const [transactions, setTransactions] = useState<any[]>([])
   const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN'>('KO')
@@ -79,20 +90,42 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
     // Load extra fields from localStorage
     try {
-      const extra = localStorage.getItem(`profile-extra-${user.id}`)
-      if (extra) {
-        const parsed = JSON.parse(extra)
-        if (parsed.bio !== undefined) setEditBio(parsed.bio)
-        if (parsed.tags !== undefined) setEditTags(parsed.tags)
-        if (parsed.banner_url !== undefined) setEditBanner(parsed.banner_url)
-        if (parsed.followers !== undefined) setEditFollowers(parsed.followers)
-        if (parsed.following !== undefined) setEditFollowing(parsed.following)
-        if (parsed.plays !== undefined) setEditPlays(parsed.plays)
-        if (parsed.likes !== undefined) setEditLikes(parsed.likes)
-        if (parsed.handle !== undefined) setEditHandle(parsed.handle)
+      const hasDbValues = profile && (
+        profile.banner_url !== undefined ||
+        profile.bio !== undefined ||
+        profile.handle !== undefined
+      )
+
+      if (hasDbValues) {
+        if (profile.bio !== undefined && profile.bio !== null) setEditBio(profile.bio)
+        if (profile.tags !== undefined && profile.tags !== null) setEditTags(profile.tags)
+        if (profile.banner_url !== undefined && profile.banner_url !== null) setEditBanner(profile.banner_url)
+        if (profile.followers !== undefined && profile.followers !== null) setEditFollowers(profile.followers)
+        if (profile.following !== undefined && profile.following !== null) setEditFollowing(profile.following)
+        if (profile.plays !== undefined && profile.plays !== null) setEditPlays(String(profile.plays))
+        if (profile.likes !== undefined && profile.likes !== null) setEditLikes(String(profile.likes))
+        if (profile.handle !== undefined && profile.handle !== null) {
+          setEditHandle(profile.handle)
+        } else {
+          const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
+          setEditHandle(defaultHandle)
+        }
       } else {
-        const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
-        setEditHandle(defaultHandle)
+        const extra = localStorage.getItem(`profile-extra-${user.id}`)
+        if (extra) {
+          const parsed = JSON.parse(extra)
+          if (parsed.bio !== undefined) setEditBio(parsed.bio)
+          if (parsed.tags !== undefined) setEditTags(parsed.tags)
+          if (parsed.banner_url !== undefined) setEditBanner(parsed.banner_url)
+          if (parsed.followers !== undefined) setEditFollowers(parsed.followers)
+          if (parsed.following !== undefined) setEditFollowing(parsed.following)
+          if (parsed.plays !== undefined) setEditPlays(String(parsed.plays))
+          if (parsed.likes !== undefined) setEditLikes(String(parsed.likes))
+          if (parsed.handle !== undefined) setEditHandle(parsed.handle)
+        } else {
+          const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
+          setEditHandle(defaultHandle)
+        }
       }
     } catch (e) {
       console.error(e)
@@ -190,7 +223,18 @@ export function SettingsClient({ user }: SettingsClientProps) {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ display_name: editName, avatar_url: editAvatar })
+        body: JSON.stringify({ 
+          display_name: editName, 
+          avatar_url: editAvatar,
+          bio: editBio,
+          tags: editTags,
+          banner_url: editBanner,
+          followers: editFollowers,
+          following: editFollowing,
+          plays: Number(editPlays) || 0,
+          likes: Number(editLikes) || 0,
+          handle: editHandle
+        })
       })
       if (res.ok) {
         const data = await res.json()

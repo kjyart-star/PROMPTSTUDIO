@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, display_name, avatar_url, created_at')
+      .select('id, email, display_name, avatar_url, banner_url, bio, tags, followers, following, plays, likes, handle, created_at')
       .eq('id', user.id)
       .single()
 
@@ -38,14 +38,34 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { display_name, avatar_url } = body
+    const { 
+      display_name, 
+      avatar_url, 
+      banner_url, 
+      bio, 
+      tags, 
+      followers, 
+      following, 
+      plays, 
+      likes, 
+      handle 
+    } = body
+
+    const updateData: any = {}
+    if (display_name !== undefined) updateData.display_name = display_name
+    if (avatar_url !== undefined) updateData.avatar_url = avatar_url
+    if (banner_url !== undefined) updateData.banner_url = banner_url
+    if (bio !== undefined) updateData.bio = bio
+    if (tags !== undefined) updateData.tags = tags
+    if (followers !== undefined) updateData.followers = followers
+    if (following !== undefined) updateData.following = following
+    if (plays !== undefined) updateData.plays = plays
+    if (likes !== undefined) updateData.likes = likes
+    if (handle !== undefined) updateData.handle = handle
 
     const { data, error } = await supabase
       .from('profiles')
-      .update({
-        display_name: display_name !== undefined ? display_name : null,
-        avatar_url: avatar_url !== undefined ? avatar_url : null
-      })
+      .update(updateData)
       .eq('id', user.id)
       .select()
       .single()

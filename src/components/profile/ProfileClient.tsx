@@ -251,7 +251,18 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   const [billingCycle, setBillingCycle] = useState<string>('monthly')
   const [planRenewalDate, setPlanRenewalDate] = useState<string>('')
   const [playingId, setPlayingId] = useState<string | null>(null)
-  const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
+  const [profile, setProfile] = useState<{ 
+    display_name?: string, 
+    avatar_url?: string,
+    banner_url?: string,
+    bio?: string,
+    tags?: string[],
+    followers?: number,
+    following?: number,
+    plays?: number,
+    likes?: number,
+    handle?: string
+  } | null>(null)
   const [likedSongIds, setLikedSongIds] = useState<string[]>([])
   const [likedAlbums, setLikedAlbums] = useState<string[]>([])
   
@@ -557,57 +568,102 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   useEffect(() => {
     if (!user) return
     try {
-      const extra = localStorage.getItem(`profile-extra-${user.id}`)
-      if (extra) {
-        const parsed = JSON.parse(extra)
-        if (parsed.bio !== undefined) {
-          setProfileBio(parsed.bio)
-          setEditBio(parsed.bio)
+      const hasDbValues = profile && (
+        profile.banner_url !== undefined ||
+        profile.bio !== undefined ||
+        profile.handle !== undefined
+      )
+
+      if (hasDbValues) {
+        if (profile.bio !== undefined && profile.bio !== null) {
+          setProfileBio(profile.bio)
+          setEditBio(profile.bio)
         }
-        if (parsed.tags !== undefined) {
-          setProfileTags(parsed.tags)
-          setEditTags(parsed.tags)
+        if (profile.tags !== undefined && profile.tags !== null) {
+          setProfileTags(profile.tags)
+          setEditTags(profile.tags)
         }
-        if (parsed.banner_url !== undefined) {
-          setProfileBanner(parsed.banner_url)
-          setEditBanner(parsed.banner_url)
+        if (profile.banner_url !== undefined && profile.banner_url !== null) {
+          setProfileBanner(profile.banner_url)
+          setEditBanner(profile.banner_url)
         }
-        if (parsed.followers !== undefined) {
-          setProfileFollowers(parsed.followers)
-          setEditFollowers(parsed.followers)
+        if (profile.followers !== undefined && profile.followers !== null) {
+          setProfileFollowers(profile.followers)
+          setEditFollowers(profile.followers)
         }
-        if (parsed.following !== undefined) {
-          setProfileFollowing(parsed.following)
-          setEditFollowing(parsed.following)
+        if (profile.following !== undefined && profile.following !== null) {
+          setProfileFollowing(profile.following)
+          setEditFollowing(profile.following)
         }
-        if (parsed.plays !== undefined) {
-          setProfilePlays(parsed.plays)
-          setEditPlays(parsed.plays)
+        if (profile.plays !== undefined && profile.plays !== null) {
+          setProfilePlays(String(profile.plays))
+          setEditPlays(String(profile.plays))
         }
-        if (parsed.likes !== undefined) {
-          setProfileLikes(parsed.likes)
-          setEditLikes(parsed.likes)
+        if (profile.likes !== undefined && profile.likes !== null) {
+          setProfileLikes(String(profile.likes))
+          setEditLikes(String(profile.likes))
         }
-        if (parsed.handle !== undefined) {
-          setProfileHandle(parsed.handle)
-          setEditHandle(parsed.handle)
+        if (profile.handle !== undefined && profile.handle !== null) {
+          setProfileHandle(profile.handle)
+          setEditHandle(profile.handle)
         } else {
           const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
           setProfileHandle(defaultHandle)
           setEditHandle(defaultHandle)
         }
       } else {
-        // Initialize defaults
-        setEditBio(profileBio)
-        setEditTags([...profileTags])
-        setEditBanner(profileBanner)
-        setEditFollowers(profileFollowers)
-        setEditFollowing(profileFollowing)
-        setEditPlays(profilePlays)
-        setEditLikes(profileLikes)
-        const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
-        setProfileHandle(defaultHandle)
-        setEditHandle(defaultHandle)
+        const extra = localStorage.getItem(`profile-extra-${user.id}`)
+        if (extra) {
+          const parsed = JSON.parse(extra)
+          if (parsed.bio !== undefined) {
+            setProfileBio(parsed.bio)
+            setEditBio(parsed.bio)
+          }
+          if (parsed.tags !== undefined) {
+            setProfileTags(parsed.tags)
+            setEditTags(parsed.tags)
+          }
+          if (parsed.banner_url !== undefined) {
+            setProfileBanner(parsed.banner_url)
+            setEditBanner(parsed.banner_url)
+          }
+          if (parsed.followers !== undefined) {
+            setProfileFollowers(parsed.followers)
+            setEditFollowers(parsed.followers)
+          }
+          if (parsed.following !== undefined) {
+            setProfileFollowing(parsed.following)
+            setEditFollowing(parsed.following)
+          }
+          if (parsed.plays !== undefined) {
+            setProfilePlays(parsed.plays)
+            setEditPlays(parsed.plays)
+          }
+          if (parsed.likes !== undefined) {
+            setProfileLikes(parsed.likes)
+            setEditLikes(parsed.likes)
+          }
+          if (parsed.handle !== undefined) {
+            setProfileHandle(parsed.handle)
+            setEditHandle(parsed.handle)
+          } else {
+            const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
+            setProfileHandle(defaultHandle)
+            setEditHandle(defaultHandle)
+          }
+        } else {
+          // Initialize defaults
+          setEditBio(profileBio)
+          setEditTags([...profileTags])
+          setEditBanner(profileBanner)
+          setEditFollowers(profileFollowers)
+          setEditFollowing(profileFollowing)
+          setEditPlays(profilePlays)
+          setEditLikes(profileLikes)
+          const defaultHandle = profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer'
+          setProfileHandle(defaultHandle)
+          setEditHandle(defaultHandle)
+        }
       }
     } catch (e) {
       console.error(e)
@@ -855,7 +911,18 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
       const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ display_name: editName, avatar_url: editAvatar })
+        body: JSON.stringify({ 
+          display_name: editName, 
+          avatar_url: editAvatar,
+          bio: editBio,
+          tags: editTags,
+          banner_url: editBanner,
+          followers: editFollowers,
+          following: editFollowing,
+          plays: editPlays,
+          likes: editLikes,
+          handle: editHandle
+        })
       })
       if (res.ok) {
         const data = await res.json()
