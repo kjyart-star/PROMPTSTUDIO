@@ -90,9 +90,13 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
   // 로그아웃
   const handleSignOut = async () => {
     setIsAuthMenuOpen(false)
-    await supabase.auth.signOut()
-    router.refresh()
-    router.push('/')
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' })
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('SignOut error:', err)
+    }
+    window.location.href = '/'
   }
 
   // 회원 탈퇴
@@ -106,10 +110,14 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
     if (error) {
       alert(`탈퇴 실패: ${error.message}`)
     } else {
-      await supabase.auth.signOut()
+      try {
+        await fetch('/api/auth/signout', { method: 'POST' })
+        await supabase.auth.signOut()
+      } catch (err) {
+        console.error('SignOut error:', err)
+      }
       alert('회원 탈퇴가 완료되었습니다.')
-      router.refresh()
-      router.push('/')
+      window.location.href = '/'
     }
     setConfirmDeleteOpen(false)
   }

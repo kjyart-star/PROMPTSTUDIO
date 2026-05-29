@@ -91,6 +91,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       .from('song_history')
       .select('*')
       .eq('status', 'completed')
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(100)
 

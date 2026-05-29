@@ -39,17 +39,20 @@ export default function LoginPage({ searchParams }: PageProps) {
     setError(null)
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (signInError) {
-        throw signInError
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || '로그인에 실패했습니다.')
       }
 
-      router.push(nextPath)
-      router.refresh()
+      window.location.href = nextPath
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.')
     } finally {
@@ -73,18 +76,18 @@ export default function LoginPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-md space-y-8 bg-slate-900/50 p-8 rounded-2xl border border-slate-800 backdrop-blur-sm shadow-2xl">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-md space-y-8 bg-surface-container-lowest/80 p-8 rounded-2xl border border-outline-variant backdrop-blur-sm shadow-2xl">
         
         {/* Logo Section */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-600/20 text-violet-500 border border-violet-500/20 mb-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary border border-primary/20 mb-2">
             <Music className="w-6 h-6 animate-bounce" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
             AI Music Admin Portal
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-on-surface-variant">
             관리자 계정으로 로그인하여 플랫폼을 관리하세요
           </p>
         </div>
@@ -100,7 +103,7 @@ export default function LoginPage({ searchParams }: PageProps) {
         {/* Credentials Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email-input" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label htmlFor="email-input" className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
               이메일 주소
             </label>
             <input
@@ -109,13 +112,13 @@ export default function LoginPage({ searchParams }: PageProps) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-surface-container border border-outline-variant text-foreground placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm"
               placeholder="admin@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password-input" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label htmlFor="password-input" className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
               비밀번호
             </label>
             <input
@@ -124,7 +127,7 @@ export default function LoginPage({ searchParams }: PageProps) {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-surface-container border border-outline-variant text-foreground placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm"
               placeholder="••••••••"
             />
           </div>
@@ -133,16 +136,16 @@ export default function LoginPage({ searchParams }: PageProps) {
             id="btn-login-submit"
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-lg shadow-violet-500/25 transition-all disabled:opacity-50 text-sm"
+            className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-[#d2eb05] text-[#080d08] font-black shadow-lg shadow-primary/10 transition-all disabled:opacity-50 text-sm cursor-pointer"
           >
             {loading ? '로그인 중...' : '이메일로 로그인'}
           </button>
         </form>
 
         <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-slate-800"></div>
-          <span className="flex-shrink mx-4 text-slate-500 text-xs font-semibold uppercase tracking-wider">or</span>
-          <div className="flex-grow border-t border-slate-800"></div>
+          <div className="flex-grow border-t border-outline-variant"></div>
+          <span className="flex-shrink mx-4 text-on-surface-variant/60 text-xs font-semibold uppercase tracking-wider">or</span>
+          <div className="flex-grow border-t border-outline-variant"></div>
         </div>
 
         {/* Social Login */}
@@ -150,7 +153,7 @@ export default function LoginPage({ searchParams }: PageProps) {
           id="btn-google-login"
           onClick={handleGoogleLogin}
           type="button"
-          className="w-full py-3 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-200 font-semibold transition-all flex items-center justify-center gap-2 text-sm"
+          className="w-full py-3 px-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-foreground font-semibold transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
             <g transform="matrix(1, 0, 0, 1, 0, 0)">

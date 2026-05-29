@@ -133,9 +133,13 @@ export function PublicLayoutClient({
   // 로그아웃
   const handleSignOut = async () => {
     setIsAuthMenuOpen(false)
-    await supabase.auth.signOut()
-    router.refresh()
-    router.push('/')
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' })
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('SignOut error:', err)
+    }
+    window.location.href = '/'
   }
 
   // 회원 탈퇴
@@ -149,9 +153,13 @@ export function PublicLayoutClient({
     if (error) {
       alert(`탈퇴 실패: ${error.message}`)
     } else {
-      await supabase.auth.signOut()
-      router.refresh()
-      router.push('/')
+      try {
+        await fetch('/api/auth/signout', { method: 'POST' })
+        await supabase.auth.signOut()
+      } catch (err) {
+        console.error('SignOut error:', err)
+      }
+      window.location.href = '/'
     }
   }
 

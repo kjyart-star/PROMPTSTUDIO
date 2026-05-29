@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { LayoutDashboard, Users, Library, Music, Home, LogOut, Shield } from 'lucide-react'
@@ -10,6 +11,21 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login?next=/admin/music')
+  }
+
+  // 1. 관리자 권한 확인 (user_roles 테이블에서 역할 검사)
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (roleData?.role !== 'admin') {
+    redirect('/')
+  }
 
   const navItems = [
     { href: '/admin/music', label: '대시보드', icon: LayoutDashboard },

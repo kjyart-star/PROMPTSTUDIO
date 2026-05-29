@@ -22,6 +22,7 @@ export default async function PublicHomePage() {
     supabase.from('song_history')
       .select('*')
       .eq('status', 'completed')
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(12),
     supabase.from('chart_snapshots')
