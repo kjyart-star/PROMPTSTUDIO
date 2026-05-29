@@ -364,7 +364,7 @@ export function LibraryClient({
   useEffect(() => {
     const loadPlaylists = async () => {
       try {
-        const res = await fetch('/api/playlists')
+        const res = await fetch('/api/playlists?type=playlist')
         if (res.ok) {
           const data = await res.json()
           setCustomPlaylists(data || [])

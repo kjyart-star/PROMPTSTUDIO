@@ -710,7 +710,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
   const fetchPlaylists = async () => {
     try {
-      const res = await fetch('/api/playlists')
+      const res = await fetch('/api/playlists?type=album')
       if (res.ok) setPlaylists(await res.json() || [])
     } catch (e) { console.error(e) }
   }
@@ -2256,20 +2256,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
               {visibleLooseTracks.length === 0 && <p className="text-sm text-on-surface-variant">표시할 단일 곡이 없습니다.</p>}
             </div>
 
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><ListMusic className="w-5 h-5 text-primary" /> 나만의 플레이리스트</h2>
-              </div>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <button onClick={() => openCreateModal('playlist')} className="bg-surface-container-low hover:bg-surface-container border border-dashed border-outline-variant/30 p-3 rounded-xl flex flex-col items-center justify-center gap-2 min-h-[160px] transition-colors group">
-                  <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors"><Plus className="w-6 h-6" /></div>
-                  <span className="text-sm font-bold text-on-surface-variant group-hover:text-primary">나만의 플레이리스트 만들기</span>
-                </button>
-                {visiblePlaylists.map(renderPlaylistCard)}
-              </div>
-              {visiblePlaylists.length === 0 && <p className="text-sm text-on-surface-variant mt-4">플레이리스트를 만들어 음악을 폴더처럼 관리해보세요.</p>}
-            </div>
+
           </>
         ) : (
           /* Premium Public Artist Channel View */

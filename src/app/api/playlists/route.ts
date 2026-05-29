@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const fetchAll = searchParams.get('all') === 'true'
+    const typeFilter = searchParams.get('type') // 'album' | 'playlist'
 
     let query = supabase
       .from('user_playlists')
@@ -53,7 +54,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    let filteredData = data || []
+    if (typeFilter === 'playlist') {
+      filteredData = filteredData.filter(item => item.description?.startsWith('[playlist]'))
+    } else if (typeFilter === 'album') {
+      filteredData = filteredData.filter(item => !item.description?.startsWith('[playlist]'))
+    }
+
+    return NextResponse.json(filteredData)
   } catch (err: any) {
     console.error('API GET playlists error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
