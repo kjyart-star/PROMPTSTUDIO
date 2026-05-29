@@ -13,7 +13,7 @@ interface PageProps {
 
 export default function LoginPage({ searchParams }: PageProps) {
   const params = use(searchParams)
-  const nextPath = params.next || '/admin/music'
+  const nextPath = params.next || '/'
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
