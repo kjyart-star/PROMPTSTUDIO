@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
 
-const API_KEY = process.env.APIPASS_API_KEY || "apk_34c50e9bc6cf84c22d8bbe9c5a42b9a24a72bec5083acffdeb5e065b82924b98"
+const API_KEY = process.env.APIPASS_API_KEY
 
 export async function GET(request: Request) {
   try {
+    if (!API_KEY) {
+      return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
+    }
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get('taskId')
 

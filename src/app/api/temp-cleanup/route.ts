@@ -6,12 +6,27 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    if (!user) {
+      return new NextResponse('로그인이 필요합니다. (Please log in first)', { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const userIdParam = searchParams.get('userId')
-    const targetUserId = user?.id || userIdParam
+    let targetUserId = user.id
 
-    if (!targetUserId) {
-      return new NextResponse('로그인이 필요합니다. (Please log in first or provide userId parameter)', { status: 401 })
+    // If attempting to clean up another user's history, verify admin privileges
+    if (userIdParam && userIdParam !== user.id) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+
+      if (roleData?.role === 'admin') {
+        targetUserId = userIdParam
+      } else {
+        return new NextResponse('권한이 없습니다. (Forbidden)', { status: 403 })
+      }
     }
 
     // 15분 이전의 모든 song_history 레코드 삭제

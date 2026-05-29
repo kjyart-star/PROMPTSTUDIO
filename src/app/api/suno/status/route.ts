@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-const API_KEY = process.env.APIPASS_API_KEY || "apk_34c50e9bc6cf84c22d8bbe9c5a42b9a24a72bec5083acffdeb5e065b82924b98"
+const API_KEY = process.env.APIPASS_API_KEY
 
 async function uploadToStorage(supabase: any, url: string, bucketName: string, filePath: string): Promise<string> {
   if (!url) return ''
@@ -40,6 +40,10 @@ async function uploadToStorage(supabase: any, url: string, bucketName: string, f
 
 export async function GET(request: Request) {
   try {
+    if (!API_KEY) {
+      return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
