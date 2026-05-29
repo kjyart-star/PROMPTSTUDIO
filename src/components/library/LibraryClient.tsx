@@ -807,23 +807,20 @@ export function LibraryClient({
                           isCurrent ? 'bg-primary/10' : ''
                         }`}
                       >
-                        {/* Index / Rank Shift / Play button */}
-                        <td className="py-4 px-4 text-center font-mono font-bold text-on-surface-variant/80 relative">
-                          <div className="group-hover:hidden flex items-center justify-center">
+                        {/* Index / Rank Shift */}
+                        <td className="py-4 px-4 text-center font-mono font-bold text-on-surface-variant/80">
+                          <span className={isCurrent && isPlaying ? "text-primary font-bold" : ""}>
                             {activePlaylist.id === 'top100' ? renderRankShift(track.id, index) : index + 1}
-                          </div>
-                          <button
-                            onClick={() => handlePlay(track, activePlaylist.tracks)}
-                            className="hidden group-hover:inline-block hover:scale-105 active:scale-95 text-primary transition-transform cursor-pointer absolute inset-0 m-auto w-fit h-fit"
-                          >
-                            {isCurrent && isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current" />}
-                          </button>
+                          </span>
                         </td>
 
                         {/* Title / Artist Info */}
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-gradient-to-br from-[#111a12] to-[#070b08] border border-outline-variant/10 rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center">
+                            <div 
+                              className="h-10 w-10 bg-gradient-to-br from-[#111a12] to-[#070b08] border border-outline-variant/10 rounded-lg overflow-hidden shrink-0 relative flex items-center justify-center cursor-pointer group/cover"
+                              onClick={() => handlePlay(track, activePlaylist.tracks)}
+                            >
                               <Music className="w-4 h-4 text-on-surface-variant/25 absolute" />
                               {track.album?.cover_url && (
                                 <img
@@ -833,6 +830,18 @@ export function LibraryClient({
                                   className="absolute inset-0 h-full w-full object-cover z-10"
                                 />
                               )}
+                              {/* Hover Play/Pause Overlay */}
+                              <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all z-20 ${
+                                isCurrent && isPlaying
+                                  ? 'opacity-100'
+                                  : 'opacity-0 group-hover:opacity-100'
+                              }`}>
+                                {isCurrent && isPlaying ? (
+                                  <Pause className="w-4 h-4 text-white fill-current" />
+                                ) : (
+                                  <Play className="w-4 h-4 text-white fill-current ml-0.5" />
+                                )}
+                              </div>
                             </div>
                             <div className="min-w-0">
                               <p className={`font-bold text-xs truncate transition-colors ${isCurrent ? 'text-primary' : 'text-on-surface group-hover:text-white'}`}>
