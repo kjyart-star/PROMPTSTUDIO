@@ -1099,89 +1099,6 @@ export function HomeClient({
         />
       </section>
 
-      {/* 최신 앨범 */}
-      <section className="space-y-6 animate-fade-in-up animation-delay-300">
-        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-            <Library className="w-2.5 h-2.5 text-primary" />
-          </span>
-          {uiLanguage === 'KO' ? '최신 앨범' : 'Latest Albums'}
-        </h2>
-
-        <Carousel
-          items={displayAlbums.slice(0, 10)}
-          renderItem={(album) => {
-            const playCount = album.total_plays || (album.id.startsWith('album-') ? (album.title.length * 850 + 1200) : 0)
-            const likeCount = album.total_likes || (album.id.startsWith('album-') ? (album.title.length * 35 + 80) : 0)
-            return (
-              <div
-                key={album.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
-              >
-                <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
-                  <Link 
-                    href={`/albums/${album.slug || album.id}`} 
-                    className="block w-full h-full cursor-pointer z-10"
-                  >
-                    {album.cover_url ? (
-                      <img
-                        src={album.cover_url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                      />
-                    ) : (
-                      <Library className="w-8 h-8 text-on-surface-variant/40" />
-                    )}
-                  </Link>
-
-                  {/* Album badge top-left */}
-                  <span className="absolute top-2.5 left-2.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-[#070709] uppercase tracking-wider scale-90 z-20">
-                    {uiLanguage === 'KO' ? '앨범' : 'ALBUM'}
-                  </span>
-                  
-                  {/* Floating Circular Heart Button on Hover */}
-                  <div className="absolute top-2.5 right-2.5 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleAlbumLikeToggle(album.id)
-                      }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
-                        likedAlbums.includes(album.id)
-                          ? 'bg-primary text-[#080d08]'
-                          : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
-                      }`}
-                      title="앨범 좋아요"
-                    >
-                      <Heart className={`w-4 h-4 ${likedAlbums.includes(album.id) ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-
-                  {/* Bottom Text Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end pt-8 z-10 pointer-events-none">
-                    <p className="font-bold text-xs text-white truncate">
-                      {album.title}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-semibold mt-1 font-mono">
-                      <span className="flex items-center gap-0.5">
-                        <Play className="w-2.5 h-2.5 text-zinc-300 fill-current" />
-                        {formatCount(playCount)}
-                      </span>
-                      <span className="text-zinc-500">•</span>
-                      <span className="flex items-center gap-0.5">
-                        <Heart className={`w-2.5 h-2.5 text-zinc-300 ${likedAlbums.includes(album.id) ? 'fill-current text-primary' : ''}`} />
-                        <span>{formatCount(likeCount + (likedAlbums.includes(album.id) ? 1 : 0))}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          }}
-        />
-      </section>
-
       {/* 추천 음원 */}
       <section className="space-y-6 animate-fade-in-up animation-delay-450">
         <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
@@ -1296,6 +1213,89 @@ export function HomeClient({
                       <Heart className={`w-3.5 h-3.5 text-zinc-500 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
                       <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))} Likes</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+            )
+          }}
+        />
+      </section>
+
+      {/* 최신 앨범 */}
+      <section className="space-y-6 animate-fade-in-up animation-delay-600">
+        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+            <Library className="w-2.5 h-2.5 text-primary" />
+          </span>
+          {uiLanguage === 'KO' ? '최신 앨범' : 'Latest Albums'}
+        </h2>
+
+        <Carousel
+          items={displayAlbums.slice(0, 10)}
+          renderItem={(album) => {
+            const playCount = album.total_plays || (album.id.startsWith('album-') ? (album.title.length * 850 + 1200) : 0)
+            const likeCount = album.total_likes || (album.id.startsWith('album-') ? (album.title.length * 35 + 80) : 0)
+            return (
+              <div
+                key={album.id}
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
+              >
+                <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
+                  <Link 
+                    href={`/albums/${album.slug || album.id}`} 
+                    className="block w-full h-full cursor-pointer z-10"
+                  >
+                    {album.cover_url ? (
+                      <img
+                        src={album.cover_url}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+                      />
+                    ) : (
+                      <Library className="w-8 h-8 text-on-surface-variant/40" />
+                    )}
+                  </Link>
+
+                  {/* Album badge top-left */}
+                  <span className="absolute top-2.5 left-2.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-[#070709] uppercase tracking-wider scale-90 z-20">
+                    {uiLanguage === 'KO' ? '앨범' : 'ALBUM'}
+                  </span>
+                  
+                  {/* Floating Circular Heart Button on Hover */}
+                  <div className="absolute top-2.5 right-2.5 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleAlbumLikeToggle(album.id)
+                      }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
+                        likedAlbums.includes(album.id)
+                          ? 'bg-primary text-[#080d08]'
+                          : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
+                      }`}
+                      title="앨범 좋아요"
+                    >
+                      <Heart className={`w-4 h-4 ${likedAlbums.includes(album.id) ? 'fill-current' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Bottom Text Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end pt-8 z-10 pointer-events-none">
+                    <p className="font-bold text-xs text-white truncate">
+                      {album.title}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-semibold mt-1 font-mono">
+                      <span className="flex items-center gap-0.5">
+                        <Play className="w-2.5 h-2.5 text-zinc-300 fill-current" />
+                        {formatCount(playCount)}
+                      </span>
+                      <span className="text-zinc-500">•</span>
+                      <span className="flex items-center gap-0.5">
+                        <Heart className={`w-2.5 h-2.5 text-zinc-300 ${likedAlbums.includes(album.id) ? 'fill-current text-primary' : ''}`} />
+                        <span>{formatCount(likeCount + (likedAlbums.includes(album.id) ? 1 : 0))}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
