@@ -194,6 +194,20 @@ export default async function PublicHomePage() {
     artist: album.artists
   }))
 
+  // 인기 앨범 로드 (10개, 플레이수 및 좋아요수 내림차순)
+  const { data: popularAlbumsData } = await supabase
+    .from('albums')
+    .select('*, artists(*)')
+    .eq('status', 'published')
+    .order('total_plays', { ascending: false })
+    .order('total_likes', { ascending: false })
+    .limit(10)
+
+  const initialPopularAlbums: Album[] = (popularAlbumsData || []).map((album: any) => ({
+    ...album,
+    artist: album.artists
+  }))
+
   // 추천 아티스트 로드
   const { data: artistsData } = await supabase
     .from('artists')
@@ -228,6 +242,7 @@ export default async function PublicHomePage() {
     <HomeClient
       initialTracks={initialTracks}
       initialAlbums={initialAlbums}
+      initialPopularAlbums={initialPopularAlbums}
       initialArtists={initialArtists}
       initialUserLikes={initialUserLikes}
       initialRecommendedTracks={initialRecommendedTracks}
