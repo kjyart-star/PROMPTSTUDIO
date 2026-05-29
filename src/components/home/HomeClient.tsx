@@ -1255,9 +1255,6 @@ export function HomeClient({
                     <span className="text-[8px] font-black bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded tracking-wider uppercase">
                       FEATURED SINGLE
                     </span>
-                    <span className="text-[8px] font-bold border border-zinc-700 text-zinc-400 px-1 py-0.5 rounded uppercase tracking-wider">
-                      V2.0
-                    </span>
                   </div>
 
                   {/* Title & Artist */}
