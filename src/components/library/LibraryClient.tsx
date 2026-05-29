@@ -317,7 +317,7 @@ export function LibraryClient({
   const [editCoverUrl, setEditCoverUrl] = useState('')
   const [editGenre, setEditGenre] = useState('')
 
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+  const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
   const supabase = createClient()
 
   useEffect(() => {
@@ -476,6 +476,7 @@ export function LibraryClient({
 
     if (track.id.startsWith('dummy-') || track.file_url.startsWith('http')) {
       playTrack(track, list)
+      setNowPlayingOpen(true)
       return
     }
 
@@ -491,6 +492,7 @@ export function LibraryClient({
         file_url: data.signedUrl
       }
       playTrack(signedTrack, list)
+      setNowPlayingOpen(true)
     } catch (err) {
       console.error(err)
       alert('음원 재생 주소를 발급받지 못했습니다.')

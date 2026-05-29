@@ -117,7 +117,7 @@ export function AlbumClient({
     localStorage.setItem('user_liked_albums', JSON.stringify(next))
   }
   
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+  const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
   const supabase = createClient()
 
   const handleLikeToggle = async (trackId: string) => {
@@ -195,6 +195,7 @@ export function AlbumClient({
         album: t.id === track.id ? signedTrack.album : { ...album }
       }))
       playTrack(signedTrack, queueTracks)
+      setNowPlayingOpen(true)
       return
     }
 
@@ -217,6 +218,7 @@ export function AlbumClient({
       }))
 
       playTrack(signedTrack, queueTracks)
+      setNowPlayingOpen(true)
     } catch (err) {
       console.error(err)
       alert('음원 재생에 실패했습니다.')
