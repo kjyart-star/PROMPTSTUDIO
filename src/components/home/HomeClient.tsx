@@ -536,9 +536,10 @@ const generateDummyTracks = (baseTracks: typeof DUMMY_TRACKS, count: number): Tr
 interface CarouselProps<T> {
   items: T[]
   renderItem: (item: T, index: number) => React.ReactNode
+  containerClassName?: string
 }
 
-function Carousel({ items, renderItem }: CarouselProps<any>) {
+function Carousel({ items, renderItem, containerClassName }: CarouselProps<any>) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
@@ -576,8 +577,11 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
   const scroll = (direction: 'left' | 'right') => {
     if (containerRef.current) {
       const { clientWidth } = containerRef.current
-      // Scroll by 85% of client width to keep some visual context overlap
-      const scrollAmount = direction === 'left' ? -clientWidth * 0.85 : clientWidth * 0.85
+      const isGrid = containerClassName?.includes('grid')
+      // For grid layouts, scroll by 100% of client width to scroll a full page, otherwise 85%
+      const scrollAmount = direction === 'left' 
+        ? -(isGrid ? clientWidth : clientWidth * 0.85) 
+        : (isGrid ? clientWidth : clientWidth * 0.85)
       containerRef.current.scrollBy({
         left: scrollAmount,
         behavior: 'smooth'
@@ -600,7 +604,7 @@ function Carousel({ items, renderItem }: CarouselProps<any>) {
       {/* Scrollable Row */}
       <div
         ref={containerRef}
-        className="flex gap-6 overflow-x-auto scrollbar-none scroll-smooth pb-4"
+        className={containerClassName || "flex gap-6 overflow-x-auto scrollbar-none scroll-smooth pb-4"}
       >
         {items.map((item, index) => renderItem(item, index))}
       </div>
@@ -647,9 +651,13 @@ export function HomeClient({
   const displayAlbums = (initialAlbums.length > 0 ? initialAlbums : DUMMY_ALBUMS) as Album[]
   const displayPopularAlbums = (initialPopularAlbums.length > 0 ? initialPopularAlbums : DUMMY_ALBUMS) as Album[]
 
-  const displayRecommendedTracks = (initialRecommendedTracks.length > 0
-    ? initialRecommendedTracks
-    : generateDummyTracks(DUMMY_RECOMMENDED_BASE_TRACKS, 10)) as Track[]
+  const displayRecommendedTracks = (() => {
+    if (initialRecommendedTracks.length >= 12) {
+      return initialRecommendedTracks
+    }
+    const dummies = generateDummyTracks(DUMMY_RECOMMENDED_BASE_TRACKS, 12 - initialRecommendedTracks.length)
+    return [...initialRecommendedTracks, ...dummies]
+  })() as Track[]
 
   const displayLatestTracks = (initialLatestTracks.length > 0
     ? initialLatestTracks
@@ -1184,24 +1192,34 @@ export function HomeClient({
         </h2>
 
         <Carousel
-          items={displayRecommendedTracks.slice(0, 10)}
+          items={displayRecommendedTracks.slice(0, 12)}
+          containerClassName="grid grid-rows-2 grid-flow-col gap-x-6 gap-y-4 overflow-x-auto scrollbar-none scroll-smooth pb-4"
           renderItem={(track) => {
             const isCurrent = currentTrack?.id === track.id
             const playCount = track.play_count || (track.id.startsWith('dummy-') ? (track.title.length * 900 + 1500) : 0)
             const likeCount = track.like_count || (track.id.startsWith('dummy-') ? (track.title.length * 40 + 90) : 0)
-            const commentCount = Math.floor(likeCount / 12) + 2
+
+            const formatDuration = (sec?: number) => {
+              if (!sec) return '3:00'
+              const m = Math.floor(sec / 60)
+              const s = (sec % 60).toString().padStart(2, '0')
+              return `${m}:${s}`
+            }
 
             return (
               <div
                 key={track.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
+                className={`flex-none w-[85%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
+                  isCurrent ? 'bg-primary/10 border-primary/30' : 'bg-[#091009]/80 border-[#1a2c1a]/50 hover:border-primary/40 hover:bg-[#111c11]/85'
+                }`}
+                onClick={() => {
+                  handlePlay(track, displayRecommendedTracks)
+                  setNowPlayingOpen(true)
+                }}
               >
+                {/* Album Cover */}
                 <div 
-                  onClick={() => {
-                    handlePlay(track, displayRecommendedTracks)
-                    setNowPlayingOpen(true)
-                  }}
-                  className="relative aspect-square w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5 group/image cursor-pointer"
+                  className="relative w-[80px] h-[80px] rounded-xl overflow-hidden bg-surface-container-lowest shrink-0 border border-white/5 group/image"
                 >
                   {track.album?.cover_url ? (
                     <img
@@ -1215,71 +1233,72 @@ export function HomeClient({
                   
                   {/* Hover Control Overlay */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 flex items-center justify-center transition-all duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handlePlay(track, displayRecommendedTracks)
-                        setNowPlayingOpen(true)
-                      }}
-                      className="w-12 h-12 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                    >
+                    <div className="w-8 h-8 bg-primary text-[#080d08] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
                       {isCurrent && isPlaying ? (
-                        <Pause className="w-5 h-5 fill-current" />
+                        <Pause className="w-3.5 h-3.5 fill-current" />
                       ) : (
-                        <Play className="w-5 h-5 fill-current ml-0.5" />
+                        <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                       )}
-                    </button>
+                    </div>
                   </div>
-                  
-                  {/* Top Right Quick Controls */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover/image:opacity-100 transition-opacity">
+
+                  {/* Duration Badge */}
+                  <span className="absolute bottom-1 right-1.5 bg-black/70 text-[8px] font-bold text-zinc-300 px-1 py-0.2 rounded font-mono">
+                    {formatDuration(track.duration_sec)}
+                  </span>
+                </div>
+
+                {/* Track Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 text-left">
+                  {/* Badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[8px] font-black bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded tracking-wider uppercase">
+                      FEATURED SINGLE
+                    </span>
+                    <span className="text-[8px] font-bold border border-zinc-700 text-zinc-400 px-1 py-0.5 rounded uppercase tracking-wider">
+                      V2.0
+                    </span>
+                  </div>
+
+                  {/* Title & Artist */}
+                  <div className="mt-1">
+                    <p className="font-bold text-xs truncate text-slate-100 group-hover:text-primary transition-colors">
+                      {track.title}
+                    </p>
+                    {track.album?.artist ? (
+                      <div className="mt-0.5">
+                        <Link
+                          href={`/artists/${track.album.artist.slug}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[10px] text-zinc-400 hover:text-primary transition-colors truncate font-semibold cursor-pointer"
+                        >
+                          {track.album.artist.name}
+                        </Link>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-zinc-400 font-semibold truncate mt-0.5">
+                        K-Pop
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5">
+                    <span className="flex items-center gap-1">
+                      <Play className="w-3.5 h-3.5 text-zinc-500 fill-current" />
+                      {formatCount(playCount)} Plays
+                    </span>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation()
                         handleLikeToggle(track.id)
                       }}
-                      className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors cursor-pointer"
+                      className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
                       title="좋아요"
                     >
-                      <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
+                      <Heart className={`w-3.5 h-3.5 text-zinc-500 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
+                      <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))} Likes</span>
                     </button>
-                  </div>
-                </div>
-
-                <div className="pt-2 min-w-0">
-                  <div className="flex items-center gap-1.5 justify-between min-w-0">
-                    <p 
-                      onClick={() => {
-                        handlePlay(track, displayRecommendedTracks)
-                        setNowPlayingOpen(true)
-                      }}
-                      className="font-bold text-xs truncate text-slate-100 group-hover:text-primary transition-colors flex-1 cursor-pointer hover:underline text-left"
-                    >
-                      {track.title}
-                    </p>
-                  </div>
-                  {track.album?.artist && (
-                    <div className="mt-0.5">
-                      <Link
-                        href={`/artists/${track.album.artist.slug}`}
-                        className="text-[10px] text-zinc-400 hover:text-primary transition-colors truncate font-semibold cursor-pointer"
-                      >
-                        {track.album.artist.name}
-                      </Link>
-                    </div>
-                  )}
-                  
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5">
-                    <span className="flex items-center gap-0.5">
-                      <Play className="w-2.5 h-2.5 text-zinc-500 fill-current" />
-                      {formatCount(playCount)}
-                    </span>
-                    <span className="flex items-center gap-0.5">
-                      <Heart className={`w-2.5 h-2.5 text-zinc-500 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
-                      <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))}</span>
-                    </span>
                   </div>
                 </div>
               </div>
