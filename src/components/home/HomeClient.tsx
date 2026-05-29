@@ -1392,6 +1392,50 @@ export function HomeClient({
         />
       </section>
 
+      {/* TOP 카테고리 */}
+      <section className="space-y-6 animate-fade-in-up animation-delay-750 pb-10">
+        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+            <Disc className="w-2.5 h-2.5 text-primary" />
+          </span>
+          {uiLanguage === 'KO' ? '인기 카테고리' : 'TOP Categories'}
+        </h2>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          {[
+            { name: 'K-Pop', koName: '케이팝', gradient: 'from-pink-600/20 to-fuchsia-600/20 hover:border-pink-500/40 text-pink-300' },
+            { name: 'Pop', koName: '팝', gradient: 'from-emerald-600/20 to-teal-600/20 hover:border-emerald-500/40 text-emerald-300' },
+            { name: 'Hip Hop', koName: '힙합', gradient: 'from-amber-600/20 to-orange-600/20 hover:border-amber-500/40 text-amber-300' },
+            { name: 'R&B', koName: '알앤비', gradient: 'from-rose-600/20 to-red-600/20 hover:border-rose-500/40 text-rose-300' },
+            { name: 'Electronic', koName: '일렉트로닉', gradient: 'from-cyan-600/20 to-blue-600/20 hover:border-cyan-500/40 text-cyan-300' },
+            { name: 'Rock', koName: '락', gradient: 'from-red-700/20 to-stone-800/20 hover:border-red-500/40 text-red-300' },
+            { name: 'Jazz', koName: '재즈', gradient: 'from-indigo-600/20 to-violet-600/20 hover:border-indigo-500/40 text-indigo-300' },
+            { name: 'Classical', koName: '클래식', gradient: 'from-slate-600/20 to-zinc-700/20 hover:border-slate-500/40 text-zinc-300' },
+          ].map((cat) => (
+            <Link
+              key={cat.name}
+              href={`/charts?genre=${cat.name}`}
+              className={`relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${cat.gradient} p-5 flex flex-col justify-between aspect-square hover:scale-[1.03] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-300 cursor-pointer group`}
+            >
+              <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
+                <ChevronRight className="w-4 h-4" />
+              </div>
+              <div className="flex-1 flex items-center justify-center">
+                <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
+                  {uiLanguage === 'KO' ? cat.koName : cat.name}
+                </p>
+                <p className="text-[9px] font-mono text-zinc-400 mt-0.5 tracking-wider uppercase">
+                  {cat.name}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       </div>
 
     </div>
