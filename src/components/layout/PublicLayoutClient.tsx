@@ -1,0 +1,605 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { 
+  Home, Sparkles, Library, Trophy, Bell, Shield, LogOut, 
+  Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
+  Search, Settings, Heart, ListMusic, CreditCard, Music
+} from 'lucide-react'
+import { PersistentPlayer } from '@/components/player/PersistentPlayer'
+import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
+import { usePlayerStore } from '@/stores/playerStore'
+
+interface PublicLayoutClientProps {
+  children: React.ReactNode
+  user: any
+  isAdmin: boolean
+  initialAnnouncements: any[]
+}
+
+export function PublicLayoutClient({
+  children,
+  user,
+  isAdmin,
+  initialAnnouncements
+}: PublicLayoutClientProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const supabase = createClient()
+  const { isNowPlayingOpen } = usePlayerStore()
+
+  // UI 상태
+  const [uiLanguage, setUiLanguage] = useState('KO')
+  const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false)
+  const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false)
+  const [announcements] = useState(initialAnnouncements)
+  const [hasUnread, setHasUnread] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
+
+  const authDropdownRef = useRef<HTMLDivElement>(null)
+
+  const [activeTab, setActiveTab] = useState('')
+
+  // 활성화된 탭 판별 (Client-safe to avoid SSR Suspense deopt)
+  useEffect(() => {
+    const getActiveTab = () => {
+      if (pathname === '/studio') return 'studio'
+      if (pathname === '/charts') return 'charts'
+      if (pathname === '/search') return 'search'
+      if (pathname === '/library') {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('playlistId') === 'recommended') return 'recommended'
+        return params.get('tab') === 'liked' ? 'liked' : 'library'
+      }
+      if (pathname === '/profile') {
+        const params = new URLSearchParams(window.location.search)
+        return params.get('tab') === 'private' ? 'audio-management' : 'profile'
+      }
+      if (pathname === '/') return 'home'
+      return ''
+    }
+    setActiveTab(getActiveTab())
+  }, [pathname])
+
+  // 언어 초기 로드 및 이벤트 리스너
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storedLang = localStorage.getItem('language')
+    if (storedLang) {
+      setUiLanguage(storedLang.toUpperCase())
+    } else {
+      const browserLang = navigator.language || ''
+      const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+      setUiLanguage(defaultLang)
+      localStorage.setItem('language', defaultLang)
+    }
+
+    if (initialAnnouncements.length > 0) {
+      const lastRead = localStorage.getItem('announcements_last_read')
+      if (!lastRead) {
+        setHasUnread(true)
+      } else {
+        const lastReadTime = new Date(lastRead).getTime()
+        const newestTime = new Date(initialAnnouncements[0].created_at).getTime()
+        setHasUnread(newestTime > lastReadTime)
+      }
+    }
+  }, [initialAnnouncements])
+
+  // 언어 변경 핸들러
+  const handleLanguageChange = (lang: string) => {
+    setUiLanguage(lang)
+    localStorage.setItem('language', lang)
+    window.dispatchEvent(new CustomEvent('languageChange', { detail: lang }))
+  }
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (authDropdownRef.current && !authDropdownRef.current.contains(event.target as Node)) {
+        setIsAuthMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Fetch profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        try {
+          const res = await fetch('/api/profile')
+          if (res.ok) setProfile(await res.json())
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    }
+    fetchProfile()
+  }, [user])
+
+  // 공지사항 열기 핸들러
+  const handleOpenAnnouncements = () => {
+    setIsAnnouncementsOpen(true)
+    setHasUnread(false)
+    localStorage.setItem('announcements_last_read', new Date().toISOString())
+  }
+
+  // 로그아웃
+  const handleSignOut = async () => {
+    setIsAuthMenuOpen(false)
+    await supabase.auth.signOut()
+    router.refresh()
+    router.push('/')
+  }
+
+  // 회원 탈퇴
+  const handleWithdraw = async () => {
+    setIsAuthMenuOpen(false)
+    setConfirmDeleteOpen(true)
+  }
+
+  const confirmWithdraw = async () => {
+    const { error } = await supabase.rpc('delete_user')
+    if (error) {
+      alert(`탈퇴 실패: ${error.message}`)
+    } else {
+      await supabase.auth.signOut()
+      router.refresh()
+      router.push('/')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-on-background font-body-md selection:bg-primary selection:text-on-primary">
+      
+      {/* Shell: Side Navigation (Desktop Only) */}
+      <aside className={`hidden md:flex flex-col py-[24px] px-[16px] h-screen w-64 border-r border-outline-variant/10 fixed left-0 top-0 z-50 justify-between ${
+        activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
+      }`}>
+        <div className="flex flex-col gap-[48px]">
+          <div className="flex justify-center">
+            <Link href="/" className="select-none flex flex-col items-center">
+              <h1 className="text-[32px] leading-[32px] font-black tracking-tighter text-primary italic">BEATZ</h1>
+              <p className="text-[9px] leading-[14px] font-bold text-primary tracking-widest mt-1 text-center">AI MUSIC PLATFORM</p>
+            </Link>
+          </div>
+
+          <nav className="flex flex-col gap-[8px]">
+            <Link 
+              href="/" 
+              onClick={() => setActiveTab('home')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'home' 
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Home className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '홈' : 'Home'}</span>
+            </Link>
+
+            <Link 
+              href="/search" 
+              onClick={() => setActiveTab('search')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'search' 
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Search className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '검색' : 'Search'}</span>
+            </Link>
+            
+            <Link 
+              href="/charts" 
+              onClick={() => setActiveTab('charts')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'charts' 
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Trophy className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '실시간 차트' : 'Live Charts'}</span>
+            </Link>
+
+            <Link 
+              href="/library" 
+              onClick={() => setActiveTab('library')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'library'
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Library className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : 'Playlist'}</span>
+            </Link>
+
+            <Link 
+              href="/library?playlistId=recommended" 
+              onClick={() => setActiveTab('recommended')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'recommended'
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <ListMusic className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '추천 플레이리스트' : 'Recommended'}</span>
+            </Link>
+
+            <Link 
+              href="/profile?tab=public" 
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'profile'
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <User className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 채널' : 'My Channel'}</span>
+            </Link>
+
+            <Link 
+              href="/profile?tab=private" 
+              onClick={() => setActiveTab('audio-management')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'audio-management'
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Music className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 음원 관리' : 'My Audio Management'}</span>
+            </Link>
+
+
+            <Link 
+              href="/studio" 
+              onClick={() => setActiveTab('studio')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'studio'
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Sparkles className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '스튜디오' : 'Studio'}</span>
+            </Link>
+          </nav>
+        </div>
+
+        {/* Sidebar Footer (Admin Shortcut if logged in as admin) */}
+        <div>
+          {isAdmin && (
+            <Link
+              href="/admin/music"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#e3fe06]/10 border border-[#e3fe06]/20 text-[#e3fe06] hover:bg-[#e3fe06]/15 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            >
+              <Shield className="w-4 h-4" />
+              <span>{uiLanguage === 'KO' ? '어드민 관리자' : 'Administrator'}</span>
+            </Link>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Canvas */}
+      <div className={`flex-1 pl-0 md:pl-64 flex flex-col min-h-screen relative pb-32 transition-all duration-300 ${
+        isNowPlayingOpen ? 'md:pr-[360px]' : ''
+      }`}>
+        
+        {/* Shell: Top Navigation */}
+        {/* Shell: Top Navigation */}
+        <header className="w-full h-16 z-40 bg-surface/80 backdrop-blur-xl sticky top-0 border-b border-outline-variant/10">
+          <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-[32px]">
+            <div className="flex items-center gap-[16px] flex-1">
+              <div className="hidden md:flex gap-[8px]">
+                <button 
+                  onClick={() => router.back()} 
+                  className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft className="w-5 h-5 text-on-surface" />
+                </button>
+                <button 
+                  onClick={() => router.forward()} 
+                  className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight className="w-5 h-5 text-on-surface" />
+                </button>
+              </div>
+              
+              <div className="relative w-full max-w-md group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+                <input 
+                  type="text"
+                  placeholder={uiLanguage === 'KO' ? '어떤 음악을 듣고 싶으신가요?' : 'What do you want to listen to?'}
+                  className="w-full bg-surface-container-high border-none rounded-full pl-10 pr-[16px] py-[4px] text-[16px] leading-[24px] text-on-surface focus:ring-2 ring-primary/20 transition-all placeholder:text-on-surface-variant/50 focus:outline-none"
+                  onChange={(e) => {
+                    router.push(`/search?q=${encodeURIComponent(e.target.value)}`)
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-[24px] ml-auto shrink-0 justify-end">
+              {/* Language Switcher */}
+              <div className="flex items-center rounded-full border border-outline-variant/15 bg-surface-container-lowest/60 p-0.5">
+                <button 
+                  onClick={() => handleLanguageChange('KO')}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'KO' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  KO
+                </button>
+                <button 
+                  onClick={() => handleLanguageChange('EN')}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'EN' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  EN
+                </button>
+              </div>
+
+              {/* Notification (Bell) */}
+              <div className="relative">
+                <button 
+                  onClick={handleOpenAnnouncements}
+                  className="text-on-surface-variant hover:bg-surface-variant/50 p-[8px] rounded-full transition-all relative cursor-pointer flex items-center justify-center"
+                >
+                  <Bell className="w-5 h-5" />
+                  {hasUnread && (
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#e3fe06] shadow-[0_0_6px_#e3fe06]"></span>
+                  )}
+                </button>
+              </div>
+
+              {/* Settings Button */}
+              <Link 
+                href="/settings"
+                className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 p-[8px] rounded-full transition-all flex items-center justify-center cursor-pointer"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+
+              {/* User Dropdown */}
+              <div className="relative flex items-center" ref={authDropdownRef}>
+                {user ? (
+                  <button 
+                    onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
+                    className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center cursor-pointer transition-all hover:scale-105 bg-surface-container-high"
+                  >
+                    {profile?.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url}
+                        alt="User profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-on-surface-variant" />
+                    )}
+                  </button>
+                ) : (
+                  <Link 
+                    href="/login"
+                    className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center cursor-pointer transition-all hover:scale-105 bg-surface-container-high"
+                  >
+                    <User className="w-4 h-4 text-on-surface-variant" />
+                  </Link>
+                )}
+
+                {/* User Dropdown Menu */}
+                {isAuthMenuOpen && user && (
+                  <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-outline-variant/15 bg-surface-container-highest/95 p-3 shadow-2xl backdrop-blur-xl z-[100] ring-1 ring-white/5">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-4 mb-2 px-2 pt-1">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-high border-2 border-primary overflow-hidden">
+                          {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[#070709] font-black">{user.email[0].toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e3fe06] opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#e3fe06]"></span>
+                            </span>
+                            <span className="text-[8px] text-[#e3fe06] font-extrabold tracking-wider">ONLINE</span>
+                          </div>
+                          <p className="text-xs font-bold text-on-surface truncate" title={profile?.display_name || user.email}>
+                            {profile?.display_name || user.email}
+                          </p>
+                          {isAdmin && (
+                            <span className="inline-flex w-fit mt-1 text-[8px] bg-[#e3fe06]/10 border border-[#e3fe06]/25 text-[#e3fe06] px-1.5 py-0.5 rounded font-extrabold tracking-wider">
+                              ADMINISTRATOR
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-0.5">
+                        <Link 
+                          href="/profile" 
+                          onClick={() => setIsAuthMenuOpen(false)}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
+                        >
+                          <User className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                          {uiLanguage === 'KO' ? '내 채널' : 'My Channel'}
+                        </Link>
+
+                        <Link 
+                          href="/settings" 
+                          onClick={() => setIsAuthMenuOpen(false)}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
+                        >
+                          <Settings className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                          {uiLanguage === 'KO' ? '설정 및 관리' : 'Settings & Management'}
+                        </Link>
+
+                        <Link 
+                          href="/pricing" 
+                          onClick={() => setIsAuthMenuOpen(false)}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
+                        >
+                          <CreditCard className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                          {uiLanguage === 'KO' ? '크레딧 충전' : 'Recharge Credits'}
+                        </Link>
+
+                        <button 
+                          onClick={handleSignOut} 
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                          {uiLanguage === 'KO' ? '로그아웃' : 'Log Out'}
+                        </button>
+                        
+                        <button 
+                          onClick={handleWithdraw} 
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant/70 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group text-left cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4 text-zinc-500 group-hover:text-red-400 transition-colors" />
+                          {uiLanguage === 'KO' ? '계정 탈퇴' : 'Delete Account'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Children */}
+        <main className="flex-1 px-[32px] py-[24px]">
+          <div key={pathname} className="animate-fade-in-up w-full">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* Shell: Bottom Navigation (Mobile Only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-[60] flex items-center justify-between px-[32px] h-24 glass-panel border-t border-outline-variant/10">
+        <Link 
+          href="/" 
+          className={`flex flex-col items-center gap-[4px] cursor-pointer ${
+            activeTab === 'home' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+          }`}
+        >
+          <Home className="w-5 h-5 text-current" />
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '홈' : 'Home'}</span>
+        </Link>
+        <Link 
+          href="/search" 
+          className={`flex flex-col items-center gap-[4px] cursor-pointer ${
+            activeTab === 'search' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+          }`}
+        >
+          <Search className="w-5 h-5 text-current" />
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '검색' : 'Search'}</span>
+        </Link>
+        <Link 
+          href="/library" 
+          className={`flex flex-col items-center gap-[4px] cursor-pointer ${
+            activeTab === 'library' || activeTab === 'liked' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+          }`}
+        >
+          <Library className="w-5 h-5 text-current" />
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '플레이리스트' : 'Playlist'}</span>
+        </Link>
+      </nav>
+
+      {/* Announcements Modal */}
+      {isAnnouncementsOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          onClick={() => setIsAnnouncementsOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg rounded-2xl border border-outline-variant/15 bg-surface-container shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-outline-variant/10 p-5 bg-surface-container-lowest">
+              <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#e3fe06] text-[#070709] text-[10px] font-black font-sans">!</span>
+                {uiLanguage === 'KO' ? '공지사항' : 'Announcements'}
+              </h3>
+              <button 
+                onClick={() => setIsAnnouncementsOpen(false)} 
+                className="text-zinc-555 hover:text-white p-1 rounded-lg hover:bg-white/[0.03] cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex flex-col gap-4 p-6 overflow-y-auto custom-scrollbar flex-1">
+              {announcements.length === 0 ? (
+                <div className="text-center text-on-surface-variant py-10 font-bold text-xs">{uiLanguage === 'KO' ? '등록된 공지사항이 없습니다.' : 'No announcements.'}</div>
+              ) : (
+                announcements.map((ann) => (
+                  <div key={ann.id} className="border-b border-outline-variant/5 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+                    <h4 className="text-xs font-bold text-on-surface mb-2">{ann.title}</h4>
+                    <p className="text-xs text-on-surface-variant whitespace-pre-wrap leading-relaxed">{ann.content}</p>
+                    <div className="mt-2 text-[9px] text-zinc-655 font-bold">
+                      {new Date(ann.created_at).toLocaleString(uiLanguage === 'KO' ? 'ko-KR' : 'en-US')}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Withdrawal Confirm Modal */}
+      {confirmDeleteOpen && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          onClick={() => setConfirmDeleteOpen(false)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h3 className="text-sm font-extrabold text-on-surface mb-2 tracking-tight">
+                {uiLanguage === 'KO' ? '계정 삭제' : 'Delete Account'}
+              </h3>
+              <p className="text-on-surface-variant text-xs leading-relaxed">
+                {uiLanguage === 'KO' 
+                  ? '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.' 
+                  : 'Are you sure you want to delete your account? All data will be permanently erased.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/10">
+              <button 
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-on-surface bg-white/[0.04] hover:bg-white/[0.08] transition-colors focus:outline-none cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+              </button>
+              <button 
+                onClick={confirmWithdraw}
+                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-[#070709] bg-[#e3fe06] hover:brightness-105 shadow-md shadow-[#e3fe06]/15 transition-all focus:outline-none cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '확인' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PersistentPlayer />
+      <NowPlayingPanel />
+    </div>
+  )
+}

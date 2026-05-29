@@ -168,3 +168,32 @@ begin
   delete from auth.users where id = auth.uid();
 end;
 $$;
+
+-- Playlists table for Library Folders
+create table if not exists playlists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  description text,
+  cover_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table playlists enable row level security;
+
+create policy "Users can read own playlists"
+on playlists for select
+using (auth.uid() = user_id);
+
+create policy "Users can insert own playlists"
+on playlists for insert
+with check (auth.uid() = user_id);
+
+create policy "Users can update own playlists"
+on playlists for update
+using (auth.uid() = user_id);
+
+create policy "Users can delete own playlists"
+on playlists for delete
+using (auth.uid() = user_id);

@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@import "tailwindcss";
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+:root {
+  --background: #0e150e;
+  --foreground: #dde5d9;
+}
+
+@theme {
+  --color-background: #0e150e;
+  --color-foreground: #dde5d9;
+  
+  --color-surface-container-lowest: #091009;
+  --color-surface-container-low: #161d16;
+  --color-surface-container: #1a211a;
+  --color-surface-container-high: #242c24;
+  --color-surface-container-highest: #2f372e;
+  --color-surface-variant: #2f372e;
+  --color-surface: #0e150e;
+  --color-surface-dim: #0e150e;
+  --color-surface-bright: #333b33;
+  
+  --color-on-surface: #dde5d9;
+  --color-on-surface-variant: #bccbb9;
+  
+  --color-outline: #869585;
+  --color-outline-variant: #3d4a3d;
+  
+  --color-primary: #e3fe06;
+  --color-primary-fixed: #e3fe06;
+  --color-primary-fixed-dim: #e3fe06;
+  --color-primary-container: #e3fe06;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom Webkit scrollbar for premium dark feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e150e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d4a3d;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e3fe06;
+}
+
+.glass-panel {
+  backdrop-filter: blur(24px);
+  background-color: rgba(14, 21, 14, 0.8);
+}
+
+.hero-gradient {
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(14, 21, 14, 1) 100%);
+}
+
+.track-hover:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Premium Entry Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animation-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-450 {
+  animation-delay: 450ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+

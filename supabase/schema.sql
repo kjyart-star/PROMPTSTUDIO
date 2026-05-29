@@ -6,6 +6,11 @@ create table if not exists public.song_history (
   lyrics text default '',
   notes text default '',
   form jsonb default '{}'::jsonb,
+  suno_task_id text,
+  status text default 'completed',
+  audio_url text,
+  image_url text,
+  is_published boolean default false,
   created_at timestamptz not null default now()
 );
 
@@ -65,4 +70,37 @@ alter table public.subscriptions enable row level security;
 drop policy if exists "Users can read own subscription" on public.subscriptions;
 create policy "Users can read own subscription"
 on public.subscriptions for select
+using ((select auth.uid()) = user_id);
+
+-- Playlists table for Library Folders
+create table if not exists public.playlists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  description text,
+  cover_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.playlists enable row level security;
+
+drop policy if exists "Users can read own playlists" on public.playlists;
+create policy "Users can read own playlists"
+on public.playlists for select
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can insert own playlists" on public.playlists;
+create policy "Users can insert own playlists"
+on public.playlists for insert
+with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update own playlists" on public.playlists;
+create policy "Users can update own playlists"
+on public.playlists for update
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete own playlists" on public.playlists;
+create policy "Users can delete own playlists"
+on public.playlists for delete
 using ((select auth.uid()) = user_id);
