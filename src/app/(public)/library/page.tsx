@@ -11,12 +11,7 @@ export default async function LibraryPage() {
   let likedTracks: Track[] = []
 
   if (user) {
-    // 1. Fetch user profiles to map creator info
-    const { data: profilesData } = await supabase
-      .from('profiles')
-      .select('*')
-
-    // 2. Fetch completed songs from song_history where liked is true
+    // 1. Fetch completed songs from song_history where liked is true
     const { data: realSongs } = await supabase
       .from('song_history')
       .select('*')
@@ -24,11 +19,22 @@ export default async function LibraryPage() {
       .eq('liked', true)
       .order('created_at', { ascending: false })
 
+    // 2. Fetch only the user profiles associated with the songs
+    const userIds = Array.from(new Set(realSongs?.map((song: any) => song.user_id).filter(Boolean) || []))
+    let profilesData: any[] = []
+    if (userIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds)
+      profilesData = data || []
+    }
+
     likedTracks = (realSongs || []).map((song: any) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'
       const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
       const dbPlayCount = Number(song.form?.play_count || 0)
-      const songProfile = (profilesData || []).find((p: any) => p.id === song.user_id)
+      const songProfile = profilesData.find((p: any) => p.id === song.user_id)
 
       return {
         id: song.id,

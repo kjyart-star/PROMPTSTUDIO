@@ -86,23 +86,30 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
 
   // 4. If no DB chart data exists, fill with 20 premium mock items
   if (chartItems.length === 0) {
-    // 4.0. Load profiles
-    const { data: profilesData } = await supabase
-      .from('profiles')
-      .select('*')
-
-    // 4.1. Fetch real completed songs from song_history
+    // 4.0. Fetch real completed songs from song_history (up to 100)
     const { data: realSongs } = await supabase
       .from('song_history')
       .select('*')
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
+      .limit(100)
+
+    // 4.1. Fetch only corresponding profiles
+    const userIds = Array.from(new Set(realSongs?.map((song: any) => song.user_id).filter(Boolean) || []))
+    let profilesData: any[] = []
+    if (userIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds)
+      profilesData = data || []
+    }
 
     const mappedRealSongs = (realSongs || []).map((song: any, idx: number) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'
       const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
       const dbPlayCount = Number(song.form?.play_count || 0)
-      const songProfile = (profilesData || []).find((p: any) => p.id === song.user_id)
+      const songProfile = profilesData.find((p: any) => p.id === song.user_id)
 
       return {
         id: song.id,

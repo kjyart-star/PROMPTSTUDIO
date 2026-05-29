@@ -7,35 +7,99 @@ export const revalidate = 0
 export default async function PublicHomePage() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // 1. Baseline independent queries in parallel
+  const [
+    userRes,
+    realSongsRes,
+    latestSnapshotRes,
+    recommendedRes,
+    latestTracksRes,
+    albumsRes,
+    popularAlbumsRes,
+    artistsRes
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('song_history')
+      .select('*')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(12),
+    supabase.from('chart_snapshots')
+      .select('period_date')
+      .eq('period_type', 'daily')
+      .order('period_date', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from('tracks')
+      .select('*, albums(*, artists(*))')
+      .eq('status', 'published')
+      .order('like_count', { ascending: false })
+      .limit(12),
+    supabase.from('tracks')
+      .select('*, albums(*, artists(*))')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase.from('albums')
+      .select('*, artists(*)')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase.from('albums')
+      .select('*, artists(*)')
+      .eq('status', 'published')
+      .order('total_plays', { ascending: false })
+      .order('total_likes', { ascending: false })
+      .limit(10),
+    supabase.from('artists')
+      .select('*')
+      .limit(4)
+  ])
 
-  let initialUserLikes: string[] = []
-  if (user) {
-    const { data: userLikedSongs } = await supabase
-      .from('song_history')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('liked', true)
-    initialUserLikes = userLikedSongs?.map((l) => l.id) || []
-  }
+  const user = userRes.data.user
+  const realSongs = realSongsRes.data || []
+  const latestSnapshot = latestSnapshotRes.data
+  const dbRecommended = recommendedRes.data || []
+  const dbLatest = latestTracksRes.data || []
+  const albumsData = albumsRes.data || []
+  const popularAlbumsData = popularAlbumsRes.data || []
+  const artistsData = artistsRes.data || []
 
-  // 1.4. profiles 목록 로드
-  const { data: profilesData } = await supabase
-    .from('profiles')
-    .select('*')
+  // 2. Dependent queries in parallel
+  const userIds = Array.from(new Set(realSongs.map((song: any) => song.user_id).filter(Boolean)))
+  const latestDateStr = latestSnapshot?.period_date || null
 
-  // 1.5. Fetch real completed songs from song_history for general fallbacks & lists
-  const { data: realSongs } = await supabase
-    .from('song_history')
-    .select('*')
-    .eq('status', 'completed')
-    .order('created_at', { ascending: false })
+  const [
+    userLikedSongsRes,
+    profilesRes,
+    chartDataRes
+  ] = await Promise.all([
+    user 
+      ? supabase.from('song_history').select('id').eq('user_id', user.id).eq('liked', true)
+      : Promise.resolve({ data: null }),
+    userIds.length > 0
+      ? supabase.from('profiles').select('*').in('id', userIds)
+      : Promise.resolve({ data: null }),
+    latestDateStr
+      ? supabase.from('chart_snapshots')
+          .select('*, tracks(*, albums(*, artists(*)))')
+          .eq('period_type', 'daily')
+          .eq('period_date', latestDateStr)
+          .order('rank', { ascending: true })
+          .limit(10)
+      : Promise.resolve({ data: null })
+  ])
 
-  const mappedRealSongs = (realSongs || []).map((song: any) => {
+  const userLikedSongs = userLikedSongsRes.data || []
+  const initialUserLikes = userLikedSongs.map((l: any) => l.id)
+  const profilesData = profilesRes.data || []
+  const chartData = chartDataRes.data || []
+
+  const mappedRealSongs = realSongs.map((song: any) => {
     const formGenre = song.form?.genre || song.genre || 'Pop'
     const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
     const dbPlayCount = Number(song.form?.play_count || 0)
-    const songProfile = (profilesData || []).find((p: any) => p.id === song.user_id)
+    const songProfile = profilesData.find((p: any) => p.id === song.user_id)
 
     return {
       id: song.id,
@@ -72,44 +136,22 @@ export default async function PublicHomePage() {
     }
   }) as unknown as Track[]
 
-  // 1.6. 실시간 차트 정보 로드 (daily snapshot)
-  const { data: latestSnapshot } = await supabase
-    .from('chart_snapshots')
-    .select('period_date')
-    .eq('period_type', 'daily')
-    .order('period_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const latestDateStr = latestSnapshot?.period_date || null
-
   let initialTracks: Track[] = []
 
-  // 최신 날짜가 있다면 해당 날짜의 랭킹 스냅샷 10위까지 로드
-  if (latestDateStr) {
-    const { data: chartData, error } = await supabase
-      .from('chart_snapshots')
-      .select('*, tracks(*, albums(*, artists(*)))')
-      .eq('period_type', 'daily')
-      .eq('period_date', latestDateStr)
-      .order('rank', { ascending: true })
-      .limit(10)
+  if (chartData.length > 0) {
+    initialTracks = chartData.map((item: any) => {
+      const rawTrack = item.tracks
+      const rawAlbum = rawTrack?.albums
+      const rawArtist = rawAlbum?.artists
 
-    if (!error && chartData) {
-      initialTracks = chartData.map((item: any) => {
-        const rawTrack = item.tracks
-        const rawAlbum = rawTrack?.albums
-        const rawArtist = rawAlbum?.artists
-
-        return rawTrack ? {
-          ...rawTrack,
-          album: rawAlbum ? {
-            ...rawAlbum,
-            artist: rawArtist
-          } : undefined
-        } : null
-      }).filter(Boolean) as unknown as Track[]
-    }
+      return rawTrack ? {
+        ...rawTrack,
+        album: rawAlbum ? {
+          ...rawAlbum,
+          artist: rawArtist
+        } : undefined
+      } : null
+    }).filter(Boolean) as unknown as Track[]
   }
 
   // Fallback fallback lists for local dev
@@ -121,9 +163,7 @@ export default async function PublicHomePage() {
     { id: 'dummy-5', title: 'R u still there', file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', duration_sec: 235, like_count: 94332, play_count: 94332, status: 'published', created_at: '', album_id: 'dummy-album-5', album: { id: 'dummy-album-5', title: 'R u still there', cover_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=350&h=350&q=80', release_type: 'single', status: 'published', created_at: '', artist_id: 'artist-5', artist: { id: 'artist-5', name: 'Krheâzee', slug: 'krheazee', avatar_url: '', bio: '', created_at: '' } } }
   ]
 
-  // 만약 랭킹 스냅샷 데이터가 비어있다면 song_history 완료본 기반으로 fallback 리스트 빌드
   if (initialTracks.length === 0) {
-    // 인기 트랙 로드
     const { data: tracksData } = await supabase
       .from('tracks')
       .select('*, albums(*, artists(*))')
@@ -143,80 +183,23 @@ export default async function PublicHomePage() {
     initialTracks = [...mappedRealSongs, ...baseTracks.slice(0, Math.max(0, 10 - mappedRealSongs.length))]
   }
 
-  // 추천 음원 로드 (좋아요 순)
-  const { data: recommendedTracksData } = await supabase
-    .from('tracks')
-    .select('*, albums(*, artists(*))')
-    .eq('status', 'published')
-    .order('like_count', { ascending: false })
-    .limit(10)
-
-  const dbRecommended: Track[] = (recommendedTracksData || []).map((track: any) => ({
-    ...track,
-    album: track.albums ? {
-      ...track.albums,
-      artist: track.albums.artists
-    } : undefined
-  }))
-
   const baseRecommended = dbRecommended.length > 0 ? dbRecommended : DUMMY_TRACKS_FALLBACK as Track[]
-  const initialRecommendedTracks = [...mappedRealSongs, ...baseRecommended.slice(0, Math.max(0, 10 - mappedRealSongs.length))]
-
-  // 최신 음원 로드 (최신 등록 순)
-  const { data: latestTracksData } = await supabase
-    .from('tracks')
-    .select('*, albums(*, artists(*))')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  const dbLatest: Track[] = (latestTracksData || []).map((track: any) => ({
-    ...track,
-    album: track.albums ? {
-      ...track.albums,
-      artist: track.albums.artists
-    } : undefined
-  }))
+  const initialRecommendedTracks = [...mappedRealSongs, ...baseRecommended.slice(0, Math.max(0, 12 - mappedRealSongs.length))]
 
   const baseLatest = dbLatest.length > 0 ? dbLatest : DUMMY_TRACKS_FALLBACK as Track[]
   const initialLatestTracks = [...mappedRealSongs, ...baseLatest.slice(0, Math.max(0, 10 - mappedRealSongs.length))]
 
-  // 최신 앨범 로드 (10개)
-  const { data: albumsData } = await supabase
-    .from('albums')
-    .select('*, artists(*)')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  const initialAlbums: Album[] = (albumsData || []).map((album: any) => ({
+  const initialAlbums: Album[] = albumsData.map((album: any) => ({
     ...album,
     artist: album.artists
   }))
 
-  // 인기 앨범 로드 (10개, 플레이수 및 좋아요수 내림차순)
-  const { data: popularAlbumsData } = await supabase
-    .from('albums')
-    .select('*, artists(*)')
-    .eq('status', 'published')
-    .order('total_plays', { ascending: false })
-    .order('total_likes', { ascending: false })
-    .limit(10)
-
-  const initialPopularAlbums: Album[] = (popularAlbumsData || []).map((album: any) => ({
+  const initialPopularAlbums: Album[] = popularAlbumsData.map((album: any) => ({
     ...album,
     artist: album.artists
   }))
 
-  // 추천 아티스트 로드
-  const { data: artistsData } = await supabase
-    .from('artists')
-    .select('*')
-    .limit(4)
-
-
-
-  const profileArtists: Artist[] = (profilesData || []).map((profile: any) => {
+  const profileArtists: Artist[] = profilesData.map((profile: any) => {
     return {
       id: profile.id,
       name: profile.display_name || profile.email.split('@')[0],
@@ -231,7 +214,7 @@ export default async function PublicHomePage() {
 
   const initialArtists: Artist[] = [
     ...profileArtists,
-    ...(artistsData || []).map((artist: any) => ({
+    ...artistsData.map((artist: any) => ({
       ...artist,
       followers: artist.followers || (artist.name.length * 850 + 1200),
       is_user: false
