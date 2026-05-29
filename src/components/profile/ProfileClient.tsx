@@ -1477,7 +1477,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     return (
       <div 
         key={playlist.id} 
-        className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-outline-variant/10 shadow-lg group cursor-pointer"
+        className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-outline-variant/10 shadow-lg group cursor-pointer"
         onClick={() => handleSelectPlaylist(playlist)}
       >
         <img 
