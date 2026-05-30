@@ -238,6 +238,9 @@ export function MasteringClient() {
       case 'streaming': // Perfectly flat and safe
         setClarity(50); setWarmth(50); setSaturation(0); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
+      case 'loud_balanced': // Flat but pushed loud
+        setClarity(50); setWarmth(50); setSaturation(5); setWidth(0); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+        break;
       case 'kpop': // Pop / K-Pop (Bright, tight, commercial loudness)
         setClarity(65); setWarmth(55); setSaturation(5); setWidth(15); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
@@ -607,6 +610,7 @@ export function MasteringClient() {
                   장르 프리셋
                 </div>
                 <button onClick={() => handleTemplateChange('streaming')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>기본(균형)</button>
+                <button onClick={() => handleTemplateChange('loud_balanced')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'loud_balanced' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>균형(볼륨업)</button>
                 <button onClick={() => handleTemplateChange('kpop')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'kpop' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>팝/K-Pop</button>
                 <button onClick={() => handleTemplateChange('punchy')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'punchy' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>힙합/EDM</button>
                 <button onClick={() => handleTemplateChange('rock')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rock' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>록/메탈</button>
