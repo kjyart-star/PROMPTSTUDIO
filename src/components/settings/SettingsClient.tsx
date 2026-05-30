@@ -68,6 +68,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
         setProfile(data)
         setEditName(data.display_name || '')
         setEditAvatar(data.avatar_url || '')
+        if (data.credits !== undefined && data.credits !== null) {
+          setUserCredits(data.credits)
+          localStorage.setItem('user-credits', String(data.credits))
+        }
       }
     } catch (e) {
       console.error(e)
@@ -154,8 +158,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
     const savedCredits = localStorage.getItem('user-credits')
     if (savedCredits !== null) {
       setUserCredits(parseFloat(savedCredits))
-    } else {
-      localStorage.setItem('user-credits', '120')
     }
 
     const savedTx = localStorage.getItem('user-transactions')
@@ -374,8 +376,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 if (userPlan === 'pro') {
                   planLabel = uiLanguage === 'KO' ? '프로 플랜' : 'Pro Plan';
                   maxCredits = 2500;
-                  cardBg = 'from-[#1a0f16] via-[#120a0f] to-[#070708]';
-                  borderHighlight = 'border-pink-500/20';
+                  cardBg = 'from-[#121408] via-[#0d0f05] to-[#070708]';
+                  borderHighlight = 'border-primary/20';
                 } else if (userPlan === 'premier') {
                   planLabel = uiLanguage === 'KO' ? '프리미어 플랜' : 'Premier Plan';
                   maxCredits = 10000;
@@ -392,7 +394,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-black px-2.5 py-0.5 rounded-full tracking-wide uppercase ${
                             userPlan === 'pro' 
-                              ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' 
+                              ? 'bg-primary/10 text-primary border border-primary/20' 
                               : userPlan === 'premier' 
                               ? 'bg-primary/10 text-primary border border-primary/20' 
                               : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
@@ -429,7 +431,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <div 
                           className={`h-full rounded-full transition-all duration-500 ${
                             userPlan === 'pro' 
-                              ? 'bg-gradient-to-r from-pink-500 to-rose-500' 
+                              ? 'bg-gradient-to-r from-primary to-[#b8cd05]' 
                               : userPlan === 'premier' 
                               ? 'bg-gradient-to-r from-primary to-[#49be67]' 
                               : 'bg-zinc-500'

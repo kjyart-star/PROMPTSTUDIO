@@ -701,6 +701,20 @@ export function HomeClient({
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [likedAlbums, setLikedAlbums] = useState<string[]>([])
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
+
+  const heroImages = [
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&h=500&q=80",
+    "/images/hero-bg-2.png",
+    "/images/hero-bg-3.png"
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [heroImages.length])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -863,11 +877,16 @@ export function HomeClient({
       <section className="-mx-[32px] -mt-[24px] relative h-[25vh] min-h-[220px] md:h-[30vh] overflow-hidden bg-[#0e150e] flex flex-col justify-end animate-fade-in">
         {/* Background Pop Artist Image */}
         <div className="absolute inset-0 select-none">
-          <img 
-            src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&h=500&q=80" 
-            alt="" 
-            className="w-full h-full object-cover grayscale opacity-50 brightness-[0.7]"
-          />
+          {heroImages.map((src, index) => (
+            <img 
+              key={src}
+              src={src} 
+              alt="" 
+              className={`absolute inset-0 w-full h-full object-cover grayscale brightness-[0.7] transition-opacity duration-1000 ${
+                index === heroImageIndex ? 'opacity-50' : 'opacity-0'
+              }`}
+            />
+          ))}
           {/* Smooth gradients to blend image into the forest green-black background */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0e150e] via-[#0e150e]/30 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0e150e]/50 via-transparent to-transparent" />

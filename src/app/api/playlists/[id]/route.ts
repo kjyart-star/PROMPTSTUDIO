@@ -28,12 +28,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const isOwner = playlistCheck.user_id === user.id
 
     // 2. 관리자 권한 확인
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
       .single()
-    const isAdmin = roleData?.role === 'admin'
+    const isAdmin = !!profileData?.is_admin
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

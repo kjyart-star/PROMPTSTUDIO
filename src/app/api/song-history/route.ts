@@ -14,24 +14,22 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const fetchAll = searchParams.get('all') === 'true'
 
+    // 조인 쿼리 대신 단순 select로 에러 방지
     let query = supabase
       .from('song_history')
       .select('*')
 
     if (fetchAll) {
       // 관리자 권한 확인
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
         .single()
 
-      if (roleData?.role !== 'admin') {
+      if (!profileData?.is_admin) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
-
-      // 관리자는 모든 공개된 곡을 조회할 수 있음 (규정 위반 단속용)
-      query = query.eq('is_published', true)
     } else {
       // 일반 사용자는 본인 음원 기록만 조회
       query = query.eq('user_id', user.id)
@@ -59,7 +57,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data || [])
+    let listData = data || []
+
+    // fetchAll이 true이면 profiles 테이블에서 사용자 목록을 추가로 가져와 인메모리에서 결합
+    if (fetchAll && listData.length > 0) {
+      const userIds = Array.from(new Set(listData.map(item => item.user_id)))
+      const { data: profiles, error: profilesErr } = await supabase
+        .from('profiles')
+        .select('id, display_name, is_banned')
+        .in('id', userIds)
+      
+      if (!profilesErr && profiles) {
+        const profileMap = new Map(profiles.map((p: any) => [p.id, p]))
+        listData = listData.map(item => ({
+          ...item,
+          profiles: profileMap.get(item.user_id) || null
+        }))
+      }
+    }
+
+    return NextResponse.json(listData)
   } catch (err: any) {
     console.error('API GET song-history error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

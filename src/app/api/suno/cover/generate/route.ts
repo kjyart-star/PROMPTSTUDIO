@@ -16,6 +16,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // 차단 사용자 및 크레딧 검증
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_banned, credits')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.is_banned) {
+      return NextResponse.json({ error: 'Banned account. Please contact support.' }, { status: 403 })
+    }
+
+    if ((profile?.credits ?? 0) < 10) {
+      return NextResponse.json({ error: 'Insufficient credits. Please recharge.' }, { status: 403 })
+    }
+
     const body = await request.json()
     
     // Construct the payload as per apipass docs
@@ -48,6 +63,12 @@ export async function POST(request: Request) {
     const data = await response.json()
 
     if (response.ok && data.code === 200) {
+       // 크레딧 10 차감
+       await supabase.rpc('update_user_credits', {
+         target_user_id: user.id,
+         credit_delta: -10
+       })
+
        // Typically we would save this to Supabase song_history here
        // but for simplicity, we just return the taskId to the client
        return NextResponse.json({ taskId: data.data.taskId })

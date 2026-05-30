@@ -64,7 +64,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       image_url: song.image_url || '',
       album: {
         id: `suno-album-${song.id}`,
-        title: song.form?.styleDesc || `${song.title} (Suno)`,
+        title: song.form?.styleDesc || song.title,
         cover_url: song.image_url || '/default-album.png',
         release_type: 'single',
         status: 'published',

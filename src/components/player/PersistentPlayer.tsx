@@ -23,6 +23,23 @@ export function PersistentPlayer() {
 
   const [isLiked, setIsLiked] = useState(false);
   const [isPipOpen, setIsPipOpen] = useState(false);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+
+  const queueRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (queueRef.current && !queueRef.current.contains(event.target as Node)) {
+        setIsQueueOpen(false);
+      }
+    }
+    if (isQueueOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isQueueOpen]);
 
   // Sync liked state when current track changes
   useEffect(() => {
@@ -385,12 +402,65 @@ export function PersistentPlayer() {
 
         {/* 우: 볼륨 및 기능 */}
         <div className="flex items-center justify-end gap-[16px] w-1/4">
-          <button className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center">
-            <Mic className="w-5 h-5" />
-          </button>
-          <button className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center">
-            <ListMusic className="w-5 h-5" />
-          </button>
+          <div className="relative" ref={queueRef}>
+            <button 
+              onClick={() => setIsQueueOpen(!isQueueOpen)}
+              className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${isQueueOpen ? 'text-primary' : 'text-on-surface-variant'}`}
+              title="재생 목록"
+            >
+              <ListMusic className="w-5 h-5" />
+            </button>
+            
+            {/* Queue Popup */}
+            {isQueueOpen && (
+              <div className="absolute bottom-12 right-0 w-[320px] max-h-[400px] bg-[#282828] border border-outline-variant/10 shadow-2xl rounded-xl z-50 flex flex-col overflow-hidden animate-fade-in">
+                <div className="flex items-center justify-between p-4 border-b border-outline-variant/5 bg-[#18181b]">
+                  <h3 className="text-sm font-bold text-on-surface">현재 재생 목록</h3>
+                  <span className="text-[10px] font-bold text-on-surface-variant bg-on-surface-variant/10 px-2 py-0.5 rounded-full">
+                    {usePlayerStore.getState().queue.length}곡
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
+                  {usePlayerStore.getState().queue.map((track, idx) => {
+                    const isCurrent = currentTrack?.id === track.id;
+                    return (
+                      <div 
+                        key={`${track.id}-${idx}`}
+                        onClick={() => {
+                          playTrack(track, usePlayerStore.getState().queue);
+                        }}
+                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${
+                          isCurrent 
+                            ? 'bg-primary/10 border border-primary/20' 
+                            : 'hover:bg-white/[0.04] border border-transparent'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded overflow-hidden bg-[#18181b] shrink-0">
+                          <img src={track.album?.cover_url || track.image_url || '/default-album.png'} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-xs font-bold truncate ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>
+                            {track.title}
+                          </p>
+                          <p className="text-[10px] text-on-surface-variant truncate">
+                            {track.album?.artist?.name || 'Suno AI'}
+                          </p>
+                        </div>
+                        {isCurrent && (
+                          <div className="w-3 h-3 rounded-full bg-primary animate-pulse shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {usePlayerStore.getState().queue.length === 0 && (
+                    <div className="p-4 text-center text-xs text-on-surface-variant">
+                      대기열이 비어있습니다.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-[8px] group">
             <button 
               onClick={toggleMute}

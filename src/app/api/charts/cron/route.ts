@@ -24,12 +24,12 @@ export async function GET(request: Request) {
     let isAuthorized = isLocal
 
     if (user && !isAuthorized) {
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
         .single()
-      isAuthorized = roleData?.role === 'admin'
+      isAuthorized = !!profileData?.is_admin
     }
 
     const cronHeader = request.headers.get('x-cron-auth')

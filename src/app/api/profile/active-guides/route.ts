@@ -22,7 +22,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data?.active_guide_ids || [])
+    return NextResponse.json(data?.active_guide_ids ?? null)
   } catch (err: any) {
     console.error('API GET active-guides error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

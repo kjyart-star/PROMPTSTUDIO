@@ -60,16 +60,16 @@ const PROVIDERS = {
     models: ['gpt-4o-mini', 'gpt-4o', 'o3-mini'],
     keyLabel: 'OpenAI API Key',
   },
-  gemini: {
-    name: 'Gemini',
-    models: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
-    keyLabel: 'Google AI API Key',
-  },
-  claude: {
-    name: 'Claude',
-    models: ['claude-3-5-haiku-latest', 'claude-3-5-sonnet-latest', 'claude-3-7-sonnet-latest'],
-    keyLabel: 'Anthropic API Key',
-  },
+}
+
+const MODEL_CREDIT_COSTS: Record<string, number> = {
+  'gpt-4o-mini': 1,
+  'o3-mini': 3,
+  'gpt-4o': 5,
+}
+
+const getModelCreditCost = (model: string): number => {
+  return MODEL_CREDIT_COSTS[model] || 2
 }
 
 const DEFAULT_GUIDES = [
@@ -611,19 +611,62 @@ const buildInstructionPrompt = (form: any, guideText: string) => {
   const engFeat = FEAT_MAP[form.vocalFeaturing] || form.vocalFeaturing
   const engGroup = GROUP_MAP[form.vocalGroup] || form.vocalGroup
 
-  return `너는 음악 생성 AI용 프롬프트와 가사를 만드는 전문 작사가/프로듀서다.
+  // 랩/힙합 하위 장르 및 관련 키워드 전체 탐색
+  const checkRapKeywords = (text: string) => {
+    if (!text) return false
+    const lower = text.toLowerCase()
+    return (
+      lower.includes('랩') ||
+      lower.includes('힙합') ||
+      lower.includes('rap') ||
+      lower.includes('hip') ||
+      lower.includes('trap') ||
+      lower.includes('트랩') ||
+      lower.includes('boom-bap') ||
+      lower.includes('boom bap') ||
+      lower.includes('붐뱁') ||
+      lower.includes('drill') ||
+      lower.includes('드릴') ||
+      lower.includes('grime') ||
+      lower.includes('그라임') ||
+      lower.includes('mumble') ||
+      lower.includes('멈블') ||
+      lower.includes('flow') ||
+      lower.includes('플로우') ||
+      lower.includes('rhyme') ||
+      lower.includes('라임')
+    )
+  }
 
-[사용자 정의 지침서 (1순위 반영)]
-${guideText ? `아래 내용은 사용자가 설정한 고유 지침입니다. 프롬프트 및 가사 생성 시 **절대적으로 준수**하세요:\n${guideText}` : '등록된 추가 지침 없음'}
+  const isRap = 
+    checkRapKeywords(form.styleDesc) ||
+    checkRapKeywords(form.extra) ||
+    checkRapKeywords(guideText)
+
+  const system = `너는 음악 생성 AI용 프롬프트와 가사를 만드는 최고 수준의 전문 작사가이자 프로듀서다.
+
+${isRap ? `⚠️ [RAP/HIP-HOP EXTRA MANDATORY DIRECTION - CRITICAL]
+이 곡은 랩/힙합(Rap/Hip-Hop) 음악입니다. 아래의 랩 전문 작법 규칙을 100% 절대적으로 적용하여 가사를 작성하십시오:
+- 일반 가사 구조 대신, 랩 플로우(rhythmic flow), 라임(rhyme), 비트 드롭(bass drop), 더블링(doubling), 추임새(ad-libs)에 최적화된 구절로만 가사를 작성해야 합니다.
+- 멜로디 라인을 완전히 배제하고, 짧고 리듬감이 살아있는 호흡(글자 수가 한 행에 너무 길지 않게 조절)으로 가사 행들을 구성하세요.
+- 섹션 태그에 대괄호와 파이프를 결합한 스태킹 형식을 반드시 적극 사용하세요. 각 섹션마다 비트의 분위기, 랩의 속도, 플로우 스타일을 상세히 지시해야 합니다.
+  (예: [Rap Verse 1 | fast rhythmic rap flow | heavy trap drums | aggressive delivery], [Chorus | melodic rap hook | stacked harmonies | bass drop])
+- 가사 중 랩 플로우의 엇박이나 그루브를 표현할 수 있도록 의성어나 짧은 외마디 비명, 더블링 가이드를 적극 포함시키세요 (예: (Yeah), (Ayy), (Whoo) 등).
+` : ''}
+
+[사용자 정의 및 공용 지침서 (1순위 절대 준수 - CRITICAL PRIORITY)]
+${guideText ? `아래 내용은 설정된 지침서 규정입니다. 이 내용은 AI 생성 프로세스 전체를 지배하는 **최우선 준수사항**입니다. 프롬프트 및 가사 생성 시 어떠한 예외도 없이 **절대적으로 준수**하고 모든 우선순위의 1순위로 적용하십시오:
+
+${guideText}` : '등록된 추가 지침 없음'}
 
 [우선순위 원칙 (PRIORITY RULES)]
 모든 내용 생성 시 다음의 우선순위를 기본으로 가장 강력하게 적용해야 합니다:
-1순위: [사용자 정의 지침서]의 내용
-2순위: 곡 제목 (분위기와 주제의 핵심 뼈대)
-3순위: 스타일 설명 (전반적인 장르와 무드)
-다른 어떤 설정(보컬, 템포 등)보다 이 세 가지 핵심 요소가 프롬프트의 전반적인 방향성과 결과물을 지배하도록 작성하세요.
+1순위: [사용자 정의 및 공용 지침서]의 내용 (장르, 구조, 톤앤매너 등 고유 규칙)
+2순위: 스타일 설명 (음악 장르, 리듬, 악기 등 사운드의 핵심 지향점)
+3순위: 곡 제목 (가사의 주제, 분위기 및 전체 스토리의 감성 뼈대)
+다른 어떤 설정(보컬, 템포 등)보다 [사용자 정의 및 공용 지침서]와 [스타일 설명]이 프롬프트의 음악 장르와 사운드 특성, 가사 형식을 지배하도록 작성해야 합니다.
 
-[CRITICAL RULE]
+[CRITICAL RULES]
 1. "STYLE PROMPT" 및 "NEGATIVE PROMPT" 섹션은 **반드시 100% 영어 쉼표 구분 키워드(English comma-separated keywords)로만** 작성해야 합니다.
    - **절대 단 하나의 한글 단어나 한글 조사도 이 두 섹션에 포함되어서는 안 됩니다.**
    - 사용자가 한글로 정보를 입력했더라도(예: '한국어', '솔로', '여성' 등), 스타일 프롬프트에서는 이를 반드시 'Korean', 'solo', 'female' 등의 영문으로 완벽히 번역하여 키워드 형태로 구성해야 합니다.
@@ -631,25 +674,10 @@ ${guideText ? `아래 내용은 사용자가 설정한 고유 지침입니다. �
 2. "LYRICS", "TITLE", "NOTES" 섹션은 사용자가 지정한 [언어: ${form.language}]에 맞추어 작성해야 합니다.
 3. 음악이 촌스럽거나 뻔하게 들리지 않도록, 최고 수준의 전문적인 프로듀싱 키워드와 세련된 사운드 질감을 적극적으로 추가하세요.
 4. 출력 형식의 순서와 이름을 정확히 지키세요.
-
-목표: ${form.targetTool}에 바로 복사하여 붙여넣을 수 있는 극도로 정교하고 트렌디한 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 생성한다.
-
-곡 정보:
-- 제목: ${form.title}
-- 스타일 설명: ${form.styleDesc}
-- 곡 유형: ${form.songType === 'instrumental' ? '가사 없는 연주곡/BGM (Instrumental)' : '보컬 곡'}
-${form.songType === 'instrumental' ? 
-`- 용도: ${form.bgmType || '영화음악'}
-- 음악 길이: ${form.musicLength || '1분'}` 
-: 
-`- 언어: ${form.language} (English translation in prompt: ${engLang})
-- 보컬 성별: ${form.vocalGender || '여성'} (English translation in prompt: ${engGender})
-- 피쳐링: ${form.vocalFeaturing || '없음'} (English translation in prompt: ${engFeat})
-- 보컬 톤: ${form.vocal}
-- 보컬 구성: ${form.vocalGroup} (English translation in prompt: ${engGroup})`}
-- 템포: ${form.tempo} BPM
-- 추가 요청: ${form.extra}
-- 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}
+5. [지침서 기반 태그 스태킹 & 감정 레이어링 (Tag Stacking & Emotion Layering)]
+   - 가사([LYRICS])의 대괄호 섹션 정의 시, 단순히 [Verse 1]이나 [Chorus]만 적지 마세요.
+   - 지침서 및 음악 스타일에 근거하여 대괄호 안에 파이프(|) 기호를 사용해 랩 플로우, 보컬 지시, 비트 분위기를 결합하는 스태킹을 적극적으로 활용하세요.
+   - 예: \`[Rap Verse 1 | fast rhythmic flow | boom bap beats]\`, \`[Chorus | emotional vocal | warm synth pad | bass drop]\`, \`[Bridge | whispers | piano only]\`.
 
 출력 형식은 반드시 아래 순서를 따른다.
 STYLE PROMPT
@@ -668,59 +696,30 @@ ${form.songType === 'instrumental' ? '[Instrumental] 만 작성하고 다른 텍
 
 NOTES
 짧은 제작 메모 3개`
+
+  const user = `목표: ${form.targetTool}에 바로 복사하여 붙여넣을 수 있는 극도로 정교하고 트렌디한 스타일 프롬프트${form.songType === 'instrumental' ? '' : '와 완성형 가사'}를 생성한다.
+
+곡 정보:
+- 제목: ${form.title}
+- 스타일 설명: ${form.styleDesc}
+- 곡 유형: ${form.songType === 'instrumental' ? '가사 없는 연주곡/BGM (Instrumental)' : '보컬 곡'}
+${form.songType === 'instrumental' ? 
+`- 용도: ${form.bgmType || '영화음악'}
+- 음악 길이: ${form.musicLength || '1분'}` 
+: 
+`- 언어: ${form.language} (English translation in prompt: ${engLang})
+- 보컬 성별: ${form.vocalGender || '여성'} (English translation in prompt: ${engGender})
+- 피쳐링: ${form.vocalFeaturing || '없음'} (English translation in prompt: ${engFeat})
+- 보컬 톤: ${form.vocal}
+- 보컬 구성: ${form.vocalGroup} (English translation in prompt: ${engGroup})`}
+- 템포: ${form.tempo} BPM
+- 추가 요청: ${form.extra}
+- 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}`
+
+  return { system, user }
 }
 
-async function callOpenAI(settings: any, prompt: string, globalKey: string) {
-  let apiKey = (globalKey || settings.apiKey || '').trim()
-  apiKey = apiKey.replace(/^["']|["']$/g, '')
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: settings.model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.85,
-    }),
-  })
-  const data = await response.json()
-  if (!response.ok) throw new Error(data?.error?.message || 'OpenAI 호출 실패')
-  return data.choices?.[0]?.message?.content || ''
-}
 
-async function callGemini(settings: any, prompt: string) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.model}:generateContent?key=${settings.apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-  })
-  const data = await response.json()
-  if (!response.ok) throw new Error(data?.error?.message || 'Gemini 호출 실패')
-  return data?.candidates?.[0]?.content?.parts?.map((part: any) => part.text).join('\n') || ''
-}
-
-async function callClaude(settings: any, prompt: string) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': settings.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: settings.model,
-      max_tokens: 2200,
-      temperature: 0.85,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
-  const data = await response.json()
-  if (!response.ok) throw new Error(data?.error?.message || 'Claude 호출 실패')
-  return data?.content?.map((part: any) => part.text).join('\n') || ''
-}
 
 interface StudioClientProps {
   user?: any
@@ -828,18 +827,23 @@ export function StudioClient({ user }: StudioClientProps) {
     setUiLanguage(storedLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN')
 
     const savedSettings = readJson(STORAGE_KEYS.settings, null)
-    if (savedSettings) setSettings(savedSettings)
+    if (savedSettings) {
+      const sanitized = {
+        ...savedSettings,
+        provider: 'openai',
+        model: PROVIDERS.openai.models.includes(savedSettings.model)
+          ? savedSettings.model
+          : PROVIDERS.openai.models[0]
+      }
+      setSettings(sanitized)
+    }
 
     if (!user) {
-      const savedGuides = readJson(STORAGE_KEYS.guides, null)
-      setGuides(savedGuides || DEFAULT_GUIDES)
-
-      const savedActive = readJson(STORAGE_KEYS.activeGuides, null)
-      if (savedActive) setActiveGuideIds(savedActive)
-
       const localHistory = readJson(STORAGE_KEYS.localHistory, [])
       setHistory(localHistory)
     }
+
+    fetchGuidelines(user)
 
     // Sync language from Header changes
     const handleLangChange = (e: Event) => {
@@ -856,6 +860,50 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const [history, setHistory] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
+
+  // Load guidelines (both system and user guidelines)
+  const fetchGuidelines = async (currentUser: any) => {
+    try {
+      // 1. Fetch user guides if logged in
+      let userGuides: any[] = []
+      if (currentUser) {
+        const userRes = await fetch('/api/user-guides')
+        if (userRes.ok) {
+          userGuides = await userRes.json()
+        }
+      }
+
+      setGuides(userGuides)
+
+      // 2. Fetch active guide IDs
+      if (currentUser) {
+        const activeRes = await fetch('/api/profile/active-guides')
+        if (activeRes.ok) {
+          const activeData = await activeRes.json()
+          if (Array.isArray(activeData)) {
+            const allAvailableIds = userGuides.map(g => g.id)
+            const activeDbIds = activeData.filter(id => allAvailableIds.includes(id))
+            setActiveGuideIds(activeDbIds)
+            return
+          }
+        }
+      }
+
+      // Fallback for non-logged in or API failure
+      const savedActive = readJson(STORAGE_KEYS.activeGuides, null)
+      if (savedActive && Array.isArray(savedActive)) {
+        const allAvailableIds = userGuides.map(g => g.id)
+        const activeLocalIds = savedActive.filter(id => allAvailableIds.includes(id))
+        setActiveGuideIds(activeLocalIds)
+      } else {
+        setActiveGuideIds([])
+      }
+    } catch (e) {
+      console.error('Error fetching guidelines:', e)
+      setGuides([])
+      setActiveGuideIds([])
+    }
+  }
 
   const fetchSongHistory = async () => {
     if (!user) return
@@ -904,22 +952,8 @@ export function StudioClient({ user }: StudioClientProps) {
         // 2. Fetch playlists
         await fetchPlaylists()
 
-        // 3. Fetch user guides
-        const guidesRes = await fetch('/api/user-guides')
-        let serverGuides: any[] = []
-        if (guidesRes.ok) {
-          serverGuides = await guidesRes.json()
-        }
-        setGuides([...DEFAULT_GUIDES, ...(serverGuides || [])])
-
-        // 4. Fetch active guide IDs
-        const activeRes = await fetch('/api/profile/active-guides')
-        if (activeRes.ok) {
-          const activeData = await activeRes.json()
-          if (Array.isArray(activeData) && activeData.length > 0) {
-            setActiveGuideIds(activeData)
-          }
-        }
+        // 3. Fetch all guides & active statuses
+        await fetchGuidelines(user)
       } catch (e) {
         console.error('Error loading server data:', e)
       }
@@ -1044,13 +1078,7 @@ export function StudioClient({ user }: StudioClientProps) {
     setResultParts((current) => ({ ...current, [key]: value }))
   }
 
-  const updateProvider = (providerId: 'openai' | 'gemini' | 'claude') => {
-    setSettings((current) => ({
-      ...current,
-      provider: providerId,
-      model: PROVIDERS[providerId].models[0],
-    }))
-  }
+
 
   // 지침서 PDF/TXT 업로드 핸들러
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1175,36 +1203,6 @@ export function StudioClient({ user }: StudioClientProps) {
   }
 
   const generateSample = () => {
-    // Check credits
-    const savedCredits = localStorage.getItem('user-credits')
-    const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
-    if (currentCredits < 2) {
-      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 2 크레딧)' : 'Insufficient credits. (Requires 2 credits)')
-      return
-    }
-
-    // Deduct credits and save transaction
-    const nextCredits = Number((currentCredits - 2).toFixed(1))
-    localStorage.setItem('user-credits', String(nextCredits))
-
-    const savedTx = localStorage.getItem('user-transactions')
-    let txList = []
-    if (savedTx) {
-      try {
-        txList = JSON.parse(savedTx)
-      } catch (e) {
-        console.error(e)
-      }
-    }
-    const newTx = {
-      id: 'tx-' + Date.now(),
-      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      type: 'use',
-      desc: uiLanguage === 'KO' ? '가사 및 프롬프트 생성 (-2)' : 'Lyrics & Prompt Generation (-2)',
-      amount: '-2',
-      status: 'Completed'
-    }
-    localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
 
     const fallbackText = makeFallback(form, guideText)
     const parsedParts = parseGeneratedText(fallbackText)
@@ -1215,31 +1213,47 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const generate = async () => {
     // Check credits
+    const modelCost = getModelCreditCost(settings.model)
     const savedCredits = localStorage.getItem('user-credits')
     const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
-    if (currentCredits < 2) {
-      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 2 크레딧)' : 'Insufficient credits. (Requires 2 credits)')
+    if (currentCredits < modelCost) {
+      alert(uiLanguage === 'KO' ? `크레딧이 부족합니다. (필요: ${modelCost} 크레딧)` : `Insufficient credits. (Requires ${modelCost} credits)`)
       return
     }
 
-    const prompt = buildInstructionPrompt(form, guideText)
+    const promptObj = buildInstructionPrompt(form, guideText)
     setIsGenerating(true)
     setStatus(t.statusGenerating)
     try {
-      if (!settings.apiKey.trim()) {
+      if (!user) {
         generateSample()
         return
       }
-      const nextResult = settings.provider === 'openai'
-        ? await callOpenAI(settings, prompt, '')
-        : settings.provider === 'gemini'
-          ? await callGemini(settings, prompt)
-          : await callClaude(settings, prompt)
+      
+      const response = await fetch('/api/generate-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          system: promptObj.system,
+          user: promptObj.user,
+          model: settings.model
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || (uiLanguage === 'KO' ? '프롬프트 생성 실패' : 'Failed to generate prompt'))
+      }
+
+      const data = await response.json()
+      const nextResult = data.text || ''
       const textToSave = nextResult.trim() || makeFallback(form, guideText)
       const parsedParts = parseGeneratedText(textToSave)
 
       // Deduct credits and save transaction!
-      const nextCredits = Number((currentCredits - 2).toFixed(1))
+      const nextCredits = Number((currentCredits - modelCost).toFixed(1))
       localStorage.setItem('user-credits', String(nextCredits))
 
       const savedTx = localStorage.getItem('user-transactions')
@@ -1255,14 +1269,14 @@ export function StudioClient({ user }: StudioClientProps) {
         id: 'tx-' + Date.now(),
         date: new Date().toISOString().replace('T', ' ').slice(0, 16),
         type: 'use',
-        desc: uiLanguage === 'KO' ? '가사 및 프롬프트 생성 (-2)' : 'Lyrics & Prompt Generation (-2)',
-        amount: '-2',
+        desc: uiLanguage === 'KO' ? `가사 및 프롬프트 생성 (-${modelCost})` : `Lyrics & Prompt Generation (-${modelCost})`,
+        amount: `-${modelCost}`,
         status: 'Completed'
       }
       localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
 
       setResultParts(parsedParts)
-      setStatus(`${PROVIDERS[settings.provider as 'openai'|'gemini'|'claude'].name} ${t.statusGenerated}`)
+      setStatus(`${PROVIDERS.openai.name} ${t.statusGenerated}`)
       saveHistory(parsedParts)
     } catch (error: any) {
       const fallbackText = makeFallback(form, guideText)
@@ -1444,7 +1458,8 @@ export function StudioClient({ user }: StudioClientProps) {
     }
   }
 
-  const provider = PROVIDERS[settings.provider as 'openai' | 'gemini' | 'claude']
+  const provider = PROVIDERS.openai
+  const modelCost = getModelCreditCost(settings.model)
 
   return (
     <div className="bg-background text-on-surface min-h-screen font-sans">
@@ -1511,26 +1526,6 @@ export function StudioClient({ user }: StudioClientProps) {
           </h2>
           
           <div className="space-y-3.5">
-            {/* 제공자 선택 */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.provider}</label>
-              <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                {(Object.keys(PROVIDERS) as Array<keyof typeof PROVIDERS>).map((prov) => (
-                  <button
-                    key={prov}
-                    onClick={() => updateProvider(prov)}
-                    className={`py-1.5 text-[11px] font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                      settings.provider === prov
-                        ? 'bg-primary text-[#080d08] shadow-md shadow-primary/10'
-                        : 'text-on-surface-variant/60 hover:text-on-surface-variant'
-                    }`}
-                  >
-                    {PROVIDERS[prov].name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* 모델 선택 */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.model}</label>
@@ -1546,18 +1541,6 @@ export function StudioClient({ user }: StudioClientProps) {
                 </select>
                 <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
               </div>
-            </div>
-
-            {/* API Key */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{provider.keyLabel}</label>
-              <input
-                type="password"
-                placeholder={t.apiKeyPlaceholder}
-                value={settings.apiKey}
-                onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-              />
             </div>
           </div>
         </section>
@@ -1902,13 +1885,13 @@ export function StudioClient({ user }: StudioClientProps) {
               disabled={isGenerating}
               className="flex-1 py-4 bg-primary hover:bg-[#e3fe06] active:scale-[0.98] text-[#080d08] font-extrabold text-xs tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isGenerating ? t.generating : t.generateBtn}
+              {isGenerating ? t.generating : (uiLanguage === 'KO' ? `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)` : `GENERATE PROMPT & LYRICS (${modelCost} Credits)`)}
             </button>
             <button
               onClick={generateSample}
               className="px-6 py-4 bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] hover:bg-white/[0.02] text-on-surface hover:text-white font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer"
             >
-              {t.generateSampleBtn}
+              {uiLanguage === 'KO' ? '샘플 생성' : 'Sample Output'}
             </button>
           </div>
         </section>

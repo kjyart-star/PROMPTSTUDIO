@@ -326,7 +326,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   // New Profile States
   const [profileBio, setProfileBio] = useState('Welcome Dreamer... I create ambient and cinematic soundtracks.')
   const [profileTags, setProfileTags] = useState<string[]>(['Dream', 'Dubstep', 'Doom Metal', 'K-pop', 'Ambient-POP'])
-  const [profileBanner, setProfileBanner] = useState('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80')
+  const [profileBanner, setProfileBanner] = useState('')
   const [profileFollowers, setProfileFollowers] = useState(0)
   const [profileFollowing, setProfileFollowing] = useState(0)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -641,12 +641,16 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch('/api/profile')
+      const res = await fetch('/api/profile', { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setProfile(data)
         setEditName(data.display_name || '')
         setEditAvatar(data.avatar_url || '')
+        if (data.credits !== undefined && data.credits !== null) {
+          setUserCredits(data.credits)
+          localStorage.setItem('user-credits', String(data.credits))
+        }
       }
     } catch (e) { console.error(e) }
   }
@@ -1909,7 +1913,11 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
           <div className="flex items-start justify-between mb-8">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center border-2 border-primary overflow-hidden shrink-0">
-                {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <User className="w-8 h-8 text-primary" />}
+                {(profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture) ? (
+                  <img src={profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-8 h-8 text-primary" />
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-on-background">{profile?.display_name || '내 채널'}</h1>
@@ -1926,18 +1934,22 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
           /* Premium Cover Banner Header for Public Channel View */
           <div className="relative w-full h-[260px] md:h-[350px] rounded-3xl overflow-hidden mb-6 border border-outline-variant/10 shadow-2xl">
             {/* Banner Image Background */}
-            <img 
-              src={profileBanner || "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80"} 
-              alt="Banner" 
-              className="w-full h-full object-cover" 
-            />
+            {!profile ? (
+              <div className="w-full h-full bg-[#18181b] animate-pulse" />
+            ) : (
+              <img 
+                src={profileBanner || "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80"} 
+                alt="Banner" 
+                className="w-full h-full object-cover animate-fade-in" 
+              />
+            )}
             {/* Glassmorphic dark gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0b] via-[#0b0c0b]/40 to-transparent flex flex-col justify-end p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="flex items-center gap-4 md:gap-6">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary/50 overflow-hidden shrink-0">
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                    {(profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture) ? (
+                      <img src={profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-[#18181b] flex items-center justify-center">
                         <User className="w-10 h-10 text-primary" />

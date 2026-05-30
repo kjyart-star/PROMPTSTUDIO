@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Music, Library, EyeOff, Search, Loader2, Play, Pause, AlertCircle, Shield } from 'lucide-react'
+import { Music, Library, EyeOff, Search, Loader2, Play, Pause, AlertCircle, Shield, UserX, UserCheck } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 
@@ -93,6 +93,36 @@ export function UgcManagementClient() {
           } else {
             const err = await res.json()
             alert('비공개 처리 실패: ' + (err.error || '오류가 발생했습니다.'))
+          }
+        } catch (err) {
+          console.error(err)
+        } finally {
+          setActionLoading(null)
+        }
+      }
+    })
+  }
+
+  const handleToggleUserBan = async (targetUserId: string, currentBanStatus: boolean) => {
+    const actionLabel = currentBanStatus ? '정지 해제' : '영구 정지';
+    setConfirmModal({
+      isOpen: true,
+      title: `사용자 계정 ${actionLabel}`,
+      message: `정말 사용자 '${targetUserId.slice(0, 8)}...' 계정을 ${actionLabel}하시겠습니까?\n\n${currentBanStatus ? '정지 해제 시 이 사용자의 서비스 이용 권한이 정상 복구됩니다.' : '영구 정지 시 이 사용자의 서비스 이용이 금지되며, 해당 사용자가 공개했던 모든 음원 및 앨범이 즉시 일괄 비공개로 강제 차단 전환됩니다.'}`,
+      onConfirm: async () => {
+        setActionLoading(targetUserId)
+        try {
+          const res = await fetch(`/api/admin/users/ban`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_user_id: targetUserId, is_banned: !currentBanStatus })
+          })
+          if (res.ok) {
+            alert(`계정 ${actionLabel} 처리가 완료되었습니다.`)
+            fetchData()
+          } else {
+            const err = await res.json()
+            alert(`${actionLabel} 실패: ` + (err.error || '오류가 발생했습니다.'))
           }
         } catch (err) {
           console.error(err)
@@ -202,50 +232,75 @@ export function UgcManagementClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-sm">
-                {filteredSongs.map((song) => (
-                  <tr key={song.id} className="hover:bg-slate-800/20 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="relative w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center group shrink-0">
-                        {song.image_url ? (
-                          <img src={song.image_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Music className="w-5 h-5 text-slate-500" />
-                        )}
-                        {song.audio_url && (
+                {filteredSongs.map((song) => {
+                  const isUserBanned = song.profiles?.is_banned || false
+                  return (
+                    <tr key={song.id} className={`hover:bg-slate-800/20 transition-colors ${isUserBanned ? 'bg-red-950/10 border-l-2 border-l-red-500/50' : ''}`}>
+                      <td className="py-4 px-6">
+                        <div className="relative w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center group shrink-0">
+                          {song.image_url ? (
+                            <img src={song.image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Music className="w-5 h-5 text-slate-500" />
+                          )}
+                          {song.audio_url && (
+                            <button 
+                              onClick={() => handlePlayUgcSong(song)}
+                              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"
+                            >
+                              {isPlaying && currentTrack?.id === `ugc-song-${song.id}` ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 font-semibold truncate max-w-[200px]">
+                        {song.title}
+                      </td>
+                      <td className="py-4 px-6 font-mono text-xs text-slate-400 truncate max-w-[150px]" title={song.user_id}>
+                        <div className="flex items-center gap-1.5">
+                          <span>{song.user_id}</span>
+                          {isUserBanned && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold">정지됨</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-xs text-slate-400">
+                        {new Date(song.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <div className="inline-flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => handlePlayUgcSong(song)}
-                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"
+                            disabled={actionLoading === song.id}
+                            onClick={() => handleUnpublishSong(song.id, song.title)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-lg text-xs font-bold transition-all border border-slate-750 disabled:opacity-50"
                           >
-                            {isPlaying && currentTrack?.id === `ugc-song-${song.id}` ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                            {actionLoading === song.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            )}
+                            비공개 (가리기)
                           </button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 font-semibold truncate max-w-[200px]">
-                      {song.title}
-                    </td>
-                    <td className="py-4 px-6 font-mono text-xs text-slate-400 truncate max-w-[150px]" title={song.user_id}>
-                      {song.user_id}
-                    </td>
-                    <td className="py-4 px-6 text-xs text-slate-400">
-                      {new Date(song.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button 
-                        disabled={actionLoading === song.id}
-                        onClick={() => handleUnpublishSong(song.id, song.title)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg text-xs font-bold transition-all border border-red-500/10 disabled:opacity-50"
-                      >
-                        {actionLoading === song.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <EyeOff className="w-3.5 h-3.5" />
-                        )}
-                        비공개 전환 (가리기)
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                          
+                          <button 
+                            disabled={actionLoading === song.user_id}
+                            onClick={() => handleToggleUserBan(song.user_id, isUserBanned)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${isUserBanned ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10' : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10'}`}
+                          >
+                            {actionLoading === song.user_id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : isUserBanned ? (
+                              <UserCheck className="w-3.5 h-3.5" />
+                            ) : (
+                              <UserX className="w-3.5 h-3.5" />
+                            )}
+                            {isUserBanned ? '정지 해제' : '계정 정지'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
                 {filteredSongs.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-500 text-sm">
@@ -272,45 +327,70 @@ export function UgcManagementClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-sm">
-                {filteredPlaylists.map((playlist) => (
-                  <tr key={playlist.id} className="hover:bg-slate-800/20 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                        {playlist.cover_url ? (
-                          <img src={playlist.cover_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Library className="w-5 h-5 text-slate-500" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 font-semibold truncate max-w-[200px]">
-                      {playlist.title}
-                    </td>
-                    <td className="py-4 px-6 font-mono text-xs text-slate-400 truncate max-w-[150px]" title={playlist.user_id}>
-                      {playlist.user_id}
-                    </td>
-                    <td className="py-4 px-6 text-xs text-slate-400 truncate max-w-[200px]" title={parsePlaylistDescription(playlist.description).text}>
-                      {parsePlaylistDescription(playlist.description).text || '-'}
-                    </td>
-                    <td className="py-4 px-6 text-xs text-slate-400">
-                      {new Date(playlist.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button 
-                        disabled={actionLoading === playlist.id}
-                        onClick={() => handleUnpublishPlaylist(playlist.id, playlist.title)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg text-xs font-bold transition-all border border-red-500/10 disabled:opacity-50"
-                      >
-                        {actionLoading === playlist.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <EyeOff className="w-3.5 h-3.5" />
-                        )}
-                        비공개 전환 (가리기)
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredPlaylists.map((playlist) => {
+                  const isUserBanned = playlist.profiles?.is_banned || false
+                  return (
+                    <tr key={playlist.id} className={`hover:bg-slate-800/20 transition-colors ${isUserBanned ? 'bg-red-950/10 border-l-2 border-l-red-500/50' : ''}`}>
+                      <td className="py-4 px-6">
+                        <div className="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                          {playlist.cover_url ? (
+                            <img src={playlist.cover_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Library className="w-5 h-5 text-slate-500" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 font-semibold truncate max-w-[200px]">
+                        {playlist.title}
+                      </td>
+                      <td className="py-4 px-6 font-mono text-xs text-slate-400 truncate max-w-[150px]" title={playlist.user_id}>
+                        <div className="flex items-center gap-1.5">
+                          <span>{playlist.user_id}</span>
+                          {isUserBanned && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold">정지됨</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-xs text-slate-400 truncate max-w-[200px]" title={parsePlaylistDescription(playlist.description).text}>
+                        {parsePlaylistDescription(playlist.description).text || '-'}
+                      </td>
+                      <td className="py-4 px-6 text-xs text-slate-400">
+                        {new Date(playlist.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <button 
+                            disabled={actionLoading === playlist.id}
+                            onClick={() => handleUnpublishPlaylist(playlist.id, playlist.title)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-lg text-xs font-bold transition-all border border-slate-750 disabled:opacity-50"
+                          >
+                            {actionLoading === playlist.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            )}
+                            비공개 (가리기)
+                          </button>
+                          
+                          <button 
+                            disabled={actionLoading === playlist.user_id}
+                            onClick={() => handleToggleUserBan(playlist.user_id, isUserBanned)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${isUserBanned ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/10' : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10'}`}
+                          >
+                            {actionLoading === playlist.user_id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : isUserBanned ? (
+                              <UserCheck className="w-3.5 h-3.5" />
+                            ) : (
+                              <UserX className="w-3.5 h-3.5" />
+                            )}
+                            {isUserBanned ? '정지 해제' : '계정 정지'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
                 {filteredPlaylists.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500 text-sm">

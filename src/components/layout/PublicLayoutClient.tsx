@@ -16,15 +16,17 @@ import { usePlayerStore } from '@/stores/playerStore'
 interface PublicLayoutClientProps {
   children: React.ReactNode
   user: any
-  isAdmin: boolean
-  initialAnnouncements: any[]
+  isAdmin?: boolean
+  serverAvatarUrl?: string | null
+  initialAnnouncements?: any[]
 }
 
 export function PublicLayoutClient({
   children,
   user,
-  isAdmin,
-  initialAnnouncements
+  isAdmin = false,
+  serverAvatarUrl = null,
+  initialAnnouncements = []
 }: PublicLayoutClientProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -35,7 +37,7 @@ export function PublicLayoutClient({
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false)
   const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false)
-  const [announcements] = useState(initialAnnouncements)
+  const [announcements, setAnnouncements] = useState(initialAnnouncements)
   const [hasUnread, setHasUnread] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
@@ -77,18 +79,41 @@ export function PublicLayoutClient({
       setUiLanguage(defaultLang)
       localStorage.setItem('language', defaultLang)
     }
+  }, [])
 
-    if (initialAnnouncements.length > 0) {
+  // 공지사항 변경 감지 및 실시간 업데이트 처리
+  useEffect(() => {
+    if (announcements.length > 0) {
       const lastRead = localStorage.getItem('announcements_last_read')
       if (!lastRead) {
         setHasUnread(true)
       } else {
         const lastReadTime = new Date(lastRead).getTime()
-        const newestTime = new Date(initialAnnouncements[0].created_at).getTime()
+        const newestTime = new Date(announcements[0].created_at).getTime()
         setHasUnread(newestTime > lastReadTime)
       }
+    } else {
+      setHasUnread(false)
     }
-  }, [initialAnnouncements])
+  }, [announcements])
+
+  // 실시간 공지사항 구독
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:announcements')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, async () => {
+        // 공지사항 데이터 새로고침
+        const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false })
+        if (data) {
+          setAnnouncements(data)
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase])
 
   // 언어 변경 핸들러
   const handleLanguageChange = (lang: string) => {
@@ -113,7 +138,7 @@ export function PublicLayoutClient({
     const fetchProfile = async () => {
       if (user) {
         try {
-          const res = await fetch('/api/profile')
+          const res = await fetch('/api/profile', { cache: 'no-store' })
           if (res.ok) setProfile(await res.json())
         } catch (e) {
           console.error(e)
@@ -121,7 +146,15 @@ export function PublicLayoutClient({
       }
     }
     fetchProfile()
+
+    const handleProfileUpdate = (e: any) => {
+      setProfile(e.detail)
+    }
+    window.addEventListener('profileUpdated', handleProfileUpdate)
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate)
   }, [user])
+
+  const displayAvatar = profile?.avatar_url || serverAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   // 공지사항 열기 핸들러
   const handleOpenAnnouncements = () => {
@@ -368,11 +401,11 @@ export function PublicLayoutClient({
                 {user ? (
                   <button 
                     onClick={() => setIsAuthMenuOpen(!isAuthMenuOpen)}
-                    className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center cursor-pointer transition-all hover:scale-105 bg-surface-container-high"
+                    className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center cursor-pointer transition-all hover:scale-105 bg-surface-container-high shrink-0"
                   >
-                    {profile?.avatar_url ? (
+                    {displayAvatar ? (
                       <img 
-                        src={profile.avatar_url}
+                        src={displayAvatar}
                         alt="User profile"
                         className="w-full h-full object-cover"
                       />
@@ -395,10 +428,10 @@ export function PublicLayoutClient({
                     <div className="flex flex-col">
                       <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-4 mb-2 px-2 pt-1">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-high border-2 border-primary overflow-hidden">
-                          {profile?.avatar_url ? (
-                            <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                          {displayAvatar ? (
+                            <img src={displayAvatar} alt="Profile" className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-[#070709] font-black">{user.email[0].toUpperCase()}</span>
+                            <span className="text-[#070709] font-black">{user.email?.[0]?.toUpperCase() || 'U'}</span>
                           )}
                         </div>
                         <div className="flex flex-col overflow-hidden">
@@ -471,6 +504,40 @@ export function PublicLayoutClient({
             </div>
           </div>
         </header>
+
+        {/* Unread Announcements Marquee */}
+        {hasUnread && announcements.length > 0 && (
+          <div className="w-full bg-[#e3fe06]/[0.03] border-b border-[#e3fe06]/10 py-2 px-4 flex items-center relative overflow-hidden z-30">
+            <style>{`
+              @keyframes marquee {
+                0% { transform: translateX(100vw); }
+                100% { transform: translateX(-100%); }
+              }
+              .animate-marquee {
+                animation: marquee 20s linear infinite;
+                display: inline-block;
+                white-space: nowrap;
+                will-change: transform;
+              }
+              .animate-marquee:hover {
+                animation-play-state: paused;
+              }
+            `}</style>
+            <div className="bg-[#e3fe06] text-black rounded-full w-5 h-5 flex items-center justify-center shrink-0 z-10 font-black text-xs shadow-[0_0_10px_rgba(227,254,6,0.4)]">!</div>
+            <div className="flex-1 overflow-hidden ml-3 relative whitespace-nowrap mask-image-linear-gradient h-5 flex items-center">
+              <div className="animate-marquee cursor-default">
+                <span className="text-[#e3fe06] font-extrabold mr-2 tracking-wide">[공지사항]</span>
+                <span className="text-gray-200 text-sm font-medium">{announcements[0].title}: {announcements[0].content}</span>
+              </div>
+            </div>
+            <button 
+              onClick={handleOpenAnnouncements}
+              className="text-xs text-[#e3fe06] shrink-0 z-10 ml-4 font-bold bg-[#080808] pl-2 hover:text-white transition-colors cursor-pointer"
+            >
+              {uiLanguage === 'KO' ? '자세히 보기' : 'View Details'}
+            </button>
+          </div>
+        )}
 
         {/* Content Children */}
         <main className="flex-1 px-[32px] py-[24px]">

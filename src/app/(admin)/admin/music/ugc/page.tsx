@@ -12,14 +12,14 @@ export default async function UgcManagementPage() {
     redirect('/login')
   }
 
-  // 1. 관리자 권한 확인 (user_roles 테이블에서 역할 검사)
-  const { data: roleData } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
+  // 1. 관리자 권한 확인 (profiles 테이블에서 is_admin 검사)
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
     .single()
 
-  if (roleData?.role !== 'admin') {
+  if (!profileData?.is_admin) {
     redirect('/')
   }
 

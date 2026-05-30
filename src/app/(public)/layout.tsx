@@ -10,13 +10,16 @@ export default async function PublicLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   let isAdmin = false
+  let serverAvatarUrl = null
+  
   if (user) {
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('is_admin, avatar_url')
+      .eq('id', user.id)
       .single()
-    isAdmin = roleData?.role === 'admin'
+    isAdmin = !!profileData?.is_admin
+    serverAvatarUrl = profileData?.avatar_url
   }
 
   // 공지사항 로드
@@ -30,6 +33,7 @@ export default async function PublicLayout({
     <PublicLayoutClient
       user={user}
       isAdmin={isAdmin}
+      serverAvatarUrl={serverAvatarUrl}
       initialAnnouncements={initialAnnouncements}
     >
       {children}

@@ -1,7 +1,7 @@
 const baseUrl = 'https://qdldfwzygnxlstxqojtq.supabase.co/rest/v1'
 const apiKey = 'sb_publishable_U6hlom2lANKeWHRBGb2RXw_wVn_2iw-'
 
-const tables = ['song_history', 'tracks', 'albums', 'artists', 'chart_snapshots', 'likes']
+const tables = ['song_history', 'tracks', 'albums', 'artists', 'chart_snapshots', 'likes', 'system_settings', 'system_guides', 'profiles', 'user_playlists']
 
 async function check() {
   for (const table of tables) {

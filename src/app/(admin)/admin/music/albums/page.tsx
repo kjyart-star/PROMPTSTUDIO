@@ -1,524 +1,238 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Album, Artist, ReleaseType, Status } from '@/types/music'
-import { Plus, Edit2, Trash2, Upload, Loader2, X, Library } from 'lucide-react'
+import { Library, EyeOff, Eye, Loader2, User, Calendar, Tag, ShieldAlert, Search } from 'lucide-react'
+import { parsePlaylistDescription } from '@/lib/utils'
+
+interface AlbumPlaylist {
+  id: string
+  title: string
+  cover_url: string | null
+  description: string | null
+  genre: string | null
+  is_published: boolean
+  user_id: string
+  created_at: string
+  profiles?: {
+    display_name: string | null
+    is_banned: boolean
+  } | null
+}
 
 export default function AlbumsPage() {
-  const [albums, setAlbums] = useState<Album[]>([])
-  const [artists, setArtists] = useState<Artist[]>([])
+  const [albums, setAlbums] = useState<AlbumPlaylist[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  // 폼 상태
-  const [currentAlbumId, setCurrentAlbumId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [slug, setSlug] = useState('')
-  const [artistId, setArtistId] = useState('')
-  const [releaseType, setReleaseType] = useState<ReleaseType>('single')
-  const [status, setStatus] = useState<Status>('draft')
-  const [coverUrl, setCoverUrl] = useState('')
-  const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [genresInput, setGenresInput] = useState('')
-  const [moodsInput, setMoodsInput] = useState('')
-  const [description, setDescription] = useState('')
-
-  const supabase = createClient()
-
-  // 앨범 및 아티스트 정보 가져오기
-  const fetchData = async () => {
+  // 앨범(플레이리스트) 목록 가져오기
+  const fetchAlbums = async () => {
     setLoading(true)
     try {
-      // 1. 아티스트 목록 가져오기 (셀렉트용)
-      const { data: artistsData, error: artistsError } = await supabase
-        .from('artists')
-        .select('*')
-        .order('name')
-      
-      if (artistsError) throw artistsError
-      setArtists(artistsData || [])
-
-      // 2. 앨범 목록 가져오기 (아티스트 조인)
-      const { data: albumsData, error: albumsError } = await supabase
-        .from('albums')
-        .select('*, artists(*)')
-        .order('created_at', { ascending: false })
-
-      if (albumsError) throw albumsError
-
-      // 타입 호환 처리를 위한 변형
-      const formattedAlbums: Album[] = (albumsData || []).map((album: any) => ({
-        ...album,
-        artist: album.artists // Supabase 조인은 단수형 혹은 별칭이 아닌 테이블명 원본(artists) 배열 또는 객체로 넘어옵니다.
-      }))
-      setAlbums(formattedAlbums)
-    } catch (err) {
-      console.error('Error fetching albums/artists:', err)
-      alert('데이터를 가져오지 못했습니다.')
+      const res = await fetch('/api/playlists?all=true')
+      if (res.ok) {
+        const data = await res.json()
+        setAlbums(data || [])
+      } else {
+        throw new Error('앨범 목록을 불러오지 못했습니다.')
+      }
+    } catch (err: any) {
+      console.error('Error fetching albums:', err)
+      alert(err.message || '목록 로드 오류')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchData()
+    fetchAlbums()
   }, [])
 
-  // 제목 작성 시 슬러그 제안
-  const handleTitleChange = (val: string) => {
-    setTitle(val)
-    if (!currentAlbumId) {
-      const suggestedSlug = val
-        .toLowerCase()
-        .replace(/[^a-z0-9ㄱ-ㅎㅏ-ㅣ가-힣]+/g, '-')
-        .replace(/(^-|-$)+/g, '')
-      setSlug(suggestedSlug)
-    }
-  }
+  // 앨범 퍼블리싱 상태 토글 (공개 <-> 비공개)
+  const handleTogglePublish = async (album: AlbumPlaylist) => {
+    const nextStatus = !album.is_published
+    const actionLabel = nextStatus ? '공개 전환' : '비공개 처리';
+    const confirmMessage = nextStatus
+      ? `정말 '${album.title}' 앨범을 다시 공개하시겠습니까?`
+      : `정말 '${album.title}' 앨범의 공개를 중단하고 비공개로 전환하시겠습니까?\n비공개 시 일반 사용자 화면에 더 이상 노출되지 않습니다.`;
 
-  // 모달 닫기 및 폼 초기화
-  const closeModal = () => {
-    setModalOpen(false)
-    setCurrentAlbumId(null)
-    setTitle('')
-    setSlug('')
-    setArtistId(artists[0]?.id || '')
-    setReleaseType('single')
-    setStatus('draft')
-    setCoverUrl('')
-    setCoverFile(null)
-    setGenresInput('')
-    setMoodsInput('')
-    setDescription('')
-  }
+    if (!confirm(confirmMessage)) return
 
-  // 수정 모달 열기
-  const openEditModal = (album: Album) => {
-    setCurrentAlbumId(album.id)
-    setTitle(album.title)
-    setSlug(album.slug)
-    setArtistId(album.artist_id)
-    setReleaseType(album.release_type)
-    setStatus(album.status)
-    setCoverUrl(album.cover_url || '')
-    setGenresInput(album.genres ? album.genres.join(', ') : '')
-    setMoodsInput(album.moods ? album.moods.join(', ') : '')
-    setDescription(album.description || '')
-    setModalOpen(true)
-  }
-
-  // 앨범 생성/수정 제출
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title || !slug || !artistId) {
-      alert('제목, 슬러그, 아티스트는 필수 항목입니다.')
-      return
-    }
-
-    setIsSubmitting(true)
+    setActionLoading(album.id)
     try {
-      let finalCoverUrl = coverUrl
+      const res = await fetch(`/api/playlists/${album.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_published: nextStatus })
+      })
 
-      // 파일 업로드 처리
-      if (coverFile) {
-        const fileExt = coverFile.name.split('.').pop()
-        const fileName = `cover_${Date.now()}.${fileExt}`
-        const filePath = `covers/${fileName}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('albums')
-          .upload(filePath, coverFile)
-
-        if (uploadError) throw uploadError
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('albums')
-          .getPublicUrl(filePath)
-        
-        finalCoverUrl = publicUrl
-      }
-
-      // 장르 및 무드 콤마 스플릿 배열 처리
-      const genres = genresInput
-        .split(',')
-        .map((g) => g.trim())
-        .filter((g) => g !== '')
-      
-      const moods = moodsInput
-        .split(',')
-        .map((m) => m.trim())
-        .filter((m) => m !== '')
-
-      const payload = {
-        title,
-        slug,
-        artist_id: artistId,
-        release_type: releaseType,
-        status,
-        cover_url: finalCoverUrl || null,
-        genres,
-        moods,
-        description: description || null,
-        updated_at: new Date().toISOString()
-      }
-
-      if (currentAlbumId) {
-        const { error } = await supabase
-          .from('albums')
-          .update(payload)
-          .eq('id', currentAlbumId)
-
-        if (error) throw error
+      if (res.ok) {
+        alert(`앨범이 성공적으로 ${actionLabel}되었습니다.`)
+        fetchAlbums()
       } else {
-        const { error } = await supabase
-          .from('albums')
-          .insert([payload])
-
-        if (error) throw error
+        const err = await res.json()
+        alert(`${actionLabel} 실패: ` + (err.error || '오류가 발생했습니다.'))
       }
-
-      closeModal()
-      fetchData()
-    } catch (err: any) {
-      console.error('Error saving album:', err)
-      alert(err.message || '앨범 저장에 실패했습니다.')
+    } catch (err) {
+      console.error('Error toggling publish status:', err)
+      alert('서버와의 통신에 실패했습니다.')
     } finally {
-      setIsSubmitting(false)
+      setActionLoading(null)
     }
   }
-
-  // 앨범 삭제
-  const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까? 앨범에 속한 모든 음악 트랙이 함께 삭제됩니다.')) return
-
-    try {
-      const { error } = await supabase
-        .from('albums')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      fetchData()
-    } catch (err: any) {
-      console.error('Error deleting album:', err)
-      alert(err.message || '삭제에 실패했습니다.')
-    }
-  }
-
-  // 아티스트가 변경될 때 기본값 세팅 보정
-  useEffect(() => {
-    if (artists.length > 0 && !artistId && !currentAlbumId) {
-      setArtistId(artists[0].id)
-    }
-  }, [artists, artistId, currentAlbumId])
+  const filteredAlbums = albums.filter(album => {
+    const term = searchTerm.toLowerCase()
+    const titleMatch = album.title.toLowerCase().includes(term)
+    const genreMatch = (album.genre || '').toLowerCase().includes(term)
+    const authorMatch = (album.profiles?.display_name || '').toLowerCase().includes(term) || album.user_id.toLowerCase().includes(term)
+    const descMatch = (album.description || '').toLowerCase().includes(term)
+    return titleMatch || genreMatch || authorMatch || descMatch
+  })
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 font-sans select-none pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">앨범 관리</h1>
-          <p className="text-xs text-slate-400 mt-1">싱글, EP, LP 등의 앨범 패키지 정보를 제어합니다.</p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
+            <Library className="w-6 h-6 text-[#e3fe06]" />
+            사용자 앨범 관리
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            서비스 사용자들이 직접 생성하고 배포(퍼블리싱)한 플레이리스트 및 앨범 카탈로그 목록입니다.
+          </p>
         </div>
-        <button
-          id="btn-add-album"
-          onClick={() => {
-            if (artists.length === 0) {
-              alert('앨범을 등록하려면 최소 1명 이상의 아티스트가 먼저 등록되어 있어야 합니다.')
-              return
-            }
-            setModalOpen(true)
-          }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          앨범 추가
-        </button>
+
+        {/* 검색 바 */}
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="앨범 제목, 장르, 작성자 검색" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-[#091009] border border-[#242c24] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+          />
+        </div>
       </div>
 
-      {/* 리스트 그리드 */}
+      {/* 리스트 그리드 (브랜드 테마: bg-[#161d16], border-[#242c24]) */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#e3fe06] animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {albums.length > 0 ? (
-            albums.map((album) => (
-              <div key={album.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between group shadow-sm">
-                
-                {/* 앨범 커버 */}
-                <div className="relative aspect-square w-full bg-slate-950 border-b border-slate-850 flex items-center justify-center overflow-hidden">
-                  {album.cover_url ? (
-                    <img src={album.cover_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" />
-                  ) : (
-                    <Library className="w-12 h-12 text-slate-700" />
-                  )}
-                  
-                  {/* 오버레이 뱃지 */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                      album.release_type === 'single' ? 'bg-blue-500 text-white' :
-                      album.release_type === 'ep' ? 'bg-violet-500 text-white' :
-                      album.release_type === 'lp' ? 'bg-fuchsia-500 text-white' :
-                      'bg-slate-500 text-white'
-                    }`}>
-                      {album.release_type}
-                    </span>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                      album.status === 'published' ? 'bg-emerald-500 text-white animate-pulse' :
-                      album.status === 'draft' ? 'bg-yellow-500 text-slate-900' :
-                      'bg-slate-700 text-slate-200'
-                    }`}>
-                      {album.status}
-                    </span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          {filteredAlbums.length > 0 ? (
+            filteredAlbums.map((album) => {
+              const isUserBanned = album.profiles?.is_banned || false
+              const parsedDesc = parsePlaylistDescription(album.description)
 
-                {/* 정보 */}
-                <div className="p-5 flex-grow space-y-2">
-                  <h3 className="font-bold text-base text-slate-100 truncate">{album.title}</h3>
-                  <p className="text-xs text-slate-400 truncate">
-                    아티스트: <span className="font-medium text-slate-200">{album.artist?.name || '알 수 없음'}</span>
-                  </p>
-                  {album.genres && album.genres.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {album.genres.slice(0, 3).map((genre, index) => (
-                        <span key={index} className="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-slate-400 border border-slate-800">
-                          {genre}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* 관리 버튼 */}
-                <div className="px-5 pb-5 pt-0 border-t border-slate-850 flex items-center justify-between bg-slate-950/20">
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    {new Date(album.created_at).toLocaleDateString()}
-                  </span>
-                  
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      id={`btn-edit-album-${album.id}`}
-                      onClick={() => openEditModal(album)}
-                      className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      id={`btn-delete-album-${album.id}`}
-                      onClick={() => handleDelete(album.id)}
-                      className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl bg-slate-900/30">
-              등록된 앨범이 없습니다. 첫 앨범을 등록해 보세요.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CRUD 모달 */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/20">
-              <h3 className="font-bold text-lg">
-                {currentAlbumId ? '앨범 수정' : '앨범 등록'}
-              </h3>
-              <button onClick={closeModal} className="text-slate-400 hover:text-white p-1 rounded-lg">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    앨범 제목 *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
-                    placeholder="예: AI Beats Vol. 1"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    슬러그 (영문 고유주소) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm font-mono"
-                    placeholder="예: ai-beats-vol-1"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  소속 아티스트 선택 *
-                </label>
-                <select
-                  required
-                  value={artistId}
-                  onChange={(e) => setArtistId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
+              return (
+                <div 
+                  key={album.id} 
+                  className={`bg-[#161d16] border rounded-xl flex flex-row items-stretch group shadow-sm transition-all duration-200 ${
+                    isUserBanned 
+                      ? 'border-red-950/50 bg-red-950/5' 
+                      : 'border-[#242c24] hover:border-[#3d4a3d]'
+                  }`}
                 >
-                  {artists.map((artist) => (
-                    <option key={artist.id} value={artist.id}>
-                      {artist.name} ({artist.slug})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    발매 형태 *
-                  </label>
-                  <select
-                    value={releaseType}
-                    onChange={(e) => setReleaseType(e.target.value as ReleaseType)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm uppercase"
-                  >
-                    <option value="single">Single (싱글)</option>
-                    <option value="ep">EP (미니)</option>
-                    <option value="lp">LP (정규)</option>
-                    <option value="compilation">Compilation</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    공개 상태 *
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as Status)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
-                  >
-                    <option value="draft">Draft (초안)</option>
-                    <option value="published">Published (발매)</option>
-                    <option value="archived">Archived (보관)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    장르 (쉼표로 구분)
-                  </label>
-                  <input
-                    type="text"
-                    value={genresInput}
-                    onChange={(e) => setGenresInput(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
-                    placeholder="예: Pop, Electronic, Lofi"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    무드 (쉼표로 구분)
-                  </label>
-                  <input
-                    type="text"
-                    value={moodsInput}
-                    onChange={(e) => setMoodsInput(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm"
-                    placeholder="예: Relaxing, Energetic"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  앨범 설명
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all text-sm h-20 resize-none"
-                  placeholder="앨범 소개 및 제작 노트를 적어주세요."
-                />
-              </div>
-
-              {/* 아트워크 커버 이미지 업로드 */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  앨범 커버 이미지
-                </label>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0">
-                    {coverFile ? (
-                      <img src={URL.createObjectURL(coverFile)} alt="" className="w-full h-full object-cover" />
-                    ) : coverUrl ? (
-                      <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                  {/* 앨범 커버 (작은 사이즈) */}
+                  <div className="relative w-24 h-full min-h-[96px] shrink-0 bg-[#091009] border-r border-[#242c24] flex items-center justify-center overflow-hidden rounded-l-xl">
+                    {album.cover_url ? (
+                      <img 
+                        src={album.cover_url} 
+                        alt="" 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-350" 
+                      />
                     ) : (
-                      <Library className="w-6 h-6 text-slate-600" />
+                      <Library className="w-8 h-8 text-slate-700" />
                     )}
                   </div>
-                  
-                  <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all text-xs font-medium text-slate-300">
-                    <Upload className="w-4 h-4 text-slate-400" />
-                    커버 선택
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) setCoverFile(file)
-                      }}
-                    />
-                  </label>
+
+                  {/* 정보 및 관리 버튼 컨테이너 */}
+                  <div className="p-3.5 flex-grow flex flex-col justify-between gap-3 overflow-hidden">
+                    {/* 정보 */}
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-bold text-sm text-slate-100 truncate" title={album.title}>
+                          {album.title}
+                        </h3>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border shrink-0 ${
+                          album.is_published 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                        }`}>
+                          {album.is_published ? '공개됨' : '비공개'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                        <p className="flex items-center gap-1 truncate">
+                          <User className="w-3 h-3 text-slate-500 shrink-0" />
+                          <span className="text-slate-300">{album.profiles?.display_name || album.user_id.slice(0, 8)}</span>
+                        </p>
+                        
+                        {album.genre && (
+                          <p className="flex items-center gap-1 truncate">
+                            <Tag className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span className="text-slate-350 font-mono">{album.genre}</span>
+                          </p>
+                        )}
+
+                        <p className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-slate-500 shrink-0" />
+                          <span className="text-slate-350">{new Date(album.created_at).toLocaleDateString()}</span>
+                        </p>
+                        
+                        {isUserBanned && (
+                          <span className="text-red-400 font-bold flex items-center gap-0.5 shrink-0">
+                            <ShieldAlert className="w-2.5 h-2.5" />
+                            차단유저
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 line-clamp-1">
+                        {parsedDesc.text || '설명이 없습니다.'}
+                      </p>
+                    </div>
+
+                    {/* 관리 버튼 */}
+                    <div className="flex-shrink-0 mt-auto">
+                      <button
+                        id={`btn-toggle-publish-${album.id}`}
+                        disabled={actionLoading === album.id}
+                        onClick={() => handleTogglePublish(album)}
+                        className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all border ${
+                          album.is_published
+                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                        }`}
+                      >
+                        {actionLoading === album.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : album.is_published ? (
+                          <>
+                            <EyeOff className="w-3 h-3" />
+                            비공개 처리
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3 h-3" />
+                            공개 처리
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-300 text-xs font-semibold"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center gap-1 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold disabled:opacity-50"
-                >
-                  {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {currentAlbumId ? '수정 완료' : '추가 완료'}
-                </button>
-              </div>
-            </form>
-
-          </div>
+              )
+            })
+          ) : (
+            <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-[#242c24] rounded-2xl bg-[#091009]/30">
+              검색 결과와 일치하는 앨범이 없습니다.
+            </div>
+          )}
         </div>
       )}
     </div>

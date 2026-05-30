@@ -21,12 +21,12 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
   
   let isAdmin = false
   if (user) {
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
       .single()
-    isAdmin = roleData?.role === 'admin'
+    isAdmin = !!profileData?.is_admin
   }
 
   // 로컬 개발 환경일 경우 테스트 목적으로 관리자 버튼 활성화 지원
@@ -136,7 +136,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
           style_prompt: song.prompt || song.form?.prompt || '',
           album: {
             id: `suno-album-${song.id}`,
-            title: song.form?.styleDesc || `${song.title} (Suno)`,
+            title: song.form?.styleDesc || song.title,
             cover_url: song.image_url || '/default-album.png',
             artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
             genres: [formGenre],

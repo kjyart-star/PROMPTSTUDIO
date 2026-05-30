@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
@@ -10,15 +12,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('profiles')
-      .select('id, email, display_name, avatar_url, banner_url, bio, tags, followers, following, plays, likes, handle, created_at')
+      .select('id, email, display_name, avatar_url, banner_url, bio, tags, followers, following, plays, likes, handle, created_at, credits')
       .eq('id', user.id)
       .single()
 
     if (error) {
-      console.error('Error fetching profile:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching full profile, falling back to basic columns:', error)
+      // Fallback: try fetching only basic columns in case the schema extensions weren't applied
+      const fallbackResult = await supabase
+        .from('profiles')
+        .select('id, email, display_name, avatar_url, created_at, credits')
+        .eq('id', user.id)
+        .single()
+      
+      if (fallbackResult.error) {
+        console.error('Error fetching basic profile:', fallbackResult.error)
+        return NextResponse.json({ error: fallbackResult.error.message }, { status: 500 })
+      }
+      data = fallbackResult.data
     }
 
     return NextResponse.json(data)

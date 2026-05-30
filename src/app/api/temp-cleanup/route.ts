@@ -16,13 +16,13 @@ export async function GET(request: Request) {
 
     // If attempting to clean up another user's history, verify admin privileges
     if (userIdParam && userIdParam !== user.id) {
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
         .single()
 
-      if (roleData?.role === 'admin') {
+      if (profileData?.is_admin) {
         targetUserId = userIdParam
       } else {
         return new NextResponse('권한이 없습니다. (Forbidden)', { status: 403 })

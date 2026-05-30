@@ -53,7 +53,7 @@ export default async function LibraryPage() {
         style_prompt: song.prompt || song.form?.prompt || '',
         album: {
           id: `suno-album-${song.id}`,
-          title: song.form?.styleDesc || `${song.title} (Suno)`,
+          title: song.form?.styleDesc || song.title,
           cover_url: song.image_url || '/default-album.png',
           release_type: 'single',
           status: 'published',

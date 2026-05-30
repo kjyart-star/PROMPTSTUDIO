@@ -14,12 +14,12 @@ export default async function ProfilePage() {
   }
 
   let isAdmin = false
-  const { data: roleData } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
     .single()
-  isAdmin = roleData?.role === 'admin'
+  isAdmin = !!profileData?.is_admin
 
   const isLocal = process.env.NODE_ENV === 'development'
   if (isLocal) {
