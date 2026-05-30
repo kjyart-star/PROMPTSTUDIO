@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Upload, Play, Pause, Download, Trash2, Sliders, Settings2, FileAudio, RotateCcw, X, Activity, Maximize2, Gauge, Check, RefreshCw, ListFilter } from 'lucide-react'
-import { audioBufferToWav, estimateTruePeak, makeDistortionCurve } from '@/lib/audioUtils'
+import { audioBufferToWav, estimateTruePeak, makeDistortionCurve, makeSoftClipCurve } from '@/lib/audioUtils'
 
 interface Track {
   id: string
@@ -244,6 +244,15 @@ export function MasteringClient() {
       case 'bass': // Gentle bass focus
         setClarity(45); setWarmth(65); setSaturation(10); setWidth(0); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
+      case 'punchy': // Hip-hop / EDM (Punchy)
+        setClarity(60); setWarmth(60); setSaturation(15); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+        break;
+      case 'acoustic': // Classical / Acoustic (Wide & Transparent)
+        setClarity(55); setWarmth(45); setSaturation(0); setWidth(30); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'lofi': // Lo-Fi Chill (Warm, Narrow, Distorted)
+        setClarity(30); setWarmth(75); setSaturation(40); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
       case 'extreme': // Noticeable but not completely broken
         setClarity(55); setWarmth(55); setSaturation(20); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
         break;
@@ -287,7 +296,12 @@ export function MasteringClient() {
         buffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
       }
 
-      const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate)
+      // [Pro Optimization] Force 48kHz Target Sample Rate for consistent, high-precision rendering
+      const targetSampleRate = 48000
+      const duration = buffer.length / buffer.sampleRate
+      const targetLength = Math.ceil(duration * targetSampleRate)
+
+      const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, targetLength, targetSampleRate)
       const source = offlineCtx.createBufferSource()
       source.buffer = buffer
       
@@ -373,7 +387,7 @@ export function MasteringClient() {
       
       compressor.connect(makeupGain)
       
-      // True Peak Guard (Fast Limiter)
+      // True Peak Guard (Fast Limiter + Soft Clipper)
       if (truePeakGuard) {
         const limiter = offlineCtx.createDynamicsCompressor()
         limiter.threshold.value = -0.5
@@ -381,8 +395,15 @@ export function MasteringClient() {
         limiter.knee.value = 0
         limiter.attack.value = 0.001
         limiter.release.value = 0.05
+        
+        // [Pro Optimization] Math.tanh based Soft Clipper for musical saturation instead of harsh digital clipping
+        const softClipper = offlineCtx.createWaveShaper()
+        softClipper.curve = makeSoftClipCurve(1.5)
+        softClipper.oversample = '4x'
+        
         makeupGain.connect(limiter)
-        limiter.connect(offlineCtx.destination)
+        limiter.connect(softClipper)
+        softClipper.connect(offlineCtx.destination)
       } else {
         makeupGain.connect(offlineCtx.destination)
       }
@@ -567,17 +588,20 @@ export function MasteringClient() {
               Mastering Rack Console
             </h2>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex items-center bg-black border border-white/10 rounded-xl overflow-hidden p-1">
-                <div className="px-3 text-xs font-bold text-zinc-500 flex items-center gap-2 border-r border-white/10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex flex-wrap items-center bg-black/50 border border-white/10 rounded-xl p-1.5 max-w-[600px] gap-1.5">
+                <div className="px-3 text-xs font-bold text-zinc-500 flex items-center gap-2 mr-2">
                   <ListFilter className="w-3 h-3" />
-                  기본 템플릿
+                  프리셋
                 </div>
-                <button onClick={() => handleTemplateChange('streaming')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>균형형</button>
-                <button onClick={() => handleTemplateChange('vocal')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>보컬 강조</button>
-                <button onClick={() => handleTemplateChange('bass')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>저음 강화</button>
-                <button onClick={() => handleTemplateChange('extreme')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>익스트림</button>
-                <button onClick={() => handleTemplateChange('vintage')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>아날로그</button>
+                <button onClick={() => handleTemplateChange('streaming')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>기본(균형)</button>
+                <button onClick={() => handleTemplateChange('punchy')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'punchy' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>힙합/EDM</button>
+                <button onClick={() => handleTemplateChange('acoustic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'acoustic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>어쿠스틱</button>
+                <button onClick={() => handleTemplateChange('vocal')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>보컬 강조</button>
+                <button onClick={() => handleTemplateChange('bass')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>저음 강화</button>
+                <button onClick={() => handleTemplateChange('lofi')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'lofi' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>로파이</button>
+                <button onClick={() => handleTemplateChange('vintage')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>아날로그</button>
+                <button onClick={() => handleTemplateChange('extreme')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>익스트림</button>
               </div>
 
               <button 

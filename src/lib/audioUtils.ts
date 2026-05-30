@@ -146,3 +146,14 @@ export function makeDistortionCurve(amount: number) {
   }
   return curve
 }
+
+export function makeSoftClipCurve(amount: number = 1.2) {
+  const n_samples = 44100
+  const curve = new Float32Array(n_samples)
+  for (let i = 0; i < n_samples; ++i) {
+    const x = (i * 2) / n_samples - 1
+    // Math.tanh provides a perfect mathematical soft clip (tape saturation curve)
+    curve[i] = Math.tanh(x * amount) / Math.tanh(amount)
+  }
+  return curve
+}
