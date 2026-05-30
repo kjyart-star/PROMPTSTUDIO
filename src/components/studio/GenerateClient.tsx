@@ -438,9 +438,15 @@ export function GenerateClient({
         window.history.replaceState({}, '', url.toString())
       } else {
         alert("음악 생성 요청 실패")
+        if (activeHistoryId) {
+          await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
+        }
       }
     } catch (e) {
       console.error(e)
+      if (activeHistoryId) {
+        await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
+      }
     } finally {
       setIsMusicGenerating(false)
     }

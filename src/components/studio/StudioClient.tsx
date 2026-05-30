@@ -862,8 +862,10 @@ export function StudioClient({ user }: StudioClientProps) {
     try {
       const historyRes = await fetch('/api/song-history')
       if (historyRes.ok) {
-        const historyData = await historyRes.json()
-        setHistory(historyData || [])
+        const rawData = await historyRes.json() || []
+        const completedData = rawData.filter((item: any) => item.audio_url || item.file_url)
+        completedData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+        setHistory(completedData)
       }
     } catch (e) {
       console.error('Error fetching song history:', e)

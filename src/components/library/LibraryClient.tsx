@@ -460,10 +460,12 @@ export function LibraryClient({
     try {
       const res = await fetch('/api/song-history')
       if (res.ok) {
-        const data = await res.json() || []
-        setUserTracks(data)
+        const rawData = await res.json() || []
+        const completedData = rawData.filter((song: any) => song.audio_url || song.file_url)
+        completedData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+        setUserTracks(completedData)
         
-        const userIds = Array.from(new Set(data.map((song: any) => song.user_id).filter(Boolean))) as string[]
+        const userIds = Array.from(new Set(completedData.map((song: any) => song.user_id).filter(Boolean))) as string[]
         if (userIds.length > 0) {
           const { data: profiles, error } = await supabase
             .from('profiles')
