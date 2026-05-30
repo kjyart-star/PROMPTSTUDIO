@@ -4385,13 +4385,14 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
       )}
 
       {/* Beautiful Custom Toast Notifications */}
-      {toast && (
-        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[100] bg-[#121214]/90 backdrop-blur-md border border-zinc-800/80 text-sm font-bold text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {mounted && typeof window !== 'undefined' && document.body && toast && createPortal(
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] bg-[#121214]/90 backdrop-blur-md border border-zinc-800/80 text-sm font-bold text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-none">
           <div className={`w-2 h-2 rounded-full ${
             toast.type === 'success' ? 'bg-[#e3fe06]' : toast.type === 'error' ? 'bg-red-500' : 'bg-primary'
           }`} />
           <span>{toast.message}</span>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
