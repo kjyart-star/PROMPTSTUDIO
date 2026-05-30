@@ -261,6 +261,12 @@ export function MasteringClient() {
   const processAudio = async (track: Track): Promise<Track> => {
     if (!audioContextRef.current) return track
 
+    let currentProgress = 0
+    const progressInterval = setInterval(() => {
+      currentProgress += (95 - currentProgress) * 0.15
+      setTracks(prev => prev.map(t => t.id === track.id ? { ...t, progress: Math.floor(currentProgress) } : t))
+    }, 200)
+
     try {
       let buffer = track.originalBuffer
       if (!buffer) {
@@ -374,6 +380,8 @@ export function MasteringClient() {
       const wavBlob = audioBufferToWav(processedBuffer)
       const processedUrl = URL.createObjectURL(wavBlob)
 
+      clearInterval(progressInterval)
+
       return {
         ...track,
         originalBuffer: buffer,
@@ -385,18 +393,20 @@ export function MasteringClient() {
       }
     } catch (e) {
       console.error(e)
+      clearInterval(progressInterval)
       return { ...track, status: 'error' }
     }
   }
 
   const processAll = async () => {
     setIsProcessingAll(true)
+    
+    // Set all tracks to processing
+    setTracks(prev => prev.map(t => ({ ...t, status: 'processing', progress: 0 })))
+    
     for (let i = 0; i < tracks.length; i++) {
-      if (tracks[i].status !== 'done') {
-        setTracks(prev => prev.map((t, idx) => idx === i ? { ...t, status: 'processing', progress: 50 } : t))
-        const processedTrack = await processAudio(tracks[i])
-        setTracks(prev => prev.map((t, idx) => idx === i ? processedTrack : t))
-      }
+      const processedTrack = await processAudio(tracks[i])
+      setTracks(prev => prev.map(t => t.id === tracks[i].id ? processedTrack : t))
     }
     setIsProcessingAll(false)
   }
@@ -479,8 +489,14 @@ export function MasteringClient() {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm truncate">{track.name}</p>
                         {track.status === 'processing' && (
-                          <div className="w-full bg-black rounded-full h-1 mt-2 overflow-hidden">
-                            <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${track.progress}%` }} />
+                          <div className="w-full mt-2">
+                            <div className="flex justify-between items-center text-[10px] text-zinc-400 mb-1.5 font-mono">
+                              <span className="animate-pulse">오프라인 렌더링 중...</span>
+                              <span className="text-primary font-bold">{track.progress}%</span>
+                            </div>
+                            <div className="w-full bg-black rounded-full h-1.5 overflow-hidden border border-white/5">
+                              <div className="bg-primary h-full rounded-full transition-all duration-200 ease-out" style={{ width: `${track.progress}%` }} />
+                            </div>
                           </div>
                         )}
                       </div>
