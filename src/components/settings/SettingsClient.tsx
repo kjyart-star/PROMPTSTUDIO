@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { User, Check, Upload, ArrowLeft, Clock, Settings, CreditCard, Sliders, Pencil } from 'lucide-react'
+import { User, Users, Check, Upload, ArrowLeft, Clock, Settings, CreditCard, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface SettingsClientProps {
@@ -10,6 +11,8 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({ user }: SettingsClientProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -49,6 +52,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
   const [editFollowing, setEditFollowing] = useState(0)
   const [editPlays, setEditPlays] = useState('0')
   const [editLikes, setEditLikes] = useState('0')
+
+
 
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null)
@@ -100,6 +105,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
       console.error(e)
     }
   }
+
+
 
   // Load configuration and data on mount
   useEffect(() => {
@@ -326,12 +333,13 @@ export function SettingsClient({ user }: SettingsClientProps) {
       const { error } = await supabase.storage.from('avatars').upload(fileName, file)
       if (error) throw error
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
-      setEditBanner(data.publicUrl)
       showToast('배너 이미지가 업로드되었습니다.', 'success')
     } catch (e: any) {
       showToast('업로드 실패', 'error')
     }
   }
+
+
 
   return (
     <div className="max-w-7xl mx-auto pl-[32px] pr-0 py-4">
@@ -384,6 +392,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
             <User className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '프로필 관리' : 'Profile Management'}</span>
           </button>
+
           <button 
             onClick={() => setActiveSettingSection('preferences')}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
@@ -660,6 +669,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
             </div>
           )}
 
+
+
           {activeSettingSection === 'preferences' && (
             <div className="flex flex-col gap-6 text-left">
               <div>
@@ -779,6 +790,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
           </div>
         </div>
       )}
+
+
     </div>
   )
 }

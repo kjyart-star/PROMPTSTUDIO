@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
-import { User, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download } from 'lucide-react'
+import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -273,7 +273,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
   const [history, setHistory] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<'private' | 'public'>('public')
+  const [activeTab, setActiveTab] = useState<'private' | 'public' | 'channels'>('public')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
   const [currentAlbumPage, setCurrentAlbumPage] = useState(1)
@@ -342,6 +342,21 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null)
 
+  // Channels state
+  const [channels, setChannels] = useState<any[]>([])
+  const [showChannelModal, setShowChannelModal] = useState(false)
+  const [newChannelName, setNewChannelName] = useState('')
+  const [newChannelSlug, setNewChannelSlug] = useState('')
+  const [newChannelBio, setNewChannelBio] = useState('')
+  const [newChannelAvatar, setNewChannelAvatar] = useState('')
+  const [newChannelBanner, setNewChannelBanner] = useState('')
+  const [newChannelTags, setNewChannelTags] = useState<string[]>([])
+  const [newChannelGenreInput, setNewChannelGenreInput] = useState('')
+  const [newChannelPlays, setNewChannelPlays] = useState('0')
+  const [newChannelLikes, setNewChannelLikes] = useState('0')
+  const [newChannelFollowers, setNewChannelFollowers] = useState(0)
+  const [newChannelFollowing, setNewChannelFollowing] = useState(0)
+
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null)
 
@@ -350,6 +365,126 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     setTimeout(() => {
       setToast(null)
     }, 2500)
+  }
+
+  const fetchChannels = async () => {
+    try {
+      const res = await fetch('/api/channels')
+      if (res.ok) {
+        const data = await res.json()
+        setChannels(data.channels || [])
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleChannelAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) return showToast('이미지 크기는 2MB 이내여야 합니다.', 'error')
+    try {
+      const supabase = createClient()
+      const fileName = `${user.id}-channel-avatar-${Math.random().toString(36).substring(2)}.${file.name.split('.').pop()}`
+      const { error } = await supabase.storage.from('avatars').upload(fileName, file)
+      if (error) throw error
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+      setNewChannelAvatar(data.publicUrl)
+      showToast('채널 아바타 이미지가 업로드되었습니다.', 'success')
+    } catch (e: any) {
+      showToast('업로드 실패', 'error')
+    }
+  }
+
+  const handleChannelBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) return showToast('배너 이미지 크기는 5MB 이내여야 합니다.', 'error')
+    try {
+      const supabase = createClient()
+      const fileName = `${user.id}-channel-banner-${Math.random().toString(36).substring(2)}.${file.name.split('.').pop()}`
+      const { error } = await supabase.storage.from('avatars').upload(fileName, file)
+      if (error) throw error
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+      setNewChannelBanner(data.publicUrl)
+      showToast('채널 배너 이미지가 업로드되었습니다.', 'success')
+    } catch (e: any) {
+      showToast('업로드 실패', 'error')
+    }
+  }
+
+  const resetChannelModal = () => {
+    setNewChannelName('')
+    setNewChannelSlug('')
+    setNewChannelBio('')
+    setNewChannelAvatar('')
+    setNewChannelBanner('')
+    setNewChannelTags([])
+    setNewChannelGenreInput('')
+    setNewChannelPlays('0')
+    setNewChannelLikes('0')
+    setNewChannelFollowers(0)
+    setNewChannelFollowing(0)
+    setShowChannelModal(false)
+  }
+
+  const handleAddChannel = async () => {
+    if (!newChannelName) {
+      return showToast(uiLanguage === 'KO' ? '채널명을 입력해주세요.' : 'Channel name is required.', 'error')
+    }
+    
+    // 핸들이 비어있으면 자동 생성
+    const finalSlug = newChannelSlug || `user_${Math.random().toString(36).substring(2, 10)}`
+
+    try {
+      const res = await fetch('/api/channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: newChannelName, 
+          slug: finalSlug, 
+          bio: newChannelBio,
+          avatar_url: newChannelAvatar,
+          banner_url: newChannelBanner,
+          tags: newChannelTags,
+          plays: newChannelPlays,
+          likes: newChannelLikes,
+          followers: newChannelFollowers,
+          following: newChannelFollowing
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        return showToast(data.error || '채널 생성 실패 (관리자 권한이 필요할 수 있습니다)', 'error')
+      }
+      showToast(uiLanguage === 'KO' ? '새 채널이 생성되었습니다.' : 'New channel created.', 'success')
+      resetChannelModal()
+      fetchChannels()
+    } catch (e) {
+      console.error(e)
+      showToast('채널 생성 중 오류 발생', 'error')
+    }
+  }
+
+  const handleDeleteChannel = async (id: string) => {
+    if (!window.confirm(uiLanguage === 'KO' ? '정말로 이 채널을 삭제하시겠습니까?' : 'Are you sure you want to delete this channel?')) {
+      return
+    }
+    
+    try {
+      const res = await fetch(`/api/channels/${id}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        return showToast(data.error || '채널 삭제 실패', 'error')
+      }
+      showToast(uiLanguage === 'KO' ? '채널이 삭제되었습니다.' : 'Channel deleted.', 'success')
+      fetchChannels()
+    } catch (e) {
+      console.error(e)
+      showToast(uiLanguage === 'KO' ? '채널 삭제 중 오류가 발생했습니다.' : 'Error deleting channel.', 'error')
+    }
   }
   
   // Playlist Modal State
@@ -815,6 +950,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     fetchProfile()
     fetchHistory()
     fetchPlaylists()
+    fetchChannels()
     try {
       const savedIds = localStorage.getItem('profile-liked-song-ids')
       if (savedIds) {
@@ -2669,6 +2805,373 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
             </div>
 
 
+          </>
+        ) : activeTab === 'channels' ? (
+          /* Channels Tab View (Channel Management) */
+          <>
+            <div className="flex gap-4 mb-6 border-b border-outline-variant/20 pb-4">
+              <button 
+                onClick={() => {
+                  setActiveTab('private');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'private');
+                  window.history.pushState({ tab: 'private' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
+              >
+                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : 'Library (Private)'}
+              </button>
+              <button 
+                onClick={() => { 
+                  setActiveTab('public'); 
+                  handleSetPublicSubView('main'); 
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'public');
+                  window.history.pushState({ tab: 'public' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
+              >
+                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : 'My Channel (Published)'}
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('channels');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'channels');
+                  window.history.pushState({ tab: 'channels' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer bg-surface-container-high text-on-surface`}
+              >
+                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
+              </button>
+            </div>
+
+            <div className="mb-10 flex flex-col gap-6 text-left">
+              <div className="flex justify-between items-end">
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '추가 채널 관리' : 'Additional Channels'}</h3>
+                  <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '새로운 아티스트 페르소나(채널)를 추가하고 관리합니다.' : 'Create and manage additional artist personas.'}</p>
+                </div>
+                <button
+                  onClick={() => setShowChannelModal(true)}
+                  className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 추가' : 'Add Channel'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Default Profile Channel */}
+                <div 
+                  className="p-4 bg-surface-container border border-outline-variant/30 rounded-2xl flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer" 
+                  onClick={() => router.push(`/profile?tab=public`)}
+                >
+                  <div className="flex items-center gap-4">
+                    {editAvatar ? (
+                      <img src={editAvatar} alt={editName} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-zinc-500">
+                        <User className="w-5 h-5" />
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-white">{editName || (uiLanguage === 'KO' ? '이름 없음' : 'Unnamed')}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
+                          {uiLanguage === 'KO' ? '기본 채널' : 'Default'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-zinc-500 font-mono">@{editHandle || 'handle'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Channels */}
+                {channels.map((ch: any) => (
+                  <div key={ch.id} className="p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-2xl flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer" onClick={() => router.push(`/artists/${ch.slug}`)}>
+                    <div className="flex items-center gap-4">
+                      {ch.avatar_url ? (
+                        <img src={ch.avatar_url} alt={ch.name} className="w-12 h-12 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-zinc-500">
+                          <User className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">{ch.name}</span>
+                        <span className="text-xs text-zinc-500 font-mono">@{ch.slug}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }}
+                      className="p-2 rounded-full hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-colors"
+                      title={uiLanguage === 'KO' ? '채널 삭제' : 'Delete Channel'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add Channel Modal */}
+            {mounted && typeof window !== 'undefined' && document.body && showChannelModal && createPortal(
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-md grid place-items-center overflow-y-auto z-50 p-4 py-12 md:py-20">
+                <div className="bg-[#121214] border border-zinc-800/80 rounded-3xl w-full max-w-lg shadow-2xl flex flex-col my-8 animate-in fade-in zoom-in-95 duration-200">
+                  {/* Header */}
+                  <div className="relative py-5 flex items-center justify-center border-b border-zinc-850/40">
+                    <h2 className="text-base font-extrabold text-white">
+                      {uiLanguage === 'KO' ? '새 채널 추가' : 'Create New Channel'}
+                    </h2>
+                    <button 
+                      onClick={resetChannelModal} 
+                      className="absolute right-4 w-8 h-8 rounded-full bg-zinc-800/50 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Body */}
+                  <div className="p-6 flex flex-col gap-6 overflow-y-auto max-h-[70vh]">
+                    {/* Background Image Upload Area */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-400 flex items-center gap-1">
+                        {uiLanguage === 'KO' ? '배너 이미지 (Background image)' : 'Background image'} <Info className="w-3.5 h-3.5 text-zinc-500" />
+                      </label>
+                      <div 
+                        className="relative w-full h-44 bg-zinc-900/60 hover:bg-zinc-900 border border-dashed border-zinc-850 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer group overflow-hidden transition-colors"
+                        onClick={() => document.getElementById('channel-banner-file-input')?.click()}
+                      >
+                        {newChannelBanner ? (
+                          <img src={newChannelBanner} alt="Banner Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-zinc-500 group-hover:text-primary transition-colors" />
+                            <span className="text-xs text-zinc-400 font-medium">{uiLanguage === 'KO' ? '이미지 업로드' : 'Upload a photo'}</span>
+                          </>
+                        )}
+                        <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-zinc-700/50 shadow-md transition-all">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </div>
+                        <input 
+                          id="channel-banner-file-input" 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleChannelBannerUpload} 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Profile Picture Upload Area */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-400 flex items-center gap-1">
+                        {uiLanguage === 'KO' ? '프로필 사진 (Profile picture)' : 'Profile picture'} <Info className="w-3.5 h-3.5 text-zinc-500" />
+                      </label>
+                      <div 
+                        className="relative w-24 h-24 rounded-full cursor-pointer group overflow-visible shrink-0 self-start"
+                        onClick={() => document.getElementById('channel-avatar-file-input')?.click()}
+                      >
+                        {newChannelAvatar ? (
+                          <img src={newChannelAvatar} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover border border-zinc-800 shadow-lg" />
+                        ) : (
+                          <div className="w-24 h-24 rounded-full bg-zinc-900 border border-zinc-850 flex items-center justify-center text-zinc-500 group-hover:text-primary transition-colors">
+                            <User className="w-10 h-10" />
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-zinc-700/50 shadow-md transition-all">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </div>
+                        <input 
+                          id="channel-avatar-file-input" 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleChannelAvatarUpload} 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Display Name */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '채널명 (Display Name)' : 'Display Name'}</label>
+                      <input 
+                        type="text" 
+                        value={newChannelName}
+                        onChange={(e) => setNewChannelName(e.target.value)}
+                        placeholder={uiLanguage === 'KO' ? '새 아티스트 이름' : 'My New Artist'}
+                        className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600"
+                      />
+                    </div>
+
+                    {/* Add a bio */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '소개글 (Bio)' : 'Add a bio'}</label>
+                        <span className="text-[10px] font-medium text-zinc-500">{newChannelBio.length}/1200</span>
+                      </div>
+                      <textarea 
+                        value={newChannelBio}
+                        onChange={(e) => setNewChannelBio(e.target.value.slice(0, 1200))}
+                        placeholder={uiLanguage === 'KO' ? '채널에 대해 소개해주세요...' : 'Tell us about this channel...'}
+                        maxLength={1200}
+                        className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors h-28 resize-none placeholder-zinc-600"
+                      />
+                    </div>
+
+                    {/* Handle */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '핸들 네임 (고유 URL)*' : 'Handle*'}</label>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3 text-sm font-medium text-zinc-500 font-mono">@</span>
+                        <input 
+                          type="text" 
+                          value={newChannelSlug}
+                          onChange={(e) => setNewChannelSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          placeholder="artist_handle"
+                          className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 pl-7 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Genres Override */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '장르 설정 (Genres Override)' : 'Genres Override'}</label>
+                      <p className="text-[11px] text-zinc-500 leading-normal">
+                        {uiLanguage === 'KO' 
+                          ? '최대 5개의 음악 장르를 추가할 수 있습니다. 비워둘 경우 가장 인기 있는 곡의 장르가 표시됩니다.' 
+                          : 'Add up to 5 genres to describe your music style. If this is empty, the genres will be inferred from your most popular songs'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="relative flex-1 flex items-center">
+                          <input 
+                            type="text" 
+                            value={newChannelGenreInput}
+                            onChange={(e) => setNewChannelGenreInput(e.target.value.slice(0, 20))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (newChannelGenreInput.trim() && newChannelTags.length < 5 && !newChannelTags.includes(newChannelGenreInput.trim())) {
+                                  setNewChannelTags([...newChannelTags, newChannelGenreInput.trim()]);
+                                  setNewChannelGenreInput('');
+                                }
+                              }
+                            }}
+                            placeholder={uiLanguage === 'KO' ? '장르 입력...' : 'Type a genre...'}
+                            className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 pr-12 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600"
+                          />
+                          <span className="absolute right-3 text-[10px] text-zinc-500 font-medium">{newChannelGenreInput.length}/20</span>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (newChannelGenreInput.trim() && newChannelTags.length < 5 && !newChannelTags.includes(newChannelGenreInput.trim())) {
+                              setNewChannelTags([...newChannelTags, newChannelGenreInput.trim()]);
+                              setNewChannelGenreInput('');
+                            }
+                          }}
+                          disabled={!newChannelGenreInput.trim() || newChannelTags.length >= 5}
+                          className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:hover:bg-zinc-800 text-sm font-bold text-white transition-all shrink-0"
+                        >
+                          {uiLanguage === 'KO' ? '추가' : 'Add'}
+                        </button>
+                      </div>
+                      
+                      {newChannelTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {newChannelTags.map((tag) => (
+                            <span 
+                              key={tag} 
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300"
+                            >
+                              {tag}
+                              <button 
+                                type="button" 
+                                onClick={() => setNewChannelTags(newChannelTags.filter(t => t !== tag))}
+                                className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all text-[10px] font-bold"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Statistical Metrics Grid */}
+                    <div className="border-t border-zinc-800/40 pt-4 mt-2">
+                      <details className="group">
+                        <summary className="text-xs font-bold text-zinc-500 hover:text-zinc-300 cursor-pointer list-none flex items-center justify-between select-none">
+                          <span>{uiLanguage === 'KO' ? '고급 통계 설정 (Advanced Statistics)' : 'Advanced Statistics Override'}</span>
+                          <span className="transition-transform group-open:rotate-180 text-[10px]">▼</span>
+                        </summary>
+                        <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-zinc-400">조회수 (Plays)</label>
+                            <input 
+                              type="text" 
+                              value={newChannelPlays}
+                              onChange={(e) => setNewChannelPlays(e.target.value)}
+                              placeholder="예: 62K"
+                              className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-zinc-400">좋아요수 (Likes)</label>
+                            <input 
+                              type="text" 
+                              value={newChannelLikes}
+                              onChange={(e) => setNewChannelLikes(e.target.value)}
+                              placeholder="예: 3.5K"
+                              className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-zinc-400">팔로워 수 (Followers)</label>
+                            <input 
+                              type="number" 
+                              value={newChannelFollowers}
+                              onChange={(e) => setNewChannelFollowers(Number(e.target.value))}
+                              placeholder="예: 825"
+                              className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-zinc-400">팔로잉 수 (Following)</label>
+                            <input 
+                              type="number" 
+                              value={newChannelFollowing}
+                              onChange={(e) => setNewChannelFollowing(Number(e.target.value))}
+                              placeholder="예: 532"
+                              className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-5 bg-[#141415]/40 border-t border-zinc-850/40 flex justify-end gap-3 rounded-b-3xl">
+                    <button 
+                      type="button"
+                      onClick={resetChannelModal}
+                      className="px-5 py-2.5 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl transition-all"
+                    >
+                      {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={handleAddChannel}
+                      className="px-5 py-2.5 text-sm font-bold bg-[#e3fe06] text-black hover:bg-[#d0ea04] rounded-xl transition-all"
+                    >
+                      {uiLanguage === 'KO' ? '생성하기' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
           </>
         ) : (
           /* Premium Public Artist Channel View */
