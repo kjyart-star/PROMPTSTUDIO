@@ -191,22 +191,23 @@ export function MasteringClient() {
       
       // 1. Tube Saturation (WaveShaper)
       const shaper = offlineCtx.createWaveShaper()
-      shaper.curve = makeDistortionCurve(saturation * 4) // Multiply for dramatic effect
-      shaper.oversample = '4x'
+      if (saturation > 0) {
+        shaper.curve = makeDistortionCurve(saturation / 2) // scale down to prevent harsh clipping
+        shaper.oversample = '4x'
+      }
 
       // 2. EQ (Clarity & Warmth)
       const highShelf = offlineCtx.createBiquadFilter()
       highShelf.type = 'highshelf'
       highShelf.frequency.value = 8000
-      highShelf.gain.value = (clarity - 50) / 5 // +/- 10dB
+      highShelf.gain.value = (clarity - 50) / 10 // reduced from /5 to /10 for smoother EQ
 
       const lowShelf = offlineCtx.createBiquadFilter()
       lowShelf.type = 'lowshelf'
       lowShelf.frequency.value = 150
-      lowShelf.gain.value = (warmth - 50) / 5 // +/- 10dB
+      lowShelf.gain.value = (warmth - 50) / 10 // reduced from /5 to /10
 
       // 3. Stereo Width Simulation (Delay on one channel via Splitter/Merger)
-      // Only apply if stereo and width > 0
       const hasWidth = buffer.numberOfChannels === 2 && width > 0
       let leftGain, rightGain, rightDelay, merger
       if (hasWidth) {
@@ -216,9 +217,8 @@ export function MasteringClient() {
         leftGain = offlineCtx.createGain()
         rightGain = offlineCtx.createGain()
         
-        // Haas effect delay (0 to 30ms based on width slider)
         rightDelay = offlineCtx.createDelay(0.1)
-        rightDelay.delayTime.value = (width / 100) * 0.03
+        rightDelay.delayTime.value = (width / 100) * 0.02 // max 20ms delay
         
         splitter.connect(leftGain, 0)
         splitter.connect(rightDelay, 1)
@@ -236,22 +236,27 @@ export function MasteringClient() {
       const compressor = offlineCtx.createDynamicsCompressor()
       
       if (extremeLoudness) {
-        compressor.threshold.value = -30
-        compressor.ratio.value = 12
+        compressor.threshold.value = -24
+        compressor.ratio.value = 8
         compressor.knee.value = 0
         compressor.attack.value = 0.003
         compressor.release.value = 0.25
       } else {
-        compressor.threshold.value = preset === 'loud' ? -20 : -14
-        compressor.ratio.value = preset === 'loud' ? 6 : 3
+        compressor.threshold.value = preset === 'loud' ? -16 : -12
+        compressor.ratio.value = preset === 'loud' ? 4 : 2
         compressor.knee.value = 5
       }
       
       const makeupGain = offlineCtx.createGain()
-      makeupGain.gain.value = extremeLoudness ? 3.0 : 1.5 // Dramatic loudness boost
+      makeupGain.gain.value = extremeLoudness ? 2.0 : 1.2 // Reduced gain to prevent clipping
       
-      source.connect(shaper)
-      shaper.connect(highShelf)
+      if (saturation > 0) {
+        source.connect(shaper)
+        shaper.connect(highShelf)
+      } else {
+        source.connect(highShelf)
+      }
+      
       highShelf.connect(lowShelf)
       
       if (hasWidth && merger) {
@@ -262,14 +267,15 @@ export function MasteringClient() {
       
       compressor.connect(makeupGain)
       
-      // True Peak Guard (Hard Limiter)
-      const limiter = offlineCtx.createDynamicsCompressor()
+      // True Peak Guard (Hard Limiter using wave shaper to hard clip at 1.0)
       if (truePeakGuard) {
-        limiter.threshold.value = -1.0
-        limiter.ratio.value = 20
-        limiter.knee.value = 0
-        limiter.attack.value = 0.001
-        limiter.release.value = 0.1
+        const limiter = offlineCtx.createWaveShaper()
+        const clipCurve = new Float32Array(44100)
+        for (let i = 0; i < 44100; i++) {
+          const x = (i * 2) / 44100 - 1
+          clipCurve[i] = Math.max(-0.98, Math.min(0.98, x)) // Hard clip at -0.17dBFS to prevent true peak overshoot
+        }
+        limiter.curve = clipCurve
         makeupGain.connect(limiter)
         limiter.connect(offlineCtx.destination)
       } else {
