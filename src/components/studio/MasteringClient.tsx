@@ -238,26 +238,38 @@ export function MasteringClient() {
       case 'streaming': // Perfectly flat and safe
         setClarity(50); setWarmth(50); setSaturation(0); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
-      case 'vocal': // Gentle vocal presence
-        setClarity(60); setWarmth(45); setSaturation(5); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
-        break;
-      case 'bass': // Gentle bass focus
-        setClarity(45); setWarmth(65); setSaturation(10); setWidth(0); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
+      case 'kpop': // Pop / K-Pop (Bright, tight, commercial loudness)
+        setClarity(65); setWarmth(55); setSaturation(5); setWidth(15); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
       case 'punchy': // Hip-hop / EDM (Punchy)
-        setClarity(60); setWarmth(60); setSaturation(15); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+        setClarity(60); setWarmth(65); setSaturation(15); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+        break;
+      case 'rock': // Rock / Metal (Aggressive, wide, warm low-mids)
+        setClarity(55); setWarmth(60); setSaturation(25); setWidth(20); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'rnb': // R&B / Soul (Warm, intimate)
+        setClarity(50); setWarmth(65); setSaturation(15); setWidth(5); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
       case 'acoustic': // Classical / Acoustic (Wide & Transparent)
         setClarity(55); setWarmth(45); setSaturation(0); setWidth(30); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
+      case 'cinematic': // Cinematic / OST (Deep bass, very wide, dynamic)
+        setClarity(60); setWarmth(70); setSaturation(10); setWidth(40); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'vocal': // Gentle vocal presence
+        setClarity(65); setWarmth(40); setSaturation(5); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'bass': // Gentle bass focus
+        setClarity(40); setWarmth(70); setSaturation(10); setWidth(0); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
       case 'lofi': // Lo-Fi Chill (Warm, Narrow, Distorted)
         setClarity(30); setWarmth(75); setSaturation(40); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
-      case 'extreme': // Noticeable but not completely broken
-        setClarity(55); setWarmth(55); setSaturation(20); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
-        break;
       case 'vintage': // Warm analog feel
         setClarity(40); setWarmth(60); setSaturation(30); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'extreme': // Noticeable but not completely broken
+        setClarity(55); setWarmth(55); setSaturation(20); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
         break;
       case 'custom':
         break;
@@ -588,20 +600,24 @@ export function MasteringClient() {
               Mastering Rack Console
             </h2>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex flex-wrap items-center bg-black/50 border border-white/10 rounded-xl p-1.5 max-w-[600px] gap-1.5">
-                <div className="px-3 text-xs font-bold text-zinc-500 flex items-center gap-2 mr-2">
+            <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4">
+              <div className="flex flex-wrap items-center bg-black/50 border border-white/10 rounded-xl p-2 max-w-[800px] gap-1.5">
+                <div className="px-3 py-1 text-xs font-bold text-zinc-500 flex items-center gap-2 mr-2">
                   <ListFilter className="w-3 h-3" />
-                  프리셋
+                  장르 프리셋
                 </div>
                 <button onClick={() => handleTemplateChange('streaming')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>기본(균형)</button>
+                <button onClick={() => handleTemplateChange('kpop')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'kpop' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>팝/K-Pop</button>
                 <button onClick={() => handleTemplateChange('punchy')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'punchy' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>힙합/EDM</button>
+                <button onClick={() => handleTemplateChange('rock')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rock' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>록/메탈</button>
+                <button onClick={() => handleTemplateChange('rnb')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rnb' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>R&B/소울</button>
                 <button onClick={() => handleTemplateChange('acoustic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'acoustic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>어쿠스틱</button>
+                <button onClick={() => handleTemplateChange('cinematic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'cinematic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>시네마틱/OST</button>
                 <button onClick={() => handleTemplateChange('vocal')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>보컬 강조</button>
                 <button onClick={() => handleTemplateChange('bass')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>저음 강화</button>
                 <button onClick={() => handleTemplateChange('lofi')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'lofi' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>로파이</button>
                 <button onClick={() => handleTemplateChange('vintage')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>아날로그</button>
-                <button onClick={() => handleTemplateChange('extreme')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>익스트림</button>
+                <button onClick={() => handleTemplateChange('extreme')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-red-500 text-black' : 'text-red-400/70 hover:text-red-400 hover:bg-red-500/10'}`}>익스트림</button>
               </div>
 
               <button 
