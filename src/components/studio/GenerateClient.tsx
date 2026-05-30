@@ -461,19 +461,20 @@ export function GenerateClient({
     
     // Load its details into the Left Column form
     if (track.form) {
-      setGenerateForm({
+      setGenerateForm(prev => ({
+        ...prev,
         modelVersion: track.form.modelVersion || 'v5',
         customMode: track.form.customMode !== undefined ? track.form.customMode : true,
         instrumentalOnly: track.form.instrumentalOnly || false,
         prompt: track.lyrics || track.form.prompt || '',
         style: track.prompt || track.form.style || '',
-        title: track.title?.replace(/\s\(v\d+\)$/, '') || track.form.title || '',
+        title: track.title?.replace(/\\s\\(v\\d+\\)$/, '') || track.form.title || '',
         vocalGender: track.form.vocalGender || 'Female',
         negativeTags: track.form.negativePrompt || track.form.negativeTags || '',
         styleWeight: track.form.styleWeight !== undefined ? track.form.styleWeight : 0.5,
         weirdness: track.form.weirdness !== undefined ? track.form.weirdness : 0.3,
         audioWeight: track.form.audioWeight !== undefined ? track.form.audioWeight : 0.5
-      })
+      }))
     } else {
       setGenerateForm(prev => ({
         ...prev,

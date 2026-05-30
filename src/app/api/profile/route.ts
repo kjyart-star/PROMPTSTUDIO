@@ -31,7 +31,7 @@ export async function GET(request: Request) {
         console.error('Error fetching basic profile:', fallbackResult.error)
         return NextResponse.json({ error: fallbackResult.error.message }, { status: 500 })
       }
-      data = fallbackResult.data
+      data = fallbackResult.data as any
     }
 
     return NextResponse.json(data)
