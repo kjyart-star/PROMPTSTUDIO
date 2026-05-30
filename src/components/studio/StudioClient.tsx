@@ -2031,25 +2031,24 @@ export function StudioClient({ user }: StudioClientProps) {
             </div>
  
             {/* DURATION PLAN */}
-            {resultParts.structurePlan && (
-              <div className="space-y-1.5 relative group/item mt-4">
-                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                  <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : 'Structure & BPM Plan'}</span>
-                  <button
-                    onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : 'Copy Plan', resultParts.structurePlan)}
-                    className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                    title={t.copyTooltip}
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <textarea
-                  readOnly
-                  value={resultParts.structurePlan}
-                  className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[120px]"
-                />
+            <div className="space-y-1.5 relative group/item mt-4">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
+                <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : 'Structure & BPM Plan'}</span>
+                <button
+                  onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : 'Copy Plan', resultParts.structurePlan)}
+                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
+                  title={t.copyTooltip}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
               </div>
-            )}
+              <textarea
+                readOnly
+                placeholder={uiLanguage === 'KO' ? '생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다.' : 'Duration and BPM plan will be displayed here.'}
+                value={resultParts.structurePlan}
+                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[120px]"
+              />
+            </div>
 
             {/* AI 메모 (SUGGESTIONS) */}
             <div className="space-y-1.5 relative group/item">
