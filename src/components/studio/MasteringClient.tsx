@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Upload, Play, Pause, Download, Trash2, Sliders, Settings2, FileAudio, RotateCcw, X, Activity, Maximize2, Gauge, Check } from 'lucide-react'
+import { Upload, Play, Pause, Download, Trash2, Sliders, Settings2, FileAudio, RotateCcw, X, Activity, Maximize2, Gauge, Check, RefreshCw, ListFilter } from 'lucide-react'
 import { audioBufferToWav, estimateTruePeak, makeDistortionCurve } from '@/lib/audioUtils'
 
 interface Track {
@@ -18,9 +18,10 @@ interface Track {
 
 export function MasteringClient() {
   const [tracks, setTracks] = useState<Track[]>([])
-  const [preset, setPreset] = useState('streaming')
   
   // Mastering Parameters
+  const [activeTemplate, setActiveTemplate] = useState('streaming')
+  const [preset, setPreset] = useState('streaming') // Used for compressor threshold target
   const [clarity, setClarity] = useState(55)
   const [warmth, setWarmth] = useState(48)
   const [saturation, setSaturation] = useState(20)
@@ -131,6 +132,47 @@ export function MasteringClient() {
         }
       }
     }
+  }
+
+  const handleTemplateChange = (templateId: string) => {
+    setActiveTemplate(templateId)
+    switch (templateId) {
+      case 'streaming':
+        setClarity(55); setWarmth(48); setSaturation(20); setWidth(30); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'vocal':
+        setClarity(65); setWarmth(40); setSaturation(10); setWidth(20); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'bass':
+        setClarity(40); setWarmth(75); setSaturation(40); setWidth(15); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'extreme':
+        setClarity(60); setWarmth(60); setSaturation(50); setWidth(50); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+        break;
+      case 'vintage':
+        setClarity(40); setWarmth(55); setSaturation(80); setWidth(10); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+        break;
+      case 'custom':
+        // Do nothing, just switch the active label
+        break;
+    }
+  }
+
+  const resetOptions = () => {
+    setClarity(50)
+    setWarmth(50)
+    setSaturation(0)
+    setWidth(0)
+    setPreset('streaming')
+    setExtremeLoudness(false)
+    setTruePeakGuard(true)
+    setActiveTemplate('custom')
+  }
+
+  // Trigger 'custom' template mode when user manually changes a slider
+  const handleSliderChange = (setter: any, value: number) => {
+    setter(value)
+    setActiveTemplate('custom')
   }
 
   const processAudio = async (track: Track): Promise<Track> => {
@@ -285,7 +327,7 @@ export function MasteringClient() {
           <Settings2 className="w-10 h-10 text-primary" />
           Pro Audio Mastering Console
         </h1>
-        <p className="text-zinc-400 max-w-2xl text-lg">Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 스튜디오 랙 마운트 마스터링 툴입니다.</p>
+        <p className="text-zinc-400 max-w-2xl text-lg">Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.</p>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -375,19 +417,43 @@ export function MasteringClient() {
 
         {/* Bottom: Mastering Rack Console */}
         <div className="bg-[#121214] border border-outline-variant/10 rounded-[2rem] p-6 lg:p-10 shadow-2xl relative">
-          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+          
+          {/* Header & Templates */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 pb-6 border-b border-white/5 gap-6">
             <h2 className="text-2xl font-black flex items-center gap-3">
               <Sliders className="w-7 h-7 text-primary" />
               Mastering Rack Console
             </h2>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex items-center bg-black border border-white/10 rounded-xl overflow-hidden p-1">
+                <div className="px-3 text-xs font-bold text-zinc-500 flex items-center gap-2 border-r border-white/10">
+                  <ListFilter className="w-3 h-3" />
+                  기본 템플릿
+                </div>
+                <button onClick={() => handleTemplateChange('streaming')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>균형형</button>
+                <button onClick={() => handleTemplateChange('vocal')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>보컬 강조</button>
+                <button onClick={() => handleTemplateChange('bass')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>저음 강화</button>
+                <button onClick={() => handleTemplateChange('extreme')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>익스트림</button>
+                <button onClick={() => handleTemplateChange('vintage')} className={`px-4 py-2 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>아날로그</button>
+              </div>
+
+              <button 
+                onClick={resetOptions}
+                className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold flex items-center gap-2 text-sm transition-all shadow-md"
+                title="설정 초기화"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
             
             <div className="flex gap-3">
               <button onClick={downloadAll} disabled={!tracks.some(t => t.status === 'done')} className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold flex items-center gap-2 text-sm disabled:opacity-30 transition-all">
-                <Download className="w-4 h-4" /> 다운로드
+                <Download className="w-4 h-4" /> 전체 다운로드
               </button>
               <button onClick={processAll} disabled={isProcessingAll || tracks.length === 0} className="px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold flex items-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all">
                 {isProcessingAll ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-black" />}
-                {isProcessingAll ? '처리 중...' : '마스터링 시작'}
+                {isProcessingAll ? '마스터링 중...' : '마스터링 시작'}
               </button>
             </div>
           </div>
@@ -401,23 +467,23 @@ export function MasteringClient() {
                 <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                   <Sliders className="w-4 h-4 text-blue-400" />
                 </div>
-                <h3 className="font-bold text-lg text-blue-100">Tonal Balance</h3>
+                <h3 className="font-bold text-lg text-blue-100">톤 밸런스 <span className="text-sm text-zinc-500 font-normal ml-1">(EQ)</span></h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">High-Shelf (Clarity)</span>
-                    <span className={clarity > 50 ? 'text-blue-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
+                    <span className="text-zinc-400">선명도 (High-Shelf)</span>
+                    <span className={clarity > 50 ? 'text-blue-400' : clarity < 50 ? 'text-red-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={clarity} onChange={(e) => setClarity(Number(e.target.value))} className="accent-blue-500 w-full" />
+                  <input type="range" min="0" max="100" value={clarity} onChange={(e) => handleSliderChange(setClarity, Number(e.target.value))} className="accent-blue-500 w-full" />
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">Low-Shelf (Warmth)</span>
-                    <span className={warmth > 50 ? 'text-blue-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
+                    <span className="text-zinc-400">무게감 (Low-Shelf)</span>
+                    <span className={warmth > 50 ? 'text-blue-400' : warmth < 50 ? 'text-red-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={warmth} onChange={(e) => setWarmth(Number(e.target.value))} className="accent-blue-500 w-full" />
+                  <input type="range" min="0" max="100" value={warmth} onChange={(e) => handleSliderChange(setWarmth, Number(e.target.value))} className="accent-blue-500 w-full" />
                 </div>
               </div>
             </div>
@@ -429,25 +495,25 @@ export function MasteringClient() {
                 <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
                   <Maximize2 className="w-4 h-4 text-orange-400" />
                 </div>
-                <h3 className="font-bold text-lg text-orange-100">Saturation & Width</h3>
+                <h3 className="font-bold text-lg text-orange-100">새츄레이션 & 공간감</h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">Tube Saturation</span>
-                    <span className="text-orange-400">{saturation} %</span>
+                    <span className="text-zinc-400">진공관 따뜻함 (Saturation)</span>
+                    <span className={saturation > 0 ? 'text-orange-400' : 'text-zinc-500'}>{saturation} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={saturation} onChange={(e) => setSaturation(Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <input type="range" min="0" max="100" value={saturation} onChange={(e) => handleSliderChange(setSaturation, Number(e.target.value))} className="accent-orange-500 w-full" />
                   <p className="text-[10px] text-zinc-500">아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">Stereo Widener</span>
-                    <span className="text-orange-400">{width} %</span>
+                    <span className="text-zinc-400">스테레오 확장 (Width)</span>
+                    <span className={width > 0 ? 'text-orange-400' : 'text-zinc-500'}>{width} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="accent-orange-500 w-full" />
-                  <p className="text-[10px] text-zinc-500">Haas Effect 기반 좌우 위상 확장 (공간감 극대화)</p>
+                  <input type="range" min="0" max="100" value={width} onChange={(e) => handleSliderChange(setWidth, Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <p className="text-[10px] text-zinc-500">좌우 위상 확장으로 공간감 극대화</p>
                 </div>
               </div>
             </div>
@@ -460,32 +526,32 @@ export function MasteringClient() {
                   <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                     <Gauge className="w-4 h-4 text-primary" />
                   </div>
-                  <h3 className="font-bold text-lg text-primary-100">Maximizer</h3>
+                  <h3 className="font-bold text-lg text-primary-100">다이내믹스 <span className="text-sm text-zinc-500 font-normal ml-1">(음압)</span></h3>
                 </div>
               </div>
               
               <div className="space-y-6 relative z-10">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-zinc-400">Loudness Target</label>
+                  <label className="text-xs font-bold text-zinc-400">목표 음압 (Loudness Target)</label>
                   <select 
                     value={preset}
-                    onChange={(e) => setPreset(e.target.value)}
+                    onChange={(e) => { setPreset(e.target.value); setActiveTemplate('custom'); }}
                     className="bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary text-white font-bold"
                   >
-                    <option value="streaming">Streaming (-14 LUFS)</option>
-                    <option value="loud">Modern Loud (-10 LUFS)</option>
+                    <option value="streaming">스트리밍 기본 (-14 LUFS)</option>
+                    <option value="loud">모던 라우드 (-10 LUFS)</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
                   <label className="flex items-center gap-3 cursor-pointer group/label">
                     <div className="relative flex items-center">
-                      <input type="checkbox" checked={extremeLoudness} onChange={(e) => setExtremeLoudness(e.target.checked)} className="peer sr-only" />
+                      <input type="checkbox" checked={extremeLoudness} onChange={(e) => { setExtremeLoudness(e.target.checked); setActiveTemplate('custom'); }} className="peer sr-only" />
                       <div className="w-10 h-6 bg-zinc-800 rounded-full peer-checked:bg-red-500/80 transition-colors" />
                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
                     </div>
                     <div>
-                      <span className={`text-sm font-bold ${extremeLoudness ? 'text-red-400' : 'text-zinc-300'}`}>Extreme Loudness</span>
+                      <span className={`text-sm font-bold ${extremeLoudness ? 'text-red-400' : 'text-zinc-300'}`}>익스트림 부스터 (Extreme)</span>
                       <p className="text-[10px] text-zinc-500">공격적인 압축 및 게인 부스트 (음압 극대화)</p>
                     </div>
                   </label>
@@ -497,8 +563,8 @@ export function MasteringClient() {
                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
                     </div>
                     <div>
-                      <span className={`text-sm font-bold ${truePeakGuard ? 'text-primary' : 'text-zinc-300'}`}>True Peak Guard</span>
-                      <p className="text-[10px] text-zinc-500">출력 전단 클리핑 방지 하드 리미터</p>
+                      <span className={`text-sm font-bold ${truePeakGuard ? 'text-primary' : 'text-zinc-300'}`}>트루 피크 가드 (True Peak)</span>
+                      <p className="text-[10px] text-zinc-500">출력 전단 클리핑 방지 리미터 적용</p>
                     </div>
                   </label>
                 </div>
