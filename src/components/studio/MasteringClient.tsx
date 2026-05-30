@@ -662,7 +662,7 @@ export function MasteringClient() {
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">무게감 (Low-Shelf)</span>
+                    <span className="text-zinc-400">저역 (Low-Shelf)</span>
                     <span className={warmth > 50 ? 'text-blue-400' : warmth < 50 ? 'text-red-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
                   </div>
                   <input type="range" min="0" max="100" value={warmth} onChange={(e) => handleSliderChange(setWarmth, Number(e.target.value))} className="accent-blue-500 w-full" />
