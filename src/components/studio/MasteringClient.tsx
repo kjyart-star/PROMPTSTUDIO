@@ -46,6 +46,7 @@ export function MasteringClient() {
   const startTimeRef = useRef<number>(0)
   const pauseTimeRef = useRef<number>(0)
   const animationRef = useRef<number>(0)
+  const playRequestTokenRef = useRef<number>(0)
 
   useEffect(() => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -115,10 +116,13 @@ export function MasteringClient() {
   }
 
   const stopPlayback = () => {
+    playRequestTokenRef.current = 0 // Cancel any pending play requests
     if (sourceNodeRef.current && audioContextRef.current) {
       pauseTimeRef.current += audioContextRef.current.currentTime - startTimeRef.current
-      sourceNodeRef.current.stop()
-      sourceNodeRef.current.disconnect()
+      try {
+        sourceNodeRef.current.stop()
+        sourceNodeRef.current.disconnect()
+      } catch (e) {}
       sourceNodeRef.current = null
     }
     setCurrentlyPlayingId(null)
@@ -136,6 +140,10 @@ export function MasteringClient() {
       return
     }
 
+    // Generate unique token for this play request
+    const token = Date.now() + Math.random()
+    playRequestTokenRef.current = token
+
     let buffer = type === 'processed' ? track.processedBuffer : track.originalBuffer
     
     if (!buffer && type === 'original') {
@@ -144,6 +152,8 @@ export function MasteringClient() {
       setTracks(prev => prev.map(t => t.id === track.id ? { ...t, originalBuffer: buffer } : t))
     }
 
+    // Abort if another play request was made or stop was called while decoding
+    if (playRequestTokenRef.current !== token) return
     if (!buffer) return
 
     let startOffset = 0
@@ -153,18 +163,21 @@ export function MasteringClient() {
       // Switching A/B mid-playback or resuming
       if (sourceNodeRef.current) {
         startOffset = pauseTimeRef.current + (ctx.currentTime - startTimeRef.current)
-        sourceNodeRef.current.stop()
-        sourceNodeRef.current.disconnect()
       } else {
         startOffset = pauseTimeRef.current
       }
     } else {
       // Different track entirely
-      if (sourceNodeRef.current) {
+      startOffset = 0
+    }
+
+    // Stop current playback before starting new one
+    if (sourceNodeRef.current) {
+      try {
         sourceNodeRef.current.stop()
         sourceNodeRef.current.disconnect()
-      }
-      startOffset = 0
+      } catch (e) {}
+      sourceNodeRef.current = null
     }
 
     if (startOffset >= buffer.duration) {
