@@ -11,6 +11,7 @@ import { GENRES } from '@/lib/constants'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import { MasteringClient } from './MasteringClient'
+import { GenreModal } from './GenreModal'
 
 const durationCache: Record<string, number> = {}
 
@@ -379,7 +380,32 @@ const getOptions = (lang: string) => {
       vocalFeaturing: [{ value: '없음', label: 'None' }, { value: '남성 피쳐링', label: 'Male Ft.' }, { value: '여성 피쳐링', label: 'Female Ft.' }],
       songType: [{ value: 'vocal', label: 'Vocal Song' }, { value: 'instrumental', label: 'Instrumental / BGM' }],
       bgmType: [{ value: '영화음악', label: 'Film Score' }, { value: '홍보음악', label: 'Promotional' }, { value: '광고음악', label: 'Commercial' }, { value: '애니메이션', label: 'Animation' }, { value: '게임음악', label: 'Game Music' }, { value: '유튜브/기타', label: 'YouTube/Other' }],
-      musicLength: [{ value: '15초', label: '15s' }, { value: '30초', label: '30s' }, { value: '1분', label: '1m' }, { value: '2분', label: '2m' }, { value: '3분 이상', label: '3m+' }]
+      musicLength: [{ value: '1분', label: '1m' }, { value: '2분', label: '2m' }, { value: '3분', label: '3m' }, { value: '4분', label: '4m' }, { value: '5분', label: '5m' }],
+      lyricDensity: [{ value: '적음', label: 'Low' }, { value: '보통', label: 'Medium' }, { value: '많음', label: 'High' }],
+      songStructure: [{ value: '랜덤', label: 'Random (AI)' }, { value: '대중적인 팝', label: 'Standard Pop' }, { value: '숏폼/훅 중심', label: 'Hook-heavy (Shorts)' }, { value: '빌드업/드롭', label: 'Build-up & Drop' }, { value: '기승전결', label: 'Narrative (Epic)' }],
+      genre1: [{ value: '케이팝', label: 'K-Pop' }, { value: '팝', label: 'Pop' }, { value: '힙합', label: 'Hip Hop' }, { value: '알앤비', label: 'R&B' }, { value: '록', label: 'Rock' }, { value: '일렉트로닉', label: 'Electronic' }, { value: '재즈', label: 'Jazz' }, { value: '어쿠스틱', label: 'Acoustic' }, { value: '시티팝', label: 'City Pop' }, { value: '기타', label: 'Other' }],
+      genre2: [{ value: '없음', label: 'None' }, { value: '케이팝', label: 'K-Pop' }, { value: '팝', label: 'Pop' }, { value: '힙합', label: 'Hip Hop' }, { value: '알앤비', label: 'R&B' }, { value: '록', label: 'Rock' }, { value: '일렉트로닉', label: 'Electronic' }, { value: '재즈', label: 'Jazz' }, { value: '어쿠스틱', label: 'Acoustic' }, { value: '시티팝', label: 'City Pop' }, { value: '기타', label: 'Other' }],
+      vocalTone: [
+        { value: '없음', label: 'None' },
+        { value: '밝고 쾌활한', label: 'Bright & Cheerful' },
+        { value: '감정적으로 솔직한', label: 'Emotionally Honest' },
+        { value: '수줍은', label: 'Shy' },
+        { value: '장난기 넘치는', label: 'Playful' },
+        { value: '시크하고 쿨한', label: 'Chic & Cool' },
+        { value: '몽환적이고 부드러운', label: 'Dreamy & Soft' },
+        { value: '따뜻하고 포근한', label: 'Warm & Cozy' },
+        { value: '우아하고 차분한', label: 'Elegant & Calm' },
+        { value: '허스키한', label: 'Husky' },
+        { value: '에너지 넘치고 파워풀한', label: 'Energetic & Powerful' },
+        { value: '맑고 깨끗한', label: 'Clear & Pure' },
+        { value: '섬세하고 속삭이는', label: 'Delicate & Whispering' },
+        { value: '깊고 성숙한', label: 'Deep & Mature' },
+        { value: '담백하고 자연스러운', label: 'Plain & Natural' }
+      ],
+      vocalAge: [{ value: '어린이', label: 'Child' }, { value: '청소년', label: 'Teenager' }, { value: '청년', label: 'Young Adult' }, { value: '중장년', label: 'Middle-aged' }],
+      vocalGenderGroup: [{ value: '여자', label: 'Female' }, { value: '남자', label: 'Male' }, { value: '혼성', label: 'Mixed' }, { value: '듀엣', label: 'Duet' }, { value: '그룹', label: 'Group' }],
+      language1: [{ value: '한국어', label: 'Korean' }, { value: '영어', label: 'English' }, { value: '일본어', label: 'Japanese' }],
+      language2: [{ value: '없음', label: 'None' }, { value: '한국어', label: 'Korean' }, { value: '영어', label: 'English' }, { value: '일본어', label: 'Japanese' }],
     }
   }
   return {
@@ -389,13 +415,38 @@ const getOptions = (lang: string) => {
     vocalFeaturing: [{ value: '없음', label: '없음' }, { value: '남성 피쳐링', label: '남자 피쳐링' }, { value: '여성 피쳐링', label: '여자 피쳐링' }],
     songType: [{ value: 'vocal', label: '가사 있는 곡' }, { value: 'instrumental', label: '가사 없는 연주곡 (BGM)' }],
     bgmType: [{ value: '영화음악', label: '영화음악' }, { value: '홍보음악', label: '홍보음악' }, { value: '광고음악', label: '광고음악' }, { value: '애니메이션', label: '애니메이션' }, { value: '게임음악', label: '게임음악' }, { value: '유튜브/기타', label: '유튜브/기타' }],
-    musicLength: [{ value: '15초', label: '15초' }, { value: '30초', label: '30초' }, { value: '1분', label: '1분' }, { value: '2분', label: '2분' }, { value: '3분 이상', label: '3분 이상' }]
+    musicLength: [{ value: '1분', label: '1분' }, { value: '2분', label: '2분' }, { value: '3분', label: '3분' }, { value: '4분', label: '4분' }, { value: '5분', label: '5분' }],
+    lyricDensity: [{ value: '적음', label: '적음 (Low)' }, { value: '보통', label: '보통 (Medium)' }, { value: '많음', label: '많음 (High)' }],
+    songStructure: [{ value: '랜덤', label: '랜덤 (AI 추천)' }, { value: '대중적인 팝', label: '대중적인 팝 (Verse-Chorus)' }, { value: '숏폼/훅 중심', label: '숏폼/훅 중심 (Hook-heavy)' }, { value: '빌드업/드롭', label: '빌드업 & 드롭 (EDM)' }, { value: '기승전결', label: '기승전결 서사형' }],
+    genre1: [{ value: '케이팝', label: '케이팝' }, { value: '팝', label: '팝' }, { value: '힙합', label: '힙합' }, { value: '알앤비', label: '알앤비' }, { value: '록', label: '록' }, { value: '일렉트로닉', label: '일렉트로닉' }, { value: '재즈', label: '재즈' }, { value: '어쿠스틱', label: '어쿠스틱' }, { value: '시티팝', label: '시티팝' }, { value: '기타', label: '기타' }],
+    genre2: [{ value: '없음', label: '없음' }, { value: '케이팝', label: '케이팝' }, { value: '팝', label: '팝' }, { value: '힙합', label: '힙합' }, { value: '알앤비', label: '알앤비' }, { value: '록', label: '록' }, { value: '일렉트로닉', label: '일렉트로닉' }, { value: '재즈', label: '재즈' }, { value: '어쿠스틱', label: '어쿠스틱' }, { value: '시티팝', label: '시티팝' }, { value: '기타', label: '기타' }],
+    vocalTone: [
+      { value: '없음', label: '없음' },
+      { value: '밝고 쾌활한', label: '밝고 쾌활한' },
+      { value: '감정적으로 솔직한', label: '감정적으로 솔직한' },
+      { value: '수줍은', label: '수줍은' },
+      { value: '장난기 넘치는', label: '장난기 넘치는' },
+      { value: '시크하고 쿨한', label: '시크하고 쿨한' },
+      { value: '몽환적이고 부드러운', label: '몽환적이고 부드러운' },
+      { value: '따뜻하고 포근한', label: '따뜻하고 포근한' },
+      { value: '우아하고 차분한', label: '우아하고 차분한' },
+      { value: '허스키한', label: '허스키한' },
+      { value: '에너지 넘치고 파워풀한', label: '에너지 넘치고 파워풀한' },
+      { value: '맑고 깨끗한', label: '맑고 깨끗한' },
+      { value: '섬세하고 속삭이는', label: '섬세하고 속삭이는' },
+      { value: '깊고 성숙한', label: '깊고 성숙한' },
+      { value: '담백하고 자연스러운', label: '담백하고 자연스러운' }
+    ],
+    vocalAge: [{ value: '어린이', label: '어린이' }, { value: '청소년', label: '청소년' }, { value: '청년', label: '청년' }, { value: '중장년', label: '중장년' }],
+    vocalGenderGroup: [{ value: '여자', label: '여자' }, { value: '남자', label: '남자' }, { value: '혼성', label: '혼성' }, { value: '듀엣', label: '듀엣' }, { value: '그룹', label: '그룹' }],
+    language1: [{ value: '한국어', label: '한국어' }, { value: '영어', label: '영어' }, { value: '일본어', label: '일본어' }],
+    language2: [{ value: '없음', label: '없음' }, { value: '한국어', label: '한국어' }, { value: '영어', label: '영어' }, { value: '일본어', label: '일본어' }],
   }
 }
 
 const INITIAL_FORM = {
-  title: '비 오는 밤의 드라이브',
-  styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic',
+  title: '',
+  styleDesc: '',
   language: '한국어',
   vocalGender: '여성',
   vocalFeaturing: '없음',
@@ -403,10 +454,21 @@ const INITIAL_FORM = {
   vocalGroup: '솔로',
   songType: 'vocal',
   bgmType: '영화음악',
-  musicLength: '1분',
+  musicLength: '3분',
+  lyricDensity: '보통',
+  songStructure: '대중적인 팝',
+  genre1: '케이팝',
+  genre2: '없음',
+  genreRatio: 70,
+  language1: '한국어',
+  language2: '없음',
+  languageRatio: 70,
+  vocalTone: '밝고 쾌활한',
+  vocalAge: '청소년',
+  vocalGenderGroup: '여자',
   tempo: 120,
   targetTool: 'Suno',
-  extra: '후렴에 영어 한 문장 훅을 섞어줘. 선정적 표현 없이 대중적인 가사로.',
+  extra: '',
   exclude: '',
 }
 
@@ -510,8 +572,11 @@ const makeFallback = (form: any, guideText: string) => {
 
   const prompt = [
     form.styleDesc,
+    form.genre1 !== '없음' ? form.genre1 : '',
+    form.genre2 !== '없음' ? form.genre2 : '',
     GENDER_MAP[form.vocalGender] || form.vocalGender,
     FEAT_MAP[form.vocalFeaturing] || '',
+    form.vocalTone !== '없음' ? form.vocalTone : '',
     cleanVocal,
     GROUP_MAP[form.vocalGroup] ? `${GROUP_MAP[form.vocalGroup]} vocal arrangement` : `${form.vocalGroup} vocal arrangement`,
     form.tempo ? `${form.tempo} BPM` : '',
@@ -615,7 +680,6 @@ const buildInstructionPrompt = (form: any, guideText: string) => {
   const engFeat = FEAT_MAP[form.vocalFeaturing] || form.vocalFeaturing
   const engGroup = GROUP_MAP[form.vocalGroup] || form.vocalGroup
 
-  // 랩/힙합 하위 장르 및 관련 키워드 전체 탐색
   const checkRapKeywords = (text: string) => {
     if (!text) return false
     const lower = text.toLowerCase()
@@ -644,6 +708,8 @@ const buildInstructionPrompt = (form: any, guideText: string) => {
 
   const isRap = 
     checkRapKeywords(form.styleDesc) ||
+    checkRapKeywords(form.genre1) ||
+    checkRapKeywords(form.genre2) ||
     checkRapKeywords(form.extra) ||
     checkRapKeywords(guideText)
 
@@ -714,17 +780,20 @@ NOTES
 
 곡 정보:
 - 제목: ${form.title}
-- 스타일 설명: ${form.styleDesc}
+- 장르 블렌딩: 주 장르 [${form.genre1}] ${form.genreRatio}% / 부 장르 [${form.genre2}] ${100 - form.genreRatio}%
+- 추가 스타일 설명: ${form.styleDesc}
 - 곡 유형: ${form.songType === 'instrumental' ? '가사 없는 연주곡/BGM (Instrumental)' : '보컬 곡'}
+- 목표 음악 길이: ${form.musicLength}
+- 곡 전개 구조: ${form.songStructure}
 ${form.songType === 'instrumental' ? 
-`- 용도: ${form.bgmType || '영화음악'}
-- 음악 길이: ${form.musicLength || '1분'}` 
+`- 용도: ${form.bgmType || '영화음악'}` 
 : 
-`- 언어: ${form.language} (English translation in prompt: ${engLang})
-- 보컬 성별: ${form.vocalGender || '여성'} (English translation in prompt: ${engGender})
-- 피쳐링: ${form.vocalFeaturing || '없음'} (English translation in prompt: ${engFeat})
-- 보컬 톤: ${form.vocal}
-- 보컬 구성: ${form.vocalGroup} (English translation in prompt: ${engGroup})`}
+`- 언어 블렌딩: 주 언어 [${form.language1 || form.language}] ${form.languageRatio}% / 부 언어 [${form.language2 || '없음'}] ${100 - form.languageRatio}%
+- 가사 분량(밀도): ${form.lyricDensity}
+- 보컬 성별 및 구성: ${form.vocalGenderGroup || form.vocalGender}
+- 보컬 나이대: ${form.vocalAge}
+- 보이스 톤: ${form.vocalTone}
+- 추가 보컬 설명: ${form.vocal}`}
 - 템포: ${form.tempo} BPM
 - 추가 요청: ${form.extra}
 - 제외 요소 (Negative Prompt): ${form.exclude || (form.songType === 'instrumental' ? 'vocal, voice, singing, speaking, words' : 'lo-fi, bad vocals')}`
@@ -793,6 +862,9 @@ export function StudioClient({ user }: StudioClientProps) {
   const [status, setStatus] = useState('대기 중')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
+
+  const [isGenreModalOpen, setIsGenreModalOpen] = useState(false)
+  const [genreModalTarget, setGenreModalTarget] = useState<'genre1' | 'genre2'>('genre1')
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Suno API States
@@ -1729,113 +1801,220 @@ export function StudioClient({ user }: StudioClientProps) {
               </div>
             </div>
 
-            {/* 스타일 설명 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.styleDesc}</label>
+            {/* 장르 설정 (Genre Blending) */}
+            <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 1' : 'Genre 1'}</label>
+                  <button
+                    onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
+                    className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
+                  >
+                    <span className="truncate">{form.genre1 || '장르 선택'}</span>
+                    <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 2' : 'Genre 2'}</label>
+                  <button
+                    onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
+                    className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
+                  >
+                    <span className="truncate">{form.genre2 || '없음'}</span>
+                    <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 비중' : 'Genre Ratio'}</label>
+                  <span className="text-xs font-bold text-[#e3fe06]">{form.genreRatio} : {100 - form.genreRatio}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="10"
+                  value={form.genreRatio}
+                  onChange={(e) => updateForm('genreRatio', parseInt(e.target.value))}
+                  className="w-full accent-[#e3fe06]"
+                />
+              </div>
+            </div>
+
+            {/* 스타일 설명 (Style Description) */}
+            <div className="space-y-1.5 md:col-span-2 bg-[#121614]/80 p-3 rounded-xl border border-[#233533]/50">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
+                {uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}
+              </label>
               <input
                 type="text"
-                placeholder={t.styleDescPlaceholder}
+                placeholder={uiLanguage === 'KO' ? '예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic' : 'e.g., Korean city pop, synth pop, nostalgic, rainy, warm, cinematic'}
                 value={form.styleDesc}
                 onChange={(e) => updateForm('styleDesc', e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
+                className="w-full bg-[#0a0f0d] border border-outline-variant/20 rounded-xl p-3.5 text-xs text-on-surface focus:outline-none focus:border-[#3fd4b6]/70 focus:ring-1 focus:ring-[#3fd4b6]/20 transition-all duration-300"
               />
             </div>
 
+            {/* 곡 전개 구조 */}
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '곡 전개 구조 (Song Structure)' : 'Song Structure'}</label>
+              <div className="relative">
+                <select
+                  value={form.songStructure}
+                  onChange={(e) => updateForm('songStructure', e.target.value)}
+                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                >
+                  {options.songStructure.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:col-span-2">
+              {/* 목표 음악 길이 */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.musicLength || '음악 길이 (Music Length)'}</label>
+                <div className="relative">
+                  <select
+                    value={form.musicLength}
+                    onChange={(e) => updateForm('musicLength', e.target.value)}
+                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                  >
+                    {options.musicLength.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                </div>
+              </div>
+            </div>
+
+            {/* 4x4 Grid for Vocal Properties removed from here, moving down to vocal specific block */}
+
             {form.songType === 'vocal' ? (
               <>
-                {/* 가사 언어 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.lyricsLanguage}</label>
-                  <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                    {options.language.map((o) => (
-                      <button
-                        key={o.value}
-                        onClick={() => updateForm('language', o.value)}
-                        className={`py-2 text-[11px] font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                          form.language === o.value
-                            ? 'bg-primary text-[#080d08] shadow-md'
-                            : 'text-zinc-555 hover:text-on-surface'
-                        }`}
+                {/* 보컬 2x2 Grid */}
+                <div className="grid grid-cols-2 gap-4 md:col-span-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '가사 분량' : 'Lyric Density'}</label>
+                    <div className="relative">
+                      <select
+                        value={form.lyricDensity}
+                        onChange={(e) => updateForm('lyricDensity', e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
                       >
-                        {o.label}
-                      </button>
-                    ))}
+                        {options.lyricDensity.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보이스 톤' : 'Voice Tone'}</label>
+                    <div className="relative">
+                      <select
+                        value={form.vocalTone}
+                        onChange={(e) => updateForm('vocalTone', e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                      >
+                        {options.vocalTone.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 나이' : 'Vocal Age'}</label>
+                    <div className="relative">
+                      <select
+                        value={form.vocalAge}
+                        onChange={(e) => updateForm('vocalAge', e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                      >
+                        {options.vocalAge.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 젠더/구성' : 'Vocal Gender/Group'}</label>
+                    <div className="relative">
+                      <select
+                        value={form.vocalGenderGroup}
+                        onChange={(e) => updateForm('vocalGenderGroup', e.target.value)}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                      >
+                        {options.vocalGenderGroup.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                    </div>
                   </div>
                 </div>
 
-                {/* 보컬 성별 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.vocalGender}</label>
-                  <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                    {options.vocalGender.map((o) => (
-                      <button
-                        key={o.value}
-                        onClick={() => updateForm('vocalGender', o.value)}
-                        className={`py-2 text-[11px] font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                          form.vocalGender === o.value
-                            ? 'bg-primary text-[#080d08] shadow-md'
-                            : 'text-zinc-555 hover:text-on-surface-variant'
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
+                {/* 다국어 혼합 (Language Blending) */}
+                <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 1' : 'Language 1'}</label>
+                      <div className="relative">
+                        <select
+                          value={form.language1}
+                          onChange={(e) => updateForm('language1', e.target.value)}
+                          className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                        >
+                          {options.language1.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 2' : 'Language 2'}</label>
+                      <div className="relative">
+                        <select
+                          value={form.language2}
+                          onChange={(e) => updateForm('language2', e.target.value)}
+                          className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
+                        >
+                          {options.language2.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* 보컬 피쳐링 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.vocalFeaturing}</label>
-                  <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                    {options.vocalFeaturing.map((o) => (
-                      <button
-                        key={o.value}
-                        onClick={() => updateForm('vocalFeaturing', o.value)}
-                        className={`py-2 text-[11px] font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                          form.vocalFeaturing === o.value
-                            ? 'bg-primary text-[#080d08] shadow-md'
-                            : 'text-zinc-555 hover:text-on-surface-variant'
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 보컬 스타일 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.vocalStyle}</label>
-                  <input
-                    type="text"
-                    placeholder={t.vocalStylePlaceholder}
-                    value={form.vocal}
-                    onChange={(e) => updateForm('vocal', e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-                  />
-                </div>
-
-                {/* 보컬 구성 */}
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.vocalGroup}</label>
-                  <div className="relative">
-                    <select
-                      value={form.vocalGroup}
-                      onChange={(e) => updateForm('vocalGroup', e.target.value)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                    >
-                      {options.vocalGroup.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-on-surface-variant/60" />
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 비중' : 'Language Ratio'}</label>
+                      <span className="text-xs font-bold text-[#e3fe06]">{form.languageRatio} : {100 - form.languageRatio}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="10"
+                      value={form.languageRatio}
+                      onChange={(e) => updateForm('languageRatio', parseInt(e.target.value))}
+                      className="w-full accent-[#e3fe06]"
+                    />
                   </div>
                 </div>
               </>
             ) : (
               <>
                 {/* BGM 용도 */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 md:col-span-2">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.bgmType}</label>
                   <div className="relative">
                     <select
@@ -1844,23 +2023,6 @@ export function StudioClient({ user }: StudioClientProps) {
                       className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
                     >
                       {options.bgmType.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                  </div>
-                </div>
-
-                {/* 음악 길이 */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.musicLength}</label>
-                  <div className="relative">
-                    <select
-                      value={form.musicLength}
-                      onChange={(e) => updateForm('musicLength', e.target.value)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                    >
-                      {options.musicLength.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
@@ -2156,6 +2318,17 @@ export function StudioClient({ user }: StudioClientProps) {
       ) : currentTab === 'mastering' ? (
         <MasteringClient />
       ) : null}
+
+      <GenreModal
+        isOpen={isGenreModalOpen}
+        onClose={() => setIsGenreModalOpen(false)}
+        title={genreModalTarget === 'genre1' ? (uiLanguage === 'KO' ? '장르 1 선택' : 'Select Genre 1') : (uiLanguage === 'KO' ? '장르 2 선택' : 'Select Genre 2')}
+        selectedGenre={genreModalTarget === 'genre1' ? form.genre1 : form.genre2}
+        onSelect={(genre) => {
+          updateForm(genreModalTarget, genre)
+          setIsGenreModalOpen(false)
+        }}
+      />
     </div>
   )
 }
