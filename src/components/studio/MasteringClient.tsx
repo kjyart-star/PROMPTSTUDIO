@@ -32,11 +32,20 @@ export function MasteringClient() {
   const [truePeakGuard, setTruePeakGuard] = useState(true)
 
   const [isProcessingAll, setIsProcessingAll] = useState(false)
+  
+  // Playback State
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null)
+  const [playingType, setPlayingType] = useState<'original' | 'processed' | null>(null)
+  const [playbackTime, setPlaybackTime] = useState(0)
+  const [duration, setDuration] = useState(0)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null)
+  
+  const startTimeRef = useRef<number>(0)
+  const pauseTimeRef = useRef<number>(0)
+  const animationRef = useRef<number>(0)
 
   useEffect(() => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -44,6 +53,7 @@ export function MasteringClient() {
       if (audioContextRef.current?.state !== 'closed') {
         audioContextRef.current?.close()
       }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [])
 
@@ -92,46 +102,121 @@ export function MasteringClient() {
     stopPlayback()
   }
 
+  const startProgressTracker = () => {
+    if (animationRef.current) cancelAnimationFrame(animationRef.current)
+    const update = () => {
+      if (audioContextRef.current && sourceNodeRef.current) {
+         const current = pauseTimeRef.current + (audioContextRef.current.currentTime - startTimeRef.current)
+         setPlaybackTime(current)
+         animationRef.current = requestAnimationFrame(update)
+      }
+    }
+    animationRef.current = requestAnimationFrame(update)
+  }
+
   const stopPlayback = () => {
-    if (sourceNodeRef.current) {
+    if (sourceNodeRef.current && audioContextRef.current) {
+      pauseTimeRef.current += audioContextRef.current.currentTime - startTimeRef.current
       sourceNodeRef.current.stop()
       sourceNodeRef.current.disconnect()
       sourceNodeRef.current = null
     }
     setCurrentlyPlayingId(null)
+    setPlayingType(null)
+    if (animationRef.current) cancelAnimationFrame(animationRef.current)
   }
 
-  const playPreview = async (track: Track, type: 'original' | 'processed') => {
+  const playPreview = async (track: Track, type: 'original' | 'processed', seekTime?: number) => {
     if (!audioContextRef.current) return
+    const ctx = audioContextRef.current
     
-    if (currentlyPlayingId === track.id) {
+    // Toggle pause if clicking the same active button
+    if (currentlyPlayingId === track.id && playingType === type && seekTime === undefined) {
       stopPlayback()
       return
     }
-
-    stopPlayback()
 
     let buffer = type === 'processed' ? track.processedBuffer : track.originalBuffer
     
     if (!buffer && type === 'original') {
       const arrayBuffer = await track.file.arrayBuffer()
-      buffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
+      buffer = await ctx.decodeAudioData(arrayBuffer)
       setTracks(prev => prev.map(t => t.id === track.id ? { ...t, originalBuffer: buffer } : t))
     }
 
-    if (buffer) {
-      const source = audioContextRef.current.createBufferSource()
-      source.buffer = buffer
-      source.connect(audioContextRef.current.destination)
-      source.start(0)
-      sourceNodeRef.current = source
-      setCurrentlyPlayingId(track.id)
-      source.onended = () => {
-        if (sourceNodeRef.current === source) {
-          setCurrentlyPlayingId(null)
-        }
+    if (!buffer) return
+
+    let startOffset = 0
+    if (seekTime !== undefined) {
+      startOffset = seekTime
+    } else if (currentlyPlayingId === track.id) {
+      // Switching A/B mid-playback or resuming
+      if (sourceNodeRef.current) {
+        startOffset = pauseTimeRef.current + (ctx.currentTime - startTimeRef.current)
+        sourceNodeRef.current.stop()
+        sourceNodeRef.current.disconnect()
+      } else {
+        startOffset = pauseTimeRef.current
+      }
+    } else {
+      // Different track entirely
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop()
+        sourceNodeRef.current.disconnect()
+      }
+      startOffset = 0
+    }
+
+    if (startOffset >= buffer.duration) {
+      startOffset = 0
+    }
+
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0, startOffset)
+    
+    sourceNodeRef.current = source
+    startTimeRef.current = ctx.currentTime
+    pauseTimeRef.current = startOffset
+    
+    setCurrentlyPlayingId(track.id)
+    setPlayingType(type)
+    setDuration(buffer.duration)
+    setPlaybackTime(startOffset)
+
+    source.onended = () => {
+      // Only reset if this is still the active source
+      if (sourceNodeRef.current === source) {
+         setCurrentlyPlayingId(null)
+         setPlayingType(null)
+         setPlaybackTime(0)
+         pauseTimeRef.current = 0
+         if (animationRef.current) cancelAnimationFrame(animationRef.current)
       }
     }
+
+    startProgressTracker()
+  }
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = Number(e.target.value)
+    setPlaybackTime(newTime)
+    pauseTimeRef.current = newTime
+    
+    if (currentlyPlayingId && playingType) {
+       const track = tracks.find(t => t.id === currentlyPlayingId)
+       if (track) {
+          playPreview(track, playingType, newTime)
+       }
+    }
+  }
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return "0:00"
+    const mins = Math.floor(time / 60)
+    const secs = Math.floor(time % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const handleTemplateChange = (templateId: string) => {
@@ -379,42 +464,63 @@ export function MasteringClient() {
                 </div>
               ) : (
                 tracks.map((track) => (
-                  <div key={track.id} className="flex items-center gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-colors">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black shrink-0 relative overflow-hidden">
-                      {track.status === 'done' ? <Check className="w-4 h-4 text-green-400" /> 
-                       : track.status === 'processing' ? <RotateCcw className="w-4 h-4 text-primary animate-spin" />
-                       : <div className="w-2 h-2 rounded-full bg-zinc-600" />}
-                       
-                      {track.status === 'processing' && (
-                        <div className="absolute inset-0 bg-primary/20 animate-pulse" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{track.name}</p>
-                      {track.status === 'processing' && (
-                        <div className="w-full bg-black rounded-full h-1 mt-2 overflow-hidden">
-                          <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${track.progress}%` }} />
-                        </div>
-                      )}
+                  <div key={track.id} className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-colors relative">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black shrink-0 relative overflow-hidden">
+                        {track.status === 'done' ? <Check className="w-4 h-4 text-green-400" /> 
+                         : track.status === 'processing' ? <RotateCcw className="w-4 h-4 text-primary animate-spin" />
+                         : <div className="w-2 h-2 rounded-full bg-zinc-600" />}
+                         
+                        {track.status === 'processing' && (
+                          <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{track.name}</p>
+                        {track.status === 'processing' && (
+                          <div className="w-full bg-black rounded-full h-1 mt-2 overflow-hidden">
+                            <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${track.progress}%` }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 opacity-100 transition-opacity">
+                        <button onClick={() => playPreview(track, 'original')} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors ${currentlyPlayingId === track.id && playingType === 'original' ? 'bg-primary text-black font-bold border-primary' : 'bg-black text-zinc-400 hover:bg-zinc-800 hover:text-white'}`} title="원본 듣기 (A/B 테스트)">
+                          {currentlyPlayingId === track.id && playingType === 'original' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          <span className="text-xs">원본</span>
+                        </button>
+                        <button onClick={() => playPreview(track, 'processed')} disabled={track.status !== 'done'} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors disabled:opacity-30 ${currentlyPlayingId === track.id && playingType === 'processed' ? 'bg-green-500 text-black font-bold border-green-500' : 'bg-[#0f1a15] text-green-500 hover:bg-[#162920]'}`} title="마스터 본 듣기 (A/B 테스트)">
+                          {currentlyPlayingId === track.id && playingType === 'processed' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          <span className="text-xs">마스터</span>
+                        </button>
+                        {track.status === 'done' && track.processedUrl && (
+                          <a href={track.processedUrl} download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white" title="WAV 다운로드">
+                            <Download className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button onClick={() => removeTrack(track.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 transition-colors absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 bg-black/80 hover:bg-black border border-white/10">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => playPreview(track, 'original')} className="p-2 rounded-xl bg-black hover:bg-zinc-800 transition-colors" title="원본 재생">
-                        {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.originalBuffer ? <Pause className="w-4 h-4 text-primary" /> : <Play className="w-4 h-4 text-zinc-400" />}
-                      </button>
-                      <button onClick={() => playPreview(track, 'processed')} disabled={track.status !== 'done'} className="p-2 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors disabled:opacity-30" title="마스터링 재생">
-                        {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.processedBuffer ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </button>
-                      {track.status === 'done' && track.processedUrl && (
-                        <a href={track.processedUrl} download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white" title="WAV 다운로드">
-                          <Download className="w-4 h-4" />
-                        </a>
-                      )}
-                      <button onClick={() => removeTrack(track.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {/* Progress Bar (Visible only when playing) */}
+                    {currentlyPlayingId === track.id && (
+                      <div className="w-full flex items-center gap-3 pt-2 pb-1 px-1">
+                        <span className="text-[11px] font-medium text-primary w-10 text-right font-mono">{formatTime(playbackTime)}</span>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max={duration || 100} 
+                          step="0.01"
+                          value={playbackTime}
+                          onChange={handleSeek}
+                          className="flex-1 h-1.5 bg-black border border-white/10 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full cursor-pointer hover:[&::-webkit-slider-thumb]:bg-primary hover:[&::-webkit-slider-thumb]:scale-110 transition-all"
+                        />
+                        <span className="text-[11px] font-medium text-zinc-500 w-10 font-mono">{formatTime(duration)}</span>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
