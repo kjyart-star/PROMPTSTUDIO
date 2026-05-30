@@ -1645,7 +1645,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     return !!(h.is_published && (h.audio_url || h.file_url))
   })
   const visibleLooseTracks = isPublicView
-    ? (dbPublicLooseTracks.length > 0 ? dbPublicLooseTracks : MOCK_SAMPLE_SONGS)
+    ? dbPublicLooseTracks
     : history
 
 
@@ -1660,7 +1660,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     : userAlbums
 
   const visiblePlaylists = isPublicView
-    ? (dbPublicPlaylists.length > 0 ? dbPublicPlaylists : MOCK_SAMPLE_PLAYLISTS)
+    ? dbPublicPlaylists
     : userPlaylists
 
   const allPublicAlbums = [
