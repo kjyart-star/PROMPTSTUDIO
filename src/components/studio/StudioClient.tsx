@@ -530,6 +530,7 @@ const makeFallback = (form: any, guideText: string) => {
 }
 
 const EMPTY_RESULT = {
+  structurePlan: '',
   prompt: '',
   negativePrompt: '',
   title: '',
@@ -542,7 +543,7 @@ const parseGeneratedText = (text: string) => {
   const source = text.trim()
   if (!source) return EMPTY_RESULT
 
-  const sectionNames = ['STYLE PROMPT', 'NEGATIVE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR']
+  const sectionNames = ['SONG STRUCTURE & DURATION PLAN', 'STYLE PROMPT', 'NEGATIVE PROMPT', 'TITLE', 'LYRICS', 'NOTES', 'API ERROR']
   const pattern = new RegExp(`^[\\s#\\*\\-]*(${sectionNames.join('|')})[\\s:\\*\\-]*$`, 'gim')
   const matches = [...source.matchAll(pattern)]
   const sections: Record<string, string> = {}
@@ -559,6 +560,7 @@ const parseGeneratedText = (text: string) => {
   }
 
   return {
+    structurePlan: sections['SONG STRUCTURE & DURATION PLAN'] || '',
     prompt: cleanStylePrompt(sections['STYLE PROMPT'] || ''),
     negativePrompt: cleanStylePrompt(sections['NEGATIVE PROMPT'] || ''),
     title: sections.TITLE || '',
@@ -569,6 +571,7 @@ const parseGeneratedText = (text: string) => {
 }
 
 const composeGeneratedText = (resultParts: any) => [
+  ['SONG STRUCTURE & DURATION PLAN', resultParts.structurePlan],
   ['STYLE PROMPT', resultParts.prompt],
   ['NEGATIVE PROMPT', resultParts.negativePrompt],
   ['TITLE', resultParts.title],
@@ -669,18 +672,27 @@ ${guideText}` : '등록된 추가 지침 없음'}
 
 [CRITICAL RULES]
 1. "STYLE PROMPT" 및 "NEGATIVE PROMPT" 섹션은 **반드시 100% 영어 쉼표 구분 키워드(English comma-separated keywords)로만** 작성해야 합니다.
-   - **절대 단 하나의 한글 단어나 한글 조사도 이 두 섹션에 포함되어서는 안 됩니다.**
-   - 사용자가 한글로 정보를 입력했더라도(예: '한국어', '솔로', '여성' 등), 스타일 프롬프트에서는 이를 반드시 'Korean', 'solo', 'female' 등의 영문으로 완벽히 번역하여 키워드 형태로 구성해야 합니다.
+   - [보컬 영문화 매핑]: 사용자가 한글로 감성이나 보컬 톤을 입력했더라도(예: '한국어', '밝고 쾌활한 여성', '따뜻한 중년 남성'), 이를 반드시 'bright casual girl', 'warm mature male vocal' 등 Suno가 가장 잘 인식하는 영문 보컬 키워드로 완벽히 번역하여 추가해야 합니다.
    - 키워드들은 절대 문장이 되지 않도록 단어/구 형태로 쉼표로만 구분되어야 합니다.
 2. "LYRICS", "TITLE", "NOTES" 섹션은 사용자가 지정한 [언어: ${form.language}]에 맞추어 작성해야 합니다.
-3. 음악이 촌스럽거나 뻔하게 들리지 않도록, 최고 수준의 전문적인 프로듀싱 키워드와 세련된 사운드 질감을 적극적으로 추가하세요.
-4. 출력 형식의 순서와 이름을 정확히 지키세요.
-5. [지침서 기반 태그 스태킹 & 감정 레이어링 (Tag Stacking & Emotion Layering)]
+3. [장르 및 사운드 블렌딩]: 두 개 이상의 장르나 복잡한 분위기가 섞일 경우, 단순 나열하지 말고 주 장르(Primary) 70%, 부 장르(Secondary) 30%의 비중을 설정하여 사운드가 지저분해지지 않고 명확한 방향성을 띠도록 키워드를 섞으세요.
+4. [태그 스태킹 & 감정 레이어링 (Tag Stacking & Emotion Layering)]
    - 가사([LYRICS])의 대괄호 섹션 정의 시, 단순히 [Verse 1]이나 [Chorus]만 적지 마세요.
-   - 지침서 및 음악 스타일에 근거하여 대괄호 안에 파이프(|) 기호를 사용해 랩 플로우, 보컬 지시, 비트 분위기를 결합하는 스태킹을 적극적으로 활용하세요.
-   - 예: \`[Rap Verse 1 | fast rhythmic flow | boom bap beats]\`, \`[Chorus | emotional vocal | warm synth pad | bass drop]\`, \`[Bridge | whispers | piano only]\`.
+   - 지침서 및 음악 스타일에 근거하여 대괄호 안에 파이프(|) 기호를 사용해 랩 플로우, 보컬 창법, 비트 드롭, 악기 변화를 결합하는 스태킹을 **모든 장르**에 필수적으로 적용하세요.
+   - 예: \`[Verse 1 | soft breathy vocal | acoustic guitar intro]\`, \`[Chorus | powerful emotional belt | thick synth pad & heavy bass]\`, \`[Bridge | whispers | piano only]\`.
+5. 음악이 촌스럽거나 뻔하게 들리지 않도록, 최고 수준의 전문적인 프로듀싱 키워드와 세련된 사운드 질감을 적극적으로 추가하세요.
+6. 출력 형식의 순서와 이름을 정확히 지키세요.
 
 출력 형식은 반드시 아래 순서를 따른다.
+SONG STRUCTURE & DURATION PLAN
+AI가 분석한 최적의 BPM과 사용자 목표 길이를 바탕으로, 초정밀 길이(시간) 설계표를 먼저 작성합니다. 
+(예시) 
+- 목표 길이: 3분 (180초)
+- 추천 BPM: 96 BPM
+- 총 마디 수 계산: 3분 = 72마디 (Bars)
+- 섹션 분배: Intro(4) - Verse 1(16) - Pre-Chorus(8) - Chorus(16) - Verse 2(8) - Chorus(16) - Outro(4)
+이 계산을 바탕으로 아래 LYRICS의 분량(줄 수)을 정확히 통제하세요.
+
 STYLE PROMPT
 사용자가 제공한 정보(스타일, 템포, 보컬 등)를 바탕으로, 단순히 번역하는 것을 넘어 곡에 가장 잘 어울리는 구체적인 악기(instruments), 리듬/그루브(rhythm/groove), 특정 템포(예: tempo ${form.tempo} bpm), 프로듀싱 스타일(production style) 등을 포함한 15~20개의 고품질 영어 키워드를 쉼표(,)로 구분하여 나열하세요. 문장이 아닌 키워드 나열 형식이어야 합니다.
 예시: k-hip hop, swing jazz groove, funky rhythm guitars, orchestral strings stabs, energetic brass hits, bouncy bassline, vinyl scratches, syncopated drums, tempo ${form.tempo} bpm, urban night mood, polished production
@@ -693,7 +705,7 @@ TITLE
 곡 제목
 
 LYRICS
-${form.songType === 'instrumental' ? '[Instrumental] 만 작성하고 다른 텍스트는 작성하지 마세요.' : '섹션 태그가 포함된 완성 가사'}
+${form.songType === 'instrumental' ? '[Instrumental] 만 작성하고 다른 텍스트는 작성하지 마세요.' : '섹션 태그가 포함된 완성 가사 (위 STRUCTURE PLAN의 마디 수 배분에 맞춰 분량 조절)'}
 
 NOTES
 짧은 제작 메모 3개`
@@ -1384,6 +1396,7 @@ export function StudioClient({ user }: StudioClientProps) {
     setCurrentHistoryId(item.id)
     if (mode === 'all') {
       setResultParts({
+        structurePlan: item.structurePlan || '',
         prompt: item.prompt || '',
         negativePrompt: item.negativePrompt || item.form?.negativePrompt || '',
         title: item.title || '',
@@ -2017,6 +2030,27 @@ export function StudioClient({ user }: StudioClientProps) {
               />
             </div>
  
+            {/* DURATION PLAN */}
+            {resultParts.structurePlan && (
+              <div className="space-y-1.5 relative group/item mt-4">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
+                  <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : 'Structure & BPM Plan'}</span>
+                  <button
+                    onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : 'Copy Plan', resultParts.structurePlan)}
+                    className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
+                    title={t.copyTooltip}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={resultParts.structurePlan}
+                  className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[120px]"
+                />
+              </div>
+            )}
+
             {/* AI 메모 (SUGGESTIONS) */}
             <div className="space-y-1.5 relative group/item">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
