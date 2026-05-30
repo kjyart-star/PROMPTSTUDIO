@@ -52,6 +52,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const showToast = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
     setToast({ message, type })
@@ -78,9 +79,32 @@ export function SettingsClient({ user }: SettingsClientProps) {
     }
   }
 
+  const fetchTransactions = async () => {
+    try {
+      const res = await fetch('/api/credits/history')
+      if (res.ok) {
+        const data = await res.json()
+        const formattedTxs = data.transactions.map((tx: any) => ({
+          id: tx.id,
+          date: new Date(tx.created_at).toLocaleString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
+          }).replace(/\. /g, '-').replace('.', ''),
+          type: tx.type,
+          desc: tx.description,
+          amount: tx.amount > 0 ? `+${tx.amount}` : String(tx.amount)
+        }))
+        setTransactions(formattedTxs)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   // Load configuration and data on mount
   useEffect(() => {
     fetchProfile()
+    fetchTransactions()
 
     // Query param tab activation
     const section = searchParams.get('section')
@@ -160,22 +184,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
       setUserCredits(parseFloat(savedCredits))
     }
 
-    const savedTx = localStorage.getItem('user-transactions')
-    if (savedTx) {
-      try {
-        setTransactions(JSON.parse(savedTx))
-      } catch (e) {
-        console.error(e)
-      }
-    } else {
-      const defaultTx = [
-        { id: 'tx-1', date: '2026-05-28 10:15', type: 'charge', desc: 'Credit Top-up (+100)', amount: '+100', status: 'Completed' },
-        { id: 'tx-2', date: '2026-05-27 15:40', type: 'use', desc: 'Song Generation (-10)', amount: '-10', status: 'Completed' },
-        { id: 'tx-3', date: '2026-05-26 11:22', type: 'use', desc: 'Stem Extraction (-5)', amount: '-5', status: 'Completed' },
-      ]
-      setTransactions(defaultTx)
-      localStorage.setItem('user-transactions', JSON.stringify(defaultTx))
-    }
 
     const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | null
     if (savedLanguage === 'KO' || savedLanguage === 'EN') {
@@ -218,6 +226,34 @@ export function SettingsClient({ user }: SettingsClientProps) {
     setAutoplay(val)
     localStorage.setItem('pref-autoplay', String(val))
     showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
+  }
+
+  const handleWithdraw = () => {
+    setConfirmDeleteOpen(true)
+  }
+
+  const confirmWithdraw = async () => {
+    const supabase = createClient()
+    const { error } = await supabase.rpc('delete_user')
+    if (error) {
+      alert(`탈퇴 실패: ${error.message}`)
+    } else {
+      try {
+        await fetch('/api/auth/signout', { method: 'POST' })
+        await supabase.auth.signOut()
+      } catch (err) {
+        console.error('SignOut error:', err)
+      }
+      window.location.href = '/'
+    }
+  }
+
+  const handleCancelSubscription = () => {
+    if (confirm(uiLanguage === 'KO' ? '정말 구독을 취소하시겠습니까? 이번 달 결제 주기까지만 혜택이 유지됩니다.' : 'Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.')) {
+      setUserPlan('free')
+      localStorage.setItem('user-plan', 'free')
+      showToast(uiLanguage === 'KO' ? '구독이 성공적으로 취소되었습니다.' : 'Subscription successfully cancelled.', 'success')
+    }
   }
 
   const saveProfile = async () => {
@@ -336,21 +372,21 @@ export function SettingsClient({ user }: SettingsClientProps) {
         <div className="flex flex-col gap-1 md:col-span-1 text-left">
           <button 
             onClick={() => setActiveSettingSection('credits')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <CreditCard className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '크레딧 관리' : 'Credit Management'}</span>
           </button>
           <button 
             onClick={() => setActiveSettingSection('profile')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <User className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '프로필 관리' : 'Profile Management'}</span>
           </button>
           <button 
             onClick={() => setActiveSettingSection('preferences')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <Sliders className="w-4 h-4 shrink-0" />
             <span>{uiLanguage === 'KO' ? '환경설정' : 'Preferences'}</span>
@@ -413,12 +449,22 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <span className="text-3xl font-black text-white tracking-tight mt-1">{userCredits} Credits</span>
                       </div>
 
-                      <button 
-                        onClick={() => router.push('/pricing')}
-                        className="px-5 py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md self-start md:self-auto"
-                      >
-                        {uiLanguage === 'KO' ? '요금제 변경 및 크레딧 충전' : 'Manage Plans & Recharge'}
-                      </button>
+                      <div className="flex flex-col md:flex-row gap-3 self-start md:self-auto w-full md:w-auto">
+                        {userPlan !== 'free' && (
+                          <button 
+                            onClick={handleCancelSubscription}
+                            className="px-5 py-3 rounded-2xl bg-black/40 border border-outline-variant/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 text-zinc-400 font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
+                          >
+                            {uiLanguage === 'KO' ? '구독 취소' : 'Cancel Subscription'}
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => router.push('/pricing')}
+                          className="px-5 py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
+                        >
+                          {uiLanguage === 'KO' ? '요금제 관리 및 충전' : 'Manage Plans & Recharge'}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Progress bar */}
@@ -674,10 +720,65 @@ export function SettingsClient({ user }: SettingsClientProps) {
                   <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${autoplay ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
+
+              {/* Danger Zone */}
+              <div className="flex flex-col gap-2 border-t border-outline-variant/10 pt-5 mt-4">
+                <label className="text-xs font-bold text-red-500/80">{uiLanguage === 'KO' ? '위험 구역 (Danger Zone)' : 'Danger Zone'}</label>
+                <div className="flex items-center justify-between bg-red-500/5 border border-red-500/10 rounded-xl p-4">
+                  <div className="flex flex-col gap-1 text-left">
+                    <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '계정 탈퇴' : 'Delete Account'}</span>
+                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.' : 'Permanently delete your account and all data.'}</span>
+                  </div>
+                  <button 
+                    onClick={handleWithdraw}
+                    className="px-4 py-2 text-xs font-extrabold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {uiLanguage === 'KO' ? '탈퇴하기' : 'Delete'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* User Withdrawal Confirm Modal */}
+      {confirmDeleteOpen && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          onClick={() => setConfirmDeleteOpen(false)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container shadow-2xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h3 className="text-sm font-extrabold text-on-surface mb-2 tracking-tight text-left">
+                {uiLanguage === 'KO' ? '계정 삭제' : 'Delete Account'}
+              </h3>
+              <p className="text-on-surface-variant text-xs leading-relaxed text-left">
+                {uiLanguage === 'KO' 
+                  ? '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.' 
+                  : 'Are you sure you want to delete your account? All data will be permanently erased.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/10">
+              <button 
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-on-surface bg-white/[0.04] hover:bg-white/[0.08] transition-colors focus:outline-none cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+              </button>
+              <button 
+                onClick={confirmWithdraw}
+                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-red-500 hover:brightness-105 shadow-md transition-all focus:outline-none cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '확인' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

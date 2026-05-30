@@ -63,10 +63,12 @@ export async function POST(request: Request) {
     const data = await response.json()
 
     if (response.ok && data.code === 200) {
-       // 크레딧 10 차감
-       await supabase.rpc('update_user_credits', {
-         target_user_id: user.id,
-         credit_delta: -10
+       // 크레딧 10 차감 및 히스토리 기록
+       await supabase.rpc('record_credit_transaction', {
+         p_user_id: user.id,
+         p_amount: -10,
+         p_type: 'use',
+         p_description: '커버 생성 (-10)'
        })
 
        // Typically we would save this to Supabase song_history here

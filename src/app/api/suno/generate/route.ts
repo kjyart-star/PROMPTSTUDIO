@@ -81,10 +81,12 @@ export async function POST(request: Request) {
     if (response.ok && data.code === 200) {
       const taskId = data.data.taskId
 
-      // 크레딧 10 차감
-      await supabase.rpc('update_user_credits', {
-        target_user_id: user.id,
-        credit_delta: -10
+      // 크레딧 10 차감 및 히스토리 기록
+      await supabase.rpc('record_credit_transaction', {
+        p_user_id: user.id,
+        p_amount: -10,
+        p_type: 'use',
+        p_description: '음악 생성 (-10)'
       })
 
       // Update DB with task ID and status

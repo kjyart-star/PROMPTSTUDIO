@@ -1360,7 +1360,7 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const navigateToGenerate = async () => {
     if (!user) {
-      alert("Suno 음악 생성은 로그인 후 이용 가능합니다.")
+      alert("음악 생성 기능은 로그인 후 이용 가능합니다.")
       return
     }
     
@@ -1505,7 +1505,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? 'Suno 음악 생성' : 'Suno Music Studio'}
+              {uiLanguage === 'KO' ? '음악 생성' : 'Music Studio'}
             </button>
           </div>
 
@@ -1657,13 +1657,32 @@ export function StudioClient({ user }: StudioClientProps) {
             {/* 대상 툴 */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.targetTool}</label>
-              <input
-                type="text"
-                placeholder={t.targetToolPlaceholder}
-                value={form.targetTool}
-                onChange={(e) => updateForm('targetTool', e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 font-bold focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-              />
+              <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
+                <button
+                  onClick={() => updateForm('targetTool', 'Suno')}
+                  className={`py-2.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+                    form.targetTool.toLowerCase() === 'suno'
+                      ? 'bg-primary text-[#080d08] shadow-md shadow-primary/10'
+                      : 'text-on-surface-variant/60 hover:text-on-surface-variant'
+                  }`}
+                >
+                  Suno
+                </button>
+                <button
+                  onClick={() => alert('Udio 맞춤형 프롬프트 생성 기능은 곧 지원될 예정입니다!')}
+                  className="py-2.5 text-xs font-bold rounded-lg transition-all duration-200 text-on-surface-variant/40 cursor-not-allowed relative"
+                >
+                  Udio
+                  <span className="absolute -top-1 -right-1 bg-red-500/10 border border-red-500/30 text-red-400 text-[8px] px-1 py-0.5 rounded-md leading-none">예정</span>
+                </button>
+                <button
+                  onClick={() => alert('MusicFX 맞춤형 프롬프트 생성 기능은 곧 지원될 예정입니다!')}
+                  className="py-2.5 text-xs font-bold rounded-lg transition-all duration-200 text-on-surface-variant/40 cursor-not-allowed relative"
+                >
+                  MusicFX
+                  <span className="absolute -top-1 -right-1 bg-red-500/10 border border-red-500/30 text-red-400 text-[8px] px-1 py-0.5 rounded-md leading-none">예정</span>
+                </button>
+              </div>
             </div>
 
             {/* 곡 유형 */}
@@ -2054,7 +2073,7 @@ export function StudioClient({ user }: StudioClientProps) {
               className="w-full py-3 bg-surface-container-lowest hover:bg-white/[0.05] border border-primary/30 hover:border-primary/60 text-primary font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Music className="w-4 h-4" />
-              Suno 음악 생성 스튜디오로 이동 ➡️
+              음악 생성 스튜디오로 이동 ➡️
             </button>
           </div>
         </section>

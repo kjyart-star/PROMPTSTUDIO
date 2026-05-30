@@ -47,14 +47,19 @@ export function PricingClient({ user }: PricingClientProps) {
     }
   }, [])
 
-  const handleSubscribe = (plan: 'pro' | 'premier') => {
+  const handleSubscribe = (plan: 'pro' | 'premier' | 'payg_30' | 'payg_60') => {
     if (!user) {
       router.push('/login')
       return
     }
 
-    const planCredits = plan === 'pro' ? 2500 : 10000
-    const planName = plan === 'pro' ? 'Pro Plan' : 'Premier Plan'
+    let planCredits = 0
+    let planName = ''
+    if (plan === 'pro') { planCredits = 2500; planName = 'Pro Plan' }
+    else if (plan === 'premier') { planCredits = 10000; planName = 'Premier Plan' }
+    else if (plan === 'payg_30') { planCredits = 6800; planName = 'Pay-As-You-Go ($30)' }
+    else if (plan === 'payg_60') { planCredits = 14300; planName = 'Pay-As-You-Go ($60)' }
+
     const newCredits = planCredits
 
     localStorage.setItem('user-plan', plan)
@@ -114,36 +119,47 @@ export function PricingClient({ user }: PricingClientProps) {
     router.push('/settings?section=credits')
   }
 
-  // Feature lists in Korean
   const proFeatures = [
-    '최고 수준의 개인 맞춤형 v5.5 모델에 액세스하세요.',
+    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스하세요.',
     '2,500 크레딧(최대 500곡), 매월 갱신',
     '새로 제작된 노래에 대한 상업적 이용 권한',
-    '스탠다드 기능 + 프로 기능 (페르소나 및 고급 편집)',
-    '노래를 최대 12개의 보컬 및 악기 스템으로 분할합니다.',
-    '최대 30분 분량의 오디오 파일을 업로드하세요.',
+    '스탠다드 기능 + 프로 기능',
     '기존 곡에 새로운 보컬이나 악기 연주를 추가하세요',
     '새로운 기능에 대한 조기 액세스',
     '추가 크레딧 구매 기능',
-    '우선 재생 대기열, 최대 10곡 동시 재생 가능',
-    '자신의 목소리로 녹음하고, 업로드하고, 콘텐츠를 만들어 보세요.',
-    '자신만의 오디오를 사용하여 v5.5의 사용자 지정 버전을 조정하세요.'
+    '우선 재생 대기열, 최대 6곡 동시 생성'
   ]
 
   const premierFeatures = [
     'Beatz Studio 이용 안내',
-    '최고 수준의 개인 맞춤형 v5.5 모델에 액세스하세요.',
+    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스하세요.',
     '10,000 크레딧(최대 2,000곡), 매월 갱신',
     '새로 제작된 노래에 대한 상업적 이용 권한',
-    '스탠다드 기능 + 프로 기능 (페르소나 및 고급 편집)',
-    '노래를 최대 12개의 보컬 및 악기 스템으로 분할합니다.',
-    '최대 30분 분량의 오디오 파일을 업로드하세요.',
+    '스탠다드 기능 + 프로 기능',
     '기존 곡에 새로운 보컬이나 악기 연주를 추가하세요',
     '새로운 기능에 대한 조기 액세스',
     '추가 크레딧 구매 기능',
-    '우선 재생 대기열, 최대 10곡 동시 재생 가능',
-    '자신의 목소리로 녹음하고, 업로드하고, 콘텐츠를 만들어 보세요.',
-    '자신만의 오디오를 사용하여 v5.5의 사용자 지정 버전을 조정하세요.'
+    '우선 재생 대기열, 최대 6곡 동시 생성'
+  ]
+
+  const payAsYouGoFeatures = [
+    '30달러부터 자유롭게 결제',
+    '결제일로부터 6개월간 크레딧 유효',
+    '사용한 만큼만 크레딧 소모',
+    '일반 구독 대비 약 10% 할증',
+    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스',
+    '상업적 이용 권한 포함',
+    '스탠다드 기능 + 프로 기능'
+  ]
+
+  const payAsYouGo60Features = [
+    '60달러 대용량 종량제',
+    '결제일로부터 6개월간 크레딧 유효',
+    '사용한 만큼만 크레딧 소모',
+    '기본 종량제 대비 약 5% 추가 할인',
+    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스',
+    '상업적 이용 권한 포함',
+    '스탠다드 기능 + 프로 기능'
   ]
 
   return (
@@ -206,7 +222,7 @@ export function PricingClient({ user }: PricingClientProps) {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-20 px-4 xl:px-0">
         {/* Pro Plan Card */}
         <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
           {/* Top highlight */}
@@ -302,6 +318,103 @@ export function PricingClient({ user }: PricingClientProps) {
 
             <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
               {premierFeatures.map((feat, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="leading-relaxed text-left">{feat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Pay-As-You-Go (종량제) Card */}
+        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
+          {/* Top highlight */}
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-extrabold text-white">종량제 크레딧</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/10 border border-blue-500/35 text-blue-400 uppercase tracking-wide">
+                쓴 만큼만 소모
+              </span>
+            </div>
+            
+            <p className="text-xs text-zinc-400 font-medium mb-6">
+              정기결제 없이 필요한 만큼만 구매해 사용하세요. (6개월 유효)
+            </p>
+
+            <div className="flex items-baseline gap-1 mb-8">
+              <span className="text-4xl font-black text-white tracking-tight">
+                30달러
+              </span>
+              <span className="text-xs font-bold text-zinc-400">부터</span>
+            </div>
+
+            <button 
+              onClick={() => handleSubscribe('payg_30')}
+              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                currentPlan === 'payg_30' 
+                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
+                  : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-lg border border-white/20'
+              }`}
+              disabled={currentPlan === 'payg_30'}
+            >
+              {currentPlan === 'payg_30' 
+                ? (uiLanguage === 'KO' ? '현재 구독 중' : 'Current Plan') 
+                : (uiLanguage === 'KO' ? '충전하기 (6,800 크레딧)' : 'Recharge (6,800 Credits)')}
+            </button>
+
+            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
+              {payAsYouGoFeatures.map((feat, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span className="leading-relaxed text-left">{feat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Pay-As-You-Go ($60) Card */}
+        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
+          {/* Top highlight */}
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-purple-500 to-indigo-400"></div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-extrabold text-white">종량제 대용량</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/10 border border-purple-500/35 text-purple-400 uppercase tracking-wide">
+                5% 추가 할인
+              </span>
+            </div>
+            
+            <p className="text-xs text-zinc-400 font-medium mb-6">
+              더 많은 크레딧을 합리적인 가격에 구매해 사용하세요. (6개월 유효)
+            </p>
+
+            <div className="flex items-baseline gap-1 mb-8">
+              <span className="text-4xl font-black text-white tracking-tight">
+                60달러
+              </span>
+            </div>
+
+            <button 
+              onClick={() => handleSubscribe('payg_60')}
+              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                currentPlan === 'payg_60' 
+                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
+                  : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-lg border border-white/20'
+              }`}
+              disabled={currentPlan === 'payg_60'}
+            >
+              {currentPlan === 'payg_60' 
+                ? (uiLanguage === 'KO' ? '현재 구독 중' : 'Current Plan') 
+                : (uiLanguage === 'KO' ? '충전하기 (14,300 크레딧)' : 'Recharge (14,300 Credits)')}
+            </button>
+
+            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
+              {payAsYouGo60Features.map((feat, idx) => (
                 <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
                   <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <span className="leading-relaxed text-left">{feat}</span>

@@ -147,6 +147,7 @@ export function GenerateClient({
   }, [searchParams, historyId])
 
   const [generateForm, setGenerateForm] = useState({
+    modelProvider: 'suno',
     modelVersion: 'v5',
     customMode: true,
     instrumentalOnly: false,
@@ -387,9 +388,9 @@ export function GenerateClient({
       return
     }
 
-    // Call Suno generate API task
+    // Call AI generate API task
     try {
-      const res = await fetch('/api/suno/generate', {
+      const res = await fetch('/api/music/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ historyId: activeHistoryId, ...generateForm })
@@ -566,21 +567,48 @@ export function GenerateClient({
     <div className="max-w-6xl mx-auto p-4 md:p-8 pt-6 md:pt-8">
       <h1 className="text-2xl font-bold text-on-background mb-8 flex items-center gap-3">
         <Disc className="w-8 h-8 text-primary" />
-        Suno 음악 생성 인터페이스
+        음악 생성 인터페이스
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Column: Input Data (Playground UI) */}
-        <div className="space-y-6 bg-surface p-6 rounded-2xl border border-outline-variant/10 shadow-lg custom-scrollbar max-h-[80vh] overflow-y-auto">
+        <div className="space-y-6 bg-surface p-6 rounded-2xl border border-outline-variant/10 shadow-lg">
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-3">
             <h2 className="text-sm font-bold text-on-surface">입력 설정 (Input)</h2>
-            <div className="flex gap-2">
-              <span className="text-[10px] bg-surface-container-high px-2 py-1 rounded">폼 양식</span>
-              <span className="text-[10px] bg-transparent text-on-surface-variant px-2 py-1 rounded">JSON</span>
-            </div>
           </div>
           
           <div className="space-y-4">
+            {/* Model Provider Selector */}
+            <div className="space-y-2 pb-2 border-b border-outline-variant/10">
+              <label className="text-xs font-bold text-on-surface">AI 엔진 선택 (AI Engine)</label>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setGenerateForm(prev => ({ ...prev, modelProvider: 'suno' }))}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                    (!generateForm.modelProvider || generateForm.modelProvider === 'suno')
+                      ? 'bg-primary text-[#080d08] border border-primary'
+                      : 'bg-surface-container-low text-on-surface border border-outline-variant/20 hover:border-primary/50'
+                  }`}
+                >
+                  Suno (v4~v5)
+                </button>
+                <button
+                  onClick={() => alert('Udio API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
+                  className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
+                >
+                  Udio (v1.5)
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">예정</span>
+                </button>
+                <button
+                  onClick={() => alert('Google MusicFX API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
+                  className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
+                >
+                  MusicFX
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">예정</span>
+                </button>
+              </div>
+            </div>
+
             {/* Model Version */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-on-surface">모델 버전 (Model Version)</label>
@@ -758,7 +786,7 @@ export function GenerateClient({
         </div>
 
         {/* Right Column: Generation & Output */}
-        <div className="space-y-6 bg-surface-container p-6 rounded-2xl border border-primary/20 shadow-xl relative overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="space-y-6 bg-surface-container p-6 rounded-2xl border border-primary/20 shadow-xl relative flex flex-col">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
           
           <h2 className="text-sm font-bold text-on-surface border-b border-outline-variant/10 pb-3 flex justify-between items-center shrink-0">
@@ -766,7 +794,7 @@ export function GenerateClient({
             <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">{status}</span>
           </h2>
 
-          <div className="flex-1 overflow-y-auto pr-1 space-y-6 custom-scrollbar">
+          <div className="flex-1 space-y-6">
             {/* Active Task Progress Cards List */}
             {activeTasks.length > 0 && (
               <div className="space-y-4 w-full border-b border-outline-variant/10 pb-6 shrink-0">

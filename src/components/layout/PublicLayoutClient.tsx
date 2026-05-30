@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Home, Sparkles, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
-  Search, Settings, Heart, ListMusic, CreditCard, Music
+  Search, Settings, Heart, ListMusic, CreditCard, Music, Coins
 } from 'lucide-react'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
@@ -39,12 +39,25 @@ export function PublicLayoutClient({
   const [isAnnouncementsOpen, setIsAnnouncementsOpen] = useState(false)
   const [announcements, setAnnouncements] = useState(initialAnnouncements)
   const [hasUnread, setHasUnread] = useState(false)
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
 
   const authDropdownRef = useRef<HTMLDivElement>(null)
 
   const [activeTab, setActiveTab] = useState('')
+  const [userCredits, setUserCredits] = useState<number>(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const updateCredits = () => {
+      const saved = localStorage.getItem('user-credits')
+      if (saved !== null) {
+        setUserCredits(parseFloat(saved))
+      }
+    }
+    updateCredits()
+    const interval = setInterval(updateCredits, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   // 활성화된 탭 판별 (Client-safe to avoid SSR Suspense deopt)
   useEffect(() => {
@@ -173,27 +186,6 @@ export function PublicLayoutClient({
       console.error('SignOut error:', err)
     }
     window.location.href = '/'
-  }
-
-  // 회원 탈퇴
-  const handleWithdraw = async () => {
-    setIsAuthMenuOpen(false)
-    setConfirmDeleteOpen(true)
-  }
-
-  const confirmWithdraw = async () => {
-    const { error } = await supabase.rpc('delete_user')
-    if (error) {
-      alert(`탈퇴 실패: ${error.message}`)
-    } else {
-      try {
-        await fetch('/api/auth/signout', { method: 'POST' })
-        await supabase.auth.signOut()
-      } catch (err) {
-        console.error('SignOut error:', err)
-      }
-      window.location.href = '/'
-    }
   }
 
   return (
@@ -375,6 +367,18 @@ export function PublicLayoutClient({
                 </button>
               </div>
 
+              {/* Credits (User only) */}
+              {user && (
+                <Link 
+                  href="/pricing"
+                  className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-variant border border-[#e3fe06]/30 px-3 py-1.5 rounded-full transition-all cursor-pointer group"
+                  title={uiLanguage === 'KO' ? '크레딧 충전' : 'Buy Credits'}
+                >
+                  <Coins className="w-4 h-4 text-[#e3fe06] group-hover:scale-110 transition-transform" />
+                  <span className="text-[12px] font-bold text-on-surface">{userCredits.toLocaleString()}</span>
+                </Link>
+              )}
+
               {/* Notification (Bell) */}
               <div className="relative">
                 <button 
@@ -487,14 +491,6 @@ export function PublicLayoutClient({
                         >
                           <LogOut className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
                           {uiLanguage === 'KO' ? '로그아웃' : 'Log Out'}
-                        </button>
-                        
-                        <button 
-                          onClick={handleWithdraw} 
-                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant/70 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group text-left cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4 text-zinc-500 group-hover:text-red-400 transition-colors" />
-                          {uiLanguage === 'KO' ? '계정 탈퇴' : 'Delete Account'}
                         </button>
                       </div>
                     </div>
@@ -617,44 +613,6 @@ export function PublicLayoutClient({
                   </div>
                 ))
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* User Withdrawal Confirm Modal */}
-      {confirmDeleteOpen && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-          onClick={() => setConfirmDeleteOpen(false)}
-        >
-          <div 
-            className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container shadow-2xl overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <h3 className="text-sm font-extrabold text-on-surface mb-2 tracking-tight">
-                {uiLanguage === 'KO' ? '계정 삭제' : 'Delete Account'}
-              </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
-                {uiLanguage === 'KO' 
-                  ? '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.' 
-                  : 'Are you sure you want to delete your account? All data will be permanently erased.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/10">
-              <button 
-                onClick={() => setConfirmDeleteOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-on-surface bg-white/[0.04] hover:bg-white/[0.08] transition-colors focus:outline-none cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
-              </button>
-              <button 
-                onClick={confirmWithdraw}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-[#070709] bg-[#e3fe06] hover:brightness-105 shadow-md transition-all focus:outline-none cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '확인' : 'Confirm'}
-              </button>
             </div>
           </div>
         </div>
