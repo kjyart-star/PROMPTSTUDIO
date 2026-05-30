@@ -630,10 +630,10 @@ export function MasteringClient() {
             </div>
             
             <div className="flex gap-3">
-              <button onClick={downloadAll} disabled={!tracks.some(t => t.status === 'done')} className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold flex items-center gap-2 text-sm disabled:opacity-30 transition-all">
+              <button onClick={downloadAll} disabled={!tracks.some(t => t.status === 'done')} className="whitespace-nowrap flex-shrink-0 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold flex items-center gap-2 text-sm disabled:opacity-30 transition-all">
                 <Download className="w-4 h-4" /> 전체 다운로드
               </button>
-              <button onClick={processAll} disabled={isProcessingAll || tracks.length === 0} className="px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold flex items-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all">
+              <button onClick={processAll} disabled={isProcessingAll || tracks.length === 0} className="whitespace-nowrap flex-shrink-0 px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold flex items-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all">
                 {isProcessingAll ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-black" />}
                 {isProcessingAll ? '마스터링 중...' : '마스터링 시작'}
               </button>
