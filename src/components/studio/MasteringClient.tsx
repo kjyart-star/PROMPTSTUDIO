@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Upload, Play, Pause, Download, Trash2, Sliders, Check, Settings2, FileAudio, RotateCcw, X } from 'lucide-react'
-import { audioBufferToWav, estimateTruePeak } from '@/lib/audioUtils'
+import { Upload, Play, Pause, Download, Trash2, Sliders, Settings2, FileAudio, RotateCcw, X, Activity, Maximize2, Gauge, Check } from 'lucide-react'
+import { audioBufferToWav, estimateTruePeak, makeDistortionCurve } from '@/lib/audioUtils'
 
 interface Track {
   id: string
@@ -19,12 +19,17 @@ interface Track {
 export function MasteringClient() {
   const [tracks, setTracks] = useState<Track[]>([])
   const [preset, setPreset] = useState('streaming')
+  
+  // Mastering Parameters
   const [clarity, setClarity] = useState(55)
   const [warmth, setWarmth] = useState(48)
-  const [width, setWidth] = useState(35)
-  const [trimSilence, setTrimSilence] = useState(true)
-  const [albumMatch, setAlbumMatch] = useState(true)
+  const [saturation, setSaturation] = useState(20)
+  const [width, setWidth] = useState(30)
+  
+  // Toggles
+  const [extremeLoudness, setExtremeLoudness] = useState(false)
   const [truePeakGuard, setTruePeakGuard] = useState(true)
+
   const [isProcessingAll, setIsProcessingAll] = useState(false)
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null)
   
@@ -43,21 +48,7 @@ export function MasteringClient() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files)
-      if (tracks.length + newFiles.length > 30) {
-        alert('최대 30곡까지만 업로드 가능합니다.')
-        return
-      }
-      
-      const newTracks: Track[] = newFiles.map(file => ({
-        id: Math.random().toString(36).substr(2, 9),
-        file,
-        name: file.name,
-        status: 'pending',
-        progress: 0
-      }))
-      
-      setTracks(prev => [...prev, ...newTracks])
+      addFiles(Array.from(e.target.files))
     }
   }
 
@@ -69,24 +60,25 @@ export function MasteringClient() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('audio/'))
-      if (tracks.length + newFiles.length > 30) {
-        alert('최대 30곡까지만 업로드 가능합니다.')
-        return
-      }
-      
-      const newTracks: Track[] = newFiles.map(file => ({
-        id: Math.random().toString(36).substr(2, 9),
-        file,
-        name: file.name,
-        status: 'pending',
-        progress: 0
-      }))
-      
-      setTracks(prev => [...prev, ...newTracks])
+      addFiles(Array.from(e.dataTransfer.files))
     }
+  }
+
+  const addFiles = (files: File[]) => {
+    const audioFiles = files.filter(file => file.type.startsWith('audio/'))
+    if (tracks.length + audioFiles.length > 30) {
+      alert('최대 30곡까지만 업로드 가능합니다.')
+      return
+    }
+    const newTracks: Track[] = audioFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      status: 'pending',
+      progress: 0
+    }))
+    setTracks(prev => [...prev, ...newTracks])
   }
 
   const removeTrack = (id: string) => {
@@ -151,31 +143,96 @@ export function MasteringClient() {
         buffer = await audioContextRef.current.decodeAudioData(arrayBuffer)
       }
 
-      // TODO: Implement actual offline processing based on preset and sliders
-      // For now, just copy the buffer to simulate processing
       const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate)
       const source = offlineCtx.createBufferSource()
       source.buffer = buffer
       
-      // Simulate applying effects (EQ, Compressor)
+      // 1. Tube Saturation (WaveShaper)
+      const shaper = offlineCtx.createWaveShaper()
+      shaper.curve = makeDistortionCurve(saturation * 4) // Multiply for dramatic effect
+      shaper.oversample = '4x'
+
+      // 2. EQ (Clarity & Warmth)
       const highShelf = offlineCtx.createBiquadFilter()
       highShelf.type = 'highshelf'
       highShelf.frequency.value = 8000
-      highShelf.gain.value = (clarity - 50) / 10
+      highShelf.gain.value = (clarity - 50) / 5 // +/- 10dB
 
       const lowShelf = offlineCtx.createBiquadFilter()
       lowShelf.type = 'lowshelf'
       lowShelf.frequency.value = 150
-      lowShelf.gain.value = (warmth - 50) / 10
+      lowShelf.gain.value = (warmth - 50) / 5 // +/- 10dB
 
+      // 3. Stereo Width Simulation (Delay on one channel via Splitter/Merger)
+      // Only apply if stereo and width > 0
+      const hasWidth = buffer.numberOfChannels === 2 && width > 0
+      let leftGain, rightGain, rightDelay, merger
+      if (hasWidth) {
+        const splitter = offlineCtx.createChannelSplitter(2)
+        merger = offlineCtx.createChannelMerger(2)
+        
+        leftGain = offlineCtx.createGain()
+        rightGain = offlineCtx.createGain()
+        
+        // Haas effect delay (0 to 30ms based on width slider)
+        rightDelay = offlineCtx.createDelay(0.1)
+        rightDelay.delayTime.value = (width / 100) * 0.03
+        
+        splitter.connect(leftGain, 0)
+        splitter.connect(rightDelay, 1)
+        rightDelay.connect(rightGain)
+        
+        leftGain.connect(merger, 0, 0)
+        rightGain.connect(merger, 0, 1)
+        
+        lowShelf.connect(splitter)
+      } else {
+        merger = lowShelf
+      }
+
+      // 4. Dynamics Compressor (Maximizer)
       const compressor = offlineCtx.createDynamicsCompressor()
-      compressor.threshold.value = preset === 'loud' ? -20 : -14
-      compressor.ratio.value = preset === 'loud' ? 4 : 2
       
-      source.connect(lowShelf)
-      lowShelf.connect(highShelf)
-      highShelf.connect(compressor)
-      compressor.connect(offlineCtx.destination)
+      if (extremeLoudness) {
+        compressor.threshold.value = -30
+        compressor.ratio.value = 12
+        compressor.knee.value = 0
+        compressor.attack.value = 0.003
+        compressor.release.value = 0.25
+      } else {
+        compressor.threshold.value = preset === 'loud' ? -20 : -14
+        compressor.ratio.value = preset === 'loud' ? 6 : 3
+        compressor.knee.value = 5
+      }
+      
+      const makeupGain = offlineCtx.createGain()
+      makeupGain.gain.value = extremeLoudness ? 3.0 : 1.5 // Dramatic loudness boost
+      
+      source.connect(shaper)
+      shaper.connect(highShelf)
+      highShelf.connect(lowShelf)
+      
+      if (hasWidth && merger) {
+        merger.connect(compressor)
+      } else {
+        lowShelf.connect(compressor)
+      }
+      
+      compressor.connect(makeupGain)
+      
+      // True Peak Guard (Hard Limiter)
+      const limiter = offlineCtx.createDynamicsCompressor()
+      if (truePeakGuard) {
+        limiter.threshold.value = -1.0
+        limiter.ratio.value = 20
+        limiter.knee.value = 0
+        limiter.attack.value = 0.001
+        limiter.release.value = 0.1
+        makeupGain.connect(limiter)
+        limiter.connect(offlineCtx.destination)
+      } else {
+        makeupGain.connect(offlineCtx.destination)
+      }
       
       source.start()
       
@@ -223,191 +280,231 @@ export function MasteringClient() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500 text-white">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight flex items-center gap-3 mb-2">
-          <Settings2 className="w-8 h-8 text-primary" />
-          Audio Batch Master
+      <div className="mb-10 flex flex-col items-center text-center">
+        <h1 className="text-4xl font-black tracking-tight flex items-center justify-center gap-4 mb-3 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-blue-500">
+          <Settings2 className="w-10 h-10 text-primary" />
+          Pro Audio Mastering Console
         </h1>
-        <p className="text-zinc-400">최대 30곡을 한 번에 분석하고 마스터링하는 로컬 브라우저 툴입니다.</p>
+        <p className="text-zinc-400 max-w-2xl text-lg">Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 스튜디오 랙 마운트 마스터링 툴입니다.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Controls Panel */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
+        
+        {/* Top: Queue & Dropzone */}
+        <div className="bg-[#0a0a0c] border border-outline-variant/10 rounded-[2rem] p-6 shadow-2xl flex flex-col lg:flex-row gap-6 relative overflow-hidden">
+          {/* Decorative BG */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
+          
+          {/* Dropzone */}
           <div 
-            className="border-2 border-dashed border-outline-variant/30 rounded-3xl p-8 flex flex-col items-center justify-center text-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer min-h-[200px]"
+            className="lg:w-1/3 border-2 border-dashed border-primary/30 rounded-3xl p-8 flex flex-col items-center justify-center text-center bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer min-h-[240px] relative z-10 group"
             onClick={() => fileInputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="audio/*" 
-              multiple 
-              onChange={handleFileChange}
-            />
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-primary" />
+            <input type="file" ref={fileInputRef} className="hidden" accept="audio/*" multiple onChange={handleFileChange} />
+            <div className="w-16 h-16 rounded-2xl bg-black/50 border border-primary/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-xl shadow-primary/20">
+              <Upload className="w-8 h-8 text-primary" />
             </div>
-            <p className="font-bold mb-1">클릭하거나 파일을 드래그하여 업로드</p>
-            <p className="text-xs text-zinc-500">WAV, MP3, FLAC 등 (최대 30곡)</p>
+            <p className="font-extrabold mb-2 text-lg">파일을 드래그하여 드롭하세요</p>
+            <p className="text-sm text-primary/70 font-medium">최대 30곡 일괄 업로드 (WAV, MP3)</p>
           </div>
 
-          <div className="bg-[#121214] border border-outline-variant/10 rounded-3xl p-6 flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-zinc-400">마스터링 프리셋</label>
-              <select 
-                value={preset}
-                onChange={(e) => setPreset(e.target.value)}
-                className="bg-black border border-outline-variant/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary text-white"
-              >
-                <option value="streaming">스트리밍 균형형 (-14 LUFS 기준)</option>
-                <option value="loud">모던 라우드 (-10 LUFS 기준)</option>
-                <option value="clean">클린 다이내믹 (-16 LUFS 기준)</option>
-                <option value="podcast">보이스 중심 (-15 LUFS 기준)</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-zinc-400">톤 선명도 (Clarity)</span>
-                  <span className="text-primary">{clarity}%</span>
-                </div>
-                <input type="range" min="0" max="100" value={clarity} onChange={(e) => setClarity(Number(e.target.value))} className="accent-primary" />
+          {/* Queue List */}
+          <div className="lg:w-2/3 flex flex-col h-full relative z-10 bg-black/40 rounded-3xl border border-white/5 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-bold">배치 큐 (Batch Queue)</h2>
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-zinc-400">저역 무게감 (Warmth)</span>
-                  <span className="text-primary">{warmth}%</span>
-                </div>
-                <input type="range" min="0" max="100" value={warmth} onChange={(e) => setWarmth(Number(e.target.value))} className="accent-primary" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-zinc-400">스테레오 폭 (Width)</span>
-                  <span className="text-primary">{width}%</span>
-                </div>
-                <input type="range" min="0" max="100" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="accent-primary" />
+              <div className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold">
+                {tracks.length} / 30 Tracks
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant/10">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={trimSilence} onChange={(e) => setTrimSilence(e.target.checked)} className="accent-primary w-4 h-4" />
-                <span className="text-sm font-medium">앞뒤 무음 자동 정리</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={albumMatch} onChange={(e) => setAlbumMatch(e.target.checked)} className="accent-primary w-4 h-4" />
-                <span className="text-sm font-medium">앨범 단위 볼륨/톤 통일</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={truePeakGuard} onChange={(e) => setTruePeakGuard(e.target.checked)} className="accent-primary w-4 h-4" />
-                <span className="text-sm font-medium">True Peak 가드 적용</span>
-              </label>
-            </div>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-3 min-h-[160px] max-h-[300px]">
+              {tracks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3 opacity-50 py-10">
+                  <FileAudio className="w-12 h-12" />
+                  <p className="font-medium">대기열이 비어 있습니다.</p>
+                </div>
+              ) : (
+                tracks.map((track) => (
+                  <div key={track.id} className="flex items-center gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black shrink-0 relative overflow-hidden">
+                      {track.status === 'done' ? <Check className="w-4 h-4 text-green-400" /> 
+                       : track.status === 'processing' ? <RotateCcw className="w-4 h-4 text-primary animate-spin" />
+                       : <div className="w-2 h-2 rounded-full bg-zinc-600" />}
+                       
+                      {track.status === 'processing' && (
+                        <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{track.name}</p>
+                      {track.status === 'processing' && (
+                        <div className="w-full bg-black rounded-full h-1 mt-2 overflow-hidden">
+                          <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${track.progress}%` }} />
+                        </div>
+                      )}
+                    </div>
 
-            <div className="flex flex-col gap-2 pt-2">
-              <button 
-                onClick={processAll}
-                disabled={isProcessingAll || tracks.length === 0}
-                className="w-full bg-primary text-black font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-all hover:brightness-110"
-              >
-                {isProcessingAll ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Sliders className="w-5 h-5" />}
-                전체 마스터링 시작
-              </button>
-              
-              <div className="flex gap-2">
-                <button 
-                  onClick={downloadAll}
-                  disabled={!tracks.some(t => t.status === 'done')}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-all text-xs"
-                >
-                  <Download className="w-4 h-4" />
-                  전체 다운로드
-                </button>
-                <button 
-                  onClick={clearAll}
-                  disabled={tracks.length === 0 || isProcessingAll}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-4 py-3 rounded-2xl flex items-center justify-center disabled:opacity-50 transition-all"
-                  title="목록 비우기"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => playPreview(track, 'original')} className="p-2 rounded-xl bg-black hover:bg-zinc-800 transition-colors" title="원본 재생">
+                        {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.originalBuffer ? <Pause className="w-4 h-4 text-primary" /> : <Play className="w-4 h-4 text-zinc-400" />}
+                      </button>
+                      <button onClick={() => playPreview(track, 'processed')} disabled={track.status !== 'done'} className="p-2 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors disabled:opacity-30" title="마스터링 재생">
+                        {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.processedBuffer ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </button>
+                      {track.status === 'done' && track.processedUrl && (
+                        <a href={track.processedUrl} download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white" title="WAV 다운로드">
+                          <Download className="w-4 h-4" />
+                        </a>
+                      )}
+                      <button onClick={() => removeTrack(track.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
 
-        {/* Right Queue Panel */}
-        <div className="lg:col-span-2 bg-[#121214] border border-outline-variant/10 rounded-3xl p-6 flex flex-col h-full min-h-[600px]">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-outline-variant/10">
-            <div>
-              <p className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">Batch Queue</p>
-              <h2 className="text-xl font-bold">업로드한 곡 목록</h2>
-            </div>
-            <div className="px-3 py-1.5 rounded-full bg-black border border-outline-variant/20 text-sm font-bold">
-              {tracks.length} / 30
+        {/* Bottom: Mastering Rack Console */}
+        <div className="bg-[#121214] border border-outline-variant/10 rounded-[2rem] p-6 lg:p-10 shadow-2xl relative">
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <Sliders className="w-7 h-7 text-primary" />
+              Mastering Rack Console
+            </h2>
+            
+            <div className="flex gap-3">
+              <button onClick={downloadAll} disabled={!tracks.some(t => t.status === 'done')} className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold flex items-center gap-2 text-sm disabled:opacity-30 transition-all">
+                <Download className="w-4 h-4" /> 다운로드
+              </button>
+              <button onClick={processAll} disabled={isProcessingAll || tracks.length === 0} className="px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold flex items-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all">
+                {isProcessingAll ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-black" />}
+                {isProcessingAll ? '처리 중...' : '마스터링 시작'}
+              </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-3">
-            {tracks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-4 opacity-50">
-                <FileAudio className="w-16 h-16" />
-                <p>아직 추가된 곡이 없습니다.</p>
-              </div>
-            ) : (
-              tracks.map((track) => (
-                <div key={track.id} className="flex flex-col gap-3 p-4 rounded-2xl bg-black border border-outline-variant/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${track.status === 'done' ? 'bg-green-500' : track.status === 'processing' ? 'bg-primary animate-pulse' : track.status === 'error' ? 'bg-red-500' : 'bg-zinc-600'}`} />
-                      <span className="font-bold text-sm truncate">{track.name}</span>
-                    </div>
-                    <button onClick={() => removeTrack(track.id)} className="text-zinc-500 hover:text-red-400 p-1">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  {track.status === 'processing' && (
-                    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${track.progress}%` }} />
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 mt-1">
-                    <button 
-                      onClick={() => playPreview(track, 'original')}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
-                    >
-                      {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.originalBuffer ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                      원본 듣기
-                    </button>
-                    <button 
-                      onClick={() => playPreview(track, 'processed')}
-                      disabled={track.status !== 'done'}
-                      className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 transition-colors"
-                    >
-                      {currentlyPlayingId === track.id && sourceNodeRef.current?.buffer === track.processedBuffer ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                      미리 듣기
-                    </button>
-                    {track.status === 'done' && track.processedUrl && (
-                      <a 
-                        href={track.processedUrl}
-                        download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`}
-                        className="ml-auto px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
-                      >
-                        <Download className="w-3 h-3" />
-                        WAV 다운로드
-                      </a>
-                    )}
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Module 1: Tonal Balance (EQ) */}
+            <div className="bg-black/50 border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <Sliders className="w-4 h-4 text-blue-400" />
                 </div>
-              ))
-            )}
+                <h3 className="font-bold text-lg text-blue-100">Tonal Balance</h3>
+              </div>
+              
+              <div className="space-y-8 relative z-10">
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between font-bold text-sm">
+                    <span className="text-zinc-400">High-Shelf (Clarity)</span>
+                    <span className={clarity > 50 ? 'text-blue-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={clarity} onChange={(e) => setClarity(Number(e.target.value))} className="accent-blue-500 w-full" />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between font-bold text-sm">
+                    <span className="text-zinc-400">Low-Shelf (Warmth)</span>
+                    <span className={warmth > 50 ? 'text-blue-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={warmth} onChange={(e) => setWarmth(Number(e.target.value))} className="accent-blue-500 w-full" />
+                </div>
+              </div>
+            </div>
+
+            {/* Module 2: Saturation & Width */}
+            <div className="bg-black/50 border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                  <Maximize2 className="w-4 h-4 text-orange-400" />
+                </div>
+                <h3 className="font-bold text-lg text-orange-100">Saturation & Width</h3>
+              </div>
+              
+              <div className="space-y-8 relative z-10">
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between font-bold text-sm">
+                    <span className="text-zinc-400">Tube Saturation</span>
+                    <span className="text-orange-400">{saturation} %</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={saturation} onChange={(e) => setSaturation(Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <p className="text-[10px] text-zinc-500">아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)</p>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between font-bold text-sm">
+                    <span className="text-zinc-400">Stereo Widener</span>
+                    <span className="text-orange-400">{width} %</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={width} onChange={(e) => setWidth(Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <p className="text-[10px] text-zinc-500">Haas Effect 기반 좌우 위상 확장 (공간감 극대화)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Module 3: Dynamics (Maximizer) */}
+            <div className="bg-black/50 border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <Gauge className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-lg text-primary-100">Maximizer</h3>
+                </div>
+              </div>
+              
+              <div className="space-y-6 relative z-10">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-zinc-400">Loudness Target</label>
+                  <select 
+                    value={preset}
+                    onChange={(e) => setPreset(e.target.value)}
+                    className="bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary text-white font-bold"
+                  >
+                    <option value="streaming">Streaming (-14 LUFS)</option>
+                    <option value="loud">Modern Loud (-10 LUFS)</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+                  <label className="flex items-center gap-3 cursor-pointer group/label">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={extremeLoudness} onChange={(e) => setExtremeLoudness(e.target.checked)} className="peer sr-only" />
+                      <div className="w-10 h-6 bg-zinc-800 rounded-full peer-checked:bg-red-500/80 transition-colors" />
+                      <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+                    </div>
+                    <div>
+                      <span className={`text-sm font-bold ${extremeLoudness ? 'text-red-400' : 'text-zinc-300'}`}>Extreme Loudness</span>
+                      <p className="text-[10px] text-zinc-500">공격적인 압축 및 게인 부스트 (음압 극대화)</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer group/label mt-2">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={truePeakGuard} onChange={(e) => setTruePeakGuard(e.target.checked)} className="peer sr-only" />
+                      <div className="w-10 h-6 bg-zinc-800 rounded-full peer-checked:bg-primary transition-colors" />
+                      <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+                    </div>
+                    <div>
+                      <span className={`text-sm font-bold ${truePeakGuard ? 'text-primary' : 'text-zinc-300'}`}>True Peak Guard</span>
+                      <p className="text-[10px] text-zinc-500">출력 전단 클리핑 방지 하드 리미터</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

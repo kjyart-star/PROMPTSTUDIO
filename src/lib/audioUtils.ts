@@ -132,3 +132,17 @@ function sincFast(value: number): number {
   const x = Math.PI * value
   return Math.sin(x) / x
 }
+
+export function makeDistortionCurve(amount: number) {
+  const k = typeof amount === 'number' ? amount : 50
+  const n_samples = 44100
+  const curve = new Float32Array(n_samples)
+  const deg = Math.PI / 180
+  let i = 0
+  let x
+  for ( ; i < n_samples; ++i ) {
+    x = i * 2 / n_samples - 1
+    curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) )
+  }
+  return curve
+}
