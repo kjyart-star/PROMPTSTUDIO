@@ -760,7 +760,12 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   const fetchHistory = async () => {
     try {
       const res = await fetch('/api/song-history')
-      if (res.ok) setHistory(await res.json() || [])
+      if (res.ok) {
+        const rawData = await res.json() || []
+        const completedData = rawData.filter((item: any) => item.audio_url || item.file_url)
+        completedData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+        setHistory(completedData)
+      }
     } catch (e) { console.error(e) }
   }
 

@@ -2151,6 +2151,20 @@ function LibraryView({
 }: LibraryViewProps) {
   const itemsPerPage = 15 // 15 items per page
   const [deletedIds, setDeletedIds] = useState<string[]>(() => readJson(STORAGE_KEYS.deletedDummyItems, []))
+  const [copiedPrompt, setCopiedPrompt] = useState(false)
+  const [copiedLyrics, setCopiedLyrics] = useState(false)
+
+  const handleCopyPrompt = (text: string) => {
+    navigator.clipboard.writeText(text || '')
+    setCopiedPrompt(true)
+    setTimeout(() => setCopiedPrompt(false), 1500)
+  }
+
+  const handleCopyLyrics = (text: string) => {
+    navigator.clipboard.writeText(text || '')
+    setCopiedLyrics(true)
+    setTimeout(() => setCopiedLyrics(false), 1500)
+  }
 
   // usePlayerStore hook
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
@@ -3242,13 +3256,37 @@ Rain on the midnight road
             <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar bg-surface-container-low">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">프롬프트</h3>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">프롬프트</h3>
+                    <button
+                      onClick={() => handleCopyPrompt(selectedItem.prompt || '')}
+                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
+                        copiedPrompt 
+                          ? 'text-primary border-primary/40 bg-primary/5' 
+                          : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
+                      }`}
+                    >
+                      {copiedPrompt ? (uiLanguage === 'KO' ? '복사 완료' : 'Copied') : (uiLanguage === 'KO' ? '복사' : 'Copy')}
+                    </button>
+                  </div>
                   <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
                     {selectedItem.prompt || '내용 없음'}
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">가사</h3>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">가사</h3>
+                    <button
+                      onClick={() => handleCopyLyrics(selectedItem.lyrics || '')}
+                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
+                        copiedLyrics 
+                          ? 'text-primary border-primary/40 bg-primary/5' 
+                          : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
+                      }`}
+                    >
+                      {copiedLyrics ? (uiLanguage === 'KO' ? '복사 완료' : 'Copied') : (uiLanguage === 'KO' ? '복사' : 'Copy')}
+                    </button>
+                  </div>
                   <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
                     {selectedItem.lyrics || '내용 없음'}
                   </div>
