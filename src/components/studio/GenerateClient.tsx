@@ -551,7 +551,9 @@ export function GenerateClient({
     setSelectedPublishGenre('')
   }
 
-  const completedSongs = historyList.filter((item: any) => item.status === 'completed' && item.audio_url)
+  const completedSongs = historyList
+    .filter((item: any) => item.status === 'completed' && item.audio_url)
+    .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
   const topCompletedSongs = completedSongs.slice(0, 30)
 
   return (
@@ -767,7 +769,7 @@ export function GenerateClient({
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                   </span>
-                  {uiLanguage === 'KO' ? `생성 중인 음악 (${activeTasks.length}/6)` : `Active Generations (${activeTasks.length}/6)`}
+                  {uiLanguage === 'KO' ? `생성 중인 음악 (${activeTasks.length * 2}곡 생성중)` : `Active Generations (${activeTasks.length * 2} tracks generating)`}
                 </p>
                 <div className="space-y-3">
                   {activeTasks.map((task) => (
