@@ -2475,6 +2475,17 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
               >
                 <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : 'My Channel (Published)'}
               </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('channels');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'channels');
+                  window.history.pushState({ tab: 'channels' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${activeTab === 'channels' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+              >
+                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
+              </button>
             </div>
 
             <div className="mb-10">
@@ -3395,6 +3406,17 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${isPublicView ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-white'}`}
                       >
                         <Globe className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '아티스트 채널' : 'Artist Channel'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setActiveTab('channels');
+                          const url = new URL(window.location.href);
+                          url.searchParams.set('tab', 'channels');
+                          window.history.pushState({ tab: 'channels' }, '', url.toString());
+                        }} 
+                        className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
+                      >
+                        <Users className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Mgt'}
                       </button>
                     </div>
                     <button 
