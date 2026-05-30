@@ -22,10 +22,10 @@ export function MasteringClient() {
   // Mastering Parameters
   const [activeTemplate, setActiveTemplate] = useState('streaming')
   const [preset, setPreset] = useState('streaming') // Used for compressor threshold target
-  const [clarity, setClarity] = useState(55)
-  const [warmth, setWarmth] = useState(48)
-  const [saturation, setSaturation] = useState(20)
-  const [width, setWidth] = useState(30)
+  const [clarity, setClarity] = useState(50)
+  const [warmth, setWarmth] = useState(50)
+  const [saturation, setSaturation] = useState(0)
+  const [width, setWidth] = useState(0)
   
   // Toggles
   const [extremeLoudness, setExtremeLoudness] = useState(false)
@@ -137,23 +137,22 @@ export function MasteringClient() {
   const handleTemplateChange = (templateId: string) => {
     setActiveTemplate(templateId)
     switch (templateId) {
-      case 'streaming':
-        setClarity(55); setWarmth(48); setSaturation(20); setWidth(30); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+      case 'streaming': // Perfectly flat and safe
+        setClarity(50); setWarmth(50); setSaturation(0); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
-      case 'vocal':
-        setClarity(65); setWarmth(40); setSaturation(10); setWidth(20); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+      case 'vocal': // Gentle vocal presence
+        setClarity(60); setWarmth(45); setSaturation(5); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
-      case 'bass':
-        setClarity(40); setWarmth(75); setSaturation(40); setWidth(15); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
+      case 'bass': // Gentle bass focus
+        setClarity(45); setWarmth(65); setSaturation(10); setWidth(0); setPreset('loud'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
-      case 'extreme':
-        setClarity(60); setWarmth(60); setSaturation(50); setWidth(50); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
+      case 'extreme': // Noticeable but not completely broken
+        setClarity(55); setWarmth(55); setSaturation(20); setWidth(10); setPreset('loud'); setExtremeLoudness(true); setTruePeakGuard(true);
         break;
-      case 'vintage':
-        setClarity(40); setWarmth(55); setSaturation(80); setWidth(10); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
+      case 'vintage': // Warm analog feel
+        setClarity(40); setWarmth(60); setSaturation(30); setWidth(0); setPreset('streaming'); setExtremeLoudness(false); setTruePeakGuard(true);
         break;
       case 'custom':
-        // Do nothing, just switch the active label
         break;
     }
   }
@@ -166,10 +165,9 @@ export function MasteringClient() {
     setPreset('streaming')
     setExtremeLoudness(false)
     setTruePeakGuard(true)
-    setActiveTemplate('custom')
+    setActiveTemplate('streaming')
   }
 
-  // Trigger 'custom' template mode when user manually changes a slider
   const handleSliderChange = (setter: any, value: number) => {
     setter(value)
     setActiveTemplate('custom')
@@ -189,25 +187,25 @@ export function MasteringClient() {
       const source = offlineCtx.createBufferSource()
       source.buffer = buffer
       
-      // 1. Tube Saturation (WaveShaper)
+      // 1. Tube Saturation (WaveShaper) - Highly reduced to act as true harmonic exciter, not a fuzz pedal
       const shaper = offlineCtx.createWaveShaper()
       if (saturation > 0) {
-        shaper.curve = makeDistortionCurve(saturation / 2) // scale down to prevent harsh clipping
+        shaper.curve = makeDistortionCurve(saturation / 5) // max amount 20
         shaper.oversample = '4x'
       }
 
-      // 2. EQ (Clarity & Warmth)
+      // 2. EQ (Clarity & Warmth) - Mastering Grade EQ (+/- 3.3dB max)
       const highShelf = offlineCtx.createBiquadFilter()
       highShelf.type = 'highshelf'
       highShelf.frequency.value = 8000
-      highShelf.gain.value = (clarity - 50) / 10 // reduced from /5 to /10 for smoother EQ
+      highShelf.gain.value = (clarity - 50) / 15 
 
       const lowShelf = offlineCtx.createBiquadFilter()
       lowShelf.type = 'lowshelf'
       lowShelf.frequency.value = 150
-      lowShelf.gain.value = (warmth - 50) / 10 // reduced from /5 to /10
+      lowShelf.gain.value = (warmth - 50) / 15 
 
-      // 3. Stereo Width Simulation (Delay on one channel via Splitter/Merger)
+      // 3. Stereo Width Simulation
       const hasWidth = buffer.numberOfChannels === 2 && width > 0
       let leftGain, rightGain, rightDelay, merger
       if (hasWidth) {
@@ -218,7 +216,8 @@ export function MasteringClient() {
         rightGain = offlineCtx.createGain()
         
         rightDelay = offlineCtx.createDelay(0.1)
-        rightDelay.delayTime.value = (width / 100) * 0.02 // max 20ms delay
+        // Extremely small delay for subtle widening without destroying mono compatibility (0 to 1.5ms)
+        rightDelay.delayTime.value = (width / 100) * 0.0015 
         
         splitter.connect(leftGain, 0)
         splitter.connect(rightDelay, 1)
@@ -232,23 +231,26 @@ export function MasteringClient() {
         merger = lowShelf
       }
 
-      // 4. Dynamics Compressor (Maximizer)
+      // 4. Dynamics Compressor (Glue Compressor)
       const compressor = offlineCtx.createDynamicsCompressor()
       
       if (extremeLoudness) {
-        compressor.threshold.value = -24
-        compressor.ratio.value = 8
-        compressor.knee.value = 0
-        compressor.attack.value = 0.003
-        compressor.release.value = 0.25
+        compressor.threshold.value = -18
+        compressor.ratio.value = 4
+        compressor.knee.value = 2
+        compressor.attack.value = 0.005
+        compressor.release.value = 0.1
       } else {
-        compressor.threshold.value = preset === 'loud' ? -16 : -12
-        compressor.ratio.value = preset === 'loud' ? 4 : 2
-        compressor.knee.value = 5
+        compressor.threshold.value = preset === 'loud' ? -12 : -8
+        compressor.ratio.value = preset === 'loud' ? 2.5 : 1.5
+        compressor.knee.value = 10
+        compressor.attack.value = 0.01
+        compressor.release.value = 0.25
       }
       
       const makeupGain = offlineCtx.createGain()
-      makeupGain.gain.value = extremeLoudness ? 2.0 : 1.2 // Reduced gain to prevent clipping
+      // Zero added gain by default, rely on compressor to tame peaks. Suno tracks are already loud.
+      makeupGain.gain.value = extremeLoudness ? 1.2 : 1.0 
       
       if (saturation > 0) {
         source.connect(shaper)
@@ -267,15 +269,14 @@ export function MasteringClient() {
       
       compressor.connect(makeupGain)
       
-      // True Peak Guard (Hard Limiter using wave shaper to hard clip at 1.0)
+      // True Peak Guard (Fast Limiter)
       if (truePeakGuard) {
-        const limiter = offlineCtx.createWaveShaper()
-        const clipCurve = new Float32Array(44100)
-        for (let i = 0; i < 44100; i++) {
-          const x = (i * 2) / 44100 - 1
-          clipCurve[i] = Math.max(-0.98, Math.min(0.98, x)) // Hard clip at -0.17dBFS to prevent true peak overshoot
-        }
-        limiter.curve = clipCurve
+        const limiter = offlineCtx.createDynamicsCompressor()
+        limiter.threshold.value = -0.5
+        limiter.ratio.value = 20
+        limiter.knee.value = 0
+        limiter.attack.value = 0.001
+        limiter.release.value = 0.05
         makeupGain.connect(limiter)
         limiter.connect(offlineCtx.destination)
       } else {
