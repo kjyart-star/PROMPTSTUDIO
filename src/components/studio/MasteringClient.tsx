@@ -79,8 +79,8 @@ export function MasteringClient() {
 
   const addFiles = (files: File[]) => {
     const audioFiles = files.filter(file => file.type.startsWith('audio/'))
-    if (tracks.length + audioFiles.length > 30) {
-      alert('최대 30곡까지만 업로드 가능합니다.')
+    if (tracks.length + audioFiles.length > 20) {
+      alert('최대 20곡까지만 업로드 가능합니다.')
       return
     }
     const newTracks: Track[] = audioFiles.map(file => ({
@@ -464,7 +464,7 @@ export function MasteringClient() {
               <Upload className="w-8 h-8 text-primary" />
             </div>
             <p className="font-extrabold mb-2 text-lg">파일을 드래그하여 드롭하세요</p>
-            <p className="text-sm text-primary/70 font-medium">최대 30곡 일괄 업로드 (WAV, MP3)</p>
+            <p className="text-sm text-primary/70 font-medium">최대 20곡 일괄 업로드 (WAV, MP3)</p>
           </div>
 
           {/* Queue List */}
@@ -475,7 +475,7 @@ export function MasteringClient() {
                 <h2 className="text-lg font-bold">배치 큐 (Batch Queue)</h2>
               </div>
               <div className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold">
-                {tracks.length} / 30 Tracks
+                {tracks.length} / 20 Tracks
               </div>
             </div>
 
@@ -528,8 +528,8 @@ export function MasteringClient() {
                             <Download className="w-4 h-4" />
                           </a>
                         )}
-                        <button onClick={() => removeTrack(track.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 transition-colors absolute -right-2 -top-2 opacity-0 group-hover:opacity-100 bg-black/80 hover:bg-black border border-white/10">
-                          <X className="w-4 h-4" />
+                        <button onClick={() => removeTrack(track.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="목록에서 삭제">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
