@@ -2044,7 +2044,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     <>
       <div className="max-w-7xl mx-auto px-[32px] pt-0 md:pt-0">
         {/* --- Conditionally Render Headers --- */}
-        {selectedPlaylist || activeTab === 'private' ? (
+        {selectedPlaylist || activeTab === 'private' || activeTab === 'channels' ? (
           /* Standard Header for Private view / Playlist Detail */
           <div className="flex items-start justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -2482,7 +2482,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                   url.searchParams.set('tab', 'channels');
                   window.history.pushState({ tab: 'channels' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${activeTab === 'channels' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
                 <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
               </button>
