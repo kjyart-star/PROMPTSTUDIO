@@ -10,6 +10,7 @@ import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
+import { MasteringClient } from './MasteringClient'
 
 const durationCache: Record<string, number> = {}
 
@@ -732,7 +733,7 @@ export function StudioClient({ user }: StudioClientProps) {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
 
-  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno'>('studio')
+  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering'>('studio')
 
   useEffect(() => {
     if (tabParam === 'library') {
@@ -1507,6 +1508,16 @@ export function StudioClient({ user }: StudioClientProps) {
             >
               {uiLanguage === 'KO' ? '음악 생성' : 'Music Studio'}
             </button>
+            <button
+              onClick={() => setCurrentTab('mastering')}
+              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
+                currentTab === 'mastering'
+                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+              }`}
+            >
+              {uiLanguage === 'KO' ? '마스터링' : 'Mastering'}
+            </button>
           </div>
 
         </div>
@@ -2109,6 +2120,8 @@ export function StudioClient({ user }: StudioClientProps) {
           initialTitle={resultParts.title}
           initialNegativePrompt={resultParts.negativePrompt}
         />
+      ) : currentTab === 'mastering' ? (
+        <MasteringClient />
       ) : null}
     </div>
   )
