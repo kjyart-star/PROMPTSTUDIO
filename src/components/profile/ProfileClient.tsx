@@ -1630,7 +1630,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             cover_url: song.image_url || '/default-album.png',
             artist: {
               name: profile?.display_name || user?.email?.split('@')[0] || 'AI Artist',
-              slug: user?.email?.split('@')[0] || 'user'
+              slug: user?.email?.split('@')[0] || 'user',
+              avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
             }
           }
         }
@@ -1829,7 +1830,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         cover_url: item.image_url || '/default-album.png',
         artist: {
           name: profile?.display_name || user.email.split('@')[0],
-          slug: user.email.split('@')[0]
+          slug: user.email.split('@')[0],
+          avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
         }
       }
     };
@@ -1857,7 +1859,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           cover_url: h.image_url || '/default-album.png',
           artist: {
             name: profile?.display_name || user.email.split('@')[0],
-            slug: user.email.split('@')[0]
+            slug: user.email.split('@')[0],
+            avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
           }
         }
       }));
@@ -2248,7 +2251,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                             cover_url: selectedPlaylist.cover_url || '/default-album.png',
                             artist: {
                               name: profile?.display_name || 'AI Artist',
-                              slug: user?.email?.split('@')[0] || 'user'
+                              slug: user?.email?.split('@')[0] || 'user',
+                              avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
                             }
                           }
                         }));
@@ -2348,7 +2352,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       cover_url: selectedPlaylist.cover_url || '/default-album.png',
                       artist: {
                         name: profile?.display_name || 'AI Artist',
-                        slug: user?.email?.split('@')[0] || 'user'
+                        slug: user?.email?.split('@')[0] || 'user',
+                        avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
                       }
                     }
                   };
@@ -2389,7 +2394,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                   cover_url: selectedPlaylist.cover_url || '/default-album.png',
                                   artist: {
                                     name: profile?.display_name || 'AI Artist',
-                                    slug: user?.email?.split('@')[0] || 'user'
+                                    slug: user?.email?.split('@')[0] || 'user',
+                                    avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
                                   }
                                 }
                               })));
