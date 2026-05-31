@@ -651,14 +651,20 @@ export function GenerateClient({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : uiLanguage === 'JA' ? 'プロンプト / 歌詞' : 'Prompt / Lyrics'}</label>
+              <label className={`text-xs font-bold ${generateForm.instrumentalOnly ? 'text-on-surface-variant/50' : 'text-on-surface'}`}>{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : uiLanguage === 'JA' ? 'プロンプト / 歌詞' : 'Prompt / Lyrics'}</label>
               <textarea 
-                value={generateForm.prompt}
+                value={generateForm.instrumentalOnly ? '' : generateForm.prompt}
                 onChange={e => updateFormData('prompt', e.target.value)}
+                disabled={generateForm.instrumentalOnly}
+                placeholder={generateForm.instrumentalOnly ? (uiLanguage === 'KO' ? '연주곡만 생성 옵션이 켜져있어 가사를 입력할 수 없습니다.' : uiLanguage === 'JA' ? 'インストゥルメンタルのみのオプションがオンのため、歌詞は入力できません。' : 'Disabled for Instrumental Only') : ''}
                 rows={5}
-                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface outline-none resize-none custom-scrollbar"
+                className={`w-full border rounded-lg p-3 text-xs outline-none resize-none custom-scrollbar transition-colors ${
+                  generateForm.instrumentalOnly 
+                    ? 'bg-surface-container/50 border-outline-variant/10 text-on-surface-variant/30 cursor-not-allowed opacity-60' 
+                    : 'bg-surface-container-low border-outline-variant/20 text-on-surface'
+                }`}
               />
-              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : uiLanguage === 'JA' ? '生成したい音楽の歌詞または説明。カスタムモードがオフのときに必須です。' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
+              <p className={`text-[10px] ${generateForm.instrumentalOnly ? 'text-on-surface-variant/40' : 'text-on-surface-variant'}`}>{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : uiLanguage === 'JA' ? '生成したい音楽の歌詞または説明。カスタムモードがオフのときに必須です。' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
             </div>
 
             {generateForm.customMode && (
