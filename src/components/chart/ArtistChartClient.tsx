@@ -110,11 +110,13 @@ export function ArtistChartClient({
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
               <Trophy className="w-6 h-6 text-primary shrink-0" />
-              아티스트 랭킹차트 (TOP 100)
+              {uiLanguage === 'KO' ? 'BEATZ 랭킹차트' : 'BEATZ Ranking Chart'}
             </h1>
-            <p className="text-[10px] text-on-surface-variant/80 font-mono">
-              전체 크리에이터의 팔로워 수 기준 실시간 순위 리스트입니다.
-            </p>
+            {periodDate && (
+              <p className="text-[10px] text-on-surface-variant/80 font-mono">
+                {uiLanguage === 'KO' ? '마지막 업데이트 기준일:' : 'Last updated:'} {periodDate}
+              </p>
+            )}
           </div>
         </div>
 
@@ -124,12 +126,12 @@ export function ArtistChartClient({
             href="/charts"
             className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
           >
-            음원 차트
+            {uiLanguage === 'KO' ? '음원 차트' : 'Track Chart'}
           </Link>
           <button
             className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
           >
-            아티스트 차트
+            {uiLanguage === 'KO' ? '아티스트 차트' : 'Artist Chart'}
           </button>
         </div>
       </section>
@@ -140,11 +142,11 @@ export function ArtistChartClient({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                <th className="py-4.5 px-6 w-20 text-center">순위</th>
-                <th className="py-4.5 px-4">아티스트 정보</th>
-                <th className="py-4.5 px-6">소개</th>
-                <th className="py-4.5 px-6 w-28 text-right">팔로워 수</th>
-                <th className="py-4.5 px-6 w-32 text-center">팔로우</th>
+                <th className="py-4.5 px-6 w-20 text-center">{uiLanguage === 'KO' ? '순위' : 'Rank'}</th>
+                <th className="py-4.5 px-4">{uiLanguage === 'KO' ? '아티스트 정보' : 'Artist Info'}</th>
+                <th className="py-4.5 px-6">{uiLanguage === 'KO' ? '소개' : 'Bio'}</th>
+                <th className="py-4.5 px-6 w-28 text-right">{uiLanguage === 'KO' ? '팔로워 수' : 'Followers'}</th>
+                <th className="py-4.5 px-6 w-32 text-center">{uiLanguage === 'KO' ? '팔로우' : 'Follow'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03] text-xs">
@@ -203,7 +205,7 @@ export function ArtistChartClient({
                       <td className="py-5 px-6 text-center w-32">
                         {isCurrent ? (
                           <span className="text-[10px] font-bold text-zinc-500 bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-full select-none">
-                            본인 채널
+                            {uiLanguage === 'KO' ? '본인 채널' : 'My Channel'}
                           </span>
                         ) : (
                           <button
@@ -217,12 +219,12 @@ export function ArtistChartClient({
                             {isFollowed ? (
                               <>
                                 <Check className="w-3 h-3" />
-                                <span>팔로잉</span>
+                                <span>{uiLanguage === 'KO' ? '팔로잉' : 'Following'}</span>
                               </>
                             ) : (
                               <>
                                 <Plus className="w-3 h-3" />
-                                <span>팔로우</span>
+                                <span>{uiLanguage === 'KO' ? '팔로우' : 'Follow'}</span>
                               </>
                             )}
                           </button>
@@ -234,7 +236,10 @@ export function ArtistChartClient({
               ) : (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-on-surface-variant/60">
-                    <p className="font-medium text-sm text-on-surface-variant">집계된 아티스트 데이터가 없습니다.</p>
+                    <p className="font-medium text-sm text-on-surface-variant">{uiLanguage === 'KO' ? '집계된 차트 데이터가 없습니다.' : 'No chart data available.'}</p>
+                    {isAdmin && (
+                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '차트 관련 집계 배치가 실행되어야 합니다.' : 'Requires scheduler batch.'}</p>
+                    )}
                   </td>
                 </tr>
               )}

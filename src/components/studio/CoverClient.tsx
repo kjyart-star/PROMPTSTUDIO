@@ -26,10 +26,21 @@ export function CoverClient({ user }: CoverClientProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedLang = localStorage.getItem('ui-language')
+      const storedLang = localStorage.getItem('language')
       if (storedLang) {
         setUiLanguage(storedLang.toUpperCase())
+      } else {
+        const browserLang = navigator.language || ''
+        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+        setUiLanguage(defaultLang)
+        localStorage.setItem('language', defaultLang)
       }
+
+      const handleLangChange = (e: any) => {
+        setUiLanguage(e.detail.toUpperCase())
+      }
+      window.addEventListener('languageChange', handleLangChange)
+      
       const savedCredits = localStorage.getItem('user-credits')
       if (savedCredits !== null) {
         setUserCredits(parseFloat(savedCredits))
@@ -37,6 +48,7 @@ export function CoverClient({ user }: CoverClientProps) {
         localStorage.setItem('user-credits', '120')
         setUserCredits(120)
       }
+      return () => window.removeEventListener('languageChange', handleLangChange)
     }
   }, [])
 
@@ -124,13 +136,13 @@ export function CoverClient({ user }: CoverClientProps) {
             setPollingTaskId(null)
             setIsMusicGenerating(false)
             setActiveAudioList(data.results || [])
-            setStatus("커버 곡 생성이 완료되었습니다!")
+            setStatus(uiLanguage === 'KO' ? "커버 곡 생성이 완료되었습니다!" : "Cover generation complete!")
           } else if (data.status === 'failed') {
             clearInterval(interval)
             setPollingTaskId(null)
             setIsMusicGenerating(false)
             alert(`커버 곡 생성 실패: ${data.message || '알 수 없는 오류'}`)
-            setStatus("생성 실패")
+            setStatus(uiLanguage === 'KO' ? "생성 실패" : "Generation failed")
           }
         }
       } catch (e) {
@@ -139,7 +151,7 @@ export function CoverClient({ user }: CoverClientProps) {
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [pollingTaskId])
+  }, [pollingTaskId, uiLanguage])
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -151,7 +163,7 @@ export function CoverClient({ user }: CoverClientProps) {
     }
 
     setIsUploading(true)
-    setStatus('오디오 업로드 중...')
+    setStatus(uiLanguage === 'KO' ? '오디오 업로드 중...' : 'Uploading audio...')
     
     try {
       const fileExt = file.name.split('.').pop()
@@ -171,11 +183,11 @@ export function CoverClient({ user }: CoverClientProps) {
         .getPublicUrl(filePath)
 
       setUploadedFileUrl(publicUrl)
-      setStatus('오디오 업로드 완료')
+      setStatus(uiLanguage === 'KO' ? '오디오 업로드 완료' : 'Upload complete')
     } catch (err) {
       console.error(err)
       alert("업로드 실패. Supabase 'audio_uploads' 버킷이 존재하는지 확인하세요.")
-      setStatus('업로드 실패')
+      setStatus(uiLanguage === 'KO' ? '업로드 실패' : 'Upload failed')
     } finally {
       setIsUploading(false)
     }
@@ -183,7 +195,7 @@ export function CoverClient({ user }: CoverClientProps) {
 
   const handleGenerate = async () => {
     if (!uploadedFileUrl) {
-      alert("원본 오디오 파일을 먼저 업로드해주세요.")
+      alert(uiLanguage === 'KO' ? "원본 오디오 파일을 먼저 업로드해주세요." : "Please upload a source audio file first.")
       return
     }
 
@@ -196,7 +208,7 @@ export function CoverClient({ user }: CoverClientProps) {
     }
     
     setIsMusicGenerating(true)
-    setStatus('Apipass 서버로 커버 생성 요청을 전송했습니다.')
+    setStatus(uiLanguage === 'KO' ? 'Apipass 서버로 커버 생성 요청을 전송했습니다.' : 'Sent cover generation request to Apipass.')
     
     try {
       const res = await fetch('/api/suno/cover/generate', {
@@ -239,20 +251,20 @@ export function CoverClient({ user }: CoverClientProps) {
       } else {
         alert(`요청 실패: ${data.error || '알 수 없는 오류'}`)
         setIsMusicGenerating(false)
-        setStatus('요청 실패')
+        setStatus(uiLanguage === 'KO' ? '요청 실패' : 'Request failed')
       }
     } catch (e) {
       console.error(e)
       setIsMusicGenerating(false)
-      setStatus('오류 발생')
+      setStatus(uiLanguage === 'KO' ? '오류 발생' : 'Error occurred')
     }
   }
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 pt-6 md:pt-8">
       <h1 className="text-2xl font-bold text-on-background mb-8 flex items-center gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-        AI 커버 스튜디오
+        <Music className="w-8 h-8 text-[#e3fe06]" />
+        {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : 'AI Cover Studio'}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -261,8 +273,8 @@ export function CoverClient({ user }: CoverClientProps) {
           
           <div className="space-y-4">
             {/* Audio Upload */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface">원본 오디오 (Source Audio)</label>
+            <div className="space-y-2 relative">
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '원본 오디오 (Source Audio)' : 'Source Audio'}</label>
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${uploadedFileUrl ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-high'}`}
@@ -290,12 +302,12 @@ export function CoverClient({ user }: CoverClientProps) {
                        {isPlaying && currentTrack?.id === 'source-audio' ? (
                          <>
                            <Pause className="w-3.5 h-3.5 fill-current text-primary" />
-                           <span>재생 일시정지 (하단 플레이어)</span>
+                           <span>{uiLanguage === 'KO' ? '재생 일시정지' : 'Pause'}</span>
                          </>
                        ) : (
                          <>
                            <Play className="w-3.5 h-3.5 fill-current text-primary" />
-                           <span>하단 플레이어에서 들어보기</span>
+                           <span>{uiLanguage === 'KO' ? '미리듣기' : 'Preview'}</span>
                          </>
                        )}
                      </button>
@@ -303,8 +315,8 @@ export function CoverClient({ user }: CoverClientProps) {
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-on-surface-variant mb-2" />
-                    <p className="text-sm font-bold text-on-surface">클릭하여 파일 업로드</p>
-                    <p className="text-[10px] text-on-surface-variant mt-1">MP3, WAV 등 (최대 50MB)</p>
+                    <h3 className="text-xs font-bold text-on-surface mb-1">{uiLanguage === 'KO' ? '클릭하여 파일 업로드' : 'Click to Upload'}</h3>
+                    <p className="text-[10px] text-zinc-500">MP3, WAV {uiLanguage === 'KO' ? '등 (최대 50MB)' : 'etc. (Max 50MB)'}</p>
                   </>
                 )}
               </div>
@@ -312,7 +324,7 @@ export function CoverClient({ user }: CoverClientProps) {
 
             {/* Model Version */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">모델 버전 (Model Version)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : 'Model Version'}</label>
               <select 
                 value={generateForm.modelVersion} 
                 onChange={e => setGenerateForm(prev => ({ ...prev, modelVersion: e.target.value }))}
@@ -327,8 +339,8 @@ export function CoverClient({ user }: CoverClientProps) {
 
             {/* Custom Mode & Instrumental */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex justify-between items-center bg-surface-container-low p-3 rounded-lg border border-outline-variant/10">
-                <label className="text-xs font-bold text-on-surface">커스텀 모드</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10">
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '커스텀 모드' : 'Custom Mode'}</label>
                 <button 
                   onClick={() => setGenerateForm(prev => ({ ...prev, customMode: !prev.customMode }))}
                   className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.customMode ? 'bg-primary' : 'bg-surface-container-high'}`}
@@ -336,8 +348,8 @@ export function CoverClient({ user }: CoverClientProps) {
                   <div className={`w-3.5 h-3.5 rounded-full bg-black transition-transform ${generateForm.customMode ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>
               </div>
-              <div className="flex justify-between items-center bg-surface-container-low p-3 rounded-lg border border-outline-variant/10">
-                <label className="text-xs font-bold text-on-surface">연주곡만 생성</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10">
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '연주곡만 생성' : 'Instrumental Only'}</label>
                 <button 
                   onClick={() => setGenerateForm(prev => ({ ...prev, instrumental: !prev.instrumental }))}
                   className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.instrumental ? 'bg-primary' : 'bg-surface-container-high'}`}
@@ -350,13 +362,13 @@ export function CoverClient({ user }: CoverClientProps) {
             {/* Prompt */}
             {!generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">대상 스타일 프롬프트 (Target Style Prompt)</label>
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '대상 스타일 프롬프트 (Target Style Prompt)' : 'Target Style Prompt'}</label>
                 <textarea 
                   value={generateForm.prompt}
                   onChange={e => setGenerateForm(prev => ({ ...prev, prompt: e.target.value }))}
-                  placeholder="장르나 분위기 입력 (예: 피아노와 색소폰이 어우러진 부드러운 재즈로 변환)"
+                  placeholder={uiLanguage === 'KO' ? "장르나 분위기 입력 (예: 피아노와 색소폰이 어우러진 부드러운 재즈로 변환)" : "Enter genre or mood (e.g., Soft jazz with piano and saxophone)"}
                   rows={3}
-                  className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface outline-none resize-none custom-scrollbar"
+                  className="w-full h-24 bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface resize-none focus:outline-none focus:border-[#e3fe06]/50 transition-colors custom-scrollbar"
                 />
               </div>
             )}
@@ -365,7 +377,7 @@ export function CoverClient({ user }: CoverClientProps) {
             {generateForm.customMode && (
               <>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-on-surface">스타일 (Style)</label>
+                  <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 (Style)' : 'Style'}</label>
                   <input 
                     type="text"
                     value={generateForm.style}
@@ -375,7 +387,7 @@ export function CoverClient({ user }: CoverClientProps) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-on-surface">곡 제목 (Title)</label>
+                  <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '곡 제목 (Title)' : 'Title'}</label>
                   <input 
                     type="text"
                     value={generateForm.title}
@@ -388,29 +400,31 @@ export function CoverClient({ user }: CoverClientProps) {
             )}
 
             {/* Vocal Gender */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface">보컬 성별 (Vocal Gender)</label>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'm' }))}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'm' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
-                >
-                  남성 보컬
-                </button>
-                <button 
-                  onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'f' }))}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'f' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
-                >
-                  여성 보컬
-                </button>
+            {!generateForm.instrumental && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : 'Vocal Gender'}</label>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'm' }))}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'm' ? 'bg-[#e3fe06] text-black border-[#e3fe06]' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
+                  >
+                    {uiLanguage === 'KO' ? '남성 보컬' : 'Male'}
+                  </button>
+                  <button 
+                    onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'f' }))}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'f' ? 'bg-[#e3fe06] text-black border-[#e3fe06]' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
+                  >
+                    {uiLanguage === 'KO' ? '여성 보컬' : 'Female'}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Sliders */}
             <div className="space-y-4 pt-2">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">스타일 강도 (Style Weight)</label>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : 'Style Weight'}</label>
                   <span className="font-bold">{generateForm.styleWeight}</span>
                 </div>
                 <input 
@@ -421,9 +435,9 @@ export function CoverClient({ user }: CoverClientProps) {
                 />
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">오디오 보존율 (Audio Weight)</label>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '오디오 보존율 (Audio Weight)' : 'Audio Weight'}</label>
                   <span className="font-bold">{generateForm.audioWeight}</span>
                 </div>
                 <input 
@@ -442,7 +456,7 @@ export function CoverClient({ user }: CoverClientProps) {
                 disabled={isMusicGenerating || !uploadedFileUrl}
                 className="w-full py-3 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-xl text-sm font-extrabold transition-colors disabled:opacity-50"
               >
-                {uiLanguage === 'KO' ? '커버 음악 생성하기 (API 실행) (10 크레딧)' : 'Generate Cover Music (API) (10 Credits)'}
+                {uiLanguage === 'KO' ? '커버 음악 생성하기 (10 크레딧)' : 'Generate Cover Music (10 Credits)'}
               </button>
             </div>
           </div>
@@ -453,14 +467,14 @@ export function CoverClient({ user }: CoverClientProps) {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
           
           <h2 className="text-sm font-bold text-on-surface border-b border-outline-variant/10 pb-3 flex justify-between items-center">
-            진행 상태
+            {uiLanguage === 'KO' ? '진행 상태' : 'Status'}
             <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">{status}</span>
           </h2>
 
           <div className="flex flex-col h-full justify-center space-y-6 min-h-[300px]">
             {activeAudioList.length > 0 ? (
                <div className="flex flex-col gap-4">
-                 <p className="text-sm font-bold text-on-surface text-center mb-2">🎵 커버 2곡이 생성되었습니다!</p>
+                 <p className="text-sm font-bold text-on-surface text-center mb-2">🎵 {uiLanguage === 'KO' ? '커버 곡이 생성되었습니다!' : 'Covers generated!'}</p>
                   {activeAudioList.map((audio: any, idx: number) => (
                      <div key={idx} className="flex items-center justify-between gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 w-full">
                        <div className="flex items-center gap-4">
@@ -486,12 +500,12 @@ export function CoverClient({ user }: CoverClientProps) {
                          {isPlaying && currentTrack?.id === `cover-audio-${idx}` ? (
                            <>
                              <Pause className="w-3.5 h-3.5 fill-current text-primary" />
-                             <span>일시정지</span>
+                             <span>{uiLanguage === 'KO' ? '일시정지' : 'Pause'}</span>
                            </>
                          ) : (
                            <>
                              <Play className="w-3.5 h-3.5 fill-current text-primary" />
-                             <span>재생</span>
+                             <span>{uiLanguage === 'KO' ? '재생' : 'Play'}</span>
                            </>
                          )}
                        </button>
@@ -503,21 +517,27 @@ export function CoverClient({ user }: CoverClientProps) {
                    className="mt-4 w-full py-3 bg-surface-container-highest hover:bg-white/10 text-on-surface font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2"
                  >
                    <User className="w-4 h-4" />
-                   프로필 보관함 확인
+                   {uiLanguage === 'KO' ? '프로필 보관함 확인' : 'View Library'}
                  </button>
                </div>
             ) : isMusicGenerating ? (
               <div className="flex flex-col items-center justify-center p-8 bg-surface-container-lowest rounded-xl border border-primary/20 h-full">
                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                 <p className="text-sm text-primary font-bold">Apipass에서 커버를 생성 중입니다...</p>
-                 <p className="text-xs text-on-surface-variant mt-2 text-center">API 연동으로 실제 1~2분이 소요될 수 있습니다.</p>
+                 <p className="text-sm text-primary font-bold">{uiLanguage === 'KO' ? 'Apipass에서 커버를 생성 중입니다...' : 'Generating covers...'}</p>
+                 <p className="text-xs text-on-surface-variant mt-2 text-center">{uiLanguage === 'KO' ? '실제 1~2분이 소요될 수 있습니다.' : 'May take 1-2 minutes.'}</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full space-y-4">
-                 <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center mb-2">
-                   <Disc className="w-8 h-8 text-on-surface-variant" />
-                 </div>
-                 <p className="text-sm text-on-surface text-center">오디오를 업로드하고 설정을 마친 뒤,<br/>생성 버튼을 눌러주세요.</p>
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50 relative z-10">
+                <div className="w-16 h-16 rounded-full border border-outline-variant/30 flex items-center justify-center mb-2">
+                  <Disc className="w-6 h-6 text-zinc-500" />
+                </div>
+                <p className="text-sm text-on-surface text-center">
+                  {uiLanguage === 'KO' ? (
+                    <>오디오를 업로드하고 설정을 마친 뒤,<br/>생성 버튼을 눌러주세요.</>
+                  ) : (
+                    <>Upload audio and finish settings,<br/>then click Generate.</>
+                  )}
+                </p>
               </div>
             )}
           </div>

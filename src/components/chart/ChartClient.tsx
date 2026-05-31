@@ -289,11 +289,11 @@ export function ChartClient({
         <div className="space-y-1">
           <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
             <Trophy className="w-6 h-6 text-primary shrink-0" />
-            BEATZ 랭킹차트
+            {uiLanguage === 'KO' ? 'BEATZ 랭킹차트' : 'BEATZ Ranking Chart'}
           </h1>
           {periodDate && (
             <p className="text-[10px] text-on-surface-variant/80 font-mono">
-              마지막 업데이트 기준일: {periodDate} {localGenre !== 'All' && `• ${uiLanguage === 'KO' ? (GENRE_MAP_KO[localGenre] || localGenre) : localGenre} 장르`}
+              {uiLanguage === 'KO' ? '마지막 업데이트 기준일:' : 'Last updated:'} {periodDate} {localGenre !== 'All' && `• ${uiLanguage === 'KO' ? (GENRE_MAP_KO[localGenre] || localGenre) : localGenre} ${uiLanguage === 'KO' ? '장르' : 'Genre'}`}
             </p>
           )}
         </div>
@@ -305,13 +305,13 @@ export function ChartClient({
             <button
               className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
             >
-              음원 차트
+              {uiLanguage === 'KO' ? '음원 차트' : 'Track Chart'}
             </button>
             <Link
               href="/charts/artists"
               className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
             >
-              아티스트 차트
+              {uiLanguage === 'KO' ? '아티스트 차트' : 'Artist Chart'}
             </Link>
           </div>
 
@@ -327,7 +327,9 @@ export function ChartClient({
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                {tab === 'daily' ? '일간' : tab === 'weekly' ? '주간' : '월간'}
+                {uiLanguage === 'KO' 
+                  ? (tab === 'daily' ? '일간' : tab === 'weekly' ? '주간' : '월간')
+                  : (tab === 'daily' ? 'Daily' : tab === 'weekly' ? 'Weekly' : 'Monthly')}
               </button>
             ))}
           </div>
@@ -359,14 +361,14 @@ export function ChartClient({
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#080d08] hover:bg-[#e3fe06] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer shrink-0"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            1위부터 재생
+            {uiLanguage === 'KO' ? '1위부터 재생' : 'Play from Top 1'}
           </button>
           
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
             <input
               type="text"
-              placeholder="제목, 앨범, 아티스트 검색..."
+              placeholder={uiLanguage === 'KO' ? "제목, 앨범, 아티스트 검색..." : "Search title, album, artist..."}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -385,7 +387,7 @@ export function ChartClient({
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] text-on-surface-variant text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-            차트 집계 갱신
+            {uiLanguage === 'KO' ? '차트 집계 갱신' : 'Refresh Chart'}
           </button>
         )}
       </section>
@@ -396,11 +398,11 @@ export function ChartClient({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                <th className="py-4.5 px-6 w-20 text-center">순위</th>
-                <th className="py-4.5 px-4">곡 정보</th>
-                <th className="py-4.5 px-6 w-24 text-right">재생수</th>
-                <th className="py-4.5 px-6 w-24 text-right">좋아요</th>
-                <th className="py-4.5 px-6 w-20 text-right">시간</th>
+                <th className="py-4.5 px-6 w-20 text-center">{uiLanguage === 'KO' ? '순위' : 'Rank'}</th>
+                <th className="py-4.5 px-4">{uiLanguage === 'KO' ? '곡 정보' : 'Track'}</th>
+                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '재생수' : 'Plays'}</th>
+                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '좋아요' : 'Likes'}</th>
+                <th className="py-4.5 px-6 w-20 text-right">{uiLanguage === 'KO' ? '시간' : 'Time'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03] text-xs">
@@ -505,11 +507,11 @@ export function ChartClient({
               ) : (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-on-surface-variant/60">
-                    <p className="font-medium text-sm text-on-surface-variant">집계된 차트 데이터가 없습니다.</p>
+                    <p className="font-medium text-sm text-on-surface-variant">{uiLanguage === 'KO' ? '집계된 차트 데이터가 없습니다.' : 'No chart data available.'}</p>
                     {isAdmin ? (
-                      <p className="text-xs text-zinc-650 mt-1">상단의 &apos;차트 집계 갱신&apos; 버튼을 눌러 실시간으로 차트를 만들어보세요.</p>
+                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '상단의 \'차트 집계 갱신\' 버튼을 눌러 실시간으로 차트를 만들어보세요.' : 'Click "Refresh Chart" above to generate chart in real-time.'}</p>
                     ) : (
-                      <p className="text-xs text-zinc-650 mt-1">관련 스케줄러 배치 또는 어드민의 집계 갱신 처리가 필요합니다.</p>
+                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '관련 스케줄러 배치 또는 어드민의 집계 갱신 처리가 필요합니다.' : 'Requires scheduler batch or admin chart generation.'}</p>
                     )}
                   </td>
                 </tr>

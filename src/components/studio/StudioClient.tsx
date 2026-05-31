@@ -2328,6 +2328,7 @@ export function StudioClient({ user }: StudioClientProps) {
           updateForm(genreModalTarget, genre)
           setIsGenreModalOpen(false)
         }}
+        uiLanguage={uiLanguage}
       />
     </div>
   )

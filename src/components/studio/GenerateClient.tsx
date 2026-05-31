@@ -127,7 +127,18 @@ export function GenerateClient({
       const storedLang = localStorage.getItem('language')
       if (storedLang) {
         setUiLanguage(storedLang.toUpperCase())
+      } else {
+        const browserLang = navigator.language || ''
+        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+        setUiLanguage(defaultLang)
+        localStorage.setItem('language', defaultLang)
       }
+
+      const handleLangChange = (e: any) => {
+        setUiLanguage(e.detail.toUpperCase())
+      }
+      window.addEventListener('languageChange', handleLangChange)
+      
       const savedCredits = localStorage.getItem('user-credits')
       if (savedCredits !== null) {
         setUserCredits(parseFloat(savedCredits))
@@ -135,6 +146,7 @@ export function GenerateClient({
         localStorage.setItem('user-credits', '120')
         setUserCredits(120)
       }
+      return () => window.removeEventListener('languageChange', handleLangChange)
     }
   }, [])
 
@@ -145,21 +157,6 @@ export function GenerateClient({
       setCurrentHistoryId(qId)
     }
   }, [searchParams, historyId])
-
-  const [generateForm, setGenerateForm] = useState({
-    modelProvider: 'suno',
-    modelVersion: 'v5',
-    customMode: true,
-    instrumentalOnly: false,
-    prompt: initialPrompt,
-    style: initialStyle,
-    title: initialTitle,
-    vocalGender: 'Female',
-    negativeTags: initialNegativePrompt,
-    styleWeight: 0.5,
-    weirdness: 0.3,
-    audioWeight: 0.5
-  })
 
   // Watch for initial props changes to update the form immediately
   useEffect(() => {
@@ -216,9 +213,7 @@ export function GenerateClient({
         // Sync active tasks with 'processing' status from database
         const dbProcessing = data.filter((d: any) => d.status === 'processing' && d.suno_task_id)
         setActiveTasks(prev => {
-          // Keep completed or failed tasks that are still in the 3s grace period
           const graceTasks = prev.filter(t => t.status !== 'processing')
-          
           const active = dbProcessing.map((dbTask: any) => {
             const existing = prev.find(t => t.id === dbTask.id)
             return {
@@ -230,8 +225,6 @@ export function GenerateClient({
               progress: existing?.progress || 10
             }
           })
-          
-          // Combine grace period tasks and active tasks, keeping uniqueness by ID
           const combined = [...graceTasks]
           active.forEach((a: any) => {
             if (!combined.some((c: any) => c.id === a.id)) {
@@ -290,7 +283,6 @@ export function GenerateClient({
               } else if (data.status === 'processing') {
                 const nextState = data.state || task.state || 'queuing'
                 let nextProgress = task.progress
-                // If backend is already generating but client progress was queuing (< 20%), jump to 25%
                 if (nextState === 'generating' && nextProgress < 20) {
                   nextProgress = 25
                 }
@@ -319,7 +311,6 @@ export function GenerateClient({
       }
 
       if (completedOrFailedCount > 0) {
-        // Automatically select the first newly completed task so the variations are loaded in the player
         const newlyCompleted = updatedTasks.find(t => t.status === 'completed')
         if (newlyCompleted) {
           setCurrentHistoryId(newlyCompleted.id)
@@ -339,14 +330,12 @@ export function GenerateClient({
   }, [activeTasks, currentHistoryId])
 
   const handleGenerate = async () => {
-    // Check concurrent active processing limit (maximum 6)
     const processingCount = activeTasks.filter(t => t.status === 'processing').length
     if (processingCount >= 6) {
       alert(uiLanguage === 'KO' ? '최대 6개까지 동시에 음악을 생성할 수 있습니다.' : 'You can generate up to 6 tracks concurrently.')
       return
     }
 
-    // Check credits
     const savedCredits = localStorage.getItem('user-credits')
     const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
     if (currentCredits < 10) {
@@ -359,7 +348,6 @@ export function GenerateClient({
 
     let activeHistoryId = null
 
-    // Create new history entry in database first
     try {
       const createRes = await fetch('/api/song-history', {
         method: 'POST',
@@ -388,7 +376,6 @@ export function GenerateClient({
       return
     }
 
-    // Call AI generate API task
     try {
       const res = await fetch('/api/music/generate', {
         method: 'POST',
@@ -398,7 +385,6 @@ export function GenerateClient({
       if (res.ok) {
         const data = await res.json()
 
-        // Deduct credits and save transaction!
         const nextCredits = Math.round(currentCredits - 10)
         localStorage.setItem('user-credits', String(nextCredits))
         setUserCredits(nextCredits)
@@ -422,7 +408,6 @@ export function GenerateClient({
         }
         localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
 
-        // Add to activeTasks state to start polling
         const newTask = {
           id: activeHistoryId,
           taskId: data.taskId,
@@ -432,7 +417,6 @@ export function GenerateClient({
           progress: 5
         }
         setActiveTasks(prev => [...prev, newTask])
-        // Select this task quietly to track
         setCurrentHistoryId(activeHistoryId)
         const url = new URL(window.location.href)
         url.searchParams.set('historyId', activeHistoryId)
@@ -459,7 +443,6 @@ export function GenerateClient({
     url.searchParams.set('historyId', track.id)
     window.history.replaceState({}, '', url.toString())
     
-    // Load its details into the Left Column form
     if (track.form) {
       setGenerateForm(prev => ({
         ...prev,
@@ -568,23 +551,21 @@ export function GenerateClient({
     <div className="max-w-6xl mx-auto p-4 md:p-8 pt-6 md:pt-8">
       <h1 className="text-2xl font-bold text-on-background mb-8 flex items-center gap-3">
         <Disc className="w-8 h-8 text-primary" />
-        음악 생성 인터페이스
+        {uiLanguage === 'KO' ? '음악 생성 인터페이스' : 'Music Generation Interface'}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column: Input Data (Playground UI) */}
         <div className="space-y-6 bg-surface p-6 rounded-2xl border border-outline-variant/10 shadow-lg">
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-3">
-            <h2 className="text-sm font-bold text-on-surface">입력 설정 (Input)</h2>
+            <h2 className="text-sm font-bold text-on-surface">{uiLanguage === 'KO' ? '입력 설정 (Input)' : 'Input Settings'}</h2>
           </div>
           
           <div className="space-y-4">
-            {/* Model Provider Selector */}
             <div className="space-y-2 pb-2 border-b border-outline-variant/10">
-              <label className="text-xs font-bold text-on-surface">AI 엔진 선택 (AI Engine)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? 'AI 엔진 선택 (AI Engine)' : 'Select AI Engine'}</label>
               <div className="flex gap-2 flex-wrap">
                 <button
-                  onClick={() => setGenerateForm(prev => ({ ...prev, modelProvider: 'suno' }))}
+                  onClick={() => updateFormData('modelProvider', 'suno')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
                     (!generateForm.modelProvider || generateForm.modelProvider === 'suno')
                       ? 'bg-primary text-[#080d08] border border-primary'
@@ -598,152 +579,143 @@ export function GenerateClient({
                   className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
                 >
                   Udio (v1.5)
-                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">예정</span>
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : 'Coming'}</span>
                 </button>
                 <button
                   onClick={() => alert('Google MusicFX API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
                   className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
                 >
                   MusicFX
-                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">예정</span>
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : 'Coming'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Model Version */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">모델 버전 (Model Version)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : 'Model Version'}</label>
               <select 
                 value={generateForm.modelVersion} 
-                onChange={e => setGenerateForm(prev => ({ ...prev, modelVersion: e.target.value }))}
+                onChange={e => updateFormData('modelVersion', e.target.value)}
                 className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2 text-xs text-on-surface outline-none"
               >
                 <option value="v5">Suno V5</option>
                 <option value="v4">Suno V4</option>
               </select>
-              <p className="text-[10px] text-on-surface-variant">Suno 모델 버전입니다. V5가 최신 기본값입니다.</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5가 최신 기본값입니다.' : 'Suno model version. V5 is the latest default.'}</p>
             </div>
 
-            {/* Custom Mode */}
             <div className="flex justify-between items-center py-2">
               <div>
-                <label className="text-xs font-bold text-on-surface block">커스텀 모드 (Custom Mode)</label>
-                <p className="text-[10px] text-on-surface-variant">커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.</p>
+                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '커스텀 모드 (Custom Mode)' : 'Custom Mode'}</label>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.' : 'Enable custom mode to enter style and title manually.'}</p>
               </div>
               <button 
-                onClick={() => setGenerateForm(prev => ({ ...prev, customMode: !prev.customMode }))}
+                onClick={() => updateFormData('customMode', !generateForm.customMode)}
                 className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.customMode ? 'bg-primary' : 'bg-surface-container-high'}`}
               >
                 <div className={`w-3.5 h-3.5 rounded-full bg-black transition-transform ${generateForm.customMode ? 'translate-x-4' : 'translate-x-0'}`} />
               </button>
             </div>
 
-            {/* Instrumental Only */}
             <div className="flex justify-between items-center py-2">
               <div>
-                <label className="text-xs font-bold text-on-surface block">연주곡만 생성 (Inst Only)</label>
-                <p className="text-[10px] text-on-surface-variant">보컬 없이 악기 연주만 있는 음악을 생성합니다.</p>
+                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '연주곡만 생성 (Inst Only)' : 'Instrumental Only'}</label>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '보컬 없이 악기 연주만 있는 음악을 생성합니다.' : 'Generate instrumental music without vocals.'}</p>
               </div>
               <button 
-                onClick={() => setGenerateForm(prev => ({ ...prev, instrumentalOnly: !prev.instrumentalOnly }))}
+                onClick={() => updateFormData('instrumentalOnly', !generateForm.instrumentalOnly)}
                 className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.instrumentalOnly ? 'bg-primary' : 'bg-surface-container-high'}`}
               >
                 <div className={`w-3.5 h-3.5 rounded-full bg-black transition-transform ${generateForm.instrumentalOnly ? 'translate-x-4' : 'translate-x-0'}`} />
               </button>
             </div>
 
-            {/* Prompt / Lyrics */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">프롬프트 / 가사 (Prompt)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : 'Prompt / Lyrics'}</label>
               <textarea 
                 value={generateForm.prompt}
-                onChange={e => setGenerateForm(prev => ({ ...prev, prompt: e.target.value }))}
+                onChange={e => updateFormData('prompt', e.target.value)}
                 rows={5}
                 className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface outline-none resize-none custom-scrollbar"
               />
-              <p className="text-[10px] text-on-surface-variant">생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
             </div>
 
-            {/* Style */}
             {generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">스타일 (Style)</label>
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 (Style)' : 'Style'}</label>
                 <input 
                   type="text"
                   value={generateForm.style}
-                  onChange={e => setGenerateForm(prev => ({ ...prev, style: e.target.value }))}
+                  onChange={e => updateFormData('style', e.target.value)}
                   className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
                 />
-                <p className="text-[10px] text-on-surface-variant">음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : 'Music style and genre. Required when Custom Mode is on.'}</p>
               </div>
             )}
 
-            {/* Title */}
             {generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">곡 제목 (Title)</label>
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '곡 제목 (Title)' : 'Title'}</label>
                 <input 
                   type="text"
                   value={generateForm.title}
-                  onChange={e => setGenerateForm(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={e => updateFormData('title', e.target.value)}
                   className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
                 />
-                <p className="text-[10px] text-on-surface-variant">음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : 'Title of the music. Required when Custom Mode is on.'}</p>
               </div>
             )}
 
-            {/* Vocal Gender */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface">보컬 성별 (Vocal Gender)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : 'Vocal Gender'}</label>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'Male' }))}
+                  onClick={() => updateFormData('vocalGender', 'Male')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Male' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
                 >
-                  남성 보컬
+                  {uiLanguage === 'KO' ? '남성 보컬' : 'Male'}
                 </button>
                 <button 
-                  onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'Female' }))}
+                  onClick={() => updateFormData('vocalGender', 'Female')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Female' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
                 >
-                  여성 보컬
+                  {uiLanguage === 'KO' ? '여성 보컬' : 'Female'}
                 </button>
               </div>
-              <p className="text-[10px] text-on-surface-variant">생성할 보컬의 성별을 선택합니다.</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 보컬의 성별을 선택합니다.' : 'Select the gender of the vocal to generate.'}</p>
             </div>
 
-            {/* Negative Tags */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">제외할 태그 (Negative Tags)</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '제외할 태그 (Negative Tags)' : 'Negative Tags'}</label>
               <input 
                 type="text"
                 value={generateForm.negativeTags}
-                onChange={e => setGenerateForm(prev => ({ ...prev, negativeTags: e.target.value }))}
-                placeholder="시끄러운, 헤비메탈, 스크리밍..."
+                onChange={e => updateFormData('negativeTags', e.target.value)}
+                placeholder={uiLanguage === 'KO' ? '시끄러운, 헤비메탈, 스크리밍...' : 'Noisy, Heavy Metal, Screaming...'}
                 className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none placeholder:text-on-surface-variant/50"
               />
-              <p className="text-[10px] text-on-surface-variant">생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.' : 'Genres, styles, and elements to exclude.'}</p>
             </div>
 
-            {/* Sliders */}
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">스타일 강도 (Style Weight)</label>
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : 'Style Weight'}</label>
                   <span className="font-bold">{generateForm.styleWeight}</span>
                 </div>
                 <input 
                   type="range" min="0" max="1" step="0.1" 
                   value={generateForm.styleWeight} 
-                  onChange={e => setGenerateForm(prev => ({ ...prev, styleWeight: parseFloat(e.target.value) }))}
+                  onChange={e => updateFormData('styleWeight', parseFloat(e.target.value))}
                   className="w-full accent-primary"
                 />
-                <p className="text-[10px] text-on-surface-variant">스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.' : 'Weight for style instructions. Higher values strictly follow the prompt style.'}</p>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">독창성 (Weirdness)</label>
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '독창성 (Weirdness)' : 'Weirdness'}</label>
                   <span className="font-bold">{generateForm.weirdness}</span>
                 </div>
                 <input 
