@@ -33,13 +33,13 @@ export async function POST(req: Request) {
       console.warn("play_events table not found, skipping insert")
     }
 
-    // 2. song_history 테이블의 form 내 play_count 증가
+    // 2. song_history 테이블의 form 내 play_count 증가, 또는 tracks 테이블의 play_count 증가
     try {
       const { data: song } = await supabase
         .from('song_history')
         .select('*')
         .eq('id', track_id)
-        .single()
+        .maybeSingle()
 
       if (song) {
         const currentForm = song.form || {}
@@ -52,9 +52,23 @@ export async function POST(req: Request) {
           .from('song_history')
           .update({ form: updatedForm })
           .eq('id', track_id)
+      } else {
+        // 만약 song_history에 없다면 (채널에 등록된 앨범 내의 track일 경우)
+        const { data: track } = await supabase
+          .from('tracks')
+          .select('play_count')
+          .eq('id', track_id)
+          .maybeSingle()
+          
+        if (track) {
+          await supabase
+            .from('tracks')
+            .update({ play_count: (track.play_count || 0) + 1 })
+            .eq('id', track_id)
+        }
       }
     } catch (songHistoryErr) {
-      console.warn("failed to update play_count in song_history:", songHistoryErr)
+      console.warn("failed to update play_count in song_history or tracks:", songHistoryErr)
     }
 
     return NextResponse.json({ ok: true })

@@ -137,7 +137,60 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
     }
   }
 
-  // 4. 로그인 사용자의 좋아요 목록 로드 (앞서 조회한 user 변수 활용)
+  // 3.5. UGC tracks (User generated content uploaded to this channel)
+  const { data: ugcTracksData } = await supabase
+    .from('song_history')
+    .select('*')
+    .eq('channel_id', artist.id)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+
+  const ugcTracks = (ugcTracksData || []).map((song: any) => ({
+    id: song.id,
+    title: song.title,
+    file_url: song.audio_url || '',
+    duration_sec: song.form?.duration_sec || 180,
+    like_count: song.like_count || 0,
+    play_count: song.play_count || 0,
+    album_id: `ugc-${song.id}`,
+    created_at: song.created_at,
+    status: 'published',
+    lyrics: song.lyrics || '',
+    image_url: song.image_url || '',
+    lyricist: song.form?.lyricist || song.lyricist || '',
+    composer: song.form?.composer || song.composer || '',
+    arranger: song.form?.arranger || song.arranger || '',
+    album: {
+      id: `ugc-${song.id}`,
+      title: 'Single',
+      cover_url: song.image_url || '/default-album.png',
+      release_type: 'single',
+      status: 'published',
+      created_at: song.created_at,
+      artist_id: artist.id,
+      artist: artist
+    }
+  })) as unknown as Track[]
+
+  if (ugcTracks.length > 0) {
+    initialTracks = [...initialTracks, ...ugcTracks]
+  }
+
+  // 4. 아티스트의 플레이리스트 로드
+  let playlists: any[] = []
+  if (artist) {
+    const { data: playlistsData } = await supabase
+      .from('playlists')
+      .select('*')
+      .eq('user_id', artist.id)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    playlists = playlistsData || []
+  }
+
+  // 5. 로그인 사용자의 좋아요 목록 로드 (앞서 조회한 user 변수 활용)
   let initialUserLikes: string[] = []
   if (user) {
     const { data: likesData } = await supabase
@@ -153,6 +206,8 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
       albums={albums}
       initialTracks={initialTracks}
       initialUserLikes={initialUserLikes}
+      playlists={playlists}
+      currentUserId={user?.id || null}
     />
   )
 }

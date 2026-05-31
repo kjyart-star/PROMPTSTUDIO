@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Track, Album, Artist } from '@/types/music'
-import { Play, Pause, Heart, Users, Library, Music } from 'lucide-react'
+import { Play, Pause, Heart, Users, Library, Music, Search } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 
@@ -32,6 +32,7 @@ export function SearchClient({
   const [tracks, setTracks] = useState<Track[]>(initialTracks)
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
   const [uiLanguage, setUiLanguage] = useState('KO')
+  const [localSearchQuery, setLocalSearchQuery] = useState('')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -46,27 +47,72 @@ export function SearchClient({
     return () => window.removeEventListener('languageChange', handleLangChange)
   }, [])
 
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+  const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
   const supabase = createClient()
   
   // Filter logic
-  const filteredTracks = tracks.filter((track) => {
-    const titleMatch = track.title.toLowerCase().includes(query.toLowerCase())
-    const artistMatch = track.album?.artist?.name?.toLowerCase().includes(query.toLowerCase())
-    const albumMatch = track.album?.title?.toLowerCase().includes(query.toLowerCase())
-    const genreMatch = track.album?.genres?.some(g => g.toLowerCase().includes(query.toLowerCase()))
-    return titleMatch || artistMatch || albumMatch || genreMatch
-  })
+  const isSpecialQuery = ['popular-albums', 'latest-albums', 'recommended-tracks', 'latest-tracks'].includes(query.toLowerCase())
 
-  const filteredArtists = initialArtists.filter((artist) =>
-    artist.name.toLowerCase().includes(query.toLowerCase()) ||
-    artist.slug.toLowerCase().includes(query.toLowerCase())
-  )
+  const filteredTracks = useMemo(() => {
+    const q = query.toLowerCase()
+    if (['recommended-tracks', 'latest-tracks'].includes(q)) {
+      let result = [...tracks]
+      if (q === 'recommended-tracks') {
+        result.sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
+      } else {
+        result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      }
+      return result
+    }
+    return tracks.filter((track) => {
+      const titleMatch = track.title.toLowerCase().includes(q)
+      const artistMatch = track.album?.artist?.name?.toLowerCase().includes(q)
+      const albumMatch = track.album?.title?.toLowerCase().includes(q)
+      const genreMatch = track.album?.genres?.some(g => g.toLowerCase().includes(q))
+      return titleMatch || artistMatch || albumMatch || genreMatch
+    })
+  }, [tracks, query])
 
-  const filteredAlbums = initialAlbums.filter((album) =>
-    album.title.toLowerCase().includes(query.toLowerCase()) ||
-    album.artist?.name?.toLowerCase().includes(query.toLowerCase())
-  )
+  const filteredArtists = useMemo(() => {
+    if (isSpecialQuery) return []
+    const q = query.toLowerCase()
+    return initialArtists.filter((artist) =>
+      artist.name.toLowerCase().includes(q) ||
+      artist.slug.toLowerCase().includes(q)
+    )
+  }, [initialArtists, query, isSpecialQuery])
+
+  const filteredAlbums = useMemo(() => {
+    const q = query.toLowerCase()
+    if (['popular-albums', 'latest-albums'].includes(q)) {
+      let result = [...initialAlbums]
+      if (q === 'popular-albums') {
+        result.sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0))
+      } else {
+        result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      }
+      return result
+    }
+    return initialAlbums.filter((album) =>
+      album.title.toLowerCase().includes(q) ||
+      album.artist?.name?.toLowerCase().includes(q)
+    )
+  }, [initialAlbums, query])
+
+  const showSongs = !isSpecialQuery || query.toLowerCase() === 'recommended-tracks' || query.toLowerCase() === 'latest-tracks'
+  const showArtists = !isSpecialQuery
+  const showAlbums = !isSpecialQuery || query.toLowerCase() === 'popular-albums' || query.toLowerCase() === 'latest-albums'
+
+  const displayedTracks = useMemo(() => {
+    if (!localSearchQuery.trim()) return filteredTracks
+    const q = localSearchQuery.toLowerCase()
+    return filteredTracks.filter((track) => {
+      const titleMatch = track.title.toLowerCase().includes(q)
+      const artistMatch = track.album?.artist?.name?.toLowerCase().includes(q)
+      const albumMatch = track.album?.title?.toLowerCase().includes(q)
+      return titleMatch || artistMatch || albumMatch
+    })
+  }, [filteredTracks, localSearchQuery])
 
   // Like Toggle
   const handleLikeToggle = async (trackId: string) => {
@@ -100,6 +146,7 @@ export function SearchClient({
 
   // Play handler
   const handlePlayTrack = async (track: Track) => {
+    setNowPlayingOpen(true)
     if (currentTrack?.id === track.id) {
       togglePlay()
       return
@@ -161,24 +208,41 @@ export function SearchClient({
       ) : (
         // Search Results state
         <div className="space-y-10">
-          <div className="flex items-center justify-between border-b border-outline-variant/10 pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-outline-variant/10 pb-4 gap-4">
             <h2 className="text-xs font-black text-on-surface-variant uppercase tracking-widest">
-              Search Results for <span className="text-primary">"{query}"</span>
+              {query.toLowerCase() === 'popular-albums' ? (uiLanguage === 'KO' ? '인기 앨범 (Popular Albums)' : 'Popular Albums') :
+               query.toLowerCase() === 'latest-albums' ? (uiLanguage === 'KO' ? '최신 앨범 (Latest Albums)' : 'Latest Albums') :
+               query.toLowerCase() === 'recommended-tracks' ? (uiLanguage === 'KO' ? '추천 음원 (Recommended Tracks)' : 'Recommended Tracks') :
+               query.toLowerCase() === 'latest-tracks' ? (uiLanguage === 'KO' ? '최신 음원 (Latest Tracks)' : 'Latest Tracks') :
+               <>{uiLanguage === 'KO' ? '검색 결과:' : 'Search Results for'} <span className="text-primary">"{query}"</span></>}
             </h2>
-            <button
-              onClick={() => router.push('/search')}
-              className="text-[11px] text-on-surface-variant hover:text-white transition-colors uppercase tracking-widest font-black cursor-pointer"
-            >
-              Clear Search
-            </button>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
+                <input
+                  type="text"
+                  placeholder="결과 내 검색..."
+                  value={localSearchQuery}
+                  onChange={(e) => setLocalSearchQuery(e.target.value)}
+                  className="w-full sm:w-[250px] bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-2 pl-9 pr-4 text-xs font-medium text-on-surface focus:outline-none focus:border-primary/50 transition-colors placeholder:text-on-surface-variant/40"
+                />
+              </div>
+              <button
+                onClick={() => router.push('/search')}
+                className="text-[11px] text-on-surface-variant hover:text-white transition-colors uppercase tracking-widest font-black cursor-pointer shrink-0"
+              >
+                Clear Search
+              </button>
+            </div>
           </div>
 
           {/* 1. Matching Songs */}
+          {showSongs && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              Songs
+              {uiLanguage === 'KO' ? '음원 (Songs)' : 'Songs'}
             </h3>
-            {filteredTracks.length === 0 ? (
+            {displayedTracks.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching songs found.</p>
             ) : (
               <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl overflow-hidden shadow-xl">
@@ -194,7 +258,7 @@ export function SearchClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03] text-xs">
-                    {filteredTracks.map((track, idx) => {
+                    {displayedTracks.map((track, idx) => {
                       const isCurrent = currentTrack?.id === track.id
                       const playCount = track.play_count || 0;
                       return (
@@ -205,22 +269,35 @@ export function SearchClient({
                           }`}
                         >
                           <td className="py-4 px-6 font-mono text-on-surface-variant/60 text-center w-16">
-                            <span className="group-hover:hidden">{idx + 1}</span>
-                            <button
-                              onClick={() => handlePlayTrack(track)}
-                              className="hidden group-hover:inline-block text-primary cursor-pointer"
-                            >
-                              {isCurrent && isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                            </button>
+                            <span className={`${isCurrent ? 'text-primary' : ''}`}>{idx + 1}</span>
                           </td>
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-surface-container-lowest border border-outline-variant/20 rounded overflow-hidden shrink-0 flex items-center justify-center">
+                              <div 
+                                className="relative w-10 h-10 bg-surface-container-lowest border border-outline-variant/20 rounded overflow-hidden shrink-0 flex items-center justify-center cursor-pointer group/cover"
+                                onClick={() => handlePlayTrack(track)}
+                              >
                                 {track.album?.cover_url ? (
-                                  <img src={track.album.cover_url} alt="" className="w-full h-full object-cover" />
+                                  <img 
+                                    src={track.album.cover_url} 
+                                    alt="" 
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
                                   <Music className="w-4 h-4 text-zinc-700" />
                                 )}
+                                
+                                <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-200 ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                  {isCurrent && isPlaying ? (
+                                    <div className="flex items-end justify-center gap-[3px] h-3.5 w-3.5">
+                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    </div>
+                                  ) : (
+                                    <Play className="w-4 h-4 fill-white text-white drop-shadow-md" />
+                                  )}
+                                </div>
                               </div>
                               <div className="min-w-0">
                                 <span className={`font-bold block truncate max-w-md ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>
@@ -257,11 +334,13 @@ export function SearchClient({
               </div>
             )}
           </div>
+          )}
 
           {/* 2. Matching Artists */}
+          {showArtists && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              Artists
+              {uiLanguage === 'KO' ? '아티스트 (Artists)' : 'Artists'}
             </h3>
             {filteredArtists.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching artists found.</p>
@@ -289,11 +368,13 @@ export function SearchClient({
               </div>
             )}
           </div>
+          )}
 
           {/* 3. Matching Albums */}
+          {showAlbums && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              Albums
+              {uiLanguage === 'KO' ? '앨범 (Albums)' : 'Albums'}
             </h3>
             {filteredAlbums.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching albums found.</p>
@@ -327,6 +408,7 @@ export function SearchClient({
               </div>
             )}
           </div>
+          )}
 
         </div>
       )}

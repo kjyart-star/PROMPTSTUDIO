@@ -16,7 +16,7 @@ export default async function ProfilePage() {
   let isAdmin = false
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('*')
     .eq('id', user.id)
     .single()
   isAdmin = !!profileData?.is_admin
@@ -28,7 +28,7 @@ export default async function ProfilePage() {
 
   return (
     <Suspense fallback={<div className="p-8 text-xs text-zinc-500 font-bold">Loading Profile...</div>}>
-      <ProfileClient user={user} isAdmin={isAdmin} />
+      <ProfileClient user={user} isAdmin={isAdmin} initialProfile={profileData || null} />
     </Suspense>
   )
 }

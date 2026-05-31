@@ -279,7 +279,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Music className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 음원 관리' : 'My Audio Management'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : 'Channel & Audio Management'}</span>
             </Link>
 
 

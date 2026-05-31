@@ -355,24 +355,7 @@ export function LibraryClient({
   const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
   const supabase = createClient()
 
-  const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
-    if (!url) return
-    try {
-      let proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
-      if (imageUrl) {
-        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
-      }
-      const a = document.createElement('a')
-      a.href = proxyUrl
-      a.download = `${filename}.mp3`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } catch (e) {
-      console.error(e)
-      window.open(url, '_blank')
-    }
-  }
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1018,12 +1001,19 @@ export function LibraryClient({
                   {/* Jacket Container */}
                   <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-gradient-to-br from-[#111a12] to-[#070b08] border border-outline-variant/20 shadow-md flex items-center justify-center select-none group-hover:shadow-primary/5 transition-all duration-300">
                     <Music className="w-6 h-6 text-on-surface-variant/25 absolute" />
-                    <img
-                      src={pl.cover_url}
-                      alt={pl.title}
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-500 group-hover:scale-105"
-                    />
+                    {pl.id === 'liked' ? (
+                      <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
+                        <Heart className="w-12 h-12 text-primary fill-primary filter drop-shadow-[0_0_25px_rgba(227,254,6,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                    ) : (
+                      <img
+                        src={pl.cover_url}
+                        alt={pl.title}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
 
                     {/* Status Badges for custom playlists */}
                     {!pl.isSystem && (
@@ -1151,15 +1141,22 @@ export function LibraryClient({
               {/* Cover Art */}
               <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden shadow-2xl shrink-0 border border-white/5 bg-zinc-900 relative">
                 <Music className="w-12 h-12 text-on-surface-variant/25 absolute inset-0 m-auto" />
-                <img 
-                  src={activePlaylist.cover_url || '/default-album.png'} 
-                  alt="Album Cover" 
-                  className="absolute inset-0 w-full h-full object-cover z-10" 
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/default-album.png";
-                  }}
-                />
+                {activePlaylist.id === 'liked' ? (
+                  <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 scale-150"></div>
+                    <Heart className="w-16 h-16 md:w-20 md:h-20 text-primary fill-primary filter drop-shadow-[0_0_35px_rgba(227,254,6,0.6)] z-20" />
+                  </div>
+                ) : (
+                  <img 
+                    src={activePlaylist.cover_url || '/default-album.png'} 
+                    alt="Album Cover" 
+                    className="absolute inset-0 w-full h-full object-cover z-10" 
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/default-album.png";
+                    }}
+                  />
+                )}
               </div>
 
               {/* Album Details Info */}
@@ -1290,7 +1287,11 @@ export function LibraryClient({
                               isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                             }`}>
                               {isPlayingThis ? (
-                                <Pause className="w-4 h-4 text-white fill-current" />
+                                <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                  <div className="w-[3px] h-full bg-white rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                                  <div className="w-[3px] h-full bg-white rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                                  <div className="w-[3px] h-full bg-white rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                                </div>
                               ) : (
                                 <Play className="w-4 h-4 text-white fill-current ml-0.5" />
                               )}
@@ -1328,30 +1329,6 @@ export function LibraryClient({
                             title={uiLanguage === 'KO' ? '보관함에서 제거' : 'Remove from Library'}
                           >
                             <Heart className="w-4 h-4 fill-current" />
-                          </button>
-
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              let downloadUrl = track.file_url;
-                              if (downloadUrl && !downloadUrl.startsWith('http') && !downloadUrl.startsWith('dummy-')) {
-                                try {
-                                  const { data, error } = await supabase.storage
-                                    .from('tracks')
-                                    .createSignedUrl(downloadUrl, 3600)
-                                  if (!error && data) {
-                                    downloadUrl = data.signedUrl;
-                                  }
-                                } catch (err) {
-                                  console.error(err)
-                                }
-                              }
-                              handleDownloadTrack(downloadUrl, track.title, (track.image_url || track.album?.cover_url) ?? undefined);
-                            }}
-                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer text-zinc-500 hover:text-primary shrink-0"
-                            title={uiLanguage === 'KO' ? '다운로드' : 'Download'}
-                          >
-                            <Download className="w-4 h-4" />
                           </button>
 
                           {!track.id.startsWith('dummy-') && (

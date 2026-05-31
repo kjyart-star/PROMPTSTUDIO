@@ -3,6 +3,8 @@ import { HomeClient } from '@/components/home/HomeClient'
 import { Track, Album, Artist } from '@/types/music'
 
 export const revalidate = 0
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export default async function PublicHomePage() {
   const supabase = await createClient()
@@ -49,12 +51,12 @@ export default async function PublicHomePage() {
     supabase.from('albums')
       .select('*, artists(*)')
       .eq('status', 'published')
-      .order('total_plays', { ascending: false })
       .order('total_likes', { ascending: false })
       .limit(10),
     supabase.from('artists')
       .select('*')
-      .limit(4)
+      .order('created_at', { ascending: false })
+      .limit(10)
   ])
 
   const user = userRes.data.user
@@ -65,6 +67,7 @@ export default async function PublicHomePage() {
   const albumsData = albumsRes.data || []
   const popularAlbumsData = popularAlbumsRes.data || []
   const artistsData = artistsRes.data || []
+  console.log('=== DEBUG ARTISTS_DATA ===', artistsData.map((a: any) => a.name))
 
   // 2. Dependent queries in parallel
   const userIds = Array.from(new Set(realSongs.map((song: any) => song.user_id).filter(Boolean)))
@@ -217,7 +220,7 @@ export default async function PublicHomePage() {
     ...profileArtists,
     ...artistsData.map((artist: any) => ({
       ...artist,
-      followers: artist.followers || (artist.name.length * 850 + 1200),
+      followers: artist.followers || 0,
       is_user: false
     }))
   ]

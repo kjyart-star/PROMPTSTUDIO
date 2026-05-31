@@ -20,47 +20,87 @@ export async function POST(request: Request) {
       .from('song_history')
       .select('*')
       .eq('id', track_id)
-      .single()
+      .maybeSingle()
 
-    if (fetchErr || !song) {
-      return NextResponse.json({ error: 'Song not found' }, { status: 404 })
-    }
+    let nextLiked = true;
+    let currentLikeCount = 0;
 
-    // 2. 좋아요 토글 처리 (form jsonb 필드 내에 like_count 저장)
-    const nextLiked = !song.liked
-    const currentForm = song.form || {}
-    let currentLikeCount = Number(currentForm.like_count || (song.liked ? 1 : 0))
-    
-    if (nextLiked) {
-      currentLikeCount += 1
+    if (song) {
+      // 2. 좋아요 토글 처리 (form jsonb 필드 내에 like_count 저장)
+      nextLiked = !song.liked
+      const currentForm = song.form || {}
+      currentLikeCount = Number(currentForm.like_count || (song.liked ? 1 : 0))
+      
+      if (nextLiked) {
+        currentLikeCount += 1
+      } else {
+        currentLikeCount = Math.max(0, currentLikeCount - 1)
+      }
+
+      const updatedForm = {
+        ...currentForm,
+        like_count: currentLikeCount
+      }
+
+      // 3. song_history 테이블 업데이트
+      const { error: updateErr } = await supabase
+        .from('song_history')
+        .update({
+          liked: nextLiked,
+          form: updatedForm
+        })
+        .eq('id', track_id)
+
+      if (updateErr) throw updateErr
+
+      // (Optional) 혹시 tracks 테이블이 존재한다면 fallback 업데이트
+      try {
+        await supabase
+          .from('tracks')
+          .update({ like_count: currentLikeCount })
+          .eq('id', track_id)
+      } catch (e) {}
+
     } else {
-      currentLikeCount = Math.max(0, currentLikeCount - 1)
-    }
+      // 만약 song_history에 없다면 (채널에 등록된 앨범 내의 track일 경우)
+      const { data: track } = await supabase
+        .from('tracks')
+        .select('like_count')
+        .eq('id', track_id)
+        .maybeSingle()
 
-    const updatedForm = {
-      ...currentForm,
-      like_count: currentLikeCount
-    }
+      if (!track) {
+        return NextResponse.json({ error: 'Song not found' }, { status: 404 })
+      }
 
-    // 3. song_history 테이블 업데이트
-    const { error: updateErr } = await supabase
-      .from('song_history')
-      .update({
-        liked: nextLiked,
-        form: updatedForm
-      })
-      .eq('id', track_id)
+      // 2. tracks 테이블용 좋아요 토글 처리
+      // tracks 테이블 자체에는 현재 유저가 좋아요를 눌렀는지 여부(liked)를 알 수 없으나, 
+      // 클라이언트에서 호출될 때는 토글이므로 현재 like_count를 조정합니다.
+      // 더 정확히 하려면 userLikes 배열(likes 테이블)을 조회해야 합니다.
+      
+      const { data: userLike } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('track_id', track_id)
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-    if (updateErr) throw updateErr
+      if (userLike) {
+        // 이미 좋아요를 누른 상태이므로 취소
+        await supabase.from('likes').delete().eq('id', userLike.id)
+        nextLiked = false
+        currentLikeCount = Math.max(0, (track.like_count || 0) - 1)
+      } else {
+        // 좋아요 추가
+        await supabase.from('likes').insert({ track_id: track_id, user_id: user.id })
+        nextLiked = true
+        currentLikeCount = (track.like_count || 0) + 1
+      }
 
-    // 4. (Optional) 혹시 tracks 테이블이 존재한다면 fallback 업데이트
-    try {
       await supabase
         .from('tracks')
         .update({ like_count: currentLikeCount })
         .eq('id', track_id)
-    } catch (e) {
-      // Ignore missing tracks table error
     }
 
     return NextResponse.json({ liked: nextLiked, like_count: currentLikeCount })

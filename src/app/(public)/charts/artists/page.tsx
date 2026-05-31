@@ -3,6 +3,8 @@ import { ArtistChartClient } from '@/components/chart/ArtistChartClient'
 import { Artist } from '@/types/music'
 
 export const revalidate = 0
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
 export default async function PublicArtistChartPage() {
   const supabase = await createClient()
@@ -45,7 +47,7 @@ export default async function PublicArtistChartPage() {
     avatar_url: a.avatar_url || '',
     bio: a.bio || 'AI Generated Artist',
     created_at: a.created_at,
-    followers: a.followers || (a.name.length * 850 + 1200),
+    followers: a.followers || 0,
     is_user: false
   } as any))
 

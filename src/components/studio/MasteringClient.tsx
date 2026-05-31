@@ -648,57 +648,57 @@ export function MasteringClient() {
             
             {/* Module 1: Tonal Balance (EQ) */}
             <div className="bg-black/50 border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <Sliders className="w-4 h-4 text-blue-400" />
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Sliders className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-bold text-lg text-blue-100">톤 밸런스 <span className="text-sm text-zinc-500 font-normal ml-1">(EQ)</span></h3>
+                <h3 className="font-bold text-lg text-white">톤 밸런스 <span className="text-sm text-zinc-500 font-normal ml-1">(EQ)</span></h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
                     <span className="text-zinc-400">선명도 (High-Shelf)</span>
-                    <span className={clarity > 50 ? 'text-blue-400' : clarity < 50 ? 'text-red-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
+                    <span className={clarity > 50 ? 'text-primary' : clarity < 50 ? 'text-red-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={clarity} onChange={(e) => handleSliderChange(setClarity, Number(e.target.value))} className="accent-blue-500 w-full" />
+                  <input type="range" min="0" max="100" value={clarity} onChange={(e) => handleSliderChange(setClarity, Number(e.target.value))} className="accent-primary w-full" />
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
                     <span className="text-zinc-400">저역 (Low-Shelf)</span>
-                    <span className={warmth > 50 ? 'text-blue-400' : warmth < 50 ? 'text-red-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
+                    <span className={warmth > 50 ? 'text-primary' : warmth < 50 ? 'text-red-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={warmth} onChange={(e) => handleSliderChange(setWarmth, Number(e.target.value))} className="accent-blue-500 w-full" />
+                  <input type="range" min="0" max="100" value={warmth} onChange={(e) => handleSliderChange(setWarmth, Number(e.target.value))} className="accent-primary w-full" />
                 </div>
               </div>
             </div>
 
             {/* Module 2: Saturation & Width */}
             <div className="bg-black/50 border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                  <Maximize2 className="w-4 h-4 text-orange-400" />
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Maximize2 className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-bold text-lg text-orange-100">새츄레이션 & 공간감</h3>
+                <h3 className="font-bold text-lg text-white">새츄레이션 & 공간감</h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
                     <span className="text-zinc-400">진공관 따뜻함 (Saturation)</span>
-                    <span className={saturation > 0 ? 'text-orange-400' : 'text-zinc-500'}>{saturation} %</span>
+                    <span className={saturation > 0 ? 'text-primary' : 'text-zinc-500'}>{saturation} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={saturation} onChange={(e) => handleSliderChange(setSaturation, Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <input type="range" min="0" max="100" value={saturation} onChange={(e) => handleSliderChange(setSaturation, Number(e.target.value))} className="accent-primary w-full" />
                   <p className="text-[10px] text-zinc-500">아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
                     <span className="text-zinc-400">스테레오 확장 (Width)</span>
-                    <span className={width > 0 ? 'text-orange-400' : 'text-zinc-500'}>{width} %</span>
+                    <span className={width > 0 ? 'text-primary' : 'text-zinc-500'}>{width} %</span>
                   </div>
-                  <input type="range" min="0" max="100" value={width} onChange={(e) => handleSliderChange(setWidth, Number(e.target.value))} className="accent-orange-500 w-full" />
+                  <input type="range" min="0" max="100" value={width} onChange={(e) => handleSliderChange(setWidth, Number(e.target.value))} className="accent-primary w-full" />
                   <p className="text-[10px] text-zinc-500">좌우 위상 확장으로 공간감 극대화</p>
                 </div>
               </div>
@@ -712,7 +712,7 @@ export function MasteringClient() {
                   <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                     <Gauge className="w-4 h-4 text-primary" />
                   </div>
-                  <h3 className="font-bold text-lg text-primary-100">다이내믹스 <span className="text-sm text-zinc-500 font-normal ml-1">(음압)</span></h3>
+                  <h3 className="font-bold text-lg text-white">다이내믹스 <span className="text-sm text-zinc-500 font-normal ml-1">(음압)</span></h3>
                 </div>
               </div>
               

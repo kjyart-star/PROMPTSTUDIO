@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
-import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download } from 'lucide-react'
+import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -13,6 +13,7 @@ import { GENRES } from '@/lib/constants'
 interface ProfileClientProps {
   user: any
   isAdmin?: boolean
+  initialProfile?: any
 }
 
 
@@ -233,7 +234,7 @@ const MOCK_SAMPLE_PLAYLISTS = [
   }
 ]
 
-export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
+export function ProfileClient({ user, isAdmin = false, initialProfile }: ProfileClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
@@ -274,6 +275,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   const [history, setHistory] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'private' | 'public' | 'channels'>('public')
+  const [trackSearchQuery, setTrackSearchQuery] = useState('')
+  const [showComingSoon, setShowComingSoon] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
   const [currentAlbumPage, setCurrentAlbumPage] = useState(1)
@@ -310,7 +313,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     plays?: number,
     likes?: number,
     handle?: string
-  } | null>(null)
+  } | null>(initialProfile || null)
   const [likedSongIds, setLikedSongIds] = useState<string[]>([])
   const [likedAlbums, setLikedAlbums] = useState<string[]>([])
   
@@ -320,24 +323,24 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   }, [])
   
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [editName, setEditName] = useState('')
-  const [editAvatar, setEditAvatar] = useState('')
+  const [editName, setEditName] = useState(initialProfile?.display_name || '')
+  const [editAvatar, setEditAvatar] = useState(initialProfile?.avatar_url || '')
 
   // New Profile States
-  const [profileBio, setProfileBio] = useState('Welcome Dreamer... I create ambient and cinematic soundtracks.')
-  const [profileTags, setProfileTags] = useState<string[]>(['Dream', 'Dubstep', 'Doom Metal', 'K-pop', 'Ambient-POP'])
-  const [profileBanner, setProfileBanner] = useState('')
-  const [profileFollowers, setProfileFollowers] = useState(0)
-  const [profileFollowing, setProfileFollowing] = useState(0)
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [profileHandle, setProfileHandle] = useState('ostdreamer')
+  const [profileBio, setProfileBio] = useState<string>(initialProfile?.bio || 'Welcome Dreamer... I create ambient and cinematic soundtracks.')
+  const [profileTags, setProfileTags] = useState<string[]>(initialProfile?.tags || ['Dream', 'Dubstep', 'Doom Metal', 'K-pop', 'Ambient-POP'])
+  const [profileBanner, setProfileBanner] = useState<string>(initialProfile?.banner_url || '')
+  const [profileFollowers, setProfileFollowers] = useState<number>(initialProfile?.followers || 0)
+  const [profileFollowing, setProfileFollowing] = useState<number>(initialProfile?.following || 0)
+  const [isFollowing, setIsFollowing] = useState<boolean>(false)
+  const [profileHandle, setProfileHandle] = useState<string>(initialProfile?.handle || 'ostdreamer')
 
   // Edit fields state
-  const [editBio, setEditBio] = useState('')
-  const [editTags, setEditTags] = useState<string[]>([])
-  const [newGenreInput, setNewGenreInput] = useState('')
-  const [editBanner, setEditBanner] = useState('')
-  const [editHandle, setEditHandle] = useState('')
+  const [editBio, setEditBio] = useState<string>(initialProfile?.bio || '')
+  const [editTags, setEditTags] = useState<string[]>(initialProfile?.tags || [])
+  const [newGenreInput, setNewGenreInput] = useState<string>('')
+  const [editBanner, setEditBanner] = useState<string>(initialProfile?.banner_url || '')
+  const [editHandle, setEditHandle] = useState<string>(initialProfile?.handle || '')
 
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null)
@@ -434,7 +437,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     }
     
     // 핸들이 비어있으면 자동 생성
-    const finalSlug = newChannelSlug || `user_${Math.random().toString(36).substring(2, 10)}`
+    const cleanSlug = newChannelSlug.toLowerCase().replace(/[^a-z0-9_\-]/g, '')
+    const finalSlug = cleanSlug || `user_${Math.random().toString(36).substring(2, 10)}`
 
     try {
       const res = await fetch('/api/channels', {
@@ -649,6 +653,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   const [uploadCoverFile, setUploadCoverFile] = useState<File | null>(null)
   const [uploadCoverUrl, setUploadCoverUrl] = useState('')
   const [uploadTitle, setUploadTitle] = useState('')
+  const [uploadChannelId, setUploadChannelId] = useState('')
   const [uploadGenre, setUploadGenre] = useState('')
   const [uploadLyrics, setUploadLyrics] = useState('')
   const [uploadPrompt, setUploadPrompt] = useState('')
@@ -672,6 +677,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     setUploadLyricist('')
     setUploadComposer('')
     setUploadArranger('')
+    setUploadChannelId('')
     setUploadDuration(null)
     setUploadIsPublished(true)
     setIsUploading(false)
@@ -741,6 +747,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
         .insert({
           user_id: user.id,
           title: uploadTitle.trim(),
+          channel_id: uploadChannelId || null,
           prompt: uploadPrompt.trim() || '',
           lyrics: uploadLyrics.trim() || '',
           notes: uploadNotes.trim() || '',
@@ -993,6 +1000,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
         setActiveTab('private')
       } else if (tab === 'public') {
         setActiveTab('public')
+      } else if (tab === 'channels') {
+        setActiveTab('channels')
       }
     }
 
@@ -1559,6 +1568,22 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
     } catch (e) { console.error(e) }
   }
 
+  const assignSongToChannel = async (historyId: string, channelId: string | null) => {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('song_history').update({ channel_id: channelId }).eq('id', historyId)
+      if (error) {
+        showToast(uiLanguage === 'KO' ? '채널 연결 변경 실패' : 'Failed to change channel', 'error')
+        console.error(error)
+      } else {
+        fetchHistory()
+        showToast(channelId 
+          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : 'Song assigned to channel.')
+          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : 'Channel connection removed.'), 'success')
+      }
+    } catch (e) { console.error(e) }
+  }
+
   const toggleLikeSong = (song: any) => {
     try {
       const savedIdsStr = localStorage.getItem('profile-liked-song-ids') || '[]'
@@ -1594,8 +1619,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
           lyricist: song.form?.lyricist || '',
           composer: song.form?.composer || '',
           arranger: song.form?.arranger || '',
-          play_count: Number(song.plays || 0),
-          like_count: Number(song.likes || 0) + 1,
+          play_count: Number(song.form?.play_count || (song.title?.length * 450 + 1000) || 0),
+          like_count: Number(song.form?.like_count || (song.title?.length * 25 + 15) || 0) + 1,
           status: 'published',
           created_at: song.created_at || new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -1621,10 +1646,13 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
       // Update the local history list likes count dynamically if it's there
       setHistory(prev => prev.map(h => {
         if (h.id === song.id) {
-          const currentLikes = Number(h.likes || 0)
+          const currentLikes = Number(h.form?.like_count || (h.title?.length * 25 + 15) || 0)
           return {
             ...h,
-            likes: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1
+            form: {
+              ...(h.form || {}),
+              like_count: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1
+            }
           }
         }
         return h
@@ -1644,9 +1672,32 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
   const dbPublicLooseTracks = history.filter(h => {
     return !!(h.is_published && (h.audio_url || h.file_url))
   })
-  const visibleLooseTracks = isPublicView
+
+  const totalProfilePlays = useMemo(() => {
+    const trackPlays = dbPublicLooseTracks.reduce((sum, song) => {
+      const plays = song.form?.play_count || (song.title?.length ? song.title.length * 450 + 1000 : 0) || 0
+      return sum + Number(plays)
+    }, 0)
+    return trackPlays + Number(profilePlays || 0)
+  }, [dbPublicLooseTracks, profilePlays])
+
+  const totalProfileLikes = useMemo(() => {
+    const trackLikes = dbPublicLooseTracks.reduce((sum, song) => {
+      const likes = song.form?.like_count || (song.title?.length ? song.title.length * 25 + 15 : 0) || 0
+      return sum + Number(likes)
+    }, 0)
+    return trackLikes + Number(profileLikes || 0)
+  }, [dbPublicLooseTracks, profileLikes])
+  const visibleLooseTracksRaw = isPublicView
     ? dbPublicLooseTracks
     : history
+
+  const visibleLooseTracks = trackSearchQuery
+    ? visibleLooseTracksRaw.filter(h => 
+        h.title?.toLowerCase().includes(trackSearchQuery.toLowerCase()) || 
+        h.genre?.toLowerCase().includes(trackSearchQuery.toLowerCase())
+      )
+    : visibleLooseTracksRaw
 
 
   const userAlbums = playlists.filter(p => parsePlaylistDescription(p.description).type === 'album')
@@ -1910,11 +1961,19 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
           <button 
             onClick={() => handlePlayMusic(item)}
-            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10 cursor-pointer"
+            className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity z-10 cursor-pointer ${isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
           >
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1">
-              {isPlayingThis ? <Pause className="w-5 h-5 ml-[-4px]" /> : <Play className="w-5 h-5" />}
-            </div>
+            {isPlayingThis ? (
+              <div className="flex items-end justify-center gap-[3px] h-6 w-6">
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1">
+                <Play className="w-5 h-5" />
+              </div>
+            )}
           </button>
         </div>
       
@@ -2098,8 +2157,9 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                     </div>
                     <p className="text-xs text-zinc-400 font-mono">@{profileHandle || (profile?.display_name ? profile.display_name.toLowerCase().replace(/\s+/g, '') : 'ostdreamer')}</p>
                     <div className="flex gap-4 text-xs font-bold text-zinc-300 pt-1">
-                      <span className="flex items-center gap-1"><Play className="w-3.5 h-3.5 fill-current text-primary" /> {profilePlays} Plays</span>
-                      <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-primary" /> {profileLikes} Likes</span>
+                      <span className="flex items-center gap-1"><Play className="w-3.5 h-3.5 fill-current text-primary" /> {totalProfilePlays.toLocaleString()} Plays</span>
+                      <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5 fill-current text-primary" /> {totalProfileLikes.toLocaleString()} Likes</span>
+                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 fill-current text-primary" /> {profileFollowers.toLocaleString()} Followers</span>
                     </div>
                     {/* Bio and Hashtags moved to banner */}
                     {profileBio && (
@@ -2263,8 +2323,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
               <div className="flex flex-col gap-1 mt-3">
                 {selectedPlaylistTracks.map((track: any, idx: number) => {
                   const isPlayingThis = currentTrack?.id === track.id && isPlaying;
-                  const displayPlays = track.plays || (idx * 17 + 12);
-                  const displayLikes = track.likes || (idx * 3 + 2);
+                  const displayPlays = track.form?.play_count || (track.title?.length * 450 + 1000) || 0;
+                  const displayLikes = track.form?.like_count || (track.title?.length * 25 + 15) || 0;
                   const displayGenre = track.genre || selectedPlaylist.title || 'Pop';
                   const displayDuration = track.duration_sec 
                     ? `${Math.floor(track.duration_sec / 60)}:${String(track.duration_sec % 60).padStart(2, '0')}` 
@@ -2351,7 +2411,11 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                             isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                           }`}>
                             {isPlayingThis ? (
-                              <Pause className="w-4 h-4 text-white fill-current" />
+                              <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                <div className="w-[3px] h-full bg-white rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                                <div className="w-[3px] h-full bg-white rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                                <div className="w-[3px] h-full bg-white rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                              </div>
                             ) : (
                               <Play className="w-4 h-4 text-white fill-current ml-0.5" />
                             )}
@@ -2385,13 +2449,15 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                           <Heart className={`w-4 h-4 ${isSongLiked(track.id) ? 'fill-current' : ''}`} />
                         </button>
 
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDownloadTrack(track.audio_url || track.file_url, track.title, track.image_url || track.album?.cover_url); }}
-                          className="hover:scale-105 transition-all cursor-pointer text-zinc-500 hover:text-primary opacity-0 group-hover:opacity-100 p-1"
-                          title="다운로드"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
+                        {!isPublicView && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadTrack(track.audio_url || track.file_url, track.title, track.image_url || track.album?.cover_url); }}
+                            className="hover:scale-105 transition-all cursor-pointer text-zinc-500 hover:text-primary opacity-0 group-hover:opacity-100 p-1"
+                            title="다운로드"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        )}
 
                         <button
                           onClick={(e) => {
@@ -2465,10 +2531,14 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
               </button>
               <button 
                 onClick={() => {
-                  setActiveTab('channels');
-                  const url = new URL(window.location.href);
-                  url.searchParams.set('tab', 'channels');
-                  window.history.pushState({ tab: 'channels' }, '', url.toString());
+                  if (isAdmin) {
+                    setActiveTab('channels');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'channels');
+                    window.history.pushState({ tab: 'channels' }, '', url.toString());
+                  } else {
+                    setShowComingSoon(true);
+                  }
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
@@ -2568,15 +2638,30 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                 <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
                   <Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : 'Songs'}
                 </h2>
-                {isAdmin && (
-                  <button 
-                    onClick={openUploadModal}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-black hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    {uiLanguage === 'KO' ? '음원 파일 업로드' : 'Upload Audio File'}
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
+                    <input
+                      type="text"
+                      placeholder={uiLanguage === 'KO' ? '음원 검색...' : 'Search songs...'}
+                      value={trackSearchQuery}
+                      onChange={(e) => {
+                        setTrackSearchQuery(e.target.value)
+                        setCurrentPage(1) // Reset pagination on search
+                      }}
+                      className="w-48 pl-8 pr-3 py-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  {isAdmin && (
+                    <button 
+                      onClick={openUploadModal}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-black hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {uiLanguage === 'KO' ? '음원 파일 업로드' : 'Upload Audio File'}
+                    </button>
+                  )}
+                </div>
               </div>
               {visibleLooseTracks.length === 0 ? (
                 <p className="text-sm text-on-surface-variant">표시할 단일 곡이 없습니다.</p>
@@ -2595,7 +2680,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                           <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
                             <th className="py-3 px-4 w-14 text-center">번호</th>
                             <th className="py-3 px-4">곡 정보</th>
-                            <th className="py-3 px-4">소속 폴더</th>
+                            <th className="py-3 px-4 w-40">{uiLanguage === 'KO' ? '채널 / 소속 폴더' : 'Channel / Folder'}</th>
                             <th className="py-3 px-4 w-28 text-center whitespace-nowrap">등록일</th>
                             {!isPublicView && <th className="py-3 px-4 w-44 text-right">관리</th>}
                             {isPublicView && <th className="py-3 px-4 w-16 text-center">좋아요</th>}
@@ -2608,6 +2693,8 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
                             // Fetch parent folder info
                             const folder = song.playlist_id ? playlists.find(p => p.id === song.playlist_id) : null
+                            const songChannel = song.channel_id ? channels.find(c => c.id === song.channel_id) : null
+                            const channelLabel = songChannel ? songChannel.name : '메인 채널'
                             let folderTypeLabel = '단일 곡'
                             let folderBgClass = 'text-zinc-500 bg-zinc-800/40 border border-zinc-700/30'
                             if (folder) {
@@ -2639,12 +2726,21 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                                       <img 
                                         src={song.image_url || "/default-album.png"} 
                                         alt="Cover" 
-                                        className="w-full h-full object-cover"
+                                        className={`w-full h-full object-cover ${isPlayingThis ? 'opacity-40' : ''}`}
                                         onError={(e) => {
                                           e.currentTarget.onerror = null;
                                           e.currentTarget.src = "/default-album.png";
                                         }}
                                       />
+                                      {isPlayingThis && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                          <div className="flex items-end justify-center gap-[2px] h-3.5 w-3.5">
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-1.5 min-w-0">
@@ -2658,17 +2754,23 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                                         )}
                                       </div>
                                       <span className="text-[10px] text-on-surface-variant/60 mt-0.5 block font-medium">
-                                        {song.genre || 'K-Pop'} • ▶ {song.plays || 0} plays
+                                        {song.genre || 'K-Pop'} • ▶ {song.form?.play_count || (song.title?.length * 450 + 1000) || 0} plays
                                       </span>
                                     </div>
                                   </div>
                                 </td>
 
                                 {/* Folder Association */}
-                                <td className="py-4 px-4">
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded inline-block truncate max-w-[150px] ${folderBgClass}`}>
-                                    {folderTypeLabel}
-                                  </span>
+                                <td className="py-4 px-4 align-middle">
+                                  <div className="flex flex-col items-start gap-1.5">
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-on-surface bg-surface-container/50 px-2 py-1 rounded-md border border-white/5 w-fit">
+                                      <Users className="w-3.5 h-3.5 text-primary opacity-90" />
+                                      <span className="truncate max-w-[120px]" title={channelLabel}>{channelLabel}</span>
+                                    </div>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded inline-block truncate max-w-[150px] ${folderBgClass}`}>
+                                      {folderTypeLabel}
+                                    </span>
+                                  </div>
                                 </td>
 
                                 {/* Registration Date */}
@@ -2689,6 +2791,20 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                                       >
                                         <Globe className="w-3.5 h-3.5" />
                                       </button>
+
+                                      <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500 hover:text-black" title="채널 연결">
+                                        <Users className="w-3.5 h-3.5" />
+                                        <select 
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                          value={song.channel_id || ''}
+                                          onChange={(e) => assignSongToChannel(song.id, e.target.value || null)}
+                                        >
+                                          <option value="">메인 채널 (기본)</option>
+                                          {channels.map(ch => (
+                                            <option key={ch.id} value={ch.id}>{ch.name}</option>
+                                          ))}
+                                        </select>
+                                      </div>
 
                                       <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500 hover:text-black" title="폴더 이동">
                                         <Folder className="w-3.5 h-3.5" />
@@ -2755,13 +2871,6 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                                         }`}
                                       >
                                         <Heart className={`w-3.5 h-3.5 ${isSongLiked(song.id) ? 'fill-current' : ''}`} />
-                                      </button>
-                                      <button
-                                        onClick={() => handleDownloadTrack(song.audio_url || song.file_url, song.title, song.image_url || song.album?.cover_url)}
-                                        className="p-1.5 rounded-full hover:bg-white/5 transition-all cursor-pointer text-zinc-500 hover:text-primary"
-                                        title="다운로드"
-                                      >
-                                        <Download className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </td>
@@ -2834,12 +2943,16 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
               </button>
               <button 
                 onClick={() => {
-                  setActiveTab('channels');
-                  const url = new URL(window.location.href);
-                  url.searchParams.set('tab', 'channels');
-                  window.history.pushState({ tab: 'channels' }, '', url.toString());
+                  if (isAdmin) {
+                    setActiveTab('channels');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'channels');
+                    window.history.pushState({ tab: 'channels' }, '', url.toString());
+                  } else {
+                    setShowComingSoon(true);
+                  }
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer bg-surface-container-high text-on-surface`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${activeTab === 'channels' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
                 <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
               </button>
@@ -3032,13 +3145,16 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
 
                     {/* Handle */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '핸들 네임 (고유 URL)*' : 'Handle*'}</label>
+                      <label className="text-xs font-bold text-zinc-400">
+                        {uiLanguage === 'KO' ? '핸들 네임 (고유 URL)*' : 'Handle*'}
+                        <span className="text-[10px] font-normal text-zinc-500 ml-2">(영문소문자, 숫자, _, - 만 가능)</span>
+                      </label>
                       <div className="relative flex items-center">
                         <span className="absolute left-3 text-sm font-medium text-zinc-500 font-mono">@</span>
                         <input 
                           type="text" 
                           value={newChannelSlug}
-                          onChange={(e) => setNewChannelSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          onChange={(e) => setNewChannelSlug(e.target.value)}
                           placeholder="artist_handle"
                           className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 pl-7 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600 font-mono"
                         />
@@ -3219,10 +3335,14 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               />
                               <button 
                                 onClick={() => handlePlayMusic(song)}
-                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer"
+                                className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all cursor-pointer ${isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                               >
                                 {isPlayingThis ? (
-                                  <Pause className="w-4 h-4 text-primary fill-current" />
+                                  <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  </div>
                                 ) : (
                                   <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
                                 )}
@@ -3239,7 +3359,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               </div>
                               <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium mt-0.5">
                                 <span className="flex items-center gap-0.5">
-                                  <span className="text-zinc-500 font-mono">▶</span> {song.plays || 0}
+                                  <span className="text-zinc-500 font-mono">▶</span> {song.form?.play_count || (song.title?.length * 450 + 1000) || 0}
                                 </span>
                                 <span>•</span>
                                 <span>{song.genre || 'K-Pop'}</span>
@@ -3254,13 +3374,6 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               }`}
                             >
                               <Heart className={`w-4 h-4 ${isSongLiked(song.id) ? 'fill-current' : ''}`} />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDownloadTrack(song.audio_url || song.file_url, song.title, song.image_url || song.album?.cover_url); }}
-                              className="p-2 rounded-full hover:bg-white/5 transition-all cursor-pointer text-zinc-500 hover:text-primary"
-                              title="다운로드"
-                            >
-                              <Download className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -3378,7 +3491,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                       onClick={() => handleSetPublicSubView('following')}
                       className="px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-xs font-bold text-on-surface flex items-center gap-2 border border-outline-variant/10 shadow-sm transition-colors cursor-pointer"
                     >
-                      <span className="text-primary font-extrabold">{profileFollowing}</span> following
+                      <span className="text-primary font-extrabold">{Math.max(profileFollowing, followedArtists.length)}</span> following
                     </button>
                   </div>
                   
@@ -3397,10 +3510,14 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                       </button>
                       <button 
                         onClick={() => {
-                          setActiveTab('channels');
-                          const url = new URL(window.location.href);
-                          url.searchParams.set('tab', 'channels');
-                          window.history.pushState({ tab: 'channels' }, '', url.toString());
+                          if (isAdmin) {
+                            setActiveTab('channels');
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('tab', 'channels');
+                            window.history.pushState({ tab: 'channels' }, '', url.toString());
+                          } else {
+                            setShowComingSoon(true);
+                          }
                         }} 
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                       >
@@ -3454,15 +3571,19 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               </span>
                               <button 
                                 onClick={() => handlePlayMusic(song)}
-                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer"
+                                className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all cursor-pointer ${isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                               >
-                                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1 shadow-md">
-                                  {isPlayingThis ? (
-                                    <Pause className="w-5 h-5 ml-[-4px]" />
-                                  ) : (
+                                {isPlayingThis ? (
+                                  <div className="flex items-end justify-center gap-[3px] h-6 w-6">
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1 shadow-md">
                                     <Play className="w-5 h-5" />
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </button>
                             </div>
 
@@ -3480,13 +3601,13 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               </p>
                               <div className="flex items-center gap-4 text-xs text-zinc-500 font-medium pt-1 justify-center sm:justify-start">
                                 <span className="flex items-center gap-1">
-                                  <Play className="w-3.5 h-3.5 fill-current text-zinc-500" /> {song.plays || '0'} Plays
+                                  <Play className="w-3.5 h-3.5 fill-current text-zinc-500" /> {song.form?.play_count || (song.title?.length * 450 + 1000) || '0'} Plays
                                 </span>
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); toggleLikeSong(song); }}
                                   className={`flex items-center gap-1 hover:text-primary transition-colors ${isLiked ? 'text-primary font-bold' : 'text-zinc-500'}`}
                                 >
-                                  <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-primary' : 'text-zinc-500'}`} /> {isSongLiked(song.id) ? Number(song.likes || 0) + 1 : Number(song.likes || 0)} Likes
+                                  <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-primary' : 'text-zinc-500'}`} /> {isSongLiked(song.id) ? Number(song.form?.like_count || (song.title?.length * 25 + 15) || 0) + 1 : Number(song.form?.like_count || (song.title?.length * 25 + 15) || 0)} Likes
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleDownloadTrack(song.audio_url || song.file_url, song.title, song.image_url || song.album?.cover_url); }}
@@ -3525,9 +3646,10 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {visibleLooseTracks.slice(0, 9).map((song: any, idx: number) => {
-                      const isPlayingThis = currentTrack?.id === song.id && isPlaying;
+                      const isCurrent = currentTrack?.id === song.id;
+                      const isPlayingThis = isCurrent && isPlaying;
                       return (
-                        <div key={song.id} className="bg-surface-container/40 hover:bg-surface-container-high/60 border border-outline-variant/10 p-3 rounded-2xl flex items-center justify-between gap-4 transition-all hover:scale-[1.01] group shadow-sm">
+                        <div key={song.id} className={`bg-surface-container/40 hover:bg-surface-container-high/60 border border-outline-variant/10 p-3 rounded-2xl flex items-center justify-between gap-4 transition-all hover:scale-[1.01] group shadow-sm ${isCurrent ? 'ring-1 ring-primary/50 bg-primary/5' : ''}`}>
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 shadow-md">
                               <img 
@@ -3541,10 +3663,14 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               />
                               <button 
                                 onClick={() => handlePlayMusic(song)}
-                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer"
+                                className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-all cursor-pointer ${isPlayingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                               >
                                 {isPlayingThis ? (
-                                  <Pause className="w-4 h-4 text-primary fill-current" />
+                                  <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  </div>
                                 ) : (
                                   <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
                                 )}
@@ -3552,7 +3678,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-sm font-bold text-on-surface truncate">{song.title}</span>
+                                <span className={`text-sm font-bold truncate ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>{song.title}</span>
                                 {!isPublicView && song.exposure_order && (
                                   <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-black shrink-0">
                                     {song.exposure_order}순위
@@ -3561,7 +3687,7 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                               </div>
                               <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-medium mt-0.5">
                                 <span className="flex items-center gap-0.5">
-                                  <span className="text-zinc-500 font-mono">▶</span> {song.plays || 0}
+                                  <span className="text-zinc-500 font-mono">▶</span> {song.form?.play_count || (song.title?.length * 450 + 1000) || 0}
                                 </span>
                                 <span>•</span>
                                 <span>{song.genre || 'K-Pop'}</span>
@@ -3726,6 +3852,23 @@ export function ProfileClient({ user, isAdmin = false }: ProfileClientProps) {
                   placeholder={uiLanguage === 'KO' ? '제목을 입력하세요' : 'Enter song title'}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary/50 text-sm"
                 />
+              </div>
+
+              {/* Channel Selection (Optional) */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
+                  <span>{uiLanguage === 'KO' ? '채널 등록 (선택)' : 'Publish to Channel (Optional)'}</span>
+                </label>
+                <select
+                  className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
+                  value={uploadChannelId}
+                  onChange={(e) => setUploadChannelId(e.target.value)}
+                >
+                  <option value="">{uiLanguage === 'KO' ? '선택 안 함 (메인 채널에만 등록)' : 'None (Main Channel Only)'}</option>
+                  {channels.map(ch => (
+                    <option key={ch.id} value={ch.id}>{ch.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Genre Category (Required) */}

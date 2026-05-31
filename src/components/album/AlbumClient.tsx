@@ -362,7 +362,11 @@ export function AlbumClient({
                           : 'opacity-0 group-hover:opacity-100'
                       }`}>
                         {currentTrack?.id === track.id && isPlaying ? (
-                          <Pause className="w-4 h-4 text-white fill-current" />
+                          <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                            <div className="w-[3px] h-full bg-white rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-white rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-white rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                          </div>
                         ) : (
                           <Play className="w-4 h-4 text-white fill-current ml-0.5" />
                         )}

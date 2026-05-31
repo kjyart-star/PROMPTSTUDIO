@@ -636,10 +636,15 @@ export function HomeClient({
     const merged = [...initialArtists]
     DUMMY_ARTISTS.forEach((dummy) => {
       if (!merged.some((a) => a.slug === dummy.slug)) {
-        merged.push({ ...dummy, is_user: false } as any)
+        merged.push({ ...dummy, is_user: false, is_dummy: true } as any)
       }
     })
     return merged.sort((a, b) => {
+      const isDummyA = !!(a as any).is_dummy
+      const isDummyB = !!(b as any).is_dummy
+      if (isDummyA !== isDummyB) {
+        return isDummyA ? 1 : -1
+      }
       const isUserA = !!a.is_user
       const isUserB = !!b.is_user
       if (isUserA !== isUserB) {
@@ -773,6 +778,11 @@ export function HomeClient({
                   return artist
                 })
                 return [...updated].sort((a, b) => {
+                  const isDummyA = !!(a as any).is_dummy
+                  const isDummyB = !!(b as any).is_dummy
+                  if (isDummyA !== isDummyB) {
+                    return isDummyA ? 1 : -1
+                  }
                   const isUserA = !!a.is_user
                   const isUserB = !!b.is_user
                   if (isUserA !== isUserB) {
@@ -957,11 +967,15 @@ export function HomeClient({
                       ) : (
                         <Music className="w-5 h-5 text-on-surface-variant/40" />
                       )}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                      <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-all ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-current text-primary" />
+                          <div className="flex items-end justify-center gap-[2.5px] h-4 w-4">
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                          </div>
                         ) : (
-                          <Play className="w-5 h-5 fill-current text-white" />
+                          <Play className="w-5 h-5 fill-current text-white ml-0.5" />
                         )}
                       </div>
                     </button>
@@ -1042,12 +1056,17 @@ export function HomeClient({
 
       {/* 인기 앨범 */}
       <section className="space-y-6 animate-fade-in-up animation-delay-300">
-        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-            <TrendingUp className="w-2.5 h-2.5 text-primary" />
-          </span>
-          {uiLanguage === 'KO' ? '인기 앨범' : 'Popular Albums'}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+            <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+              <TrendingUp className="w-2.5 h-2.5 text-primary" />
+            </span>
+            {uiLanguage === 'KO' ? '인기 앨범' : 'Popular Albums'}
+          </h2>
+          <Link href="/search?q=popular-albums" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
+            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+          </Link>
+        </div>
 
         <Carousel
           items={displayPopularAlbums.slice(0, 10)}
@@ -1125,12 +1144,17 @@ export function HomeClient({
 
       {/* 추천 음원 */}
       <section className="space-y-6 animate-fade-in-up animation-delay-450">
-        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-            <Music className="w-2.5 h-2.5 text-primary" />
-          </span>
-          {uiLanguage === 'KO' ? '추천 음원' : 'Recommended Tracks'}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+            <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+              <Music className="w-2.5 h-2.5 text-primary" />
+            </span>
+            {uiLanguage === 'KO' ? '추천 음원' : 'Recommended Tracks'}
+          </h2>
+          <Link href="/search?q=recommended-tracks" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
+            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+          </Link>
+        </div>
 
         <Carousel
           items={displayRecommendedTracks.slice(0, 12)}
@@ -1173,14 +1197,18 @@ export function HomeClient({
                   )}
                   
                   {/* Hover Control Overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 flex items-center justify-center transition-all duration-300">
-                    <div className="w-8 h-8 bg-primary text-[#080d08] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
-                      {isCurrent && isPlaying ? (
-                        <Pause className="w-3.5 h-3.5 fill-current" />
-                      ) : (
+                  <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
+                    {isCurrent && isPlaying ? (
+                      <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-primary text-[#080d08] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
                         <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Duration Badge */}
@@ -1247,12 +1275,17 @@ export function HomeClient({
 
       {/* 최신 앨범 */}
       <section className="space-y-6 animate-fade-in-up animation-delay-600">
-        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-            <Library className="w-2.5 h-2.5 text-primary" />
-          </span>
-          {uiLanguage === 'KO' ? '최신 앨범' : 'Latest Albums'}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+            <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+              <Library className="w-2.5 h-2.5 text-primary" />
+            </span>
+            {uiLanguage === 'KO' ? '최신 앨범' : 'Latest Albums'}
+          </h2>
+          <Link href="/search?q=latest-albums" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
+            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+          </Link>
+        </div>
 
         <Carousel
           items={displayAlbums.slice(0, 10)}
@@ -1330,12 +1363,17 @@ export function HomeClient({
 
       {/* 최신 음원 */}
       <section className="space-y-6 animate-fade-in-up animation-delay-600">
-        <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
-          <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-            <Music className="w-2.5 h-2.5 text-primary" />
-          </span>
-          {uiLanguage === 'KO' ? '최신 음원' : 'Latest Tracks'}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
+            <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
+              <Music className="w-2.5 h-2.5 text-primary" />
+            </span>
+            {uiLanguage === 'KO' ? '최신 음원' : 'Latest Tracks'}
+          </h2>
+          <Link href="/search?q=latest-tracks" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
+            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+          </Link>
+        </div>
 
         <Carousel
           items={displayLatestTracks.slice(0, 10)}
@@ -1368,22 +1406,26 @@ export function HomeClient({
                   )}
                   
                   {/* Hover Control Overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 flex items-center justify-center transition-all duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handlePlay(track, displayLatestTracks)
-                        setNowPlayingOpen(true)
-                      }}
-                      className="w-12 h-12 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                    >
-                      {isCurrent && isPlaying ? (
-                        <Pause className="w-5 h-5 fill-current" />
-                      ) : (
+                  <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
+                    {isCurrent && isPlaying ? (
+                      <div className="flex items-end justify-center gap-[3px] h-6 w-6">
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handlePlay(track, displayLatestTracks)
+                          setNowPlayingOpen(true)
+                        }}
+                        className="w-12 h-12 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      >
                         <Play className="w-5 h-5 fill-current ml-0.5" />
-                      )}
-                    </button>
+                      </button>
+                    )}
                   </div>
                   
                   {/* Top Right Quick Controls */}

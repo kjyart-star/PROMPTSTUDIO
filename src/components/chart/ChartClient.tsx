@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Track, Album, Artist } from '@/types/music'
-import { Play, Pause, Heart, Trophy, ArrowUp, ArrowDown, Minus, RefreshCw, Music } from 'lucide-react'
+import { Play, Pause, Heart, Trophy, ArrowUp, ArrowDown, Minus, RefreshCw, Music, Search } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 
@@ -65,6 +65,8 @@ export function ChartClient({
 
   const [localGenre, setLocalGenre] = useState(searchParams.get('genre') || 'All')
   const [uiLanguage, setUiLanguage] = useState('KO')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const savedLang = localStorage.getItem('uiLanguage')
@@ -79,7 +81,8 @@ export function ChartClient({
     'House': '하우스', 'Punk': '펑크', 'Dance': '댄스', 'Indie Rock': '인디 록', 
     'Hip Hop': '힙합', 'Reggae': '레게', 'Hyperpop': '하이퍼팝', 'Metal': '메탈', 
     'Funk Soul': '펑크 소울', 'Soundtrack': '사운드트랙', 'Classical': '클래식', 
-    'Ambient': '앰비언트', 'Chill': '칠', 'Podcasts': '팟캐스트'
+    'Ambient': '앰비언트', 'Chill': '칠', 'Podcasts': '팟캐스트',
+    'Animation': '애니메이션', 'City Pop': '시티팝', 'Trot': '트로트', 'Other': '기타'
   }
 
   const isRealTrack = (item: any) => {
@@ -92,13 +95,20 @@ export function ChartClient({
     return true
   }
 
-  // 클라이언트 측 즉각 장르 필터링
+  // 클라이언트 측 즉각 장르 및 검색어 필터링
   const filteredItems = chartItems.filter((item: any) => {
     if (!item.track) return false
     if (localGenre !== 'All') {
       const albumGenres = item.track.album?.genres || []
       const lowerGenre = localGenre.toLowerCase()
-      return albumGenres.some((g: string) => g.toLowerCase() === lowerGenre)
+      if (!albumGenres.some((g: string) => g.toLowerCase() === lowerGenre)) return false
+    }
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase()
+      const titleMatch = item.track.title?.toLowerCase().includes(q)
+      const artistMatch = item.track.album?.artist?.name?.toLowerCase().includes(q)
+      const albumMatch = item.track.album?.title?.toLowerCase().includes(q)
+      if (!titleMatch && !artistMatch && !albumMatch) return false
     }
     return true
   })
@@ -108,8 +118,14 @@ export function ChartClient({
     return a.rank - b.rank
   })
 
+  // 제한 없이 모두 표시 (100개씩 페이징)
+  const itemsPerPage = 100
+  const paginatedItems = sortedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const totalPages = Math.ceil(sortedItems.length / itemsPerPage)
+
   // 탭 이동
   const handleTabChange = (type: 'daily' | 'weekly' | 'monthly') => {
+    setCurrentPage(1)
     const params = new URLSearchParams(searchParams.toString())
     params.set('type', type)
     router.push(`/charts?${params.toString()}`)
@@ -118,6 +134,7 @@ export function ChartClient({
   // 장르 이동 (클라이언트에서 즉각 처리)
   const handleGenreChange = (genre: string) => {
     setLocalGenre(genre)
+    setCurrentPage(1)
     const params = new URLSearchParams(searchParams.toString())
     if (genre === 'All') {
       params.delete('genre')
@@ -317,7 +334,7 @@ export function ChartClient({
       </section>
 
       <section className="flex flex-wrap gap-2 pb-2 overflow-x-auto scrollbar-none">
-        {['All', 'Pop', 'K-Pop', 'J-Pop', 'Gospel', 'Electronic', 'Rock', 'R&B', 'Country', 'Latin', 'Afrobeats', 'Shoegaze', 'Experimental', 'Alternative', 'Folk', 'Jazz', 'Blues', 'House', 'Punk', 'Dance', 'Indie Rock', 'Hip Hop', 'Reggae', 'Hyperpop', 'Metal', 'Funk Soul', 'Soundtrack', 'Classical', 'Ambient', 'Chill', 'Podcasts'].map((genre) => (
+        {['All', 'K-Pop', 'Pop', 'Hip Hop', 'R&B', 'Dance', 'Electronic', 'Rock', 'Indie Rock', 'J-Pop', 'City Pop', 'Jazz', 'Classical', 'Ambient', 'Chill', 'Soundtrack', 'Animation', 'Trot', 'Blues', 'Country', 'Latin', 'Afrobeats', 'Shoegaze', 'Experimental', 'Alternative', 'Folk', 'House', 'Punk', 'Reggae', 'Hyperpop', 'Metal', 'Funk Soul', 'Gospel', 'Podcasts', 'Other'].map((genre) => (
           <button
             key={genre}
             onClick={() => handleGenreChange(genre)}
@@ -333,16 +350,30 @@ export function ChartClient({
       </section>
 
       {/* 액션바 */}
-      <section className="flex items-center justify-between bg-surface-container-low border border-outline-variant/10 p-4 rounded-2xl shadow-md">
-        <div className="flex items-center gap-3">
+      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container-low border border-outline-variant/10 p-4 rounded-2xl shadow-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handlePlayAll}
             disabled={sortedItems.length === 0}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#080d08] hover:bg-[#e3fe06] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#080d08] hover:bg-[#e3fe06] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer shrink-0"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             1위부터 재생
           </button>
+          
+          <div className="relative flex-1 sm:flex-none">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
+            <input
+              type="text"
+              placeholder="제목, 앨범, 아티스트 검색..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="w-full sm:w-[250px] bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-2 pl-9 pr-4 text-xs font-medium text-on-surface focus:outline-none focus:border-primary/50 transition-colors placeholder:text-on-surface-variant/40"
+            />
+          </div>
         </div>
 
         {/* 어드민이거나 로컬 개발 환경일 때 차트 재생성 버튼 노출 */}
@@ -372,8 +403,8 @@ export function ChartClient({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03] text-xs">
-              {sortedItems.length > 0 ? (
-                sortedItems.map((item, idx) => {
+              {paginatedItems.length > 0 ? (
+                paginatedItems.map((item, idx) => {
                   const track = item.track
                   const album = track?.album
                   const artist = album?.artist
@@ -389,18 +420,9 @@ export function ChartClient({
                       <td className="py-4 px-6 text-center w-20">
                         <div className="flex flex-col items-center justify-center gap-1">
                           <div className="h-5 flex items-center justify-center">
-                            <span className={`font-mono font-black text-sm ${isCurrent ? 'text-primary' : 'text-on-surface'} ${isCurrent ? 'inline-block' : 'group-hover:hidden'}`}>
-                              {idx + 1}
+                            <span className={`font-mono font-black text-sm ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>
+                              {(currentPage - 1) * itemsPerPage + idx + 1}
                             </span>
-                            <button
-                              onClick={() => {
-                                handlePlayTrack(track)
-                                setNowPlayingOpen(true)
-                              }}
-                              className={`text-primary cursor-pointer hover:scale-110 transition-transform ${isCurrent ? 'hidden' : 'hidden group-hover:inline-block'}`}
-                            >
-                              <Play className="w-4 h-4 fill-current mx-auto" />
-                            </button>
                           </div>
                           <div className="text-[9px] font-bold">
                             {renderRankChange(item.rank_change)}
@@ -427,7 +449,11 @@ export function ChartClient({
                               isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                             }`}>
                               {isCurrent && isPlaying ? (
-                                <Pause className="w-5 h-5 fill-current text-primary" />
+                                <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                </div>
                               ) : (
                                 <Play className="w-5 h-5 fill-current text-white" />
                               )}
@@ -490,6 +516,48 @@ export function ChartClient({
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 pt-2">
+            <p className="text-xs text-zinc-500 font-bold">
+              {uiLanguage === 'KO' 
+                ? `페이지 ${currentPage} / ${totalPages}` 
+                : `Page ${currentPage} of ${totalPages}`}
+            </p>
+            <div className="flex gap-1.5">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                {uiLanguage === 'KO' ? '이전' : 'Prev'}
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-8 w-8 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                      currentPage === page 
+                        ? 'bg-[#FF2D55] text-white shadow-md shadow-red-500/10' 
+                        : 'text-zinc-400 hover:bg-white/[0.03] hover:text-white'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                {uiLanguage === 'KO' ? '다음' : 'Next'}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
     </div>

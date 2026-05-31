@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy } from 'lucide-react'
+import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -2391,6 +2391,35 @@ function LibraryView({
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
   const supabase = createClient()
 
+  const [channels, setChannels] = useState<any[]>([])
+
+  const fetchChannels = async () => {
+    if (!user) return
+    try {
+      const { data } = await supabase.from('artists').select('*').eq('owner_user_id', user.id).eq('is_user', false)
+      if (data) setChannels(data)
+    } catch (e) { console.error(e) }
+  }
+
+  useEffect(() => {
+    fetchChannels()
+  }, [user])
+
+  const assignSongToChannel = async (historyId: string, channelId: string | null) => {
+    try {
+      const { error } = await supabase.from('song_history').update({ channel_id: channelId }).eq('id', historyId)
+      if (error) {
+        alert(uiLanguage === 'KO' ? '채널 연결 변경 실패' : 'Failed to change channel')
+        console.error(error)
+      } else {
+        await onRefreshHistory()
+        alert(channelId 
+          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : 'Song assigned to channel.')
+          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : 'Channel connection removed.'))
+      }
+    } catch (e) { console.error(e) }
+  }
+
   const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
     if (!url) return
     try {
@@ -3156,7 +3185,11 @@ Rain on the midnight road
                                 isCurrentPlaying ? 'opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
                               }`}>
                                 {isCurrentPlaying ? (
-                                  <Pause className="w-6 h-6 text-primary fill-primary" />
+                                  <div className="flex items-end justify-center gap-[4px] h-6 w-6">
+                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  </div>
                                 ) : (
                                   <Play className="w-6 h-6 text-primary fill-primary ml-0.5" />
                                 )}
@@ -3251,6 +3284,21 @@ Rain on the midnight road
                           >
                             <Download className="w-4 h-4" />
                           </button>
+
+                          <div className="relative text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer" title={uiLanguage === 'KO' ? '채널 연결' : 'Assign to Channel'}>
+                            <Users className="w-4 h-4" />
+                            <select 
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              value={item.channel_id || ''}
+                              onChange={(e) => assignSongToChannel(item.id, e.target.value || null)}
+                              disabled={item.id.startsWith('dummy')}
+                            >
+                              <option value="">{uiLanguage === 'KO' ? '메인 프로필 (채널 없음)' : 'Main Profile (No Channel)'}</option>
+                              {channels.map(ch => (
+                                <option key={ch.id} value={ch.id}>{ch.name}</option>
+                              ))}
+                            </select>
+                          </div>
 
                           <button
                             onClick={() => setActivePlaylistMenuId(activePlaylistMenuId === item.id ? null : item.id)}
