@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
+import { GENRE_TRANSLATIONS } from '@/lib/constants/genres'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import { MasteringClient } from './MasteringClient'
@@ -1810,7 +1811,7 @@ export function StudioClient({ user }: StudioClientProps) {
                     onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
                     className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
                   >
-                    <span className="truncate">{form.genre1 || '장르 선택'}</span>
+                    <span className="truncate">{form.genre1 ? (uiLanguage === 'KO' ? form.genre1 : (GENRE_TRANSLATIONS[form.genre1] || form.genre1)) : (uiLanguage === 'KO' ? '장르 선택' : 'Select Genre')}</span>
                     <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
                   </button>
                 </div>
@@ -1820,7 +1821,7 @@ export function StudioClient({ user }: StudioClientProps) {
                     onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
                     className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
                   >
-                    <span className="truncate">{form.genre2 || '없음'}</span>
+                    <span className="truncate">{form.genre2 ? (uiLanguage === 'KO' ? form.genre2 : (GENRE_TRANSLATIONS[form.genre2] || form.genre2)) : (uiLanguage === 'KO' ? '없음' : 'None')}</span>
                     <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
                   </button>
                 </div>
