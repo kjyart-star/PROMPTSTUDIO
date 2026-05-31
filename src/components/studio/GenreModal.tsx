@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { GENRE_CATEGORIES } from '@/lib/constants/genres'
+import { GENRE_CATEGORIES, GENRE_TRANSLATIONS } from '@/lib/constants/genres'
 import { X, Search } from 'lucide-react'
 
 interface GenreModalProps {
@@ -20,10 +20,16 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
     if (!searchQuery.trim()) return GENRE_CATEGORIES
 
     const lowerQuery = searchQuery.toLowerCase()
-    return GENRE_CATEGORIES.map(category => ({
-      ...category,
-      genres: category.genres.filter(g => g.toLowerCase().includes(lowerQuery))
-    })).filter(category => category.genres.length > 0)
+    return GENRE_CATEGORIES.map(category => {
+      return {
+        ...category,
+        genres: category.genres.filter(g => {
+          const koName = g
+          const enName = GENRE_TRANSLATIONS[g] || g
+          return koName.toLowerCase().includes(lowerQuery) || enName.toLowerCase().includes(lowerQuery)
+        })
+      }
+    }).filter(category => category.genres.length > 0)
   }, [searchQuery])
 
   if (!isOpen) return null
@@ -49,7 +55,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
         </div>
 
         {/* Search */}
-        <div className="p-6 pb-2">
+        <div className="px-6 py-4 border-b border-outline-variant/10 bg-surface-container-lowest/30">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
             <input 
@@ -62,7 +68,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
           </div>
         </div>
 
-        {/* Genre List */}
+        {/* Categories & Genres */}
         <div className="flex-1 overflow-y-auto p-6 pt-4 space-y-6 custom-scrollbar">
           {filteredCategories.length === 0 ? (
             <div className="text-center py-10 text-zinc-500">
@@ -83,7 +89,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
                           : 'bg-surface-container border-outline-variant/10 text-zinc-400 hover:bg-surface-container-high hover:border-outline-variant/30 hover:text-zinc-200'
                       }`}
                     >
-                      {genre}
+                      {uiLanguage === 'KO' ? genre : (GENRE_TRANSLATIONS[genre] || genre)}
                     </button>
                   ))}
                 </div>
