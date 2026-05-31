@@ -186,21 +186,21 @@ export function PricingClient({ user }: PricingClientProps) {
         <div className="max-w-md mx-auto mb-12 bg-[#121214] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
           <div className="flex flex-col text-left">
             <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              {uiLanguage === 'KO' ? '현재 요금제' : 'Current Plan'}
+              {uiLanguage === 'KO' ? '현재 요금제' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan'}
             </span>
             <span className="text-sm font-black text-primary capitalize">
-              {currentPlan === 'free' ? (uiLanguage === 'KO' ? '무료 플랜' : 'Free Plan') : 
-               currentPlan === 'pro' ? (uiLanguage === 'KO' ? '프로 플랜' : 'Pro Plan') : 
-               (uiLanguage === 'KO' ? '프리미어 플랜' : 'Premier Plan')}
+              {currentPlan === 'free' ? (uiLanguage === 'KO' ? '무료 플랜' : uiLanguage === 'JA' ? '無料プラン' : 'Free Plan') : 
+               currentPlan === 'pro' ? (uiLanguage === 'KO' ? '프로 플랜' : uiLanguage === 'JA' ? 'プロプラン' : 'Pro Plan') : 
+               (uiLanguage === 'KO' ? '프리미어 플랜' : uiLanguage === 'JA' ? 'プレミアプラン' : 'Premier Plan')}
             </span>
           </div>
           <div className="h-8 w-[1px] bg-zinc-800"></div>
           <div className="flex flex-col text-right">
             <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              {uiLanguage === 'KO' ? '현재 보유 크레딧' : 'Available Credits'}
+              {uiLanguage === 'KO' ? '현재 보유 크레딧' : uiLanguage === 'JA' ? '利用可能なクレジット' : 'Available Credits'}
             </span>
             <span className="text-sm font-black text-white">
-              {userCredits.toLocaleString()} {uiLanguage === 'KO' ? '크레딧' : 'Credits'}
+              {userCredits.toLocaleString()} {uiLanguage === 'KO' ? '크레딧' : uiLanguage === 'JA' ? 'クレジット' : 'Credits'}
             </span>
           </div>
         </div>
@@ -260,8 +260,8 @@ export function PricingClient({ user }: PricingClientProps) {
               disabled={currentPlan === 'pro'}
             >
               {currentPlan === 'pro' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중 (2,500 크레딧)' : 'Current Plan (2,500 Credits)') 
-                : (uiLanguage === 'KO' ? '구독하기 (2,500 크레딧 충전)' : 'Subscribe (+2,500 Credits)')}
+                ? (uiLanguage === 'KO' ? '현재 구독 중 (2,500 크레딧)' : uiLanguage === 'JA' ? '現在のプラン (2,500 クレジット)' : 'Current Plan (2,500 Credits)') 
+                : (uiLanguage === 'KO' ? '구독하기 (2,500 크레딧 충전)' : uiLanguage === 'JA' ? '購読 (+2,500 クレジット)' : 'Subscribe (+2,500 Credits)')}
             </button>
 
             <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
@@ -312,8 +312,8 @@ export function PricingClient({ user }: PricingClientProps) {
               disabled={currentPlan === 'premier'}
             >
               {currentPlan === 'premier' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중 (10,000 크레딧)' : 'Current Plan (10,000 Credits)') 
-                : (uiLanguage === 'KO' ? '구독하기 (10,000 크레딧 충전)' : 'Subscribe (+10,000 Credits)')}
+                ? (uiLanguage === 'KO' ? '현재 구독 중 (10,000 크레딧)' : uiLanguage === 'JA' ? '現在のプラン (10,000 クレジット)' : 'Current Plan (10,000 Credits)') 
+                : (uiLanguage === 'KO' ? '구독하기 (10,000 크레딧 충전)' : uiLanguage === 'JA' ? '購読 (+10,000 クレジット)' : 'Subscribe (+10,000 Credits)')}
             </button>
 
             <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
@@ -361,8 +361,8 @@ export function PricingClient({ user }: PricingClientProps) {
               disabled={currentPlan === 'payg_30'}
             >
               {currentPlan === 'payg_30' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중' : 'Current Plan') 
-                : (uiLanguage === 'KO' ? '충전하기 (6,800 크레딧)' : 'Recharge (6,800 Credits)')}
+                ? (uiLanguage === 'KO' ? '현재 구독 중' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan') 
+                : (uiLanguage === 'KO' ? '충전하기 (6,800 크레딧)' : uiLanguage === 'JA' ? 'チャージ (6,800 クレジット)' : 'Recharge (6,800 Credits)')}
             </button>
 
             <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
@@ -409,8 +409,8 @@ export function PricingClient({ user }: PricingClientProps) {
               disabled={currentPlan === 'payg_60'}
             >
               {currentPlan === 'payg_60' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중' : 'Current Plan') 
-                : (uiLanguage === 'KO' ? '충전하기 (14,300 크레딧)' : 'Recharge (14,300 Credits)')}
+                ? (uiLanguage === 'KO' ? '현재 구독 중' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan') 
+                : (uiLanguage === 'KO' ? '충전하기 (14,300 크레딧)' : uiLanguage === 'JA' ? 'チャージ (14,300 クレジット)' : 'Recharge (14,300 Credits)')}
             </button>
 
             <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
@@ -456,7 +456,7 @@ export function PricingClient({ user }: PricingClientProps) {
                 onClick={() => handleBuyExtraCredits(500)}
                 className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '500 크레딧 충전하기' : 'Recharge 500 Credits'}
+                {uiLanguage === 'KO' ? '500 크레딧 충전하기' : uiLanguage === 'JA' ? '500 クレジットをチャージ' : 'Recharge 500 Credits'}
               </button>
             </div>
           </div>
@@ -487,7 +487,7 @@ export function PricingClient({ user }: PricingClientProps) {
                 onClick={() => handleBuyExtraCredits(1000)}
                 className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-black font-extrabold text-xs transition-all cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '1,000 크레딧 충전하기' : 'Recharge 1,000 Credits'}
+                {uiLanguage === 'KO' ? '1,000 크레딧 충전하기' : uiLanguage === 'JA' ? '1,000 クレジットをチャージ' : 'Recharge 1,000 Credits'}
               </button>
             </div>
           </div>
@@ -515,7 +515,7 @@ export function PricingClient({ user }: PricingClientProps) {
                 onClick={() => handleBuyExtraCredits(2000)}
                 className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '2,000 크레딧 충전하기' : 'Recharge 2,000 Credits'}
+                {uiLanguage === 'KO' ? '2,000 크레딧 충전하기' : uiLanguage === 'JA' ? '2,000 クレジットをチャージ' : 'Recharge 2,000 Credits'}
               </button>
             </div>
           </div>

@@ -100,7 +100,7 @@ export function MasteringClient() {
   const addFiles = (files: File[]) => {
     const audioFiles = files.filter(file => file.type.startsWith('audio/'))
     if (tracks.length + audioFiles.length > 20) {
-      alert(uiLanguage === 'KO' ? '최대 20곡까지만 업로드 가능합니다.' : 'You can upload up to 20 tracks at a time.')
+      alert(uiLanguage === 'KO' ? '최대 20곡까지만 업로드 가능합니다.' : uiLanguage === 'JA' ? '一度に最大20曲までアップロードできます。' : 'Maximum 20 songs can be uploaded at once.')
       return
     }
     const newTracks: Track[] = audioFiles.map(file => ({
@@ -499,9 +499,7 @@ export function MasteringClient() {
           Pro Audio Mastering Console
         </h1>
         <p className="text-zinc-400 max-w-2xl text-lg">
-          {uiLanguage === 'KO' 
-            ? 'Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.'
-            : 'Ultra-fast offline rendering powered by Web Audio API. Professional mastering tool featuring tube saturation and stereo wideners.'}
+          {uiLanguage === 'KO' ? 'Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.' : uiLanguage === 'JA' ? 'Web Audio APIを使用した超高速オフラインレンダリング。真空管サチュレーションとステレオワイドナーを備えたプロフェッショナルなマスタリングツールです。' : 'Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.'}
         </p>
       </div>
 
@@ -523,8 +521,8 @@ export function MasteringClient() {
             <div className="w-16 h-16 rounded-2xl bg-black/50 border border-primary/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-xl shadow-primary/20">
               <Upload className="w-8 h-8 text-primary" />
             </div>
-            <p className="font-extrabold mb-2 text-lg">{uiLanguage === 'KO' ? '파일을 드래그하여 드롭하세요' : 'Drag & Drop files here'}</p>
-            <p className="text-sm text-primary/70 font-medium">{uiLanguage === 'KO' ? '최대 20곡 일괄 업로드 (WAV, MP3)' : 'Batch upload up to 20 tracks (WAV, MP3)'}</p>
+            <p className="font-extrabold mb-2 text-lg">{uiLanguage === 'KO' ? '파일을 드래그하여 드롭하세요' : uiLanguage === 'JA' ? 'ここにファイルをドラッグ＆ドロップ' : '파일을 드래그하여 드롭하세요'}</p>
+            <p className="text-sm text-primary/70 font-medium">{uiLanguage === 'KO' ? '최대 20곡 일괄 업로드 (WAV, MP3)' : uiLanguage === 'JA' ? '最大20曲まで一括アップロード (WAV, MP3)' : '최대 20곡 일괄 업로드 (WAV, MP3)'}</p>
           </div>
 
           {/* Queue List */}
@@ -532,7 +530,7 @@ export function MasteringClient() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Activity className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-bold">{uiLanguage === 'KO' ? '배치 큐 (Batch Queue)' : 'Batch Queue'}</h2>
+                <h2 className="text-lg font-bold">{uiLanguage === 'KO' ? '배치 큐 (Batch Queue)' : uiLanguage === 'JA' ? 'バッチキュー' : '배치 큐 (Batch Queue)'}</h2>
               </div>
               <div className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold">
                 {tracks.length} / 20 Tracks
@@ -543,7 +541,7 @@ export function MasteringClient() {
               {tracks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3 opacity-50 py-10">
                   <FileAudio className="w-12 h-12" />
-                  <p className="font-medium">{uiLanguage === 'KO' ? '대기열이 비어 있습니다.' : 'Queue is empty.'}</p>
+                  <p className="font-medium">{uiLanguage === 'KO' ? '대기열이 비어 있습니다.' : uiLanguage === 'JA' ? 'キューは空です。' : '대기열이 비어 있습니다.'}</p>
                 </div>
               ) : (
                 tracks.map((track) => (
@@ -564,7 +562,7 @@ export function MasteringClient() {
                         {track.status === 'processing' && (
                           <div className="w-full mt-2">
                             <div className="flex justify-between items-center text-[10px] text-zinc-400 mb-1.5 font-mono">
-                              <span className="animate-pulse">{uiLanguage === 'KO' ? '오프라인 렌더링 중...' : 'Rendering offline...'}</span>
+                              <span className="animate-pulse">{uiLanguage === 'KO' ? '오프라인 렌더링 중...' : uiLanguage === 'JA' ? 'オフラインでレンダリング中...' : '오프라인 렌더링 중...'}</span>
                               <span className="text-primary font-bold">{track.progress}%</span>
                             </div>
                             <div className="w-full bg-black rounded-full h-1.5 overflow-hidden border border-white/5">
@@ -575,16 +573,16 @@ export function MasteringClient() {
                       </div>
 
                       <div className="flex items-center gap-2 opacity-100 transition-opacity">
-                        <button onClick={() => playPreview(track, 'original')} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors ${currentlyPlayingId === track.id && playingType === 'original' ? 'bg-primary text-black font-bold border-primary' : 'bg-black text-zinc-400 hover:bg-zinc-800 hover:text-white'}`} title={uiLanguage === 'KO' ? "원본 듣기 (A/B 테스트)" : "Play Original (A/B Test)"}>
+                        <button onClick={() => playPreview(track, 'original')} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors ${currentlyPlayingId === track.id && playingType === 'original' ? 'bg-primary text-black font-bold border-primary' : 'bg-black text-zinc-400 hover:bg-zinc-800 hover:text-white'}`} title={uiLanguage === 'KO' ? "원본 듣기 (A/B 테스트)" : uiLanguage === 'JA' ? 'オリジナルを再生 (A/Bテスト)' : 'Play Original (A/B Test)'}>
                           {currentlyPlayingId === track.id && playingType === 'original' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                          <span className="text-xs">{uiLanguage === 'KO' ? '원본' : 'Original'}</span>
+                          <span className="text-xs">{uiLanguage === 'KO' ? '원본' : uiLanguage === 'JA' ? 'オリジナル' : '원본'}</span>
                         </button>
-                        <button onClick={() => playPreview(track, 'processed')} disabled={track.status !== 'done'} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors disabled:opacity-30 ${currentlyPlayingId === track.id && playingType === 'processed' ? 'bg-green-500 text-black font-bold border-green-500' : 'bg-[#0f1a15] text-green-500 hover:bg-[#162920]'}`} title={uiLanguage === 'KO' ? "마스터 본 듣기 (A/B 테스트)" : "Play Mastered (A/B Test)"}>
+                        <button onClick={() => playPreview(track, 'processed')} disabled={track.status !== 'done'} className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 transition-colors disabled:opacity-30 ${currentlyPlayingId === track.id && playingType === 'processed' ? 'bg-green-500 text-black font-bold border-green-500' : 'bg-[#0f1a15] text-green-500 hover:bg-[#162920]'}`} title={uiLanguage === 'KO' ? "마스터 본 듣기 (A/B 테스트)" : uiLanguage === 'JA' ? 'マスター版を再生 (A/Bテスト)' : 'Play Mastered (A/B Test)'}>
                           {currentlyPlayingId === track.id && playingType === 'processed' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                          <span className="text-xs">{uiLanguage === 'KO' ? '마스터' : 'Master'}</span>
+                          <span className="text-xs">{uiLanguage === 'KO' ? '마스터' : uiLanguage === 'JA' ? 'マスター版' : '마스터'}</span>
                         </button>
                         {track.status === 'done' && track.processedUrl && (
-                          <a href={track.processedUrl} download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white" title={uiLanguage === 'KO' ? "WAV 다운로드" : "Download WAV"}>
+                          <a href={track.processedUrl} download={`Mastered_${track.name.replace(/\.[^/.]+$/, "")}.wav`} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white" title={uiLanguage === 'KO' ? "WAV 다운로드" : uiLanguage === 'JA' ? 'WAVをダウンロード' : 'Download WAV'}>
                             <Download className="w-4 h-4" />
                           </a>
                         )}
@@ -631,27 +629,27 @@ export function MasteringClient() {
               <div className="flex flex-wrap items-center bg-black/50 border border-white/10 rounded-xl p-2 max-w-[800px] gap-1.5">
                 <div className="px-3 py-1 text-xs font-bold text-zinc-500 flex items-center gap-2 mr-2">
                   <ListFilter className="w-3 h-3" />
-                  {uiLanguage === 'KO' ? '장르 프리셋' : 'Genre Presets'}
+                  {uiLanguage === 'KO' ? '장르 프리셋' : uiLanguage === 'JA' ? 'ジャンルプリセット' : '장르 프리셋'}
                 </div>
-                <button onClick={() => handleTemplateChange('streaming')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '기본(균형)' : 'Balanced'}</button>
-                <button onClick={() => handleTemplateChange('loud_balanced')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'loud_balanced' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '균형(볼륨업)' : 'Loud'}</button>
-                <button onClick={() => handleTemplateChange('kpop')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'kpop' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '팝/K-Pop' : 'Pop/K-Pop'}</button>
-                <button onClick={() => handleTemplateChange('punchy')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'punchy' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '힙합/EDM' : 'Hip Hop/EDM'}</button>
-                <button onClick={() => handleTemplateChange('rock')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rock' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '록/메탈' : 'Rock/Metal'}</button>
-                <button onClick={() => handleTemplateChange('rnb')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rnb' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? 'R&B/소울' : 'R&B/Soul'}</button>
-                <button onClick={() => handleTemplateChange('acoustic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'acoustic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '어쿠스틱' : 'Acoustic'}</button>
-                <button onClick={() => handleTemplateChange('cinematic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'cinematic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '시네마틱/OST' : 'Cinematic/OST'}</button>
-                <button onClick={() => handleTemplateChange('vocal')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '보컬 강조' : 'Vocal Boost'}</button>
-                <button onClick={() => handleTemplateChange('bass')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '저음 강화' : 'Bass Boost'}</button>
-                <button onClick={() => handleTemplateChange('lofi')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'lofi' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '로파이' : 'Lo-Fi'}</button>
-                <button onClick={() => handleTemplateChange('vintage')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '아날로그' : 'Analog'}</button>
-                <button onClick={() => handleTemplateChange('extreme')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-red-500 text-black' : 'text-red-400/70 hover:text-red-400 hover:bg-red-500/10'}`}>{uiLanguage === 'KO' ? '익스트림' : 'Extreme'}</button>
+                <button onClick={() => handleTemplateChange('streaming')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'streaming' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '기본(균형)' : uiLanguage === 'JA' ? 'バランス' : '기본(균형)'}</button>
+                <button onClick={() => handleTemplateChange('loud_balanced')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'loud_balanced' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '균형(볼륨업)' : uiLanguage === 'JA' ? 'ラウド' : '균형(볼륨업)'}</button>
+                <button onClick={() => handleTemplateChange('kpop')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'kpop' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '팝/K-Pop' : uiLanguage === 'JA' ? 'ポップ/K-POP' : '팝/K-Pop'}</button>
+                <button onClick={() => handleTemplateChange('punchy')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'punchy' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '힙합/EDM' : uiLanguage === 'JA' ? 'ヒップホップ/EDM' : '힙합/EDM'}</button>
+                <button onClick={() => handleTemplateChange('rock')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rock' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '록/메탈' : uiLanguage === 'JA' ? 'ロック/メタル' : '록/메탈'}</button>
+                <button onClick={() => handleTemplateChange('rnb')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'rnb' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? 'R&B/소울' : uiLanguage === 'JA' ? 'R&B/ソウル' : 'R&B/소울'}</button>
+                <button onClick={() => handleTemplateChange('acoustic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'acoustic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '어쿠스틱' : uiLanguage === 'JA' ? 'アコースティック' : '어쿠스틱'}</button>
+                <button onClick={() => handleTemplateChange('cinematic')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'cinematic' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '시네마틱/OST' : uiLanguage === 'JA' ? 'シネマティック/OST' : '시네마틱/OST'}</button>
+                <button onClick={() => handleTemplateChange('vocal')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vocal' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '보컬 강조' : uiLanguage === 'JA' ? 'ボーカル強調' : '보컬 강조'}</button>
+                <button onClick={() => handleTemplateChange('bass')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'bass' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '저음 강화' : uiLanguage === 'JA' ? 'ベース強調' : '저음 강화'}</button>
+                <button onClick={() => handleTemplateChange('lofi')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'lofi' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '로파이' : uiLanguage === 'JA' ? 'ローファイ' : '로파이'}</button>
+                <button onClick={() => handleTemplateChange('vintage')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'vintage' ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}>{uiLanguage === 'KO' ? '아날로그' : uiLanguage === 'JA' ? 'アナログ' : '아날로그'}</button>
+                <button onClick={() => handleTemplateChange('extreme')} className={`px-3 py-1.5 text-xs font-bold transition-all rounded-lg ${activeTemplate === 'extreme' ? 'bg-red-500 text-black' : 'text-red-400/70 hover:text-red-400 hover:bg-red-500/10'}`}>{uiLanguage === 'KO' ? '익스트림' : uiLanguage === 'JA' ? 'エクストリーム' : '익스트림'}</button>
               </div>
 
               <button 
                 onClick={resetOptions}
                 className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold flex items-center gap-2 text-sm transition-all shadow-md"
-                title={uiLanguage === 'KO' ? "설정 초기화" : "Reset Options"}
+                title={uiLanguage === 'KO' ? "설정 초기화" : uiLanguage === 'JA' ? '設定をリセット' : 'Reset Settings'}
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -659,11 +657,11 @@ export function MasteringClient() {
             
             <div className="flex gap-3">
               <button onClick={downloadAll} disabled={!tracks.some(t => t.status === 'done')} className="whitespace-nowrap flex-shrink-0 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold flex items-center gap-2 text-sm disabled:opacity-30 transition-all">
-                <Download className="w-4 h-4" /> {uiLanguage === 'KO' ? '전체 다운로드' : 'Download All'}
+                <Download className="w-4 h-4" /> {uiLanguage === 'KO' ? '전체 다운로드' : uiLanguage === 'JA' ? 'すべてダウンロード' : '전체 다운로드'}
               </button>
               <button onClick={processAll} disabled={isProcessingAll || tracks.length === 0} className="whitespace-nowrap flex-shrink-0 px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold flex items-center gap-2 hover:brightness-110 disabled:opacity-50 shadow-lg shadow-primary/20 transition-all">
                 {isProcessingAll ? <RotateCcw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-black" />}
-                {isProcessingAll ? (uiLanguage === 'KO' ? '마스터링 중...' : 'Mastering...') : (uiLanguage === 'KO' ? '마스터링 시작' : 'Start Mastering')}
+                {isProcessingAll ? (uiLanguage === 'KO' ? '마스터링 중...' : uiLanguage === 'JA' ? 'マスタリング中...' : 'Mastering...') : (uiLanguage === 'KO' ? '마스터링 시작' : uiLanguage === 'JA' ? 'マスタリングを開始' : 'Start Mastering')}
               </button>
             </div>
           </div>
@@ -677,20 +675,20 @@ export function MasteringClient() {
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Sliders className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '톤 밸런스' : 'Tonal Balance'} <span className="text-sm text-zinc-500 font-normal ml-1">(EQ)</span></h3>
+                <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '톤 밸런스' : uiLanguage === 'JA' ? 'トーンバランス' : '톤 밸런스'} <span className="text-sm text-zinc-500 font-normal ml-1">(EQ)</span></h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '선명도' : 'Clarity'} (High-Shelf)</span>
+                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '선명도' : uiLanguage === 'JA' ? '明瞭度' : '선명도'} (High-Shelf)</span>
                     <span className={clarity > 50 ? 'text-primary' : clarity < 50 ? 'text-red-400' : 'text-zinc-500'}>{clarity > 50 ? '+' : ''}{clarity - 50} %</span>
                   </div>
                   <input type="range" min="0" max="100" value={clarity} onChange={(e) => handleSliderChange(setClarity, Number(e.target.value))} className="accent-primary w-full" />
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '저역' : 'Warmth'} (Low-Shelf)</span>
+                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '저역' : uiLanguage === 'JA' ? '暖かさ' : 'Low'} (Low-Shelf)</span>
                     <span className={warmth > 50 ? 'text-primary' : warmth < 50 ? 'text-red-400' : 'text-zinc-500'}>{warmth > 50 ? '+' : ''}{warmth - 50} %</span>
                   </div>
                   <input type="range" min="0" max="100" value={warmth} onChange={(e) => handleSliderChange(setWarmth, Number(e.target.value))} className="accent-primary w-full" />
@@ -705,25 +703,25 @@ export function MasteringClient() {
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                   <Maximize2 className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '새츄레이션 & 공간감' : 'Saturation & Width'}</h3>
+                <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '새츄레이션 & 공간감' : uiLanguage === 'JA' ? 'サチュレーション & 広がり' : 'Saturation & Width'}</h3>
               </div>
               
               <div className="space-y-8 relative z-10">
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '진공관 따뜻함' : 'Tube Warmth'} (Saturation)</span>
+                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '진공관 따뜻함' : uiLanguage === 'JA' ? '真空管の暖かみ' : 'Tube Warmth'} (Saturation)</span>
                     <span className={saturation > 0 ? 'text-primary' : 'text-zinc-500'}>{saturation} %</span>
                   </div>
                   <input type="range" min="0" max="100" value={saturation} onChange={(e) => handleSliderChange(setSaturation, Number(e.target.value))} className="accent-primary w-full" />
-                  <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)' : 'Analog tube harmonic amplification (warm texture)'}</p>
+                  <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)' : uiLanguage === 'JA' ? 'アナログ真空管の高調波増幅 (温かみのある質感)' : 'Analog tube harmonic amplification (warm and heavy texture)'}</p>
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between font-bold text-sm">
-                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '스테레오 확장' : 'Stereo Expansion'} (Width)</span>
+                    <span className="text-zinc-400">{uiLanguage === 'KO' ? '스테레오 확장' : uiLanguage === 'JA' ? 'ステレオ拡張' : 'Stereo Width'} (Width)</span>
                     <span className={width > 0 ? 'text-primary' : 'text-zinc-500'}>{width} %</span>
                   </div>
                   <input type="range" min="0" max="100" value={width} onChange={(e) => handleSliderChange(setWidth, Number(e.target.value))} className="accent-primary w-full" />
-                  <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '좌우 위상 확장으로 공간감 극대화' : 'Maximize spatial sense with stereo width expansion'}</p>
+                  <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '좌우 위상 확장으로 공간감 극대화' : uiLanguage === 'JA' ? 'ステレオ幅を拡張して空間感を最大化' : 'Maximize spatial feel by expanding stereo phase'}</p>
                 </div>
               </div>
             </div>
@@ -736,20 +734,20 @@ export function MasteringClient() {
                   <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                     <Gauge className="w-4 h-4 text-primary" />
                   </div>
-                  <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '다이내믹스' : 'Dynamics'} <span className="text-sm text-zinc-500 font-normal ml-1">({uiLanguage === 'KO' ? '음압' : 'Loudness'})</span></h3>
+                  <h3 className="font-bold text-lg text-white">{uiLanguage === 'KO' ? '다이내믹스' : uiLanguage === 'JA' ? 'ダイナミクス' : 'Dynamics'} <span className="text-sm text-zinc-500 font-normal ml-1">({uiLanguage === 'KO' ? '음압' : uiLanguage === 'JA' ? 'ラウドネス' : 'Loudness'})</span></h3>
                 </div>
               </div>
               
               <div className="space-y-6 relative z-10">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '목표 음압 (Loudness Target)' : 'Loudness Target'}</label>
+                  <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '목표 음압 (Loudness Target)' : uiLanguage === 'JA' ? '目標ラウドネス' : 'Loudness Target'}</label>
                   <select 
                     value={preset}
                     onChange={(e) => { setPreset(e.target.value); setActiveTemplate('custom'); }}
                     className="bg-[#121214] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary text-white font-bold"
                   >
-                    <option value="streaming">{uiLanguage === 'KO' ? '스트리밍 기본 (-14 LUFS)' : 'Streaming Default (-14 LUFS)'}</option>
-                    <option value="loud">{uiLanguage === 'KO' ? '모던 라우드 (-10 LUFS)' : 'Modern Loud (-10 LUFS)'}</option>
+                    <option value="streaming">{uiLanguage === 'KO' ? '스트리밍 기본 (-14 LUFS)' : uiLanguage === 'JA' ? 'ストリーミング標準 (-14 LUFS)' : 'Streaming Default (-14 LUFS)'}</option>
+                    <option value="loud">{uiLanguage === 'KO' ? '모던 라우드 (-10 LUFS)' : uiLanguage === 'JA' ? 'モダン・ラウド (-10 LUFS)' : 'Modern Loud (-10 LUFS)'}</option>
                   </select>
                 </div>
 
@@ -761,8 +759,8 @@ export function MasteringClient() {
                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
                     </div>
                     <div>
-                      <span className={`text-sm font-bold ${extremeLoudness ? 'text-red-400' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '익스트림 부스터 (Extreme)' : 'Extreme Booster'}</span>
-                      <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '공격적인 압축 및 게인 부스트 (음압 극대화)' : 'Aggressive compression and gain boost'}</p>
+                      <span className={`text-sm font-bold ${extremeLoudness ? 'text-red-400' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '익스트림 부스터 (Extreme)' : uiLanguage === 'JA' ? 'エクストリーム・ブースター' : 'Extreme Booster'}</span>
+                      <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '공격적인 압축 및 게인 부스트 (음압 극대화)' : uiLanguage === 'JA' ? 'アグレッシブなコンプレッションとゲインブースト' : 'Aggressive compression and gain boost'}</p>
                     </div>
                   </label>
 
@@ -773,8 +771,8 @@ export function MasteringClient() {
                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
                     </div>
                     <div>
-                      <span className={`text-sm font-bold ${truePeakGuard ? 'text-primary' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '트루 피크 가드 (True Peak)' : 'True Peak Guard'}</span>
-                      <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '출력 전단 클리핑 방지 리미터 적용' : 'Limiter applied to prevent output clipping'}</p>
+                      <span className={`text-sm font-bold ${truePeakGuard ? 'text-primary' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '트루 피크 가드 (True Peak)' : uiLanguage === 'JA' ? 'トゥルーピーク・ガード' : 'True Peak Guard'}</span>
+                      <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '출력 전단 클리핑 방지 리미터 적용' : uiLanguage === 'JA' ? '出力のクリッピングを防ぐリミッター' : 'Limiter to prevent clipping'}</p>
                     </div>
                   </label>
                 </div>

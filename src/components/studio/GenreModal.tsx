@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { GENRE_CATEGORIES, GENRE_TRANSLATIONS } from '@/lib/constants/genres'
+import { GENRE_CATEGORIES, GENRE_TRANSLATIONS, GENRE_TRANSLATIONS_JA } from '@/lib/constants/genres'
 import { X, Search } from 'lucide-react'
 
 interface GenreModalProps {
@@ -50,7 +50,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
             onClick={onClose}
             className="px-4 py-2 bg-surface-container-low border border-outline-variant/20 hover:bg-surface-container hover:border-outline-variant/40 text-on-surface-variant hover:text-white rounded-lg font-bold text-sm transition-all"
           >
-            {uiLanguage === 'KO' ? '닫기' : 'Close'}
+            {uiLanguage === 'KO' ? '닫기' : uiLanguage === 'JA' ? '閉じる' : 'Close'}
           </button>
         </div>
 
@@ -60,7 +60,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
             <input 
               type="text"
-              placeholder={uiLanguage === 'KO' ? "장르 검색" : "Search genres"}
+              placeholder={uiLanguage === 'KO' ? "장르 검색" : uiLanguage === 'JA' ? "ジャンルを検索" : "Search genres"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-[#e3fe06]/50 focus:ring-1 focus:ring-[#e3fe06]/30 transition-all"
@@ -72,7 +72,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
         <div className="flex-1 overflow-y-auto p-6 pt-4 space-y-6 custom-scrollbar">
           {filteredCategories.length === 0 ? (
             <div className="text-center py-10 text-zinc-500">
-              {uiLanguage === 'KO' ? '검색 결과가 없습니다.' : 'No results found.'}
+              {uiLanguage === 'KO' ? '검색 결과가 없습니다.' : uiLanguage === 'JA' ? '結果が見つかりません。' : 'No results found.'}
             </div>
           ) : (
             filteredCategories.map((category, idx) => (
@@ -89,7 +89,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
                           : 'bg-surface-container border-outline-variant/10 text-zinc-400 hover:bg-surface-container-high hover:border-outline-variant/30 hover:text-zinc-200'
                       }`}
                     >
-                      {uiLanguage === 'KO' ? genre : (GENRE_TRANSLATIONS[genre] || genre)}
+                      {uiLanguage === 'KO' ? genre : uiLanguage === 'JA' ? (GENRE_TRANSLATIONS_JA[genre] || genre) : (GENRE_TRANSLATIONS[genre] || genre)}
                     </button>
                   ))}
                 </div>

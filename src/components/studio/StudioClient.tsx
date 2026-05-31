@@ -92,7 +92,7 @@ const DEFAULT_GUIDES = [
 const TRANSLATIONS = {
   KO: {
     studio: 'Studio',
-    library: 'Library',
+    library: '라이브러리',
     explore: 'Explore',
     statusWaiting: '대기 중',
     statusGenerating: 'AI 생성 중',
@@ -910,7 +910,7 @@ export function StudioClient({ user }: StudioClientProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const storedLang = localStorage.getItem('language') || navigator.language || ''
-    setUiLanguage(storedLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN')
+    setUiLanguage(storedLang.toLowerCase().startsWith('ko') ? 'KO' : storedLang.toLowerCase().startsWith('ja') ? 'JA' : 'EN')
 
     const savedSettings = readJson(STORAGE_KEYS.settings, null)
     if (savedSettings) {
@@ -1231,15 +1231,15 @@ export function StudioClient({ user }: StudioClientProps) {
           setGuides(prev => [...prev, newGuide])
           setActiveGuideIds(prev => [...prev, newGuide.id])
           setDraftGuide({ title: '', body: '' })
-          setStatus(uiLanguage === 'KO' ? '지침서를 서버에 등록했습니다' : 'Registered guideline on server')
+          setStatus(uiLanguage === 'KO' ? '지침서를 서버에 등록했습니다' : uiLanguage === 'JA' ? 'サーバーにガイドラインを登録しました' : 'Registered guideline on server')
         } else {
           const err = await res.json()
           console.error('Error adding guide on server:', err)
-          alert(uiLanguage === 'KO' ? `지침서 등록 실패: ${err.error}` : `Failed to register guide: ${err.error}`)
+          alert(uiLanguage === 'KO' ? `지침서 등록 실패: ${err.error}` : uiLanguage === 'JA' ? `ガイドの登録に失敗しました: ${err.error}` : `Failed to register guide: ${err.error}`)
         }
       } catch (e: any) {
         console.error('Error adding guide on server:', e)
-        alert(uiLanguage === 'KO' ? '지침서 등록 실패 (네트워크 오류)' : 'Failed to register guide (Network error)')
+        alert(uiLanguage === 'KO' ? '지침서 등록 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'ガイドラインの登録に失敗しました (ネットワークエラー)' : 'Failed to register guide (Network error)')
       }
     } else {
       const id = `guide-${Date.now()}`
@@ -1249,7 +1249,7 @@ export function StudioClient({ user }: StudioClientProps) {
       writeJson(STORAGE_KEYS.guides, newGuides)
       setActiveGuideIds((current) => [...current, id])
       setDraftGuide({ title: '', body: '' })
-      setStatus(uiLanguage === 'KO' ? '로컬 지침서에 저장했습니다' : 'Saved to local guidelines')
+      setStatus(uiLanguage === 'KO' ? '로컬 지침서에 저장했습니다' : uiLanguage === 'JA' ? 'ローカルガイドラインに保存しました' : 'Saved to local guideline')
     }
   }
 
@@ -1257,7 +1257,7 @@ export function StudioClient({ user }: StudioClientProps) {
     if (user) {
       const isDefault = id === 'suno-clear' || id === 'hook-first'
       if (isDefault) {
-        alert(uiLanguage === 'KO' ? '기본 제공 지침서는 삭제할 수 없습니다.' : 'Default guidelines cannot be deleted.')
+        alert(uiLanguage === 'KO' ? '기본 제공 지침서는 삭제할 수 없습니다.' : uiLanguage === 'JA' ? 'デフォルトのガイドラインは削除できません。' : 'Default guidelines cannot be deleted.')
         return
       }
 
@@ -1269,15 +1269,15 @@ export function StudioClient({ user }: StudioClientProps) {
         if (res.ok) {
           setGuides((current) => current.filter((guide) => guide.id !== id))
           setActiveGuideIds((current) => current.filter((guideId) => guideId !== id))
-          setStatus(uiLanguage === 'KO' ? '지침서를 서버에서 삭제했습니다' : 'Deleted guideline from server')
+          setStatus(uiLanguage === 'KO' ? '지침서를 서버에서 삭제했습니다' : uiLanguage === 'JA' ? 'サーバーからガイドラインを削除しました' : 'Deleted guideline from server')
         } else {
           const err = await res.json()
           console.error('Error deleting guide on server:', err)
-          alert(uiLanguage === 'KO' ? `지침서 삭제 실패: ${err.error}` : `Failed to delete guide: ${err.error}`)
+          alert(uiLanguage === 'KO' ? `지침서 삭제 실패: ${err.error}` : uiLanguage === 'JA' ? `ガイドの削除に失敗しました: ${err.error}` : `Failed to delete guide: ${err.error}`)
         }
       } catch (e: any) {
         console.error('Error deleting guide on server:', e)
-        alert(uiLanguage === 'KO' ? '지침서 삭제 실패 (네트워크 오류)' : 'Failed to delete guide (Network error)')
+        alert(uiLanguage === 'KO' ? '지침서 삭제 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'ガイドラインの削除に失敗しました (ネットワークエラー)' : 'Failed to delete guide (Network error)')
       }
     } else {
       const newGuides = guides.filter((guide) => guide.id !== id)
@@ -1303,7 +1303,7 @@ export function StudioClient({ user }: StudioClientProps) {
     const savedCredits = localStorage.getItem('user-credits')
     const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
     if (currentCredits < modelCost) {
-      alert(uiLanguage === 'KO' ? `크레딧이 부족합니다. (필요: ${modelCost} 크레딧)` : `Insufficient credits. (Requires ${modelCost} credits)`)
+      alert(uiLanguage === 'KO' ? `크레딧이 부족합니다. (필요: ${modelCost} 크레딧)` : uiLanguage === 'JA' ? `クレジットが不足しています。( ${modelCost} クレジット必要)` : `Insufficient credits. (Requires ${modelCost} credits)`)
       return
     }
 
@@ -1330,7 +1330,7 @@ export function StudioClient({ user }: StudioClientProps) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || (uiLanguage === 'KO' ? '프롬프트 생성 실패' : 'Failed to generate prompt'))
+        throw new Error(errorData.error || (uiLanguage === 'KO' ? '프롬프트 생성 실패' : uiLanguage === 'JA' ? 'プロンプトの生成に失敗しました' : 'Failed to generate prompt'))
       }
 
       const data = await response.json()
@@ -1355,7 +1355,7 @@ export function StudioClient({ user }: StudioClientProps) {
         id: 'tx-' + Date.now(),
         date: new Date().toISOString().replace('T', ' ').slice(0, 16),
         type: 'use',
-        desc: uiLanguage === 'KO' ? `가사 및 프롬프트 생성 (-${modelCost})` : `Lyrics & Prompt Generation (-${modelCost})`,
+        desc: uiLanguage === 'KO' ? `가사 및 프롬프트 생성 (-${modelCost})` : uiLanguage === 'JA' ? `歌詞 & プロンプト生成 (-${modelCost})` : `Lyrics & Prompt Generation (-${modelCost})`,
         amount: `-${modelCost}`,
         status: 'Completed'
       }
@@ -1416,17 +1416,17 @@ export function StudioClient({ user }: StudioClientProps) {
         if (res.ok) {
           const newHistoryItem = await res.json()
           setHistory(prev => [newHistoryItem, ...prev])
-          setStatus(uiLanguage === 'KO' ? '서버 히스토리에 저장했습니다' : 'Saved to server history')
+          setStatus(uiLanguage === 'KO' ? '서버 히스토리에 저장했습니다' : uiLanguage === 'JA' ? 'サーバー履歴に保存しました' : 'Saved to server history')
           setCurrentHistoryId(newHistoryItem.id)
           return newHistoryItem.id
         } else {
           const err = await res.json()
           console.error('Error saving history on server:', err)
-          setStatus(uiLanguage === 'KO' ? `서버 저장 실패: ${err.error}` : `Server save failed: ${err.error}`)
+          setStatus(uiLanguage === 'KO' ? `서버 저장 실패: ${err.error}` : uiLanguage === 'JA' ? `サーバー保存に失敗しました: ${err.error}` : `Server save failed: ${err.error}`)
         }
       } catch (e: any) {
         console.error('Error saving history on server:', e)
-        setStatus(uiLanguage === 'KO' ? '서버 저장 실패 (네트워크 오류)' : 'Server save failed (Network error)')
+        setStatus(uiLanguage === 'KO' ? '서버 저장 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'サーバーの保存に失敗しました (ネットワークエラー)' : 'Server save failed (Network error)')
       }
     } else {
       const localPayload = {
@@ -1527,15 +1527,15 @@ export function StudioClient({ user }: StudioClientProps) {
 
         if (res.ok) {
           setHistory(prev => prev.filter(item => item.id !== id))
-          setStatus(uiLanguage === 'KO' ? '서버 히스토리 항목을 삭제했습니다' : 'Deleted server history item')
+          setStatus(uiLanguage === 'KO' ? '서버 히스토리 항목을 삭제했습니다' : uiLanguage === 'JA' ? 'サーバー履歴アイテムを削除しました' : 'Deleted server history item')
         } else {
           const err = await res.json()
           console.error('Error deleting history on server:', err)
-          setStatus(uiLanguage === 'KO' ? `서버 삭제 실패: ${err.error}` : `Server delete failed: ${err.error}`)
+          setStatus(uiLanguage === 'KO' ? `서버 삭제 실패: ${err.error}` : uiLanguage === 'JA' ? `サーバー削除に失敗しました: ${err.error}` : `Server delete failed: ${err.error}`)
         }
       } catch (e: any) {
         console.error('Error deleting history on server:', e)
-        setStatus(uiLanguage === 'KO' ? '서버 삭제 실패 (네트워크 오류)' : 'Server delete failed (Network error)')
+        setStatus(uiLanguage === 'KO' ? '서버 삭제 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'サーバー履歴の削除に失敗しました (ネットワークエラー)' : 'Failed to delete from server (Network error)')
       }
     } else {
       const nextHistory = history.filter((item) => item.id !== id)
@@ -1562,7 +1562,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? '음악 프롬프트' : 'Music Prompt'}
+              {uiLanguage === 'KO' ? '음악 프롬프트' : uiLanguage === 'JA' ? '音楽プロンプト' : 'Music Prompt'}
             </button>
             <button
               onClick={() => setCurrentTab('library')}
@@ -1572,7 +1572,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? '보관함' : 'Library'}
+              {uiLanguage === 'KO' ? '보관함' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library'}
             </button>
             <button
               onClick={() => setCurrentTab('cover')}
@@ -1582,7 +1582,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : 'AI Cover Studio'}
+              {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : uiLanguage === 'JA' ? 'AIカバースタジオ' : 'AI Cover Studio'}
             </button>
             <button
               onClick={() => setCurrentTab('suno')}
@@ -1592,7 +1592,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? '음악 생성' : 'Music Studio'}
+              {uiLanguage === 'KO' ? '음악 생성' : uiLanguage === 'JA' ? '音楽スタジオ' : 'Music Studio'}
             </button>
             <button
               onClick={() => setCurrentTab('mastering')}
@@ -1602,7 +1602,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
               }`}
             >
-              {uiLanguage === 'KO' ? '마스터링' : 'Mastering'}
+              {uiLanguage === 'KO' ? '마스터링' : uiLanguage === 'JA' ? 'マスタリング' : 'Mastering'}
             </button>
           </div>
 
@@ -1806,29 +1806,29 @@ export function StudioClient({ user }: StudioClientProps) {
             <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 1' : 'Genre 1'}</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 1' : uiLanguage === 'JA' ? 'ジャンル 1' : 'Genre 1'}</label>
                   <button
                     onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
                     className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
                   >
-                    <span className="truncate">{form.genre1 ? (uiLanguage === 'KO' ? form.genre1 : (GENRE_TRANSLATIONS[form.genre1] || form.genre1)) : (uiLanguage === 'KO' ? '장르 선택' : 'Select Genre')}</span>
+                    <span className="truncate">{form.genre1 ? (uiLanguage === 'KO' ? form.genre1 : (GENRE_TRANSLATIONS[form.genre1] || form.genre1)) : (uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre')}</span>
                     <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
                   </button>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 2' : 'Genre 2'}</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 2' : uiLanguage === 'JA' ? 'ジャンル 2' : 'Genre 2'}</label>
                   <button
                     onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
                     className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
                   >
-                    <span className="truncate">{form.genre2 ? (uiLanguage === 'KO' ? form.genre2 : (GENRE_TRANSLATIONS[form.genre2] || form.genre2)) : (uiLanguage === 'KO' ? '없음' : 'None')}</span>
+                    <span className="truncate">{form.genre2 ? (uiLanguage === 'KO' ? form.genre2 : (GENRE_TRANSLATIONS[form.genre2] || form.genre2)) : (uiLanguage === 'KO' ? '없음' : uiLanguage === 'JA' ? 'なし' : 'None')}</span>
                     <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
                   </button>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 비중' : 'Genre Ratio'}</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 비중' : uiLanguage === 'JA' ? 'ジャンル比率' : 'Genre Ratio'}</label>
                   <span className="text-xs font-bold text-[#e3fe06]">{form.genreRatio} : {100 - form.genreRatio}</span>
                 </div>
                 <input
@@ -1846,11 +1846,11 @@ export function StudioClient({ user }: StudioClientProps) {
             {/* 스타일 설명 (Style Description) */}
             <div className="space-y-1.5 md:col-span-2 bg-[#121614]/80 p-3 rounded-xl border border-[#233533]/50">
               <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                {uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}
+                {uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明' : 'STYLE DESCRIPTION'}
               </label>
               <input
                 type="text"
-                placeholder={uiLanguage === 'KO' ? '예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic' : 'e.g., Korean city pop, synth pop, nostalgic, rainy, warm, cinematic'}
+                placeholder={uiLanguage === 'KO' ? '예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic' : uiLanguage === 'JA' ? '例: シティポップ、シンセポップ、ノスタルジック、雨、温かい、シネマティック' : 'e.g., city pop, synth pop, nostalgic, rainy, warm, cinematic'}
                 value={form.styleDesc}
                 onChange={(e) => updateForm('styleDesc', e.target.value)}
                 className="w-full bg-[#0a0f0d] border border-outline-variant/20 rounded-xl p-3.5 text-xs text-on-surface focus:outline-none focus:border-[#3fd4b6]/70 focus:ring-1 focus:ring-[#3fd4b6]/20 transition-all duration-300"
@@ -1859,7 +1859,7 @@ export function StudioClient({ user }: StudioClientProps) {
 
             {/* 곡 전개 구조 */}
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '곡 전개 구조 (Song Structure)' : 'Song Structure'}</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '곡 전개 구조 (Song Structure)' : uiLanguage === 'JA' ? '曲の構成' : 'Song Structure'}</label>
               <div className="relative">
                 <select
                   value={form.songStructure}
@@ -1900,7 +1900,7 @@ export function StudioClient({ user }: StudioClientProps) {
                 {/* 보컬 2x2 Grid */}
                 <div className="grid grid-cols-2 gap-4 md:col-span-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '가사 분량' : 'Lyric Density'}</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '가사 분량' : uiLanguage === 'JA' ? '歌詞の密度' : 'Lyrics Density'}</label>
                     <div className="relative">
                       <select
                         value={form.lyricDensity}
@@ -1915,7 +1915,7 @@ export function StudioClient({ user }: StudioClientProps) {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보이스 톤' : 'Voice Tone'}</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보이스 톤' : uiLanguage === 'JA' ? 'ボーカルのトーン' : 'Vocal Tone'}</label>
                     <div className="relative">
                       <select
                         value={form.vocalTone}
@@ -1930,7 +1930,7 @@ export function StudioClient({ user }: StudioClientProps) {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 나이' : 'Vocal Age'}</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 나이' : uiLanguage === 'JA' ? 'ボーカルの年齢' : 'Vocal Age'}</label>
                     <div className="relative">
                       <select
                         value={form.vocalAge}
@@ -1945,7 +1945,7 @@ export function StudioClient({ user }: StudioClientProps) {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 젠더/구성' : 'Vocal Gender/Group'}</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 젠더/구성' : uiLanguage === 'JA' ? 'ボーカルの性別/編成' : 'Vocal Gender/Format'}</label>
                     <div className="relative">
                       <select
                         value={form.vocalGenderGroup}
@@ -1965,7 +1965,7 @@ export function StudioClient({ user }: StudioClientProps) {
                 <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 1' : 'Language 1'}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 1' : uiLanguage === 'JA' ? '言語 1' : 'Language 1'}</label>
                       <div className="relative">
                         <select
                           value={form.language1}
@@ -1980,7 +1980,7 @@ export function StudioClient({ user }: StudioClientProps) {
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 2' : 'Language 2'}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 2' : uiLanguage === 'JA' ? '言語 2' : 'Language 2'}</label>
                       <div className="relative">
                         <select
                           value={form.language2}
@@ -1997,7 +1997,7 @@ export function StudioClient({ user }: StudioClientProps) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 비중' : 'Language Ratio'}</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 비중' : uiLanguage === 'JA' ? '言語比率' : 'Language Ratio'}</label>
                       <span className="text-xs font-bold text-[#e3fe06]">{form.languageRatio} : {100 - form.languageRatio}</span>
                     </div>
                     <input
@@ -2091,13 +2091,13 @@ export function StudioClient({ user }: StudioClientProps) {
               disabled={isGenerating}
               className="flex-1 py-4 bg-primary hover:bg-[#e3fe06] active:scale-[0.98] text-[#080d08] font-extrabold text-xs tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isGenerating ? t.generating : (uiLanguage === 'KO' ? `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)` : `GENERATE PROMPT & LYRICS (${modelCost} Credits)`)}
+              {isGenerating ? t.generating : (uiLanguage === 'KO' ? `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)` : uiLanguage === 'JA' ? `プロンプト & 歌詞を生成 (${modelCost} クレジット)` : `GENERATE PROMPT & LYRICS (${modelCost} Credits)`)}
             </button>
             <button
               onClick={generateSample}
               className="px-6 py-4 bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] hover:bg-white/[0.02] text-on-surface hover:text-white font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer"
             >
-              {uiLanguage === 'KO' ? '샘플 생성' : 'Sample Output'}
+              {uiLanguage === 'KO' ? '샘플 생성' : uiLanguage === 'JA' ? 'サンプル出力' : 'Generate Sample'}
             </button>
           </div>
         </section>
@@ -2196,9 +2196,9 @@ export function StudioClient({ user }: StudioClientProps) {
             {/* DURATION PLAN */}
             <div className="space-y-1.5 relative group/item mt-4">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : 'Structure & BPM Plan'}</span>
+                <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : uiLanguage === 'JA' ? '構成 & BPM計画' : 'Structure & BPM Plan'}</span>
                 <button
-                  onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : 'Copy Plan', resultParts.structurePlan)}
+                  onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : uiLanguage === 'JA' ? '計画をコピー' : 'Copy Plan', resultParts.structurePlan)}
                   className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
                   title={t.copyTooltip}
                 >
@@ -2207,7 +2207,7 @@ export function StudioClient({ user }: StudioClientProps) {
               </div>
               <textarea
                 readOnly
-                placeholder={uiLanguage === 'KO' ? '생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다.' : 'Duration and BPM plan will be displayed here.'}
+                placeholder={uiLanguage === 'KO' ? '생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다.' : uiLanguage === 'JA' ? '曲の長さとBPM計画がここに表示されます。' : 'Structure and BPM plan will be shown here.'}
                 value={resultParts.structurePlan}
                 className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[120px]"
               />
@@ -2323,7 +2323,7 @@ export function StudioClient({ user }: StudioClientProps) {
       <GenreModal
         isOpen={isGenreModalOpen}
         onClose={() => setIsGenreModalOpen(false)}
-        title={genreModalTarget === 'genre1' ? (uiLanguage === 'KO' ? '장르 1 선택' : 'Select Genre 1') : (uiLanguage === 'KO' ? '장르 2 선택' : 'Select Genre 2')}
+        title={genreModalTarget === 'genre1' ? (uiLanguage === 'KO' ? '장르 1 선택' : uiLanguage === 'JA' ? 'ジャンル 1 を選択' : 'Select Genre 1') : (uiLanguage === 'KO' ? '장르 2 선택' : uiLanguage === 'JA' ? 'ジャンル 2 を選択' : 'Select Genre 2')}
         selectedGenre={genreModalTarget === 'genre1' ? form.genre1 : form.genre2}
         onSelect={(genre) => {
           updateForm(genreModalTarget, genre)
@@ -2411,13 +2411,13 @@ function LibraryView({
     try {
       const { error } = await supabase.from('song_history').update({ channel_id: channelId }).eq('id', historyId)
       if (error) {
-        alert(uiLanguage === 'KO' ? '채널 연결 변경 실패' : 'Failed to change channel')
+        alert(uiLanguage === 'KO' ? '채널 연결 변경 실패' : uiLanguage === 'JA' ? 'チャンネルの変更に失敗しました' : 'Failed to change channel connection')
         console.error(error)
       } else {
         await onRefreshHistory()
         alert(channelId 
-          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : 'Song assigned to channel.')
-          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : 'Channel connection removed.'))
+          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : uiLanguage === 'JA' ? '曲がチャンネルに割り当てられました。' : 'Song assigned to channel.')
+          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : uiLanguage === 'JA' ? 'チャンネルの接続が解除されました。' : 'Channel connection disconnected.'))
       }
     } catch (e) { console.error(e) }
   }
@@ -2649,7 +2649,7 @@ function LibraryView({
         id: item.playlist_id || 'library',
         slug: 'library',
         artist_id: profile?.id || user?.id || 'user',
-        title: 'Library',
+        title: uiLanguage === 'KO' ? '라이브러리' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library',
         release_type: 'single' as const,
         cover_url: item.image_url || '/default-album.png',
         release_date: null,
@@ -3052,7 +3052,7 @@ Rain on the midnight road
           <input 
             type="text" 
             className="w-full bg-[#111612] border border-zinc-800 rounded-full pl-10 pr-4 py-2.5 text-xs text-on-surface-variant placeholder-zinc-700 focus:outline-none focus:border-zinc-700 transition-all duration-300" 
-            placeholder={uiLanguage === 'KO' ? '제목, 스타일 설명 검색...' : 'Search title, style description...'}
+            placeholder={uiLanguage === 'KO' ? '제목, 스타일 설명 검색...' : uiLanguage === 'JA' ? 'タイトル、スタイルの説明を検索...' : 'Search title, style description...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -3072,7 +3072,7 @@ Rain on the midnight road
               : 'bg-[#18181c] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
           }`}
         >
-          {uiLanguage === 'KO' ? '전체' : 'All'}
+          {uiLanguage === 'KO' ? '전체' : uiLanguage === 'JA' ? 'すべて' : 'All'}
         </button>
         <button
           onClick={() => setSelectedPlaylistFilter('liked')}
@@ -3083,7 +3083,7 @@ Rain on the midnight road
           }`}
         >
           <Heart className={`w-3.5 h-3.5 ${selectedPlaylistFilter === 'liked' ? 'fill-current text-white' : 'text-[#FF2D55] fill-current'}`} />
-          <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : 'Liked Songs'}</span>
+          <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs'}</span>
         </button>
         {[
           ...playlists.filter(p => parsePlaylistDescription(p.description).type === 'album'),
@@ -3108,7 +3108,7 @@ Rain on the midnight road
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-outline-variant/20 bg-white/[0.01] py-20 text-center">
           <Music className="mb-4 h-12 w-12 text-zinc-700" />
           <p className="text-sm font-medium text-on-surface-variant">
-            {uiLanguage === 'KO' ? '보관된 음원이나 프롬프트가 없습니다.' : 'No saved songs or prompts found.'}
+            {uiLanguage === 'KO' ? '보관된 음원이나 프롬프트가 없습니다.' : uiLanguage === 'JA' ? '保存された曲やプロンプトが見つかりません。' : 'No saved tracks or prompts.'}
           </p>
         </div>
       ) : (
@@ -3117,15 +3117,15 @@ Rain on the midnight road
             <table className="w-full text-left text-xs text-zinc-400 border-collapse">
               <thead>
                 <tr className="border-t border-b border-zinc-800 text-[11px] font-extrabold uppercase tracking-wider text-zinc-500">
-                  <th className="px-6 py-4.5 w-14 text-center">{uiLanguage === 'KO' ? '번호' : '번호'}</th>
-                  <th className="px-6 py-4.5 w-24">{uiLanguage === 'KO' ? '작성일' : '작성일'}</th>
-                  <th className="px-6 py-4.5">{uiLanguage === 'KO' ? '제목' : '제목'}</th>
-                  <th className="px-6 py-4.5 w-32">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : '스타일 설명 (STYLE DESCRIPTION)'}</th>
-                  <th className="px-6 py-4.5 w-20">{uiLanguage === 'KO' ? '언어' : '언어'}</th>
-                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '재생 시간' : 'Duration'}</th>
-                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '좋아요' : '좋아요'}</th>
-                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '공개 여부' : 'Public'}</th>
-                  <th className="px-6 py-4.5 w-32 text-center">{uiLanguage === 'KO' ? '관리' : '관리'}</th>
+                  <th className="px-6 py-4.5 w-14 text-center">{uiLanguage === 'KO' ? '번호' : uiLanguage === 'JA' ? '番号' : 'No.'}</th>
+                  <th className="px-6 py-4.5 w-24">{uiLanguage === 'KO' ? '작성일' : uiLanguage === 'JA' ? '作成日' : 'Created At'}</th>
+                  <th className="px-6 py-4.5">{uiLanguage === 'KO' ? '제목' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</th>
+                  <th className="px-6 py-4.5 w-32">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}</th>
+                  <th className="px-6 py-4.5 w-20">{uiLanguage === 'KO' ? '언어' : uiLanguage === 'JA' ? '言語' : 'Language'}</th>
+                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '재생 시간' : uiLanguage === 'JA' ? '再生時間' : 'Duration'}</th>
+                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}</th>
+                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '공개 여부' : uiLanguage === 'JA' ? '公開' : 'Public/Private'}</th>
+                  <th className="px-6 py-4.5 w-32 text-center">{uiLanguage === 'KO' ? '관리' : uiLanguage === 'JA' ? '管理' : 'Manage'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-900/50">
@@ -3206,7 +3206,7 @@ Rain on the midnight road
                               </span>
                               {isProcessing && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
-                                  {uiLanguage === 'KO' ? '생성 중' : 'Generating'}
+                                  {uiLanguage === 'KO' ? '생성 중' : uiLanguage === 'JA' ? '生成中' : 'Generating'}
                                 </span>
                               )}
                             </div>
@@ -3247,7 +3247,7 @@ Rain on the midnight road
                         <button
                           onClick={() => handleLikeToggle(item)}
                           className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer group/heart"
-                          title={uiLanguage === 'KO' ? '좋아요' : 'Like'}
+                          title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
                         >
                           <Heart 
                             className={`w-4 h-4 transition-transform active:scale-125 ${
@@ -3270,8 +3270,8 @@ Rain on the midnight road
                           }`}
                         >
                           {item.is_published 
-                            ? (uiLanguage === 'KO' ? `공개 (${item.genre || '기타'})` : `Public (${item.genre || 'Other'})`)
-                            : (uiLanguage === 'KO' ? '비공개' : 'Private')
+                            ? (uiLanguage === 'KO' ? `공개 (${item.genre || '기타'})` : uiLanguage === 'JA' ? `公開 (${item.genre || 'その他'})` : `Public (${item.genre || 'Other'})`)
+                            : (uiLanguage === 'KO' ? '비공개' : uiLanguage === 'JA' ? '非公開' : 'Private')
                           }
                         </button>
                       </td>
@@ -3282,12 +3282,12 @@ Rain on the midnight road
                           <button
                             onClick={() => handleDownloadTrack(item.audio_url || item.file_url, item.title, item.image_url)}
                             className="text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
-                            title={uiLanguage === 'KO' ? '다운로드' : 'Download'}
+                            title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
                           >
                             <Download className="w-4 h-4" />
                           </button>
 
-                          <div className="relative text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer" title={uiLanguage === 'KO' ? '채널 연결' : 'Assign to Channel'}>
+                          <div className="relative text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer" title={uiLanguage === 'KO' ? '채널 연결' : uiLanguage === 'JA' ? 'チャンネルに割り当て' : 'Connect Channel'}>
                             <Users className="w-4 h-4" />
                             <select 
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -3295,7 +3295,7 @@ Rain on the midnight road
                               onChange={(e) => assignSongToChannel(item.id, e.target.value || null)}
                               disabled={item.id.startsWith('dummy')}
                             >
-                              <option value="">{uiLanguage === 'KO' ? '메인 프로필 (채널 없음)' : 'Main Profile (No Channel)'}</option>
+                              <option value="">{uiLanguage === 'KO' ? '메인 프로필 (채널 없음)' : uiLanguage === 'JA' ? 'メインプロフィール (チャンネルなし)' : 'Main Profile (No Channel)'}</option>
                               {channels.map(ch => (
                                 <option key={ch.id} value={ch.id}>{ch.name}</option>
                               ))}
@@ -3305,7 +3305,7 @@ Rain on the midnight road
                           <button
                             onClick={() => setActivePlaylistMenuId(activePlaylistMenuId === item.id ? null : item.id)}
                             className="text-zinc-500 hover:text-white p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
-                            title={uiLanguage === 'KO' ? '플레이리스트에 추가' : 'Add to Playlist'}
+                            title={uiLanguage === 'KO' ? '플레이리스트에 추가' : uiLanguage === 'JA' ? 'プレイリストに追加' : 'Add to Playlist'}
                           >
                             <FolderPlus className="w-4 h-4" />
                           </button>
@@ -3314,7 +3314,7 @@ Rain on the midnight road
                             onClick={() => handleDelete(item.id)} 
                             className="text-zinc-500 hover:text-[#FF2D55] font-bold text-xs transition-colors cursor-pointer"
                           >
-                            {uiLanguage === 'KO' ? '삭제' : 'Delete'}
+                            {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
                           </button>
                         </div>
 
@@ -3324,7 +3324,7 @@ Rain on the midnight road
                             <div className="fixed inset-0 z-40" onClick={() => setActivePlaylistMenuId(null)} />
                             <div className="absolute right-6 mt-2 w-48 bg-[#18181c] border border-zinc-800 rounded-xl shadow-2xl p-2 z-50 text-left">
                               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2.5 py-1.5 border-b border-zinc-900">
-                                {uiLanguage === 'KO' ? '플레이리스트 선택' : 'Select Playlist'}
+                                {uiLanguage === 'KO' ? '플레이리스트 선택' : uiLanguage === 'JA' ? 'プレイリストを選択' : 'Select Playlist'}
                               </p>
                               <div className="max-h-40 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
                                 {/* 해제 버튼 */}
@@ -3350,7 +3350,7 @@ Rain on the midnight road
                                   }}
                                   className="w-full text-left px-2.5 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[11px] font-bold cursor-pointer"
                                 >
-                                  <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : 'Remove from Playlist'}</span>
+                                  <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}</span>
                                   {!item.playlist_id && <Check className="w-3.5 h-3.5 text-primary" />}
                                 </button>
 
@@ -3364,7 +3364,7 @@ Rain on the midnight road
                                 >
                                   <span className="flex items-center gap-1.5">
                                     <Heart className="w-3.5 h-3.5 text-primary fill-current" />
-                                    <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : 'Liked Songs'}</span>
+                                    <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs'}</span>
                                   </span>
                                   {item.liked && <Check className="w-3.5 h-3.5 text-primary" />}
                                 </button>
@@ -3372,7 +3372,7 @@ Rain on the midnight road
                                 {/* Albums Section */}
                                 {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').length > 0 && (
                                   <div className="px-2 py-1 text-[8px] font-black tracking-widest text-[#e3fe06] uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                    {uiLanguage === 'KO' ? '내 앨범' : 'Albums'}
+                                    {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
                                   </div>
                                 )}
                                 {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').map((playlist) => {
@@ -3410,7 +3410,7 @@ Rain on the midnight road
                                 {/* Playlists Section */}
                                 {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').length > 0 && (
                                   <div className="px-2 py-1 text-[8px] font-black tracking-widest text-zinc-400 uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                    {uiLanguage === 'KO' ? '나만의 플레이리스트' : 'Playlists'}
+                                    {uiLanguage === 'KO' ? '나만의 플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'}
                                   </div>
                                 )}
                                 {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').map((playlist) => {
@@ -3446,7 +3446,7 @@ Rain on the midnight road
                                 })}
                                 {playlists.length === 0 && (
                                   <p className="text-[10px] text-zinc-600 px-2.5 py-2 text-center">
-                                    {uiLanguage === 'KO' ? '생성된 플레이리스트 없음' : 'No playlists'}
+                                    {uiLanguage === 'KO' ? '생성된 플레이리스트 없음' : uiLanguage === 'JA' ? 'プレイリストなし' : 'No playlists created'}
                                   </p>
                                 )}
                               </div>
@@ -3467,7 +3467,7 @@ Rain on the midnight road
               <p className="text-xs text-zinc-500 font-bold">
                 {uiLanguage === 'KO' 
                   ? `페이지 ${currentPage} / ${totalPages}` 
-                  : `Page ${currentPage} of ${totalPages}`}
+                  : uiLanguage === 'JA' ? `${currentPage} / ${totalPages} ページ` : `Page ${currentPage} of ${totalPages}`}
               </p>
               <div className="flex gap-1.5">
                 <button 
@@ -3475,7 +3475,7 @@ Rain on the midnight road
                   disabled={currentPage === 1}
                   className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
-                  {uiLanguage === 'KO' ? '이전' : 'Prev'}
+                  {uiLanguage === 'KO' ? '이전' : uiLanguage === 'JA' ? '前へ' : 'Prev'}
                 </button>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -3497,7 +3497,7 @@ Rain on the midnight road
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
-                  {uiLanguage === 'KO' ? '다음' : 'Next'}
+                  {uiLanguage === 'KO' ? '다음' : uiLanguage === 'JA' ? '次へ' : 'Next'}
                 </button>
               </div>
             </div>
@@ -3528,7 +3528,7 @@ Rain on the midnight road
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="flex flex-col">
                   <div className="flex justify-between items-center mb-1.5">
-                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">프롬프트</h3>
+                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">{uiLanguage === 'KO' ? '프롬프트' : uiLanguage === 'JA' ? 'プロンプト' : 'Prompt'}</h3>
                     <button
                       onClick={() => handleCopyPrompt(selectedItem.prompt || '')}
                       className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
@@ -3537,16 +3537,16 @@ Rain on the midnight road
                           : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
                       }`}
                     >
-                      {copiedPrompt ? (uiLanguage === 'KO' ? '복사 완료' : 'Copied') : (uiLanguage === 'KO' ? '복사' : 'Copy')}
+                      {copiedPrompt ? (uiLanguage === 'KO' ? '복사 완료' : uiLanguage === 'JA' ? 'コピー完了' : 'Copied') : (uiLanguage === 'KO' ? '복사' : uiLanguage === 'JA' ? 'コピー' : 'Copy')}
                     </button>
                   </div>
                   <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
-                    {selectedItem.prompt || '내용 없음'}
+                    {selectedItem.prompt || (uiLanguage === 'KO' ? '내용 없음' : uiLanguage === 'JA' ? '内容なし' : 'No content')}
                   </div>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex justify-between items-center mb-1.5">
-                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">가사</h3>
+                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">{uiLanguage === 'KO' ? '가사' : uiLanguage === 'JA' ? '歌詞' : 'Lyrics'}</h3>
                     <button
                       onClick={() => handleCopyLyrics(selectedItem.lyrics || '')}
                       className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
@@ -3555,24 +3555,24 @@ Rain on the midnight road
                           : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
                       }`}
                     >
-                      {copiedLyrics ? (uiLanguage === 'KO' ? '복사 완료' : 'Copied') : (uiLanguage === 'KO' ? '복사' : 'Copy')}
+                      {copiedLyrics ? (uiLanguage === 'KO' ? '복사 완료' : uiLanguage === 'JA' ? 'コピー完了' : 'Copied') : (uiLanguage === 'KO' ? '복사' : uiLanguage === 'JA' ? 'コピー' : 'Copy')}
                     </button>
                   </div>
                   <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
-                    {selectedItem.lyrics || '내용 없음'}
+                    {selectedItem.lyrics || (uiLanguage === 'KO' ? '내용 없음' : uiLanguage === 'JA' ? '内容なし' : 'No content')}
                   </div>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="col-span-1 lg:col-span-3 flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">스타일 설명 (STYLE DESCRIPTION)</h3>
+                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}</h3>
                   <p className="text-xs text-on-surface bg-surface-container-lowest/60 px-4 py-3 rounded-xl border border-outline-variant/10 break-words font-medium">
                     {selectedItem.form?.styleDesc || [selectedItem.form?.genre, selectedItem.form?.mood].filter(Boolean).join(', ') || '-'}
                   </p>
                 </div>
                 <div className="col-span-1 flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">보컬 톤/스타일 (VOCAL STYLE)</h3>
+                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? '보컬 톤/스타일 (VOCAL STYLE)' : uiLanguage === 'JA' ? 'ボーカルトーン/スタイル (VOCAL STYLE)' : 'VOCAL STYLE'}</h3>
                   <p className="text-xs text-on-surface bg-surface-container-lowest/60 px-4 py-3 rounded-xl border border-outline-variant/10 break-words font-medium">
                     {selectedItem.form?.vocal || '-'}
                     {selectedItem.form?.vocalFeaturing && selectedItem.form?.vocalFeaturing !== '없음' ? ` (Ft. ${selectedItem.form.vocalFeaturing})` : ''}
@@ -3582,7 +3582,7 @@ Rain on the midnight road
 
               {/* AI 메모 */}
               <div className="flex flex-col">
-                <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">AI 메모</h3>
+                <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? 'AI 메모' : uiLanguage === 'JA' ? 'AI メモ' : 'AI Memo'}</h3>
                 <div className="rounded-xl bg-surface-container-lowest/60 p-4 border border-outline-variant/10 text-xs text-on-surface leading-relaxed font-sans whitespace-pre-line">
                   {selectedItem.notes || [
                     `- 대상 툴: ${selectedItem.form?.targetTool || selectedItem.targetTool || 'Suno'}`,
@@ -3599,19 +3599,19 @@ Rain on the midnight road
                 onClick={() => { openHistoryItem(selectedItem, 'style'); setSelectedItem(null); setCurrentTab('studio'); }}
                 className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
               >
-                스타일 프롬프트만 재사용
+                {uiLanguage === 'KO' ? '스타일 프롬프트만 재사용' : uiLanguage === 'JA' ? 'スタイルプロンプトのみ再利用' : 'Reuse style prompt only'}
               </button>
               <button 
                 onClick={() => { openHistoryItem(selectedItem, 'lyrics'); setSelectedItem(null); setCurrentTab('studio'); }}
                 className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
               >
-                가사만 재사용
+                {uiLanguage === 'KO' ? '가사만 재사용' : uiLanguage === 'JA' ? '歌詞のみ再利用' : 'Reuse lyrics only'}
               </button>
               <button 
                 onClick={() => { openHistoryItem(selectedItem, 'all'); setSelectedItem(null); setCurrentTab('studio'); }}
                 className="px-5 py-2.5 text-xs font-extrabold text-[#080d08] bg-primary hover:bg-[#e3fe06] active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/10 cursor-pointer"
               >
-                전체 재사용
+                {uiLanguage === 'KO' ? '전체 재사용' : uiLanguage === 'JA' ? 'すべて再利用' : 'Reuse all'}
               </button>
             </div>
           </div>
@@ -3623,10 +3623,10 @@ Rain on the midnight road
           <div className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-low/95 backdrop-blur-xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6">
               <h3 className="text-lg font-bold text-white mb-2">
-                {uiLanguage === 'KO' ? '삭제 확인' : 'Confirm Delete'}
+                {uiLanguage === 'KO' ? '삭제 확인' : uiLanguage === 'JA' ? '削除の確認' : 'Confirm Delete'}
               </h3>
               <p className="text-sm text-zinc-400">
-                {uiLanguage === 'KO' ? '정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : 'Are you sure you want to delete this? This action cannot be undone.'}
+                {uiLanguage === 'KO' ? '정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : uiLanguage === 'JA' ? '本当に削除しますか？この操作は元に戻せません。' : 'Are you sure you want to delete? This action cannot be undone.'}
               </p>
             </div>
             <div className="border-t border-outline-variant/10 p-4 bg-surface-container-lowest/30 flex gap-3 justify-end">
@@ -3634,13 +3634,13 @@ Rain on the midnight road
                 onClick={() => setDeleteConfirmId(null)}
                 className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
               </button>
               <button 
                 onClick={confirmDelete}
                 className="px-5 py-2.5 text-xs font-extrabold text-white bg-[#FF2D55] hover:bg-red-500 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-red-500/20 cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '삭제' : 'Delete'}
+                {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
               </button>
             </div>
           </div>
@@ -3653,26 +3653,26 @@ Rain on the midnight road
             <div className="p-6 space-y-4">
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-white">
-                  {uiLanguage === 'KO' ? '음원 퍼블리싱' : 'Publish Music'}
+                  {uiLanguage === 'KO' ? '음원 퍼블리싱' : uiLanguage === 'JA' ? '音楽を公開' : 'Publish Track'}
                 </h3>
                 <p className="text-xs text-zinc-400">
                   {uiLanguage === 'KO' 
                     ? `'${publishConfirmItem.title || t.untitledProject}' 곡을 퍼블리싱하여 내 채널에 공개하시겠습니까?`
-                    : `Are you sure you want to publish '${publishConfirmItem.title || t.untitledProject}'?`
+                    : uiLanguage === 'JA' ? `本当に公開しますか: ` : `Are you sure you want to publish '${publishConfirmItem.title || t.untitledProject}'?`
                   }
                 </p>
               </div>
 
               <div className="space-y-1.5 text-xs text-left">
                 <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                  {uiLanguage === 'KO' ? '장르 카테고리 (필수)' : 'Genre Category (Required)'}
+                  {uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリー (必須)' : 'Genre Category (Required)'}
                 </label>
                 <select
                   value={selectedPublishGenre}
                   onChange={(e) => setSelectedPublishGenre(e.target.value)}
                   className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
                 >
-                  <option value="">{uiLanguage === 'KO' ? '장르 선택' : 'Select Genre'}</option>
+                  <option value="">{uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre'}</option>
                   {GENRES.map(g => (
                     <option key={g.name} value={g.name}>
                       {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
@@ -3686,14 +3686,14 @@ Rain on the midnight road
                  onClick={() => setPublishConfirmItem(null)}
                  className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
                >
-                 {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                 {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
                </button>
                <button 
                  onClick={confirmPublish}
                  disabled={!selectedPublishGenre}
                  className="px-5 py-2.5 text-xs font-extrabold text-[#080d08] bg-primary hover:bg-[#e3fe06] disabled:opacity-50 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/10 cursor-pointer"
                >
-                 {uiLanguage === 'KO' ? '퍼블리싱' : 'Publish'}
+                 {uiLanguage === 'KO' ? '퍼블리싱' : uiLanguage === 'JA' ? '公開する' : 'Publish'}
                </button>
             </div>
           </div>

@@ -913,14 +913,14 @@ export function HomeClient({
             Listen to the Next Era of Melody
           </h2>
           <p className="text-[10px] md:text-xs text-zinc-300 max-w-xl leading-relaxed font-semibold drop-shadow-sm">
-            인공지능으로 창작된 수많은 트랙들과 제작 시 사용된 프롬프트, 가사 메타데이터를 확인해보세요.
+            {uiLanguage === 'KO' ? '인공지능으로 창작된 수많은 트랙들과 제작 시 사용된 프롬프트, 가사 메타데이터를 확인해보세요.' : uiLanguage === 'JA' ? 'AI生成された無数のトラックや、その作成に使われたプロンプトと歌詞を探索しましょう。' : 'Explore countless AI-generated tracks and the prompts and lyrics used to create them.'}
           </p>
           <div className="pt-1">
             <Link
               href="/charts"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-[#080d08] hover:bg-[#e3fe06] font-black text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
             >
-              차트 순위 보러가기
+              {uiLanguage === 'KO' ? '차트 순위 보러가기' : uiLanguage === 'JA' ? 'チャートランキングを見る' : 'View Chart Rankings'}
               <ChevronRight className="w-3.5 h-3.5 text-black stroke-[3px]" />
             </Link>
           </div>
@@ -939,10 +939,10 @@ export function HomeClient({
               <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
                 <Play className="w-2.5 h-2.5 text-primary fill-current" />
               </span>
-              실시간 인기 트랙
+              {uiLanguage === 'KO' ? '실시간 인기 트랙' : uiLanguage === 'JA' ? 'トレンドのトラック' : 'Trending Tracks'}
             </h2>
             <Link href="/charts" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-              차트 전체보기
+              {uiLanguage === 'KO' ? '차트 전체보기' : uiLanguage === 'JA' ? 'すべてのチャートを見る' : 'See all charts'}
             </Link>
           </div>
 
@@ -1022,11 +1022,11 @@ export function HomeClient({
                 <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10 group-hover/title:border-primary/50 transition-colors">
                   <Users className="w-2.5 h-2.5 text-primary" />
                 </span>
-                주목받는 AI 아티스트
+                {uiLanguage === 'KO' ? '주목받는 AI 아티스트' : uiLanguage === 'JA' ? 'トレンドのAIアーティスト' : 'Trending AI Artists'}
               </h2>
             </Link>
             <Link href="/charts/artists" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-              아티스트 전체보기
+              {uiLanguage === 'KO' ? '아티스트 전체보기' : uiLanguage === 'JA' ? 'すべてのアーティストを見る' : 'See all artists'}
             </Link>
           </div>
 
@@ -1062,10 +1062,10 @@ export function HomeClient({
             <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
               <TrendingUp className="w-2.5 h-2.5 text-primary" />
             </span>
-            {uiLanguage === 'KO' ? '인기 앨범' : 'Popular Albums'}
+            {uiLanguage === 'KO' ? '인기 앨범' : uiLanguage === 'JA' ? '人気のアルバム' : 'Popular Albums'}
           </h2>
           <Link href="/search?q=popular-albums" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+            {uiLanguage === 'KO' ? '전체보기' : uiLanguage === 'JA' ? 'すべて見る' : 'See all'}
           </Link>
         </div>
 
@@ -1150,10 +1150,10 @@ export function HomeClient({
             <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
               <Music className="w-2.5 h-2.5 text-primary" />
             </span>
-            {uiLanguage === 'KO' ? '추천 음원' : 'Recommended Tracks'}
+            {uiLanguage === 'KO' ? '추천 음원' : uiLanguage === 'JA' ? 'おすすめのトラック' : 'Recommended Tracks'}
           </h2>
           <Link href="/search?q=recommended-tracks" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+            {uiLanguage === 'KO' ? '전체보기' : uiLanguage === 'JA' ? 'すべて見る' : 'See all'}
           </Link>
         </div>
 
@@ -1274,10 +1274,10 @@ export function HomeClient({
             <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
               <Library className="w-2.5 h-2.5 text-primary" />
             </span>
-            {uiLanguage === 'KO' ? '최신 앨범' : 'Latest Albums'}
+            {uiLanguage === 'KO' ? '최신 앨범' : uiLanguage === 'JA' ? '最新のアルバム' : 'Latest Albums'}
           </h2>
           <Link href="/search?q=latest-albums" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+            {uiLanguage === 'KO' ? '전체보기' : uiLanguage === 'JA' ? 'すべて見る' : 'See all'}
           </Link>
         </div>
 
@@ -1309,7 +1309,7 @@ export function HomeClient({
 
                   {/* Album badge top-left */}
                   <span className="absolute top-2.5 left-2.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-[#070709] uppercase tracking-wider scale-90 z-20">
-                    {uiLanguage === 'KO' ? '앨범' : 'ALBUM'}
+                    {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'ALBUM'}
                   </span>
                   
                   {/* Floating Circular Heart Button on Hover */}
@@ -1362,10 +1362,10 @@ export function HomeClient({
             <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
               <Music className="w-2.5 h-2.5 text-primary" />
             </span>
-            {uiLanguage === 'KO' ? '최신 음원' : 'Latest Tracks'}
+            {uiLanguage === 'KO' ? '최신 음원' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks'}
           </h2>
           <Link href="/search?q=latest-tracks" className="text-[11px] text-primary hover:underline transition-colors font-bold tracking-tight">
-            {uiLanguage === 'KO' ? '전체보기' : 'See all'}
+            {uiLanguage === 'KO' ? '전체보기' : uiLanguage === 'JA' ? 'すべて見る' : 'See all'}
           </Link>
         </div>
 
@@ -1484,7 +1484,7 @@ export function HomeClient({
           <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
             <Disc className="w-2.5 h-2.5 text-primary" />
           </span>
-          {uiLanguage === 'KO' ? '인기 카테고리' : 'TOP Categories'}
+          {uiLanguage === 'KO' ? '인기 카테고리' : uiLanguage === 'JA' ? 'トップカテゴリー' : 'TOP Categories'}
         </h2>
 
         <Carousel
@@ -1530,7 +1530,7 @@ export function HomeClient({
                 </div>
                 <div className="text-left">
                   <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
-                    {uiLanguage === 'KO' ? cat.koName : cat.name}
+                    {uiLanguage === 'KO' ? cat.koName : uiLanguage === 'JA' ? (cat as any).jaName || cat.name : cat.name}
                   </p>
                   <p className="text-[9px] font-mono text-zinc-400 mt-0.5 tracking-wider uppercase">
                     {cat.name}

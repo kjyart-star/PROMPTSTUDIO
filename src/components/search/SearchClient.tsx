@@ -181,7 +181,7 @@ export function SearchClient({
           {/* Browse All */}
           <div className="space-y-6">
             <h2 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              {uiLanguage === 'KO' ? '모두 둘러보기' : 'Browse all'}
+              {uiLanguage === 'KO' ? '모두 둘러보기' : uiLanguage === 'JA' ? 'すべて表示' : 'Browse all'}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {GENRES.map((g) => (
@@ -192,7 +192,7 @@ export function SearchClient({
                 >
                   <div className="flex flex-col select-none">
                     <span className="text-lg font-black tracking-tight text-white leading-tight">{g.name}</span>
-                    <span className="text-xs font-bold text-white/80 mt-0.5">{g.korean}</span>
+                    <span className="text-xs font-bold text-white/80 mt-0.5">{uiLanguage === 'KO' ? g.korean : uiLanguage === 'JA' ? g.japanese : g.name}</span>
                   </div>
                   <img 
                     src={g.image} 
@@ -210,11 +210,11 @@ export function SearchClient({
         <div className="space-y-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-outline-variant/10 pb-4 gap-4">
             <h2 className="text-xs font-black text-on-surface-variant uppercase tracking-widest">
-              {query.toLowerCase() === 'popular-albums' ? (uiLanguage === 'KO' ? '인기 앨범 (Popular Albums)' : 'Popular Albums') :
-               query.toLowerCase() === 'latest-albums' ? (uiLanguage === 'KO' ? '최신 앨범 (Latest Albums)' : 'Latest Albums') :
-               query.toLowerCase() === 'recommended-tracks' ? (uiLanguage === 'KO' ? '추천 음원 (Recommended Tracks)' : 'Recommended Tracks') :
-               query.toLowerCase() === 'latest-tracks' ? (uiLanguage === 'KO' ? '최신 음원 (Latest Tracks)' : 'Latest Tracks') :
-               <>{uiLanguage === 'KO' ? '검색 결과:' : 'Search Results for'} <span className="text-primary">"{query}"</span></>}
+              {query.toLowerCase() === 'popular-albums' ? (uiLanguage === 'KO' ? '인기 앨범 (Popular Albums)' : uiLanguage === 'JA' ? '人気のアルバム' : 'Popular Albums') :
+               query.toLowerCase() === 'latest-albums' ? (uiLanguage === 'KO' ? '최신 앨범 (Latest Albums)' : uiLanguage === 'JA' ? '最新のアルバム' : 'Latest Albums') :
+               query.toLowerCase() === 'recommended-tracks' ? (uiLanguage === 'KO' ? '추천 음원 (Recommended Tracks)' : uiLanguage === 'JA' ? 'おすすめのトラック' : 'Recommended Tracks') :
+               query.toLowerCase() === 'latest-tracks' ? (uiLanguage === 'KO' ? '최신 음원 (Latest Tracks)' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks') :
+               <>{uiLanguage === 'KO' ? '검색 결과:' : uiLanguage === 'JA' ? '検索結果: ' : 'Search Results for'} <span className="text-primary">"{query}"</span></>}
             </h2>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-none">
@@ -240,7 +240,7 @@ export function SearchClient({
           {showSongs && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              {uiLanguage === 'KO' ? '음원 (Songs)' : 'Songs'}
+              {uiLanguage === 'KO' ? '음원 (Songs)' : uiLanguage === 'JA' ? '曲' : 'Songs'}
             </h3>
             {displayedTracks.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching songs found.</p>
@@ -340,7 +340,7 @@ export function SearchClient({
           {showArtists && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              {uiLanguage === 'KO' ? '아티스트 (Artists)' : 'Artists'}
+              {uiLanguage === 'KO' ? '아티스트 (Artists)' : uiLanguage === 'JA' ? 'アーティスト' : 'Artists'}
             </h3>
             {filteredArtists.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching artists found.</p>
@@ -374,7 +374,7 @@ export function SearchClient({
           {showAlbums && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              {uiLanguage === 'KO' ? '앨범 (Albums)' : 'Albums'}
+              {uiLanguage === 'KO' ? '앨범 (Albums)' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
             </h3>
             {filteredAlbums.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching albums found.</p>

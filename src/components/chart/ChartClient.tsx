@@ -70,8 +70,16 @@ export function ChartClient({
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('uiLanguage')
-    if (savedLang) setUiLanguage(savedLang)
+    if (typeof window === 'undefined') return
+    const storedLang = localStorage.getItem('language')
+    if (storedLang) {
+      setUiLanguage(storedLang.toUpperCase())
+    }
+    const handleLangChange = (e: any) => {
+      setUiLanguage(e.detail.toUpperCase())
+    }
+    window.addEventListener('languageChange', handleLangChange)
+    return () => window.removeEventListener('languageChange', handleLangChange)
   }, [])
 
   const GENRE_MAP_KO: Record<string, string> = {
@@ -84,6 +92,18 @@ export function ChartClient({
     'Funk Soul': '펑크 소울', 'Soundtrack': '사운드트랙', 'Classical': '클래식', 
     'Ambient': '앰비언트', 'Chill': '칠', 'Podcasts': '팟캐스트',
     'Animation': '애니메이션', 'City Pop': '시티팝', 'Trot': '트로트', 'Other': '기타'
+  }
+
+  const GENRE_MAP_JA: Record<string, string> = {
+    'All': 'すべて', 'Pop': 'ポップ', 'K-Pop': 'K-POP', 'J-Pop': 'J-POP', 'Gospel': 'ゴスペル', 
+    'Electronic': 'エレクトロニック', 'Rock': 'ロック', 'R&B': 'R&B', 'Country': 'カントリー', 
+    'Latin': 'ラテン', 'Afrobeats': 'アフロビーツ', 'Shoegaze': 'シューゲイザー', 'Experimental': '実験音楽', 
+    'Alternative': 'オルタナティヴ', 'Folk': 'フォーク', 'Jazz': 'ジャズ', 'Blues': 'ブルース', 
+    'House': 'ハウス', 'Punk': 'パンク', 'Dance': 'ダンス', 'Indie Rock': 'インディーロック', 
+    'Hip Hop': 'ヒップホップ', 'Reggae': 'レゲエ', 'Hyperpop': 'ハイパーポップ', 'Metal': 'メタル', 
+    'Funk Soul': 'ファンク/ソウル', 'Soundtrack': 'サントラ', 'Classical': 'クラシック', 
+    'Ambient': 'アンビエント', 'Chill': 'チルアウト', 'Podcasts': 'ポッドキャスト',
+    'Animation': 'アニメ', 'City Pop': 'シティ・ポップ', 'Trot': 'トロット', 'Other': 'その他'
   }
 
   const isRealTrack = (item: any) => {
@@ -289,11 +309,11 @@ export function ChartClient({
         <div className="space-y-1">
           <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
             <Trophy className="w-6 h-6 text-primary shrink-0" />
-            {uiLanguage === 'KO' ? 'BEATZ 랭킹차트' : 'BEATZ Ranking Chart'}
+            {uiLanguage === 'KO' ? 'BEATZ 랭킹차트' : uiLanguage === 'JA' ? 'BEATZ ランキングチャート' : 'BEATZ Ranking Chart'}
           </h1>
           {periodDate && (
             <p className="text-[10px] text-on-surface-variant/80 font-mono">
-              {uiLanguage === 'KO' ? '마지막 업데이트 기준일:' : 'Last updated:'} {periodDate} {localGenre !== 'All' && `• ${uiLanguage === 'KO' ? (GENRE_MAP_KO[localGenre] || localGenre) : localGenre} ${uiLanguage === 'KO' ? '장르' : 'Genre'}`}
+              {uiLanguage === 'KO' ? '마지막 업데이트 기준일:' : uiLanguage === 'JA' ? '最終更新:' : 'Last updated:'} {periodDate} {localGenre !== 'All' && `• ${uiLanguage === 'KO' ? (GENRE_MAP_KO[localGenre] || localGenre) : localGenre} ${uiLanguage === 'KO' ? '장르' : uiLanguage === 'JA' ? 'ジャンル' : 'Genre'}`}
             </p>
           )}
         </div>
@@ -305,13 +325,13 @@ export function ChartClient({
             <button
               className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
             >
-              {uiLanguage === 'KO' ? '음원 차트' : 'Track Chart'}
+              {uiLanguage === 'KO' ? '음원 차트' : uiLanguage === 'JA' ? 'トラックチャート' : 'Track Chart'}
             </button>
             <Link
               href="/charts/artists"
               className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
             >
-              {uiLanguage === 'KO' ? '아티스트 차트' : 'Artist Chart'}
+              {uiLanguage === 'KO' ? '아티스트 차트' : uiLanguage === 'JA' ? 'アーティストチャート' : 'Artist Chart'}
             </Link>
           </div>
 
@@ -347,7 +367,7 @@ export function ChartClient({
                 : 'bg-surface-container-low border-outline-variant/10 text-zinc-450 hover:text-on-surface hover:border-white/[0.12]'
             }`}
           >
-            {uiLanguage === 'KO' ? (GENRE_MAP_KO[genre] || genre) : (genre === 'All' ? 'All' : genre)}
+            {uiLanguage === 'KO' ? (GENRE_MAP_KO[genre] || genre) : uiLanguage === 'JA' ? (GENRE_MAP_JA[genre] || genre) : (genre === 'All' ? 'All' : genre)}
           </button>
         ))}
       </section>
@@ -361,14 +381,14 @@ export function ChartClient({
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#080d08] hover:bg-[#e3fe06] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer shrink-0"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            {uiLanguage === 'KO' ? '1위부터 재생' : 'Play from Top 1'}
+            {uiLanguage === 'KO' ? '1위부터 재생' : uiLanguage === 'JA' ? '1位から再生' : 'Play from Top 1'}
           </button>
           
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
             <input
               type="text"
-              placeholder={uiLanguage === 'KO' ? "제목, 앨범, 아티스트 검색..." : "Search title, album, artist..."}
+              placeholder={uiLanguage === 'KO' ? "제목, 앨범, 아티스트 검색..." : uiLanguage === 'JA' ? "タイトル、アルバム、アーティストを検索..." : "Search title, album, artist..."}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -387,7 +407,7 @@ export function ChartClient({
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] text-on-surface-variant text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-            {uiLanguage === 'KO' ? '차트 집계 갱신' : 'Refresh Chart'}
+            {uiLanguage === 'KO' ? '차트 집계 갱신' : uiLanguage === 'JA' ? 'チャートを更新' : 'Refresh Chart'}
           </button>
         )}
       </section>
@@ -398,11 +418,11 @@ export function ChartClient({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                <th className="py-4.5 px-6 w-20 text-center">{uiLanguage === 'KO' ? '순위' : 'Rank'}</th>
-                <th className="py-4.5 px-4">{uiLanguage === 'KO' ? '곡 정보' : 'Track'}</th>
-                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '재생수' : 'Plays'}</th>
-                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '좋아요' : 'Likes'}</th>
-                <th className="py-4.5 px-6 w-20 text-right">{uiLanguage === 'KO' ? '시간' : 'Time'}</th>
+                <th className="py-4.5 px-6 w-20 text-center">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</th>
+                <th className="py-4.5 px-4">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</th>
+                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</th>
+                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</th>
+                <th className="py-4.5 px-6 w-20 text-right">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03] text-xs">
@@ -507,11 +527,11 @@ export function ChartClient({
               ) : (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-on-surface-variant/60">
-                    <p className="font-medium text-sm text-on-surface-variant">{uiLanguage === 'KO' ? '집계된 차트 데이터가 없습니다.' : 'No chart data available.'}</p>
+                    <p className="font-medium text-sm text-on-surface-variant">{uiLanguage === 'KO' ? '집계된 차트 데이터가 없습니다.' : uiLanguage === 'JA' ? 'チャートデータがありません。' : 'No chart data available.'}</p>
                     {isAdmin ? (
-                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '상단의 \'차트 집계 갱신\' 버튼을 눌러 실시간으로 차트를 만들어보세요.' : 'Click "Refresh Chart" above to generate chart in real-time.'}</p>
+                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '상단의 \'차트 집계 갱신\' 버튼을 눌러 실시간으로 차트를 만들어보세요.' : uiLanguage === 'JA' ? 'クリック ' : 'Click "Refresh Chart" above to generate chart in real-time.'}</p>
                     ) : (
-                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '관련 스케줄러 배치 또는 어드민의 집계 갱신 처리가 필요합니다.' : 'Requires scheduler batch or admin chart generation.'}</p>
+                      <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '관련 스케줄러 배치 또는 어드민의 집계 갱신 처리가 필요합니다.' : uiLanguage === 'JA' ? 'スケジューラバッチまたは管理者のチャート生成が必要です。' : 'Requires scheduler batch or admin chart generation.'}</p>
                     )}
                   </td>
                 </tr>
@@ -526,7 +546,7 @@ export function ChartClient({
             <p className="text-xs text-zinc-500 font-bold">
               {uiLanguage === 'KO' 
                 ? `페이지 ${currentPage} / ${totalPages}` 
-                : `Page ${currentPage} of ${totalPages}`}
+                : uiLanguage === 'JA' ? `${currentPage} / ${totalPages} ページ` : `Page ${currentPage} of ${totalPages}`}
             </p>
             <div className="flex gap-1.5">
               <button 
@@ -534,7 +554,7 @@ export function ChartClient({
                 disabled={currentPage === 1}
                 className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
               >
-                {uiLanguage === 'KO' ? '이전' : 'Prev'}
+                {uiLanguage === 'KO' ? '이전' : uiLanguage === 'JA' ? '前へ' : 'Prev'}
               </button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -556,7 +576,7 @@ export function ChartClient({
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
               >
-                {uiLanguage === 'KO' ? '다음' : 'Next'}
+                {uiLanguage === 'KO' ? '다음' : uiLanguage === 'JA' ? '次へ' : 'Next'}
               </button>
             </div>
           </div>

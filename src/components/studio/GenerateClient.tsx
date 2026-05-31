@@ -87,6 +87,26 @@ export function GenerateClient({
   const [userCredits, setUserCredits] = useState<number>(120)
   const [profile, setProfile] = useState<any>(null)
 
+  const [generateForm, setGenerateForm] = useState({
+    modelProvider: 'suno',
+    modelVersion: 'v5',
+    customMode: true,
+    instrumentalOnly: false,
+    prompt: initialPrompt || '',
+    style: initialStyle || '',
+    title: initialTitle || '',
+    vocalGender: 'Female',
+    negativeTags: initialNegativePrompt || '',
+    styleWeight: 0.5,
+    weirdness: 0.3,
+    audioWeight: 0.5
+  })
+
+  const updateFormData = (key: string, value: any) => {
+    setGenerateForm(prev => ({ ...prev, [key]: value }))
+  }
+
+
   const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
     if (!url) return
     try {
@@ -332,14 +352,14 @@ export function GenerateClient({
   const handleGenerate = async () => {
     const processingCount = activeTasks.filter(t => t.status === 'processing').length
     if (processingCount >= 6) {
-      alert(uiLanguage === 'KO' ? '최대 6개까지 동시에 음악을 생성할 수 있습니다.' : 'You can generate up to 6 tracks concurrently.')
+      alert(uiLanguage === 'KO' ? '최대 6개까지 동시에 음악을 생성할 수 있습니다.' : uiLanguage === 'JA' ? '同時に最大6曲まで生成できます。' : 'You can generate up to 6 tracks concurrently.')
       return
     }
 
     const savedCredits = localStorage.getItem('user-credits')
     const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
     if (currentCredits < 10) {
-      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 10 크레딧)' : 'Insufficient credits. (Requires 10 credits)')
+      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 10 크레딧)' : uiLanguage === 'JA' ? 'クレジットが不足しています。(10クレジット必要)' : 'Insufficient credits. (Requires 10 credits)')
       return
     }
 
@@ -402,7 +422,7 @@ export function GenerateClient({
           id: 'tx-' + Date.now(),
           date: new Date().toISOString().replace('T', ' ').slice(0, 16),
           type: 'use',
-          desc: uiLanguage === 'KO' ? '음악 생성 (-10)' : 'Song Generation (-10)',
+          desc: uiLanguage === 'KO' ? '음악 생성 (-10)' : uiLanguage === 'JA' ? '曲生成 (-10)' : 'Music Generation (-10)',
           amount: '-10',
           status: 'Completed'
         }
@@ -551,18 +571,18 @@ export function GenerateClient({
     <div className="max-w-6xl mx-auto p-4 md:p-8 pt-6 md:pt-8">
       <h1 className="text-2xl font-bold text-on-background mb-8 flex items-center gap-3">
         <Disc className="w-8 h-8 text-primary" />
-        {uiLanguage === 'KO' ? '음악 생성 인터페이스' : 'Music Generation Interface'}
+        {uiLanguage === 'KO' ? '음악 생성 인터페이스' : uiLanguage === 'JA' ? '音楽生成インターフェース' : 'Music Generation Interface'}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6 bg-surface p-6 rounded-2xl border border-outline-variant/10 shadow-lg">
           <div className="flex justify-between items-center border-b border-outline-variant/10 pb-3">
-            <h2 className="text-sm font-bold text-on-surface">{uiLanguage === 'KO' ? '입력 설정 (Input)' : 'Input Settings'}</h2>
+            <h2 className="text-sm font-bold text-on-surface">{uiLanguage === 'KO' ? '입력 설정 (Input)' : uiLanguage === 'JA' ? '入力設定' : 'Input Settings'}</h2>
           </div>
           
           <div className="space-y-4">
             <div className="space-y-2 pb-2 border-b border-outline-variant/10">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? 'AI 엔진 선택 (AI Engine)' : 'Select AI Engine'}</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? 'AI 엔진 선택 (AI Engine)' : uiLanguage === 'JA' ? 'AIエンジンを選択' : 'Select AI Engine'}</label>
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => updateFormData('modelProvider', 'suno')}
@@ -579,20 +599,20 @@ export function GenerateClient({
                   className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
                 >
                   Udio (v1.5)
-                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : 'Coming'}</span>
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : uiLanguage === 'JA' ? '近日公開' : 'Coming'}</span>
                 </button>
                 <button
                   onClick={() => alert('Google MusicFX API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
                   className="px-4 py-2 bg-surface-container-low text-on-surface-variant/40 border border-outline-variant/20 rounded-xl text-xs font-bold relative cursor-not-allowed"
                 >
                   MusicFX
-                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : 'Coming'}</span>
+                  <span className="absolute -top-2 -right-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] px-1.5 py-0.5 rounded-md">{uiLanguage === 'KO' ? '예정' : uiLanguage === 'JA' ? '近日公開' : 'Coming'}</span>
                 </button>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : 'Model Version'}</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : uiLanguage === 'JA' ? 'モデルバージョン' : 'Model Version'}</label>
               <select 
                 value={generateForm.modelVersion} 
                 onChange={e => updateFormData('modelVersion', e.target.value)}
@@ -601,13 +621,13 @@ export function GenerateClient({
                 <option value="v5">Suno V5</option>
                 <option value="v4">Suno V4</option>
               </select>
-              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5가 최신 기본값입니다.' : 'Suno model version. V5 is the latest default.'}</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5가 최신 기본값입니다.' : uiLanguage === 'JA' ? 'Sunoモデルバージョン。V5が最新のデフォルトです。' : 'Suno model version. V5 is the latest default.'}</p>
             </div>
 
             <div className="flex justify-between items-center py-2">
               <div>
-                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '커스텀 모드 (Custom Mode)' : 'Custom Mode'}</label>
-                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.' : 'Enable custom mode to enter style and title manually.'}</p>
+                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '커스텀 모드 (Custom Mode)' : uiLanguage === 'JA' ? 'カスタムモード' : 'Custom Mode'}</label>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.' : uiLanguage === 'JA' ? 'カスタムモードを有効にして、スタイルとタイトルを手動で入力します。' : 'Enable custom mode to enter style and title manually.'}</p>
               </div>
               <button 
                 onClick={() => updateFormData('customMode', !generateForm.customMode)}
@@ -619,8 +639,8 @@ export function GenerateClient({
 
             <div className="flex justify-between items-center py-2">
               <div>
-                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '연주곡만 생성 (Inst Only)' : 'Instrumental Only'}</label>
-                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '보컬 없이 악기 연주만 있는 음악을 생성합니다.' : 'Generate instrumental music without vocals.'}</p>
+                <label className="text-xs font-bold text-on-surface block">{uiLanguage === 'KO' ? '연주곡만 생성 (Inst Only)' : uiLanguage === 'JA' ? 'インストゥルメンタルのみ' : 'Instrumental Only'}</label>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '보컬 없이 악기 연주만 있는 음악을 생성합니다.' : uiLanguage === 'JA' ? 'ボーカルなしのインストゥルメンタル音楽を生成します。' : 'Generate instrumental music without vocals.'}</p>
               </div>
               <button 
                 onClick={() => updateFormData('instrumentalOnly', !generateForm.instrumentalOnly)}
@@ -631,77 +651,77 @@ export function GenerateClient({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : 'Prompt / Lyrics'}</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : uiLanguage === 'JA' ? 'プロンプト / 歌詞' : 'Prompt / Lyrics'}</label>
               <textarea 
                 value={generateForm.prompt}
                 onChange={e => updateFormData('prompt', e.target.value)}
                 rows={5}
                 className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface outline-none resize-none custom-scrollbar"
               />
-              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : uiLanguage === 'JA' ? '生成したい音楽の歌詞または説明。カスタムモードがオフのときに必須です。' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
             </div>
 
             {generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 (Style)' : 'Style'}</label>
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 (Style)' : uiLanguage === 'JA' ? 'スタイル' : 'Style'}</label>
                 <input 
                   type="text"
                   value={generateForm.style}
                   onChange={e => updateFormData('style', e.target.value)}
                   className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
                 />
-                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : 'Music style and genre. Required when Custom Mode is on.'}</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : uiLanguage === 'JA' ? '音楽のスタイルとジャンル。カスタムモードがオンのときに必須です。' : 'Music style and genre. Required when Custom Mode is on.'}</p>
               </div>
             )}
 
             {generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '곡 제목 (Title)' : 'Title'}</label>
+                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '곡 제목 (Title)' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</label>
                 <input 
                   type="text"
                   value={generateForm.title}
                   onChange={e => updateFormData('title', e.target.value)}
                   className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
                 />
-                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : 'Title of the music. Required when Custom Mode is on.'}</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : uiLanguage === 'JA' ? '音楽のタイトル。カスタムモードがオンのときに必須です。' : 'Title of the music. Required when Custom Mode is on.'}</p>
               </div>
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : 'Vocal Gender'}</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : uiLanguage === 'JA' ? 'ボーカルの性別' : 'Vocal Gender'}</label>
               <div className="flex gap-2">
                 <button 
                   onClick={() => updateFormData('vocalGender', 'Male')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Male' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
                 >
-                  {uiLanguage === 'KO' ? '남성 보컬' : 'Male'}
+                  {uiLanguage === 'KO' ? '남성 보컬' : uiLanguage === 'JA' ? '男性' : 'Male'}
                 </button>
                 <button 
                   onClick={() => updateFormData('vocalGender', 'Female')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Female' ? 'bg-primary text-[#080d08] border-primary' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
                 >
-                  {uiLanguage === 'KO' ? '여성 보컬' : 'Female'}
+                  {uiLanguage === 'KO' ? '여성 보컬' : uiLanguage === 'JA' ? '女性' : 'Female'}
                 </button>
               </div>
-              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 보컬의 성별을 선택합니다.' : 'Select the gender of the vocal to generate.'}</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 보컬의 성별을 선택합니다.' : uiLanguage === 'JA' ? '生成するボーカルの性別を選択します。' : 'Select the gender of the vocal to generate.'}</p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '제외할 태그 (Negative Tags)' : 'Negative Tags'}</label>
+              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '제외할 태그 (Negative Tags)' : uiLanguage === 'JA' ? 'ネガティブタグ' : 'Negative Tags'}</label>
               <input 
                 type="text"
                 value={generateForm.negativeTags}
                 onChange={e => updateFormData('negativeTags', e.target.value)}
-                placeholder={uiLanguage === 'KO' ? '시끄러운, 헤비메탈, 스크리밍...' : 'Noisy, Heavy Metal, Screaming...'}
+                placeholder={uiLanguage === 'KO' ? '시끄러운, 헤비메탈, 스크리밍...' : uiLanguage === 'JA' ? 'ノイジー、ヘビーメタル、スクリーミング...' : 'Noisy, heavy metal, screaming...'}
                 className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none placeholder:text-on-surface-variant/50"
               />
-              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.' : 'Genres, styles, and elements to exclude.'}</p>
+              <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.' : uiLanguage === 'JA' ? '除外するジャンル、スタイル、要素。' : 'Genres, styles, and elements to exclude.'}</p>
             </div>
 
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : 'Style Weight'}</label>
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : uiLanguage === 'JA' ? 'スタイルウェイト' : 'Style Weight'}</label>
                   <span className="font-bold">{generateForm.styleWeight}</span>
                 </div>
                 <input 
@@ -710,12 +730,12 @@ export function GenerateClient({
                   onChange={e => updateFormData('styleWeight', parseFloat(e.target.value))}
                   className="w-full accent-primary"
                 />
-                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.' : 'Weight for style instructions. Higher values strictly follow the prompt style.'}</p>
+                <p className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.' : uiLanguage === 'JA' ? 'スタイル指示の重み。値が高いほどプロンプトスタイルに厳密に従います。' : 'Weight for style instructions. Higher values strictly follow the prompt style.'}</p>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '독창성 (Weirdness)' : 'Weirdness'}</label>
+                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '독창성 (Weirdness)' : uiLanguage === 'JA' ? '奇抜さ' : 'Weirdness'}</label>
                   <span className="font-bold">{generateForm.weirdness}</span>
                 </div>
                 <input 
@@ -763,7 +783,7 @@ export function GenerateClient({
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
           
           <h2 className="text-sm font-bold text-on-surface border-b border-outline-variant/10 pb-3 flex justify-between items-center shrink-0">
-            {uiLanguage === 'KO' ? '진행 상태 및 완료된 곡' : 'Status & Completed Tracks'}
+            {uiLanguage === 'KO' ? '진행 상태 및 완료된 곡' : uiLanguage === 'JA' ? 'ステータス & 完了したトラック' : 'Status & Completed Tracks'}
             <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">{status}</span>
           </h2>
 
@@ -776,7 +796,7 @@ export function GenerateClient({
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                   </span>
-                  {uiLanguage === 'KO' ? `생성 중인 음악 (${activeTasks.length * 2}곡 생성중)` : `Active Generations (${activeTasks.length * 2} tracks generating)`}
+                  {uiLanguage === 'KO' ? `생성 중인 음악 (${activeTasks.length * 2}곡 생성중)` : uiLanguage === 'JA' ? `アクティブな生成 (${activeTasks.length * 2}曲を生成中)` : `Active Generations (${activeTasks.length * 2} tracks generating)`}
                 </p>
                 <div className="space-y-3">
                   {activeTasks.map((task) => (
@@ -786,13 +806,13 @@ export function GenerateClient({
                           <p className="text-xs font-bold text-white truncate">{task.title}</p>
                           <p className="text-[10px] text-zinc-500 mt-1 font-medium">
                             {task.status === 'completed' ? (
-                              <span className="text-primary font-bold">{uiLanguage === 'KO' ? '완료' : 'Completed'}</span>
+                              <span className="text-primary font-bold">{uiLanguage === 'KO' ? '완료' : uiLanguage === 'JA' ? '完了' : 'Completed'}</span>
                             ) : task.status === 'failed' ? (
-                              <span className="text-red-400 font-bold">{uiLanguage === 'KO' ? '실패' : 'Failed'}</span>
+                              <span className="text-red-400 font-bold">{uiLanguage === 'KO' ? '실패' : uiLanguage === 'JA' ? '失敗' : 'Failed'}</span>
                             ) : task.state === 'queuing' ? (
-                              <span className="animate-pulse">{uiLanguage === 'KO' ? '대기 중...' : 'Queued...'}</span>
+                              <span className="animate-pulse">{uiLanguage === 'KO' ? '대기 중...' : uiLanguage === 'JA' ? 'キューに入りました...' : 'Queued...'}</span>
                             ) : (
-                              <span className="animate-pulse text-emerald-400">{uiLanguage === 'KO' ? '보컬 및 악기 합성 중...' : 'Synthesizing voice & instruments...'}</span>
+                              <span className="animate-pulse text-emerald-400">{uiLanguage === 'KO' ? '보컬 및 악기 합성 중...' : uiLanguage === 'JA' ? '音声と楽器を合成中...' : 'Synthesizing voice & instruments...'}</span>
                             )}
                           </p>
                         </div>
@@ -822,7 +842,7 @@ export function GenerateClient({
             {isMusicGenerating && (
               <div className="flex flex-col items-center justify-start p-8 pt-12 bg-surface-container-lowest rounded-xl border border-primary/20 shrink-0">
                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                 <p className="text-sm text-primary font-bold">{uiLanguage === 'KO' ? 'Suno 서버에 요청 전송 중...' : 'Sending request to Suno...'}</p>
+                 <p className="text-sm text-primary font-bold">{uiLanguage === 'KO' ? 'Suno 서버에 요청 전송 중...' : uiLanguage === 'JA' ? 'Sunoにリクエストを送信中...' : 'Sending request to Suno...'}</p>
               </div>
             )}
 
@@ -830,8 +850,8 @@ export function GenerateClient({
             {topCompletedSongs.length > 0 ? (
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-zinc-400 tracking-wider flex justify-between items-center">
-                  <span>{uiLanguage === 'KO' ? `🎵 생성 완료된 곡 목록 (최근 ${topCompletedSongs.length}곡)` : `🎵 Completed Songs (Recent ${topCompletedSongs.length})`}</span>
-                  <span className="text-[9px] text-zinc-500 font-normal normal-case">{uiLanguage === 'KO' ? '* 클릭 시 옵션/가사 불러오기' : '* Click to load options/lyrics'}</span>
+                  <span>{uiLanguage === 'KO' ? `🎵 생성 완료된 곡 목록 (최근 ${topCompletedSongs.length}곡)` : uiLanguage === 'JA' ? `🎵 完了した曲 (最近 ${topCompletedSongs.length}件)` : `🎵 Completed Songs (Recent ${topCompletedSongs.length})`}</span>
+                  <span className="text-[9px] text-zinc-500 font-normal normal-case">{uiLanguage === 'KO' ? '* 클릭 시 옵션/가사 불러오기' : uiLanguage === 'JA' ? '* クリックしてオプション/歌詞をロード' : '* Click to load options/lyrics'}</span>
                 </p>
                 
                 <div className="space-y-2">
@@ -877,7 +897,7 @@ export function GenerateClient({
                           <button
                             onClick={() => handlePublishToggle(track)}
                             className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-                            title={track.is_published ? (uiLanguage === 'KO' ? '비공개로 설정' : 'Make Private') : (uiLanguage === 'KO' ? '공개로 설정' : 'Make Public')}
+                            title={track.is_published ? (uiLanguage === 'KO' ? '비공개로 설정' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private') : (uiLanguage === 'KO' ? '공개로 설정' : uiLanguage === 'JA' ? '公開する' : 'Make Public')}
                           >
                             <Globe 
                               className={`w-3.5 h-3.5 ${
@@ -895,7 +915,7 @@ export function GenerateClient({
                               className={`p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0 ${
                                 track.playlist_id ? 'text-primary' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
-                              title={uiLanguage === 'KO' ? '플레이리스트 지정' : 'Playlist'}
+                              title={uiLanguage === 'KO' ? '플레이리스트 지정' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}
                             >
                               <FolderPlus className="w-3.5 h-3.5" />
                             </button>
@@ -906,7 +926,7 @@ export function GenerateClient({
                                 <div className="fixed inset-0 z-40" onClick={() => setActivePlaylistMenuId(null)} />
                                 <div className="absolute right-0 mt-2 w-48 bg-[#18181c] border border-zinc-800 rounded-xl shadow-2xl p-2 z-50 text-left">
                                   <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider px-2 py-1 border-b border-zinc-900">
-                                    {uiLanguage === 'KO' ? '플레이리스트 선택' : 'Select Playlist'}
+                                    {uiLanguage === 'KO' ? '플레이리스트 선택' : uiLanguage === 'JA' ? 'プレイリストを選択' : 'Select Playlist'}
                                   </p>
                                   <div className="max-h-40 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
                                     <button
@@ -927,14 +947,14 @@ export function GenerateClient({
                                       }}
                                       className="w-full text-left px-2 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[10px] font-bold cursor-pointer"
                                     >
-                                      <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : 'Remove from Playlist'}</span>
+                                      <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}</span>
                                       {!track.playlist_id && <Check className="w-3 h-3 text-primary" />}
                                     </button>
 
                                     {/* Albums Section */}
                                     {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').length > 0 && (
                                       <div className="px-2 py-1 text-[8px] font-black tracking-widest text-[#e3fe06] uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                        {uiLanguage === 'KO' ? '내 앨범' : 'Albums'}
+                                        {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
                                       </div>
                                     )}
                                     {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').map((playlist) => {
@@ -968,7 +988,7 @@ export function GenerateClient({
                                     {/* Playlists Section */}
                                     {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').length > 0 && (
                                       <div className="px-2 py-1 text-[8px] font-black tracking-widest text-zinc-400 uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                        {uiLanguage === 'KO' ? '나만의 플레이리스트' : 'Playlists'}
+                                        {uiLanguage === 'KO' ? '나만의 플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'}
                                       </div>
                                     )}
                                     {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').map((playlist) => {
@@ -1008,7 +1028,7 @@ export function GenerateClient({
                           <button
                             onClick={() => handleLikeToggle(track)}
                             className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer group/heart shrink-0"
-                            title={uiLanguage === 'KO' ? '좋아요' : 'Like'}
+                            title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
                           >
                             <Heart 
                               className={`w-3.5 h-3.5 transition-all duration-200 active:scale-125 ${
@@ -1023,7 +1043,7 @@ export function GenerateClient({
                           <button
                             onClick={() => handleDownloadTrack(track.audio_url, track.title, track.image_url)}
                             className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-                            title={uiLanguage === 'KO' ? '다운로드' : 'Download'}
+                            title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
                           >
                             <Download className="w-3.5 h-3.5 text-zinc-500 hover:text-primary transition-colors" />
                           </button>
@@ -1072,14 +1092,14 @@ export function GenerateClient({
                   <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center mb-2">
                     <Music className="w-8 h-8 text-on-surface-variant" />
                   </div>
-                  <p className="text-sm text-on-surface text-center">{uiLanguage === 'KO' ? '좌측의 입력 정보를 바탕으로\n실제 오디오 생성을 시작합니다.' : 'Generate audio based on\nthe input options on the left.'}</p>
+                  <p className="text-sm text-on-surface text-center">{uiLanguage === 'KO' ? '좌측의 입력 정보를 바탕으로\n실제 오디오 생성을 시작합니다.' : uiLanguage === 'JA' ? '左側の入力オプションに\n基づいて音声を生成します。' : 'Based on the input information on the left,\nactual audio generation will start.'}</p>
                   <button 
                     onClick={handleGenerate}
                     disabled={isMusicGenerating}
                     className="w-full py-4 bg-primary hover:bg-[#e3fe06] text-[#080d08] font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0"
                   >
                     <Disc className="w-5 h-5" />
-                    {uiLanguage === 'KO' ? 'Suno 음악 생성 시작하기 (10 크레딧)' : 'Start Suno Music Generation (10 Credits)'}
+                    {uiLanguage === 'KO' ? 'Suno 음악 생성 시작하기 (10 크레딧)' : uiLanguage === 'JA' ? 'Suno音楽生成を開始 (10クレジット)' : 'Start Suno Music Generation (10 Credits)'}
                   </button>
                 </div>
               )
@@ -1093,13 +1113,13 @@ export function GenerateClient({
           <div className="bg-[#18181c] border border-zinc-800 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Globe className="w-4 h-4 text-primary" />
-              {uiLanguage === 'KO' ? '음원 퍼블리싱 (공개)' : 'Publish Track'}
+              {uiLanguage === 'KO' ? '음원 퍼블리싱 (공개)' : uiLanguage === 'JA' ? 'トラックを公開' : 'Publish Track (Public)'}
             </h3>
             
             <p className="text-[11px] text-zinc-400 leading-relaxed">
               {uiLanguage === 'KO' 
                 ? `'${publishConfirmItem.title || 'Untitled'}' 곡을 퍼블리싱하여 내 채널에 공개하시겠습니까?`
-                : `Are you sure you want to publish '${publishConfirmItem.title || 'Untitled'}'?`}
+                : uiLanguage === 'JA' ? `本当に公開しますか: ` : `Are you sure you want to publish '${publishConfirmItem.title || 'Untitled'}'?`}
             </p>
 
             <div className="space-y-1.5">

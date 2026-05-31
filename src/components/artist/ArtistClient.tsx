@@ -189,6 +189,27 @@ export function ArtistClient({
     }
   }, [])
   const [isFollowed, setIsFollowed] = useState(false)
+  const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem('language')
+      if (storedLang) {
+        setUiLanguage(storedLang.toUpperCase() as any)
+      } else {
+        const browserLang = navigator.language || ''
+        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+        setUiLanguage(defaultLang)
+        localStorage.setItem('language', defaultLang)
+      }
+
+      const handleLangChange = (e: any) => {
+        setUiLanguage(e.detail.toUpperCase())
+      }
+      window.addEventListener('languageChange', handleLangChange)
+      return () => window.removeEventListener('languageChange', handleLangChange)
+    }
+  }, [])
 
   // Extra profile fields loaded from local storage for user creators
   const [profileName, setProfileName] = useState(artist.name || '')
@@ -608,19 +629,19 @@ export function ArtistClient({
                     onClick={() => router.push('/profile?tab=private')} 
                     className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                   >
-                    <Lock className="w-3.5 h-3.5" /> 관리 대시보드
+                    <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '관리 대시보드' : uiLanguage === 'JA' ? '管理ダッシュボード' : 'Admin Dashboard'}
                   </button>
                   <button 
                     onClick={() => router.push('/profile?tab=channels')} 
                     className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                   >
-                    <Users className="w-3.5 h-3.5" /> 채널 관리
+                    <Users className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Manage Channels'}
                   </button>
                   <button 
                     onClick={() => {}} 
                     className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-primary font-extrabold`}
                   >
-                    <Globe className="w-3.5 h-3.5" /> 아티스트 채널
+                    <Globe className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '아티스트 채널' : uiLanguage === 'JA' ? 'アーティストチャンネル' : 'Artist Channel'}
                   </button>
                 </div>
                 <button 
@@ -710,7 +731,7 @@ export function ArtistClient({
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight cursor-pointer group hover:text-primary transition-colors">
-              Songs <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+              {uiLanguage === 'KO' ? '음원 목록' : uiLanguage === 'JA' ? 'トラック一覧' : 'Songs'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -771,7 +792,7 @@ export function ArtistClient({
             })}
             {tracks.length === 0 && (
               <div className="col-span-full py-10 text-center text-sm text-zinc-450 bg-white/[0.01] rounded-2xl border border-dashed border-outline-variant/10">
-                등록된 음원이 없습니다.
+                {uiLanguage === 'KO' ? '등록된 음원이 없습니다.' : uiLanguage === 'JA' ? '登録されたトラックがありません。' : 'No registered tracks.'}
               </div>
             )}
           </div>
@@ -781,7 +802,7 @@ export function ArtistClient({
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight cursor-pointer group hover:text-primary transition-colors">
-              Albums <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+              {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -806,7 +827,7 @@ export function ArtistClient({
                     <div className="space-y-1">
                       <span className="text-xs font-extrabold text-white tracking-tight line-clamp-1">{album.title}</span>
                       <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1">
-                        ▶ {tracksCount} 곡
+                        ▶ {tracksCount} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}
                       </span>
                     </div>
                   </div>
@@ -815,7 +836,7 @@ export function ArtistClient({
             })}
             {(!albums || albums.length === 0) && (
               <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                공개된 앨범이 없습니다.
+                {uiLanguage === 'KO' ? '공개된 앨범이 없습니다.' : uiLanguage === 'JA' ? '公開されたアルバムがありません。' : 'No public albums.'}
               </div>
             )}
           </div>
@@ -825,7 +846,7 @@ export function ArtistClient({
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight cursor-pointer group hover:text-primary transition-colors">
-              Playlists <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+              {uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -858,7 +879,7 @@ export function ArtistClient({
             })}
             {(!playlists || playlists.length === 0) && (
               <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                공개된 플레이리스트가 없습니다.
+                {uiLanguage === 'KO' ? '공개된 플레이리스트가 없습니다.' : uiLanguage === 'JA' ? '公開されたプレイリストがありません。' : 'No public playlists.'}
               </div>
             )}
           </div>
@@ -868,7 +889,7 @@ export function ArtistClient({
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md grid place-items-center overflow-y-auto z-50 p-4 py-12 md:py-20">
             <div className="bg-[#121214] border border-zinc-800/80 rounded-3xl w-full max-w-lg shadow-2xl flex flex-col my-8 animate-in fade-in zoom-in-95 duration-200">
               <div className="relative py-5 flex items-center justify-center border-b border-zinc-850/40">
-                <h2 className="text-base font-extrabold text-white">Edit Channel</h2>
+                <h2 className="text-base font-extrabold text-white">{uiLanguage === 'KO' ? '채널 수정' : uiLanguage === 'JA' ? 'チャンネル編集' : 'Edit Channel'}</h2>
                 <button 
                   onClick={() => setIsEditingChannel(false)} 
                   className="absolute right-4 w-8 h-8 rounded-full bg-zinc-800/50 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
@@ -1112,19 +1133,19 @@ export function ArtistClient({
                       onClick={() => router.push('/profile?tab=private')} 
                       className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                     >
-                      <Lock className="w-3.5 h-3.5" /> 관리 대시보드
+                      <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '관리 대시보드' : uiLanguage === 'JA' ? '管理ダッシュボード' : 'Admin Dashboard'}
                     </button>
                     <button 
                       onClick={() => router.push('/profile?tab=channels')} 
                       className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                     >
-                      <Users className="w-3.5 h-3.5" /> 채널 관리
+                      <Users className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Manage Channels'}
                     </button>
                     <button 
                       onClick={() => {}} 
                       className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-primary font-extrabold`}
                     >
-                      <Globe className="w-3.5 h-3.5" /> 아티스트 채널
+                      <Globe className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '아티스트 채널' : uiLanguage === 'JA' ? 'アーティストチャンネル' : 'Artist Channel'}
                     </button>
                   </div>
                   <button 
@@ -1216,7 +1237,7 @@ export function ArtistClient({
               })
             ) : (
               <div className="py-8 text-center text-xs text-on-surface-variant/60 bg-white/[0.01] border border-dashed border-outline-variant/10 rounded-xl">
-                등록된 음원이 없습니다.
+                {uiLanguage === 'KO' ? '등록된 음원이 없습니다.' : uiLanguage === 'JA' ? '登録されたトラックがありません。' : 'No registered tracks.'}
               </div>
             )}
           </div>

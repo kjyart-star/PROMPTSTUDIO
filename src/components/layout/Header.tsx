@@ -173,7 +173,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
             <div className="flex items-center rounded-full border border-slate-800 bg-slate-900/60 p-0.5">
               <button 
                 onClick={() => handleLanguageChange('KO')}
-                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all duration-200 ${uiLanguage === 'KO' ? 'bg-slate-800 text-white shadow-sm' : 'text-[#A1A1AA] hover:text-white'}`}
+                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all duration-200 ${uiLanguage === 'KO' ? 'bg-slate-800 text-white shadow-sm' : uiLanguage === 'JA' ? 'text-[#A1A1AA] hover:text-white' : 'text-[#A1A1AA] hover:text-white'}`}
               >
                 KO
               </button>
@@ -182,6 +182,12 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
                 className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all duration-200 ${uiLanguage === 'EN' ? 'bg-slate-800 text-white shadow-sm' : 'text-[#A1A1AA] hover:text-white'}`}
               >
                 EN
+              </button>
+              <button 
+                onClick={() => handleLanguageChange('JA')}
+                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all duration-200 ${uiLanguage === 'JA' ? 'bg-slate-800 text-white shadow-sm' : 'text-[#A1A1AA] hover:text-white'}`}
+              >
+                JA
               </button>
             </div>
 

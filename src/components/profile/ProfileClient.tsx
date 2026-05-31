@@ -295,7 +295,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
   const [userCredits, setUserCredits] = useState<number>(120)
   const [transactions, setTransactions] = useState<any[]>([])
-  const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN'>('KO')
+  const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
   const [autoplay, setAutoplay] = useState<boolean>(true)
   const [userPlan, setUserPlan] = useState<string>('free')
@@ -433,7 +433,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
   const handleAddChannel = async () => {
     if (!newChannelName) {
-      return showToast(uiLanguage === 'KO' ? '채널명을 입력해주세요.' : 'Channel name is required.', 'error')
+      return showToast(uiLanguage === 'KO' ? '채널명을 입력해주세요.' : uiLanguage === 'JA' ? 'チャンネル名を入力してください。' : 'Channel name is required.', 'error')
     }
     
     // 핸들이 비어있으면 자동 생성
@@ -461,7 +461,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       if (!res.ok) {
         return showToast(data.error || '채널 생성 실패 (관리자 권한이 필요할 수 있습니다)', 'error')
       }
-      showToast(uiLanguage === 'KO' ? '새 채널이 생성되었습니다.' : 'New channel created.', 'success')
+      showToast(uiLanguage === 'KO' ? '새 채널이 생성되었습니다.' : uiLanguage === 'JA' ? '新しいチャンネルが作成されました。' : 'New channel created.', 'success')
       resetChannelModal()
       fetchChannels()
     } catch (e) {
@@ -471,7 +471,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   }
 
   const handleDeleteChannel = async (id: string) => {
-    if (!window.confirm(uiLanguage === 'KO' ? '정말로 이 채널을 삭제하시겠습니까?' : 'Are you sure you want to delete this channel?')) {
+    if (!window.confirm(uiLanguage === 'KO' ? '정말로 이 채널을 삭제하시겠습니까?' : uiLanguage === 'JA' ? '本当にこのチャンネルを削除しますか？' : 'Are you sure you want to delete this channel?')) {
       return
     }
     
@@ -483,11 +483,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         const data = await res.json()
         return showToast(data.error || '채널 삭제 실패', 'error')
       }
-      showToast(uiLanguage === 'KO' ? '채널이 삭제되었습니다.' : 'Channel deleted.', 'success')
+      showToast(uiLanguage === 'KO' ? '채널이 삭제되었습니다.' : uiLanguage === 'JA' ? 'チャンネルが削除されました。' : 'Channel deleted.', 'success')
       fetchChannels()
     } catch (e) {
       console.error(e)
-      showToast(uiLanguage === 'KO' ? '채널 삭제 중 오류가 발생했습니다.' : 'Error deleting channel.', 'error')
+      showToast(uiLanguage === 'KO' ? '채널 삭제 중 오류가 발생했습니다.' : uiLanguage === 'JA' ? 'チャンネルの削除中にエラーが発生しました。' : 'Error deleting channel.', 'error')
     }
   }
   
@@ -1053,15 +1053,15 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       localStorage.setItem('user-transactions', JSON.stringify(defaultTx))
     }
 
-    const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | null
-    if (savedLanguage === 'KO' || savedLanguage === 'EN') {
+    const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | 'JA' | null
+    if (savedLanguage === 'KO' || savedLanguage === 'EN' || savedLanguage === 'JA') {
       setUiLanguage(savedLanguage)
     }
 
     const handleLanguageChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>
-      if (customEvent.detail === 'KO' || customEvent.detail === 'EN') {
-        setUiLanguage(customEvent.detail as 'KO' | 'EN')
+      if (customEvent.detail === 'KO' || customEvent.detail === 'EN' || customEvent.detail === 'JA') {
+        setUiLanguage(customEvent.detail as 'KO' | 'EN' | 'JA')
       }
     }
     window.addEventListener('languageChange', handleLanguageChange)
@@ -1077,23 +1077,23 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     }
   }, [])
 
-  const changeLanguage = (lang: 'KO' | 'EN') => {
+  const changeLanguage = (lang: 'KO' | 'EN' | 'JA') => {
     setUiLanguage(lang)
     localStorage.setItem('language', lang)
     window.dispatchEvent(new CustomEvent('languageChange', { detail: lang }))
-    showToast(lang === 'KO' ? '언어가 한국어로 변경되었습니다.' : 'Language set to English.', 'success')
+    showToast(lang === 'KO' ? '언어가 한국어로 변경되었습니다.' : lang === 'JA' ? '言語が日本語に変更されました。' : 'Language set to English.', 'success')
   }
 
   const handleQualityChange = (val: 'standard' | 'high') => {
     setAudioQuality(val)
     localStorage.setItem('pref-audio-quality', val)
-    showToast(uiLanguage === 'KO' ? `스트리밍 음질: ${val === 'high' ? '고음질 (320kbps)' : '일반음질 (128kbps)'}` : `Streaming Quality: ${val === 'high' ? 'High (320kbps)' : 'Standard (128kbps)'}`, 'success')
+    showToast(uiLanguage === 'KO' ? `스트리밍 음질: ${val === 'high' ? '고음질 (320kbps)' : '일반음질 (128kbps)'}` : uiLanguage === 'JA' ? `ストリーミング音質: ${val === 'high' ? '高音質 (320kbps)' : '標準音質 (128kbps)'}` : `Streaming Quality: ${val === 'high' ? 'High (320kbps)' : 'Standard (128kbps)'}`, 'success')
   }
 
   const handleAutoplayChange = (val: boolean) => {
     setAutoplay(val)
     localStorage.setItem('pref-autoplay', String(val))
-    showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
+    showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : uiLanguage === 'JA' ? `自動再生: ${val ? 'オン' : 'オフ'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
   }
 
   const handleChargeCredits = (amount: number) => {
@@ -1108,14 +1108,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       id: `tx-${Date.now()}`,
       date: dateStr,
       type: 'charge',
-      desc: uiLanguage === 'KO' ? `크레딧 충전 (+${amount})` : `Credit Top-up (+${amount})`,
+      desc: uiLanguage === 'KO' ? `크레딧 충전 (+${amount})` : uiLanguage === 'JA' ? `クレジットチャージ (+${amount})` : `Credit Top-up (+${amount})`,
       amount: `+${amount}`,
       status: 'Completed'
     }
     const nextTx = [newTx, ...transactions]
     setTransactions(nextTx)
     localStorage.setItem('user-transactions', JSON.stringify(nextTx))
-    showToast(uiLanguage === 'KO' ? `${amount} 크레딧이 충전되었습니다!` : `${amount} credits successfully charged!`, 'success')
+    showToast(uiLanguage === 'KO' ? `${amount} 크레딧이 충전되었습니다!` : uiLanguage === 'JA' ? `${amount} クレジットが正常にチャージされました！` : `${amount} credits successfully charged!`, 'success')
   }
 
   const handleAlbumLikeToggle = (albumId: string) => {
@@ -1573,13 +1573,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       const supabase = createClient()
       const { error } = await supabase.from('song_history').update({ channel_id: channelId }).eq('id', historyId)
       if (error) {
-        showToast(uiLanguage === 'KO' ? '채널 연결 변경 실패' : 'Failed to change channel', 'error')
+        showToast(uiLanguage === 'KO' ? '채널 연결 변경 실패' : uiLanguage === 'JA' ? 'チャンネルの変更に失敗しました' : 'Failed to change channel link', 'error')
         console.error(error)
       } else {
         fetchHistory()
         showToast(channelId 
-          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : 'Song assigned to channel.')
-          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : 'Channel connection removed.'), 'success')
+          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : uiLanguage === 'JA' ? '曲がチャンネルに割り当てられました。' : 'Song assigned to channel.')
+          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : uiLanguage === 'JA' ? 'チャンネルの接続が解除されました。' : 'Channel unlinked.'), 'success')
       }
     } catch (e) { console.error(e) }
   }
@@ -1935,7 +1935,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 </select>
               </div>
 
-              <div className="relative" title="노출 순위 설정">
+              <div className="relative" title={uiLanguage === 'KO' ? '노출 순위 설정' : uiLanguage === 'JA' ? '表示順位設定' : 'Exposure Order Settings'}>
                 <button className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-primary transition-colors backdrop-blur-sm pointer-events-none">
                   <Sliders className="w-4 h-4" />
                 </button>
@@ -1986,7 +1986,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           <p className="text-[10px] text-on-surface-variant shrink-0 whitespace-nowrap">{new Date(item.created_at).toLocaleDateString()}</p>
           {item.playlist_id ? (() => {
             const folder = playlists.find(p => p.id === item.playlist_id);
-            if (!folder) return <span className="text-[9px] font-bold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded shrink-0">단일 곡</span>;
+            if (!folder) return <span className="text-[9px] font-bold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded shrink-0">{uiLanguage === 'KO' ? '단일 곡' : uiLanguage === 'JA' ? 'シングル' : 'Single'}</span>;
             const { type } = parsePlaylistDescription(folder.description);
             const isAlbum = type === 'album';
             return (
@@ -1997,7 +1997,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               </span>
             );
           })() : (
-            <span className="text-[9px] font-bold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded shrink-0">단일 곡</span>
+            <span className="text-[9px] font-bold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded shrink-0">{uiLanguage === 'KO' ? '단일 곡' : uiLanguage === 'JA' ? 'シングル' : 'Single'}</span>
           )}
         </div>
       </div>
@@ -2090,7 +2090,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         <div>
           <h3 className="text-sm font-bold text-on-surface truncate pr-2">{playlist.title}</h3>
           <p className="text-[10px] text-on-surface-variant mt-0.5 flex items-center gap-1.5">
-            <span>{tracksCount} songs</span>
+            <span>{tracksCount} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}</span>
             <span className="text-zinc-600">•</span>
             <span className="flex items-center gap-1">
               <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-[#e3fe06]' : 'text-zinc-500'}`} />
@@ -2199,7 +2199,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               onClick={handleBackFromDetail} 
               className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start"
             >
-              <ArrowLeft className="w-4 h-4" /> 목록으로
+              <ArrowLeft className="w-4 h-4" /> {uiLanguage === 'KO' ? '목록으로' : uiLanguage === 'JA' ? 'リストへ戻る' : 'Back to list'}
             </button>
 
             {/* Hero Header Banner */}
@@ -2226,7 +2226,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 </span>
                 <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mt-1">{selectedPlaylist.title}</h1>
                 <p className="text-xs text-zinc-400 font-semibold tracking-wide mt-1">
-                  {selectedPlaylist.is_mock ? 'AI Artist' : '보관함 폴더'} • {selectedPlaylistTracks.length}곡
+                  {selectedPlaylist.is_mock ? 'AI Artist' : (uiLanguage === 'KO' ? '보관함 폴더' : uiLanguage === 'JA' ? 'ライブラリフォルダ' : 'Library Folder')} • {selectedPlaylistTracks.length}{uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : ' songs'}
                 </p>
 
                 {/* Actions Button Row */}
@@ -2318,7 +2318,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               <div className="grid grid-cols-[50px_2fr_1.5fr_1.5fr_100px] gap-4 px-4 py-2 border-b border-zinc-800/40 text-xs font-bold text-zinc-500 uppercase tracking-wider">
                 <div>#</div>
                 <div>제목</div>
-                <div>앨범</div>
+                <div>{uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}</div>
                 <div>추가된 날짜</div>
                 <div className="text-right flex justify-end items-center"><Clock className="w-4 h-4 text-zinc-500" /></div>
               </div>
@@ -2533,7 +2533,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPrivateView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
-                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : 'Library (Private)'}
+                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
               </button>
               <button 
                 onClick={() => {
@@ -2548,7 +2548,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
-                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
+                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Channel Mgt'}
               </button>
               <button 
                 onClick={() => { 
@@ -2560,13 +2560,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPublicView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
-                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : 'My Channel (Published)'}
+                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : uiLanguage === 'JA' ? 'マイチャンネル (公開済み)' : 'My Channel (Published)'}
               </button>
             </div>
 
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><Folder className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '내 앨범' : 'My Albums'}</h2>
+                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><Folder className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'マイアルバム' : 'My Albums'}</h2>
               </div>
               
               {(() => {
@@ -2594,7 +2594,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                               <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                 <Plus className="w-6 h-6" />
                               </div>
-                              <span className="text-sm font-bold text-on-surface-variant group-hover:text-primary">{uiLanguage === 'KO' ? '새 앨범 만들기' : 'Create New Album'}</span>
+                              <span className="text-sm font-bold text-on-surface-variant group-hover:text-primary">{uiLanguage === 'KO' ? '새 앨범 만들기' : uiLanguage === 'JA' ? '新しいアルバムを作成' : 'Create New Album'}</span>
                             </button>
                           )
                         }
@@ -2642,14 +2642,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : 'Songs'}
+                  <Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : uiLanguage === 'JA' ? '曲' : 'Songs'}
                 </h2>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
                     <input
                       type="text"
-                      placeholder={uiLanguage === 'KO' ? '음원 검색...' : 'Search songs...'}
+                      placeholder={uiLanguage === 'KO' ? '음원 검색...' : uiLanguage === 'JA' ? '曲を検索...' : 'Search tracks...'}
                       value={trackSearchQuery}
                       onChange={(e) => {
                         setTrackSearchQuery(e.target.value)
@@ -2664,7 +2664,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-black hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      {uiLanguage === 'KO' ? '음원 파일 업로드' : 'Upload Audio File'}
+                      {uiLanguage === 'KO' ? '음원 파일 업로드' : uiLanguage === 'JA' ? '音声ファイルをアップロード' : 'Upload Audio File'}
                     </button>
                   )}
                 </div>
@@ -2684,10 +2684,10 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                            <th className="py-3 px-4 w-14 text-center">번호</th>
-                            <th className="py-3 px-4">곡 정보</th>
-                            <th className="py-3 px-4 w-40">{uiLanguage === 'KO' ? '채널 / 소속 폴더' : 'Channel / Folder'}</th>
-                            <th className="py-3 px-4 w-28 text-center whitespace-nowrap">등록일</th>
+                            <th className="py-3 px-4 w-14 text-center">{uiLanguage === 'KO' ? '번호' : uiLanguage === 'JA' ? '番号' : 'No.'}</th>
+                            <th className="py-3 px-4">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック情報' : 'Track Info'}</th>
+                            <th className="py-3 px-4 w-40">{uiLanguage === 'KO' ? '채널 / 소속 폴더' : uiLanguage === 'JA' ? 'チャンネル / フォルダ' : 'Channel / Folder'}</th>
+                            <th className="py-3 px-4 w-28 text-center whitespace-nowrap">{uiLanguage === 'KO' ? '등록일' : uiLanguage === 'JA' ? '追加日' : 'Date Added'}</th>
                             {!isPublicView && <th className="py-3 px-4 w-44 text-right">관리</th>}
                             {isPublicView && <th className="py-3 px-4 w-16 text-center">좋아요</th>}
                           </tr>
@@ -2945,7 +2945,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
-                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : 'Library (Private)'}
+                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
               </button>
               <button 
                 onClick={() => {
@@ -2960,7 +2960,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${activeTab === 'channels' ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
-                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Management'}
+                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Channel Mgt'}
               </button>
               <button 
                 onClick={() => { 
@@ -2972,21 +2972,21 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 }} 
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
-                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : 'My Channel (Published)'}
+                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : uiLanguage === 'JA' ? 'マイチャンネル (公開済み)' : 'My Channel (Published)'}
               </button>
             </div>
 
             <div className="mb-10 flex flex-col gap-6 text-left">
               <div className="flex justify-between items-end">
                 <div>
-                  <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '추가 채널 관리' : 'Additional Channels'}</h3>
-                  <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '새로운 아티스트 페르소나(채널)를 추가하고 관리합니다.' : 'Create and manage additional artist personas.'}</p>
+                  <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '추가 채널 관리' : uiLanguage === 'JA' ? '追加チャンネル' : 'Additional Channels'}</h3>
+                  <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '새로운 아티스트 페르소나(채널)를 추가하고 관리합니다.' : uiLanguage === 'JA' ? '追加のアーティストペルソナを作成および管理します。' : 'Create and manage additional artist personas.'}</p>
                 </div>
                 <button
                   onClick={() => setShowChannelModal(true)}
                   className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 추가' : 'Add Channel'}
+                  <Plus className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 추가' : uiLanguage === 'JA' ? 'チャンネルを追加' : '채널 추가'}
                 </button>
               </div>
 
@@ -3006,9 +3006,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     )}
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{editName || (uiLanguage === 'KO' ? '이름 없음' : 'Unnamed')}</span>
+                        <span className="text-sm font-bold text-white">{editName || (uiLanguage === 'KO' ? '이름 없음' : uiLanguage === 'JA' ? '名前なし' : 'No Name')}</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
-                          {uiLanguage === 'KO' ? '기본 채널' : 'Default'}
+                          {uiLanguage === 'KO' ? '기본 채널' : uiLanguage === 'JA' ? 'デフォルト' : '기본 채널'}
                         </span>
                       </div>
                       <span className="text-xs text-zinc-500 font-mono">@{editHandle || 'handle'}</span>
@@ -3035,7 +3035,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }}
                       className="p-2 rounded-full hover:bg-red-500/10 text-zinc-600 hover:text-red-500 transition-colors"
-                      title={uiLanguage === 'KO' ? '채널 삭제' : 'Delete Channel'}
+                      title={uiLanguage === 'KO' ? '채널 삭제' : uiLanguage === 'JA' ? 'チャンネルを削除' : '채널 삭제'}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -3051,7 +3051,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   {/* Header */}
                   <div className="relative py-5 flex items-center justify-center border-b border-zinc-850/40">
                     <h2 className="text-base font-extrabold text-white">
-                      {uiLanguage === 'KO' ? '새 채널 추가' : 'Create New Channel'}
+                      {uiLanguage === 'KO' ? '새 채널 추가' : uiLanguage === 'JA' ? '新しいチャンネルを作成' : 'Create New Channel'}
                     </h2>
                     <button 
                       onClick={resetChannelModal} 
@@ -3066,7 +3066,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {/* Background Image Upload Area */}
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                        {uiLanguage === 'KO' ? '배너 이미지 (Background image)' : 'Background image'} <Info className="w-3.5 h-3.5 text-zinc-500" />
+                        {uiLanguage === 'KO' ? '배너 이미지 (Background image)' : uiLanguage === 'JA' ? '背景画像' : 'Banner Image (Background image)'} <Info className="w-3.5 h-3.5 text-zinc-500" />
                       </label>
                       <div 
                         className="relative w-full h-44 bg-zinc-900/60 hover:bg-zinc-900 border border-dashed border-zinc-850 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer group overflow-hidden transition-colors"
@@ -3077,7 +3077,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         ) : (
                           <>
                             <Upload className="w-6 h-6 text-zinc-500 group-hover:text-primary transition-colors" />
-                            <span className="text-xs text-zinc-400 font-medium">{uiLanguage === 'KO' ? '이미지 업로드' : 'Upload a photo'}</span>
+                            <span className="text-xs text-zinc-400 font-medium">{uiLanguage === 'KO' ? '이미지 업로드' : uiLanguage === 'JA' ? '写真をアップロード' : 'Upload Image'}</span>
                           </>
                         )}
                         <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-zinc-700/50 shadow-md transition-all">
@@ -3096,7 +3096,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {/* Profile Picture Upload Area */}
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                        {uiLanguage === 'KO' ? '프로필 사진 (Profile picture)' : 'Profile picture'} <Info className="w-3.5 h-3.5 text-zinc-500" />
+                        {uiLanguage === 'KO' ? '프로필 사진 (Profile picture)' : uiLanguage === 'JA' ? 'プロフィール写真' : 'Profile Picture (Profile picture)'} <Info className="w-3.5 h-3.5 text-zinc-500" />
                       </label>
                       <div 
                         className="relative w-24 h-24 rounded-full cursor-pointer group overflow-visible shrink-0 self-start"
@@ -3124,12 +3124,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                     {/* Display Name */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '채널명 (Display Name)' : 'Display Name'}</label>
+                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '채널명 (Display Name)' : uiLanguage === 'JA' ? '表示名' : 'Channel Name (Display Name)'}</label>
                       <input 
                         type="text" 
                         value={newChannelName}
                         onChange={(e) => setNewChannelName(e.target.value)}
-                        placeholder={uiLanguage === 'KO' ? '새 아티스트 이름' : 'My New Artist'}
+                        placeholder={uiLanguage === 'KO' ? '새 아티스트 이름' : uiLanguage === 'JA' ? 'マイニューアーティスト' : 'New Artist Name'}
                         className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600"
                       />
                     </div>
@@ -3137,13 +3137,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {/* Add a bio */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '소개글 (Bio)' : 'Add a bio'}</label>
+                        <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '소개글 (Bio)' : uiLanguage === 'JA' ? '自己紹介を追加' : 'Bio (Bio)'}</label>
                         <span className="text-[10px] font-medium text-zinc-500">{newChannelBio.length}/1200</span>
                       </div>
                       <textarea 
                         value={newChannelBio}
                         onChange={(e) => setNewChannelBio(e.target.value.slice(0, 1200))}
-                        placeholder={uiLanguage === 'KO' ? '채널에 대해 소개해주세요...' : 'Tell us about this channel...'}
+                        placeholder={uiLanguage === 'KO' ? '채널에 대해 소개해주세요...' : uiLanguage === 'JA' ? 'このチャンネルについて教えてください...' : 'Introduce your channel...'}
                         maxLength={1200}
                         className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors h-28 resize-none placeholder-zinc-600"
                       />
@@ -3152,7 +3152,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {/* Handle */}
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold text-zinc-400">
-                        {uiLanguage === 'KO' ? '핸들 네임 (고유 URL)*' : 'Handle*'}
+                        {uiLanguage === 'KO' ? '핸들 네임 (고유 URL)*' : uiLanguage === 'JA' ? 'ハンドルネーム*' : 'Handle (Unique URL)*'}
                         <span className="text-[10px] font-normal text-zinc-500 ml-2">(영문소문자, 숫자, _, - 만 가능)</span>
                       </label>
                       <div className="relative flex items-center">
@@ -3169,11 +3169,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                     {/* Genres Override */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '장르 설정 (Genres Override)' : 'Genres Override'}</label>
+                      <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '장르 설정 (Genres Override)' : uiLanguage === 'JA' ? 'ジャンル（オーバーライド）' : 'Genres Override'}</label>
                       <p className="text-[11px] text-zinc-500 leading-normal">
-                        {uiLanguage === 'KO' 
-                          ? '최대 5개의 음악 장르를 추가할 수 있습니다. 비워둘 경우 가장 인기 있는 곡의 장르가 표시됩니다.' 
-                          : 'Add up to 5 genres to describe your music style. If this is empty, the genres will be inferred from your most popular songs'}
+                        {uiLanguage === 'KO' ? '최대 5개의 음악 장르를 추가할 수 있습니다. 비워둘 경우 가장 인기 있는 곡의 장르가 표시됩니다.' : uiLanguage === 'JA' ? '音楽スタイルを説明するジャンルを最大5つ追加できます。空の場合、最も人気のある曲から推測されます。' : 'Add up to 5 genres. If left blank, the most popular genre will be shown.'}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="relative flex-1 flex items-center">
@@ -3190,7 +3188,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                 }
                               }
                             }}
-                            placeholder={uiLanguage === 'KO' ? '장르 입력...' : 'Type a genre...'}
+                            placeholder={uiLanguage === 'KO' ? '장르 입력...' : uiLanguage === 'JA' ? 'ジャンルを入力...' : 'Enter genre...'}
                             className="w-full bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3 pr-12 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder-zinc-600"
                           />
                           <span className="absolute right-3 text-[10px] text-zinc-500 font-medium">{newChannelGenreInput.length}/20</span>
@@ -3206,7 +3204,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                           disabled={!newChannelGenreInput.trim() || newChannelTags.length >= 5}
                           className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:hover:bg-zinc-800 text-sm font-bold text-white transition-all shrink-0"
                         >
-                          {uiLanguage === 'KO' ? '추가' : 'Add'}
+                          {uiLanguage === 'KO' ? '추가' : uiLanguage === 'JA' ? '追加' : '추가'}
                         </button>
                       </div>
                       
@@ -3235,7 +3233,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     <div className="border-t border-zinc-800/40 pt-4 mt-2">
                       <details className="group">
                         <summary className="text-xs font-bold text-zinc-500 hover:text-zinc-300 cursor-pointer list-none flex items-center justify-between select-none">
-                          <span>{uiLanguage === 'KO' ? '고급 통계 설정 (Advanced Statistics)' : 'Advanced Statistics Override'}</span>
+                          <span>{uiLanguage === 'KO' ? '고급 통계 설정 (Advanced Statistics)' : uiLanguage === 'JA' ? '詳細な統計情報 (手動設定)' : 'Advanced Statistics'}</span>
                           <span className="transition-transform group-open:rotate-180 text-[10px]">▼</span>
                         </summary>
                         <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -3291,14 +3289,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={resetChannelModal}
                       className="px-5 py-2.5 text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl transition-all"
                     >
-                      {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                      {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
                     </button>
                     <button 
                       type="button"
                       onClick={handleAddChannel}
                       className="px-5 py-2.5 text-sm font-bold bg-[#e3fe06] text-black hover:bg-[#d0ea04] rounded-xl transition-all"
                     >
-                      {uiLanguage === 'KO' ? '생성하기' : 'Save'}
+                      {uiLanguage === 'KO' ? '생성하기' : uiLanguage === 'JA' ? '保存' : 'Save'}
                     </button>
                   </div>
                 </div>
@@ -3316,12 +3314,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   onClick={handleBackFromSubview} 
                   className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start"
                 >
-                  <ArrowLeft className="w-4 h-4" /> 채널로 돌아가기
-                </button>
+                  <ArrowLeft className="w-4 h-4" />{uiLanguage === 'KO' ? '채널로 돌아가기' : uiLanguage === 'JA' ? 'チャンネルに戻る' : 'Back to Channel'}</button>
 
                 <div className="mb-10">
                   <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-2 tracking-tight font-sans">
-                    전체 음원 <span className="text-xs text-on-surface-variant font-normal font-mono">({visibleLooseTracks.length})</span>
+                    {uiLanguage === 'KO' ? '전체 음원' : uiLanguage === 'JA' ? 'すべての曲' : 'All Songs'} <span className="text-xs text-on-surface-variant font-normal font-mono">({visibleLooseTracks.length})</span>
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {visibleLooseTracks.map((song: any, idx: number) => {
@@ -3395,12 +3392,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   onClick={handleBackFromSubview} 
                   className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start"
                 >
-                  <ArrowLeft className="w-4 h-4" /> 채널로 돌아가기
-                </button>
+                  <ArrowLeft className="w-4 h-4" />{uiLanguage === 'KO' ? '채널로 돌아가기' : uiLanguage === 'JA' ? 'チャンネルに戻る' : 'Back to Channel'}</button>
 
                 <div className="mb-10">
                   <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-2 tracking-tight font-sans">
-                    전체 앨범 <span className="text-xs text-on-surface-variant font-normal font-mono">({sortedPublicAlbums.length})</span>
+                    {uiLanguage === 'KO' ? '전체 앨범' : uiLanguage === 'JA' ? 'すべてのアルバム' : 'All Albums'} <span className="text-xs text-on-surface-variant font-normal font-mono">({sortedPublicAlbums.length})</span>
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                     {sortedPublicAlbums.map(renderAlbumShowcaseCard)}
@@ -3414,12 +3410,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   onClick={handleBackFromSubview} 
                   className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start"
                 >
-                  <ArrowLeft className="w-4 h-4" /> 채널로 돌아가기
-                </button>
+                  <ArrowLeft className="w-4 h-4" />{uiLanguage === 'KO' ? '채널로 돌아가기' : uiLanguage === 'JA' ? 'チャンネルに戻る' : 'Back to Channel'}</button>
 
                 <div className="mb-10">
                   <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-2 tracking-tight font-sans">
-                    전체 플레이리스트 <span className="text-xs text-on-surface-variant font-normal font-mono">({visiblePlaylists.length})</span>
+                    {uiLanguage === 'KO' ? '전체 플레이리스트' : uiLanguage === 'JA' ? 'すべてのプレイリスト' : 'All Playlists'} <span className="text-xs text-on-surface-variant font-normal font-mono">({visiblePlaylists.length})</span>
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {visiblePlaylists.map(renderPlaylistCard)}
@@ -3433,12 +3428,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   onClick={handleBackFromSubview} 
                   className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start cursor-pointer"
                 >
-                  <ArrowLeft className="w-4 h-4" /> 채널로 돌아가기
-                </button>
+                  <ArrowLeft className="w-4 h-4" />{uiLanguage === 'KO' ? '채널로 돌아가기' : uiLanguage === 'JA' ? 'チャンネルに戻る' : 'Back to Channel'}</button>
 
                 <div className="mb-10">
                   <h2 className="text-xl font-bold text-on-surface mb-6 flex items-center gap-2 tracking-tight font-sans">
-                    내가 팔로우한 사용자 <span className="text-xs text-on-surface-variant font-normal font-mono">({followedArtists.length})</span>
+                    {uiLanguage === 'KO' ? '내가 팔로우한 사용자' : uiLanguage === 'JA' ? 'フォロー中のユーザー' : 'Following'} <span className="text-xs text-on-surface-variant font-normal font-mono">({followedArtists.length})</span>
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {followedArtists.map((artist) => (
@@ -3468,16 +3462,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                             }
                           }}
                           className="px-3 py-1 rounded-full border border-outline-variant hover:border-red-500 hover:text-red-500 text-[10px] font-bold text-on-surface-variant transition-colors cursor-pointer"
-                        >
-                          팔로우 취소
-                        </button>
+                        >{uiLanguage === 'KO' ? '팔로우 취소' : uiLanguage === 'JA' ? 'フォロー解除' : 'Unfollow'}</button>
                       </div>
                     ))}
                   </div>
 
                   {followedArtists.length === 0 && (
                     <div className="py-16 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                      팔로우한 사용자가 없습니다. 마음에 드는 아티스트를 팔로우해보세요.
+                      {uiLanguage === 'KO' ? '팔로우한 사용자가 없습니다. 마음에 드는 아티스트를 팔로우해보세요.' : uiLanguage === 'JA' ? 'フォロー中のユーザーがいません。お気に入りのアーティストをフォローしてみましょう。' : 'You are not following anyone yet. Discover and follow your favorite artists.'}
                     </div>
                   )}
                 </div>
@@ -3512,7 +3504,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         }} 
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${isPrivateView ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-white'}`}
                       >
-                        <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '관리 대시보드' : 'Management'}
+                        <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '관리 대시보드' : uiLanguage === 'JA' ? '管理ダッシュボード' : 'Admin Dashboard'}
                       </button>
                       <button 
                         onClick={() => {
@@ -3527,7 +3519,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         }} 
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-white`}
                       >
-                        <Users className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '채널 관리' : 'Channel Mgt'}
+                        <Users className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Channel Mgt'}
                       </button>
                       <button 
                         onClick={() => { 
@@ -3539,7 +3531,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         }} 
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${isPublicView ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-white'}`}
                       >
-                        <Globe className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '아티스트 채널' : 'Artist Channel'}
+                        <Globe className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '아티스트 채널' : uiLanguage === 'JA' ? 'アーティストチャンネル' : 'Artist Channel'}
                       </button>
                     </div>
                     <button 
@@ -3638,15 +3630,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_songs')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      {uiLanguage === 'KO' ? '음원 목록' : 'Songs'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '음원 목록' : uiLanguage === 'JA' ? '曲' : 'Songs'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {visibleLooseTracks.length > 9 && (
                       <button 
                         onClick={() => handleSetPublicSubView('all_songs')}
                         className="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-zinc-350 hover:text-white transition-colors"
-                      >
-                        더보기
-                      </button>
+                      >{uiLanguage === 'KO' ? '더보기' : uiLanguage === 'JA' ? 'さらに表示' : 'More'}</button>
                     )}
                   </div>
                   
@@ -3722,7 +3712,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     })}
                     {visibleLooseTracks.length === 0 && (
                       <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                        퍼블리싱된 단일 곡이 없습니다.
+                        {uiLanguage === 'KO' ? '퍼블리싱된 단일 곡이 없습니다.' : uiLanguage === 'JA' ? '公開された曲がありません。' : 'No published tracks.'}
                       </div>
                     )}
                   </div>
@@ -3735,15 +3725,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_albums')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      {uiLanguage === 'KO' ? '앨범' : 'Albums'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {sortedPublicAlbums.length > 10 && (
                       <button 
                         onClick={() => handleSetPublicSubView('all_albums')}
                         className="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-zinc-350 hover:text-white transition-colors"
-                      >
-                        더보기
-                      </button>
+                      >{uiLanguage === 'KO' ? '더보기' : uiLanguage === 'JA' ? 'さらに表示' : 'More'}</button>
                     )}
                   </div>
                   
@@ -3751,7 +3739,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {sortedPublicAlbums.slice(0, 10).map(renderAlbumShowcaseCard)}
                     {sortedPublicAlbums.length === 0 && (
                       <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                        공개된 앨범이 없습니다.
+                        {uiLanguage === 'KO' ? '공개된 앨범이 없습니다.' : uiLanguage === 'JA' ? '公開されたアルバムがありません。' : 'No public albums.'}
                       </div>
                     )}
                   </div>
@@ -3764,15 +3752,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_playlists')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      {uiLanguage === 'KO' ? '플레이리스트' : 'Playlists'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {visiblePlaylists.length > 5 && (
                       <button 
                         onClick={() => handleSetPublicSubView('all_playlists')}
                         className="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-zinc-350 hover:text-white transition-colors"
-                      >
-                        더보기
-                      </button>
+                      >{uiLanguage === 'KO' ? '더보기' : uiLanguage === 'JA' ? 'さらに表示' : 'More'}</button>
                     )}
                   </div>
                   
@@ -3780,7 +3766,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     {visiblePlaylists.slice(0, 5).map(renderPlaylistCard)}
                     {visiblePlaylists.length === 0 && (
                       <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
-                        공개된 플레이리스트가 없습니다.
+                        {uiLanguage === 'KO' ? '공개된 플레이리스트가 없습니다.' : uiLanguage === 'JA' ? '公開されたプレイリストがありません。' : 'No public playlists.'}
                       </div>
                     )}
                   </div>
@@ -3799,7 +3785,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             <div className="flex items-center justify-between p-5 pb-3">
               <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
                 <Upload className="w-5 h-5 text-primary" />
-                {uiLanguage === 'KO' ? '음원 파일 업로드' : 'Upload Audio File'}
+                {uiLanguage === 'KO' ? '음원 파일 업로드' : uiLanguage === 'JA' ? '音声ファイルをアップロード' : '음원 파일 업로드'}
               </h2>
               <button 
                 onClick={closeUploadModal} 
@@ -3816,12 +3802,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Audio File Selection */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '오디오 파일 (필수)' : 'Audio File (Required)'}
+                  {uiLanguage === 'KO' ? '오디오 파일 (필수)' : uiLanguage === 'JA' ? '音声ファイル (必須)' : '오디오 파일 (필수)'}
                 </label>
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#141415] border border-outline-variant/20 hover:border-primary/50 cursor-pointer transition-colors text-xs font-bold text-on-surface">
                     <Music className="w-4 h-4 text-primary" />
-                    {uiLanguage === 'KO' ? '파일 선택' : 'Choose File'}
+                    {uiLanguage === 'KO' ? '파일 선택' : uiLanguage === 'JA' ? 'ファイルを選択' : '파일 선택'}
                     <input 
                       type="file" 
                       accept="audio/*" 
@@ -3841,7 +3827,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     />
                   </label>
                   <span className="text-xs text-zinc-400 truncate max-w-[200px]">
-                    {uploadFile ? uploadFile.name : (uiLanguage === 'KO' ? '선택된 파일 없음' : 'No file chosen')}
+                    {uploadFile ? uploadFile.name : (uiLanguage === 'KO' ? '선택된 파일 없음' : uiLanguage === 'JA' ? 'ファイルが選択されていません' : 'No file selected')}
                   </span>
                 </div>
               </div>
@@ -3849,13 +3835,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Title */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '곡 제목 (필수)' : 'Title (Required)'}
+                  {uiLanguage === 'KO' ? '곡 제목 (필수)' : uiLanguage === 'JA' ? 'タイトル (必須)' : '곡 제목 (필수)'}
                 </label>
                 <input 
                   type="text" 
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
-                  placeholder={uiLanguage === 'KO' ? '제목을 입력하세요' : 'Enter song title'}
+                  placeholder={uiLanguage === 'KO' ? '제목을 입력하세요' : uiLanguage === 'JA' ? '曲のタイトルを入力' : '제목을 입력하세요'}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary/50 text-sm"
                 />
               </div>
@@ -3863,14 +3849,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Channel Selection (Optional) */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
-                  <span>{uiLanguage === 'KO' ? '채널 등록 (선택)' : 'Publish to Channel (Optional)'}</span>
+                  <span>{uiLanguage === 'KO' ? '채널 등록 (선택)' : uiLanguage === 'JA' ? 'チャンネルに公開 (任意)' : '채널 등록 (선택)'}</span>
                 </label>
                 <select
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary/50 transition-colors"
                   value={uploadChannelId}
                   onChange={(e) => setUploadChannelId(e.target.value)}
                 >
-                  <option value="">{uiLanguage === 'KO' ? '선택 안 함 (메인 채널에만 등록)' : 'None (Main Channel Only)'}</option>
+                  <option value="">{uiLanguage === 'KO' ? '선택 안 함 (메인 채널에만 등록)' : uiLanguage === 'JA' ? 'なし (メインチャンネルのみ)' : '선택 안 함 (메인 채널에만 등록)'}</option>
                   {channels.map(ch => (
                     <option key={ch.id} value={ch.id}>{ch.name}</option>
                   ))}
@@ -3880,14 +3866,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Genre Category (Required) */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '장르 카테고리 (필수)' : 'Genre (Required)'}
+                  {uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリ (必須)' : 'Genre Category (Required)'}
                 </label>
                 <select
                   value={uploadGenre}
                   onChange={(e) => setUploadGenre(e.target.value)}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-sm text-on-surface focus:outline-none focus:border-primary/50 cursor-pointer"
                 >
-                  <option value="">{uiLanguage === 'KO' ? '장르 카테고리 선택' : 'Select Genre'}</option>
+                  <option value="">{uiLanguage === 'KO' ? '장르 카테고리 선택' : uiLanguage === 'JA' ? 'ジャンルカテゴリを選択' : 'Select Genre Category'}</option>
                   {GENRES.map(g => (
                     <option key={g.name} value={g.name}>
                       {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
@@ -3899,7 +3885,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Cover Image Upload (Optional) */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '커버 이미지 (선택)' : 'Cover Image (Optional)'}
+                  {uiLanguage === 'KO' ? '커버 이미지 (선택)' : uiLanguage === 'JA' ? 'カバー画像 (任意)' : '커버 이미지 (선택)'}
                 </label>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#141415] border border-outline-variant/20 flex items-center justify-center shrink-0">
@@ -3911,7 +3897,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   </div>
                   <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#141415] border border-outline-variant/20 hover:border-primary/50 cursor-pointer transition-colors text-xs font-bold text-on-surface">
                     <Upload className="w-3.5 h-3.5 text-zinc-400" />
-                    {uiLanguage === 'KO' ? '이미지 선택' : 'Select Image'}
+                    {uiLanguage === 'KO' ? '이미지 선택' : uiLanguage === 'JA' ? '画像を選択' : '이미지 선택'}
                     <input type="file" accept="image/*" className="hidden" onChange={handleUploadCoverImage} />
                   </label>
                   {uploadCoverUrl && (
@@ -3919,7 +3905,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => setUploadCoverUrl('')} 
                       className="p-1 rounded-md text-red-400 hover:bg-red-500/10 text-xs font-bold"
                     >
-                      {uiLanguage === 'KO' ? '삭제' : 'Remove'}
+                      {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除' : '삭제'}
                     </button>
                   )}
                 </div>
@@ -3928,7 +3914,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Prompt Setting */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '프롬프트 (선택)' : 'Prompt (Optional)'}
+                  {uiLanguage === 'KO' ? '프롬프트 (선택)' : uiLanguage === 'JA' ? 'プロンプト (任意)' : '프롬프트 (선택)'}
                 </label>
                 <input 
                   type="text" 
@@ -3942,12 +3928,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Lyrics / Description */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '가사 / 설명 (선택)' : 'Lyrics / Description (Optional)'}
+                  {uiLanguage === 'KO' ? '가사 / 설명 (선택)' : uiLanguage === 'JA' ? '歌詞 / 説明 (任意)' : '가사 / 설명 (선택)'}
                 </label>
                 <textarea 
                   value={uploadLyrics}
                   onChange={(e) => setUploadLyrics(e.target.value)}
-                  placeholder={uiLanguage === 'KO' ? '가사 또는 음원 정보를 입력하세요' : 'Enter lyrics or song details'}
+                  placeholder={uiLanguage === 'KO' ? '가사 또는 음원 정보를 입력하세요' : uiLanguage === 'JA' ? '歌詞または曲の詳細を入力' : '가사 또는 음원 정보를 입력하세요'}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary/50 h-24 resize-none text-sm font-sans"
                 />
               </div>
@@ -3955,7 +3941,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Notes */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-on-surface-variant">
-                  {uiLanguage === 'KO' ? '제작 노트 (선택)' : 'Notes (Optional)'}
+                  {uiLanguage === 'KO' ? '제작 노트 (선택)' : uiLanguage === 'JA' ? 'メモ (任意)' : '제작 노트 (선택)'}
                 </label>
                 <input 
                   type="text" 
@@ -3970,7 +3956,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-on-surface-variant">
-                    {uiLanguage === 'KO' ? '작사 (선택)' : 'Lyricist (Opt)'}
+                    {uiLanguage === 'KO' ? '작사 (선택)' : uiLanguage === 'JA' ? '作詞 (任意)' : '작사 (선택)'}
                   </label>
                   <input 
                     type="text" 
@@ -3982,7 +3968,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-on-surface-variant">
-                    {uiLanguage === 'KO' ? '작곡 (선택)' : 'Composer (Opt)'}
+                    {uiLanguage === 'KO' ? '작곡 (선택)' : uiLanguage === 'JA' ? '作曲 (任意)' : '작곡 (선택)'}
                   </label>
                   <input 
                     type="text" 
@@ -3994,7 +3980,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-on-surface-variant">
-                    {uiLanguage === 'KO' ? '편곡 (선택)' : 'Arranger (Opt)'}
+                    {uiLanguage === 'KO' ? '편곡 (선택)' : uiLanguage === 'JA' ? '編曲 (任意)' : '편곡 (선택)'}
                   </label>
                   <input 
                     type="text" 
@@ -4010,10 +3996,10 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               <div className="flex items-center justify-between bg-[#141415] border border-outline-variant/15 p-3 rounded-lg">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-on-surface">
-                    {uiLanguage === 'KO' ? '음원 퍼블리싱 (공개 여부)' : 'Publish Song (Public)'}
+                    {uiLanguage === 'KO' ? '음원 퍼블리싱 (공개 여부)' : uiLanguage === 'JA' ? '曲を公開 (パブリック)' : '음원 퍼블리싱 (공개 여부)'}
                   </span>
                   <span className="text-[10px] text-zinc-500">
-                    {uiLanguage === 'KO' ? '내 채널(공개 프로필)에 이 음원을 즉시 공개합니다.' : 'Make this track visible on your public profile.'}
+                    {uiLanguage === 'KO' ? '내 채널(공개 프로필)에 이 음원을 즉시 공개합니다.' : uiLanguage === 'JA' ? 'このトラックを公開プロフィールに表示します。' : '내 채널(공개 프로필)에 이 음원을 즉시 공개합니다.'}
                   </span>
                 </div>
                 <input 
@@ -4033,7 +4019,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 className="px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors text-xs font-bold cursor-pointer"
                 disabled={isUploading}
               >
-                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
               </button>
               <button 
                 onClick={handleAudioUpload} 
@@ -4043,12 +4029,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 {isUploading ? (
                   <>
                     <span className="w-3 h-3 rounded-full border-2 border-black/20 border-t-black animate-spin" />
-                    {uiLanguage === 'KO' ? '업로드 중...' : 'Uploading...'}
+                    {uiLanguage === 'KO' ? '업로드 중...' : uiLanguage === 'JA' ? 'アップロード中...' : 'Uploading...'}
                   </>
                 ) : (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    {uiLanguage === 'KO' ? '업로드 완료' : 'Upload Complete'}
+                    {uiLanguage === 'KO' ? '업로드 완료' : uiLanguage === 'JA' ? 'アップロード完了' : 'Upload Complete'}
                   </>
                 )}
               </button>
@@ -4081,7 +4067,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 type="text" 
                 value={playlistTitle}
                 onChange={(e) => setPlaylistTitle(e.target.value)}
-                placeholder={playlistType === 'album' ? '앨범 제목' : '플레이리스트 제목'}
+                placeholder={playlistType === 'album' ? (uiLanguage === 'KO' ? '앨범 제목' : uiLanguage === 'JA' ? 'アルバムのタイトル' : 'Album Title') : (uiLanguage === 'KO' ? '플레이리스트 제목' : uiLanguage === 'JA' ? 'プレイリストのタイトル' : 'Playlist Title')}
                 className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary/50"
               />
               
@@ -4090,7 +4076,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 <textarea 
                   value={playlistDescription}
                   onChange={(e) => setPlaylistDescription(e.target.value.substring(0, 200))}
-                  placeholder={playlistType === 'album' ? '앨범 설명' : '플레이리스트 설명'}
+                  placeholder={playlistType === 'album' ? (uiLanguage === 'KO' ? '앨범 설명' : uiLanguage === 'JA' ? 'アルバムの説明' : 'Album Description') : (uiLanguage === 'KO' ? '플레이리스트 설명' : uiLanguage === 'JA' ? 'プレイリストの説明' : 'Playlist Description')}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-on-surface focus:outline-none focus:border-primary/50 h-28 resize-none"
                 />
                 <div className="text-right text-[11px] text-on-surface-variant mt-1">
@@ -4100,13 +4086,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
               {/* Genre Category (Required) */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-on-surface-variant">장르 카테고리 (필수)</label>
+                <label className="text-xs font-bold text-on-surface-variant">{uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリ (必須)' : 'Genre Category (Required)'}</label>
                 <select
                   value={playlistGenre}
                   onChange={(e) => setPlaylistGenre(e.target.value)}
                   className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-sm text-on-surface focus:outline-none focus:border-primary/50 cursor-pointer"
                 >
-                  <option value="">장르 카테고리 선택</option>
+                  <option value="">{uiLanguage === 'KO' ? '장르 카테고리 선택' : uiLanguage === 'JA' ? 'ジャンルカテゴリを選択' : 'Select Genre Category'}</option>
                   {GENRES.map(g => (
                     <option key={g.name} value={g.name}>
                       {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
@@ -4117,7 +4103,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
               {/* Exposure Order Setting */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-on-surface-variant">노출 순위 설정</label>
+                <label className="text-xs font-bold text-on-surface-variant">{uiLanguage === 'KO' ? '노출 순위 설정' : uiLanguage === 'JA' ? '表示順位設定' : 'Exposure Order Settings'}</label>
                 <select
                   value={playlistExposureOrder || ''}
                   onChange={(e) => setPlaylistExposureOrder(e.target.value ? Number(e.target.value) : '')}
@@ -4134,7 +4120,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               <div className="flex items-center justify-between bg-[#141415] border border-outline-variant/15 p-3 rounded-lg mt-1">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-on-surface">
-                    {playlistType === 'album' ? '앨범 퍼블리싱 (공개 여부)' : '플레이리스트 퍼블리싱 (공개 여부)'}
+                    {playlistType === 'album' ? (uiLanguage === 'KO' ? '앨범 퍼블리싱 (공개 여부)' : uiLanguage === 'JA' ? 'アルバムの公開 (公開設定)' : 'Publish Album (Public)') : (uiLanguage === 'KO' ? '플레이리스트 퍼블리싱 (공개 여부)' : uiLanguage === 'JA' ? 'プレイリストの公開 (公開設定)' : 'Publish Playlist (Public)')}
                   </span>
                   <span className="text-[10px] text-zinc-500">
                     {playlistType === 'album' ? '내 채널(공개 프로필)에 이 앨범을 공개합니다.' : '내 채널(공개 프로필)에 이 플레이리스트를 공개합니다.'}
@@ -4165,7 +4151,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-primary transition-colors">
                       <Upload className="w-8 h-8 mb-2 opacity-50" />
                       <span className="text-sm font-medium">
-                        {playlistType === 'album' ? '앨범 커버 업로드' : '플레이리스트 커버 업로드'}
+                        {playlistType === 'album' ? (uiLanguage === 'KO' ? '앨범 커버 업로드' : uiLanguage === 'JA' ? 'アルバムカバーをアップロード' : 'Upload Album Cover') : (uiLanguage === 'KO' ? '플레이리스트 커버 업로드' : uiLanguage === 'JA' ? 'プレイリストカバーをアップロード' : 'Upload Playlist Cover')}
                       </span>
                       <input type="file" accept="image/*" className="hidden" onChange={handlePlaylistCoverUpload} />
                     </label>
@@ -4227,7 +4213,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             {/* Genre Select (For Publishing) */}
             {confirmModal.showGenreSelect && (
               <div className="px-5 pb-5">
-                <label className="block text-xs font-bold text-on-surface-variant mb-2">장르 카테고리 (필수)</label>
+                <label className="block text-xs font-bold text-on-surface-variant mb-2">{uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリ (必須)' : 'Genre Category (Required)'}</label>
                 <select
                   value={publishGenre}
                   onChange={(e) => setPublishGenre(e.target.value)}

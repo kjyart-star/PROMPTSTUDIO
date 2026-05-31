@@ -219,7 +219,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Home className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '홈' : 'Home'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '홈' : uiLanguage === 'JA' ? 'ホーム' : 'Home'}</span>
             </Link>
 
             <Link 
@@ -232,7 +232,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Search className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : 'Category'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
             </Link>
             
             <Link 
@@ -245,7 +245,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Trophy className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '실시간 차트' : 'Live Charts'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '실시간 차트' : uiLanguage === 'JA' ? 'ライブチャート' : 'Live Charts'}</span>
             </Link>
 
             <Link 
@@ -258,7 +258,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Library className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : 'Playlist'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
             </Link>
 
             <Link 
@@ -271,7 +271,7 @@ export function PublicLayoutClient({
               }`}
             >
               <User className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 채널' : 'My Channel'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 채널' : uiLanguage === 'JA' ? 'マイチャンネル' : 'My Channel'}</span>
             </Link>
 
             <Link 
@@ -284,7 +284,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Music className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : 'Channel & Audio Management'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : uiLanguage === 'JA' ? 'チャンネル & オーディオ管理' : 'Channel & Audio Management'}</span>
             </Link>
 
 
@@ -298,7 +298,7 @@ export function PublicLayoutClient({
               }`}
             >
               <Sparkles className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '스튜디오' : 'Studio'}</span>
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '스튜디오' : uiLanguage === 'JA' ? 'スタジオ' : 'Studio'}</span>
             </Link>
           </nav>
         </div>
@@ -311,7 +311,7 @@ export function PublicLayoutClient({
               className="flex items-center justify-center gap-2 w-full py-3 bg-[#e3fe06]/10 border border-[#e3fe06]/20 text-[#e3fe06] hover:bg-[#e3fe06]/15 text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
               <Shield className="w-4 h-4" />
-              <span>{uiLanguage === 'KO' ? '어드민 관리자' : 'Administrator'}</span>
+              <span>{uiLanguage === 'KO' ? '어드민 관리자' : uiLanguage === 'JA' ? '管理者' : 'Administrator'}</span>
             </Link>
           )}
         </div>
@@ -346,7 +346,7 @@ export function PublicLayoutClient({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
                 <input 
                   type="text"
-                  placeholder={uiLanguage === 'KO' ? '어떤 음악을 듣고 싶으신가요?' : 'What do you want to listen to?'}
+                  placeholder={uiLanguage === 'KO' ? '어떤 음악을 듣고 싶으신가요?' : uiLanguage === 'JA' ? '何を聴きたいですか？' : 'What do you want to listen to?'}
                   className="w-full bg-surface-container-high border-none rounded-full pl-10 pr-[16px] py-[4px] text-[16px] leading-[24px] text-on-surface focus:ring-2 ring-primary/20 transition-all placeholder:text-on-surface-variant/50 focus:outline-none"
                   onChange={(e) => {
                     router.push(`/search?q=${encodeURIComponent(e.target.value)}`)
@@ -360,7 +360,7 @@ export function PublicLayoutClient({
               <div className="flex items-center rounded-full border border-outline-variant/15 bg-surface-container-lowest/60 p-0.5">
                 <button 
                   onClick={() => handleLanguageChange('KO')}
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'KO' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'KO' ? 'bg-white/[0.06] text-white' : uiLanguage === 'JA' ? 'text-on-surface-variant hover:text-on-surface' : 'text-on-surface-variant hover:text-on-surface'}`}
                 >
                   KO
                 </button>
@@ -370,6 +370,12 @@ export function PublicLayoutClient({
                 >
                   EN
                 </button>
+                <button 
+                  onClick={() => handleLanguageChange('JA')}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'JA' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  JA
+                </button>
               </div>
 
               {/* Credits (User only) */}
@@ -377,7 +383,7 @@ export function PublicLayoutClient({
                 <Link 
                   href="/pricing"
                   className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-variant border border-[#e3fe06]/30 px-3 py-1.5 rounded-full transition-all cursor-pointer group"
-                  title={uiLanguage === 'KO' ? '크레딧 충전' : 'Buy Credits'}
+                  title={uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットを購入' : 'Buy Credits'}
                 >
                   <Coins className="w-4 h-4 text-[#e3fe06] group-hover:scale-110 transition-transform" />
                   <span className="text-[12px] font-bold text-on-surface">{userCredits.toLocaleString()}</span>
@@ -469,7 +475,7 @@ export function PublicLayoutClient({
                           className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
                         >
                           <User className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                          {uiLanguage === 'KO' ? '내 채널' : 'My Channel'}
+                          {uiLanguage === 'KO' ? '내 채널' : uiLanguage === 'JA' ? 'マイチャンネル' : 'My Channel'}
                         </Link>
 
                         <Link 
@@ -478,7 +484,7 @@ export function PublicLayoutClient({
                           className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
                         >
                           <Settings className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                          {uiLanguage === 'KO' ? '설정 및 관리' : 'Settings & Management'}
+                          {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
                         </Link>
 
                         <Link 
@@ -487,7 +493,7 @@ export function PublicLayoutClient({
                           className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
                         >
                           <CreditCard className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                          {uiLanguage === 'KO' ? '크레딧 충전' : 'Recharge Credits'}
+                          {uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットをチャージ' : 'Recharge Credits'}
                         </Link>
 
                         <button 
@@ -495,7 +501,7 @@ export function PublicLayoutClient({
                           className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
                         >
                           <LogOut className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                          {uiLanguage === 'KO' ? '로그아웃' : 'Log Out'}
+                          {uiLanguage === 'KO' ? '로그아웃' : uiLanguage === 'JA' ? 'ログアウト' : 'Log Out'}
                         </button>
                       </div>
                     </div>
@@ -535,7 +541,7 @@ export function PublicLayoutClient({
               onClick={handleOpenAnnouncements}
               className="text-xs text-[#e3fe06] shrink-0 z-10 ml-4 font-bold bg-[#080808] pl-2 hover:text-white transition-colors cursor-pointer"
             >
-              {uiLanguage === 'KO' ? '자세히 보기' : 'View Details'}
+              {uiLanguage === 'KO' ? '자세히 보기' : uiLanguage === 'JA' ? '詳細を見る' : 'View Details'}
             </button>
           </div>
         )}
@@ -557,7 +563,7 @@ export function PublicLayoutClient({
           }`}
         >
           <Home className="w-5 h-5 text-current" />
-          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '홈' : 'Home'}</span>
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '홈' : uiLanguage === 'JA' ? 'ホーム' : 'Home'}</span>
         </Link>
         <Link 
           href="/search" 
@@ -566,7 +572,7 @@ export function PublicLayoutClient({
           }`}
         >
           <Search className="w-5 h-5 text-current" />
-          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '카테고리' : 'Category'}</span>
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
         </Link>
         <Link 
           href="/library" 
@@ -575,7 +581,7 @@ export function PublicLayoutClient({
           }`}
         >
           <Library className="w-5 h-5 text-current" />
-          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '플레이리스트' : 'Playlist'}</span>
+          <span className="text-[12px] font-medium tracking-[0.02em]">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
         </Link>
       </nav>
 
@@ -592,7 +598,7 @@ export function PublicLayoutClient({
             <div className="flex items-center justify-between border-b border-outline-variant/10 p-5 bg-surface-container-lowest">
               <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#e3fe06] text-[#070709] text-[10px] font-black font-sans">!</span>
-                {uiLanguage === 'KO' ? '공지사항' : 'Announcements'}
+                {uiLanguage === 'KO' ? '공지사항' : uiLanguage === 'JA' ? 'お知らせ' : 'Announcements'}
               </h3>
               <button 
                 onClick={() => setIsAnnouncementsOpen(false)} 
@@ -606,14 +612,14 @@ export function PublicLayoutClient({
             
             <div className="flex flex-col gap-4 p-6 overflow-y-auto custom-scrollbar flex-1">
               {announcements.length === 0 ? (
-                <div className="text-center text-on-surface-variant py-10 font-bold text-xs">{uiLanguage === 'KO' ? '등록된 공지사항이 없습니다.' : 'No announcements.'}</div>
+                <div className="text-center text-on-surface-variant py-10 font-bold text-xs">{uiLanguage === 'KO' ? '등록된 공지사항이 없습니다.' : uiLanguage === 'JA' ? 'お知らせはありません。' : 'No announcements.'}</div>
               ) : (
                 announcements.map((ann) => (
                   <div key={ann.id} className="border-b border-outline-variant/5 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
                     <h4 className="text-xs font-bold text-on-surface mb-2">{ann.title}</h4>
                     <p className="text-xs text-on-surface-variant whitespace-pre-wrap leading-relaxed">{ann.content}</p>
                     <div className="mt-2 text-[9px] text-zinc-655 font-bold">
-                      {new Date(ann.created_at).toLocaleString(uiLanguage === 'KO' ? 'ko-KR' : 'en-US')}
+                      {new Date(ann.created_at).toLocaleString(uiLanguage === 'KO' ? 'ko-KR' : uiLanguage === 'JA' ? 'ja-JP' : 'en-US')}
                     </div>
                   </div>
                 ))

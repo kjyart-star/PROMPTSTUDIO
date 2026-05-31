@@ -34,7 +34,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
   } | null>(null)
   const [userCredits, setUserCredits] = useState<number>(120)
   const [transactions, setTransactions] = useState<any[]>([])
-  const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN'>('KO')
+  const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
   const [autoplay, setAutoplay] = useState<boolean>(true)
   const [userPlan, setUserPlan] = useState<string>('free')
@@ -226,13 +226,13 @@ export function SettingsClient({ user }: SettingsClientProps) {
   const handleQualityChange = (val: 'standard' | 'high') => {
     setAudioQuality(val)
     localStorage.setItem('pref-audio-quality', val)
-    showToast(uiLanguage === 'KO' ? `스트리밍 음질: ${val === 'high' ? '고음질 (320kbps)' : '일반음질 (128kbps)'}` : `Streaming Quality: ${val === 'high' ? 'High (320kbps)' : 'Standard (128kbps)'}`, 'success')
+    showToast(uiLanguage === 'KO' ? `스트리밍 음질: ${val === 'high' ? '고음질 (320kbps)' : '일반음질 (128kbps)'}` : uiLanguage === 'JA' ? `ストリーミング音質: ${val === 'high' ? '高音質 (320kbps)' : '標準音質 (128kbps)'}` : `Streaming Quality: ${val === 'high' ? 'High (320kbps)' : 'Standard (128kbps)'}`, 'success')
   }
 
   const handleAutoplayChange = (val: boolean) => {
     setAutoplay(val)
     localStorage.setItem('pref-autoplay', String(val))
-    showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
+    showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : uiLanguage === 'JA' ? `自動再生: ${val ? 'オン' : 'オフ'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
   }
 
   const handleWithdraw = () => {
@@ -256,10 +256,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
   }
 
   const handleCancelSubscription = () => {
-    if (confirm(uiLanguage === 'KO' ? '정말 구독을 취소하시겠습니까? 이번 달 결제 주기까지만 혜택이 유지됩니다.' : 'Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.')) {
+    if (confirm(uiLanguage === 'KO' ? '정말 구독을 취소하시겠습니까? 이번 달 결제 주기까지만 혜택이 유지됩니다.' : uiLanguage === 'JA' ? '本当にサブスクリプションをキャンセルしますか？請求サイクルの終了まで特典は有効です。' : 'Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.')) {
       setUserPlan('free')
       localStorage.setItem('user-plan', 'free')
-      showToast(uiLanguage === 'KO' ? '구독이 성공적으로 취소되었습니다.' : 'Subscription successfully cancelled.', 'success')
+      showToast(uiLanguage === 'KO' ? '구독이 성공적으로 취소되었습니다.' : uiLanguage === 'JA' ? 'サブスクリプションが正常にキャンセルされました。' : 'Subscription successfully cancelled.', 'success')
     }
   }
 
@@ -298,11 +298,11 @@ export function SettingsClient({ user }: SettingsClientProps) {
         }
         localStorage.setItem(`profile-extra-${user.id}`, JSON.stringify(extraData))
         
-        showToast(uiLanguage === 'KO' ? '프로필 설정이 저장되었습니다.' : 'Profile settings saved successfully.', 'success')
+        showToast(uiLanguage === 'KO' ? '프로필 설정이 저장되었습니다.' : uiLanguage === 'JA' ? 'プロフィール設定が正常に保存されました。' : 'Profile settings saved successfully.', 'success')
       }
     } catch (e) {
       console.error(e)
-      showToast(uiLanguage === 'KO' ? '프로필 저장 실패' : 'Failed to save profile', 'error')
+      showToast(uiLanguage === 'KO' ? '프로필 저장 실패' : uiLanguage === 'JA' ? 'プロフィールの保存に失敗しました' : 'Failed to save profile', 'error')
     }
   }
 
@@ -366,10 +366,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
         </button>
         <div>
           <h1 className="text-2xl font-black text-on-surface tracking-tight">
-            {uiLanguage === 'KO' ? '설정 및 관리' : 'Settings & Management'}
+            {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            {uiLanguage === 'KO' ? '계정 정보, 크레딧 사용 내역 및 환경설정을 관리합니다.' : 'Manage account information, credit usage, and preferences.'}
+            {uiLanguage === 'KO' ? '계정 정보, 크레딧 사용 내역 및 환경설정을 관리합니다.' : uiLanguage === 'JA' ? 'アカウント情報、クレジットの使用状況、設定を管理します。' : 'Manage account information, credit usage, and preferences.'}
           </p>
         </div>
       </div>
@@ -383,14 +383,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <CreditCard className="w-4 h-4 shrink-0" />
-            <span>{uiLanguage === 'KO' ? '크레딧 관리' : 'Credit Management'}</span>
+            <span>{uiLanguage === 'KO' ? '크레딧 관리' : uiLanguage === 'JA' ? 'クレジット管理' : 'Credit Management'}</span>
           </button>
           <button 
             onClick={() => setActiveSettingSection('profile')}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <User className="w-4 h-4 shrink-0" />
-            <span>{uiLanguage === 'KO' ? '프로필 관리' : 'Profile Management'}</span>
+            <span>{uiLanguage === 'KO' ? '프로필 관리' : uiLanguage === 'JA' ? 'プロフィール管理' : 'Profile Management'}</span>
           </button>
 
           <button 
@@ -398,7 +398,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'preferences' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
           >
             <Sliders className="w-4 h-4 shrink-0" />
-            <span>{uiLanguage === 'KO' ? '환경설정' : 'Preferences'}</span>
+            <span>{uiLanguage === 'KO' ? '환경설정' : uiLanguage === 'JA' ? '環境設定' : 'Preferences'}</span>
           </button>
         </div>
 
@@ -407,24 +407,24 @@ export function SettingsClient({ user }: SettingsClientProps) {
           {activeSettingSection === 'credits' && (
             <div className="flex flex-col gap-8 text-left">
               <div>
-                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '크레딧 관리' : 'Credit Management'}</h3>
-                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '요금제 확인 및 크레딧 충전을 관리할 수 있습니다.' : 'Check plan details and manage credit top-ups.'}</p>
+                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '크레딧 관리' : uiLanguage === 'JA' ? 'クレジット管理' : 'Credit Management'}</h3>
+                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '요금제 확인 및 크레딧 충전을 관리할 수 있습니다.' : uiLanguage === 'JA' ? 'プランの詳細を確認し、クレジットのチャージを管理します。' : 'Check plan details and manage credit top-ups.'}</p>
               </div>
 
               {/* Balance Card */}
               {(() => {
-                let planLabel = uiLanguage === 'KO' ? '무료 요금제' : 'Basic Plan';
+                let planLabel = uiLanguage === 'KO' ? '무료 요금제' : uiLanguage === 'JA' ? 'ベーシックプラン' : 'Basic Plan';
                 let maxCredits = 50;
                 let cardBg = 'from-[#121214] to-[#0d0d0f]';
                 let borderHighlight = 'border-outline-variant/20';
 
                 if (userPlan === 'pro') {
-                  planLabel = uiLanguage === 'KO' ? '프로 플랜' : 'Pro Plan';
+                  planLabel = uiLanguage === 'KO' ? '프로 플랜' : uiLanguage === 'JA' ? 'プロプラン' : 'Pro Plan';
                   maxCredits = 2500;
                   cardBg = 'from-[#121408] via-[#0d0f05] to-[#070708]';
                   borderHighlight = 'border-primary/20';
                 } else if (userPlan === 'premier') {
-                  planLabel = uiLanguage === 'KO' ? '프리미어 플랜' : 'Premier Plan';
+                  planLabel = uiLanguage === 'KO' ? '프리미어 플랜' : uiLanguage === 'JA' ? 'プレミアプラン' : 'Premier Plan';
                   maxCredits = 10000;
                   cardBg = 'from-[#0a150e] via-[#050a06] to-[#070708]';
                   borderHighlight = 'border-primary/20';
@@ -449,8 +449,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
                           {userPlan !== 'free' && (
                             <span className="text-[10px] text-zinc-400 font-bold">
                               {billingCycle === 'yearly' 
-                                ? (uiLanguage === 'KO' ? '연간 결제' : 'Billed Annually')
-                                : (uiLanguage === 'KO' ? '월간 결제' : 'Billed Monthly')}
+                                ? (uiLanguage === 'KO' ? '연간 결제' : uiLanguage === 'JA' ? '年額支払い' : 'Billed Annually')
+                                : (uiLanguage === 'KO' ? '월간 결제' : uiLanguage === 'JA' ? '月額支払い' : 'Billed Monthly')}
                             </span>
                           )}
                         </div>
@@ -464,14 +464,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
                             onClick={handleCancelSubscription}
                             className="px-5 py-3 rounded-2xl bg-black/40 border border-outline-variant/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 text-zinc-400 font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
                           >
-                            {uiLanguage === 'KO' ? '구독 취소' : 'Cancel Subscription'}
+                            {uiLanguage === 'KO' ? '구독 취소' : uiLanguage === 'JA' ? 'サブスクリプションをキャンセル' : 'Cancel Subscription'}
                           </button>
                         )}
                         <button 
                           onClick={() => router.push('/pricing')}
                           className="px-5 py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
                         >
-                          {uiLanguage === 'KO' ? '요금제 관리 및 충전' : 'Manage Plans & Recharge'}
+                          {uiLanguage === 'KO' ? '요금제 관리 및 충전' : uiLanguage === 'JA' ? 'プランの管理とチャージ' : 'Manage Plans & Recharge'}
                         </button>
                       </div>
                     </div>
@@ -479,7 +479,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                     {/* Progress bar */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400">
-                        <span>{uiLanguage === 'KO' ? '사용 가능한 크레딧' : 'Available Credits'}</span>
+                        <span>{uiLanguage === 'KO' ? '사용 가능한 크레딧' : uiLanguage === 'JA' ? '利用可能なクレジット' : 'Available Credits'}</span>
                         <span>{userCredits.toLocaleString()} / {maxCredits.toLocaleString()}</span>
                       </div>
                       <div className="w-full h-2 bg-zinc-800/80 rounded-full overflow-hidden">
@@ -501,14 +501,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
                       <div className="text-[11px] font-semibold text-zinc-400 mt-1 border-t border-zinc-800/40 pt-3">
                         {uiLanguage === 'KO' 
                           ? `다음 갱신 및 충전 예정일: ${planRenewalDate}` 
-                          : `Next renewal & credit refill date: ${planRenewalDate}`}
+                          : uiLanguage === 'JA' ? `次回の更新およびクレジット補充日: ${planRenewalDate}` : `Next renewal & credit refill date: ${planRenewalDate}`}
                       </div>
                     )}
                     {userPlan === 'free' && (
                       <div className="text-[11px] font-semibold text-zinc-500 mt-1 border-t border-zinc-800/40 pt-3">
                         {uiLanguage === 'KO'
                           ? '구독 시 고성능 모델 액세스, 상업적 권한 획득 및 최대 10,000 크레딧을 매달 받을 수 있습니다.'
-                          : 'Subscribe to get access to advanced models, commercial rights, and up to 10,000 monthly credits.'}
+                          : uiLanguage === 'JA' ? '購読して高度なモデルへのアクセス、商用利用権、毎月最大10,000クレジットを獲得してください。' : 'Subscribe to get access to advanced models, commercial rights, and up to 10,000 monthly credits.'}
                       </div>
                     )}
                   </div>
@@ -519,16 +519,16 @@ export function SettingsClient({ user }: SettingsClientProps) {
               <div>
                 <h4 className="text-sm font-bold text-on-surface mb-3 flex items-center gap-1.5 text-left">
                   <Clock className="w-4 h-4 text-zinc-400" />
-                  <span>{uiLanguage === 'KO' ? '최근 거래 내역' : 'Recent Transactions'}</span>
+                  <span>{uiLanguage === 'KO' ? '최근 거래 내역' : uiLanguage === 'JA' ? '最近の取引' : 'Recent Transactions'}</span>
                 </h4>
                 <div className="overflow-x-auto rounded-2xl border border-outline-variant/10">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="bg-surface-container/40 text-on-surface-variant font-bold border-b border-outline-variant/10">
-                        <th className="p-3">{uiLanguage === 'KO' ? '거래 일시' : 'Date'}</th>
-                        <th className="p-3">{uiLanguage === 'KO' ? '상세 내용' : 'Description'}</th>
-                        <th className="p-3 text-right">{uiLanguage === 'KO' ? '금액' : 'Amount'}</th>
-                        <th className="p-3 text-center">{uiLanguage === 'KO' ? '상태' : 'Status'}</th>
+                        <th className="p-3">{uiLanguage === 'KO' ? '거래 일시' : uiLanguage === 'JA' ? '日付' : 'Date'}</th>
+                        <th className="p-3">{uiLanguage === 'KO' ? '상세 내용' : uiLanguage === 'JA' ? '説明' : 'Description'}</th>
+                        <th className="p-3 text-right">{uiLanguage === 'KO' ? '금액' : uiLanguage === 'JA' ? '金額' : 'Amount'}</th>
+                        <th className="p-3 text-center">{uiLanguage === 'KO' ? '상태' : uiLanguage === 'JA' ? 'ステータス' : 'Status'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/10 text-on-surface">
@@ -541,7 +541,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                           </td>
                           <td className="p-3 text-center">
                             <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#e3fe06]/10 border border-[#e3fe06]/25 text-[#e3fe06]">
-                              {uiLanguage === 'KO' ? '완료됨' : 'Completed'}
+                              {uiLanguage === 'KO' ? '완료됨' : uiLanguage === 'JA' ? '完了' : 'Completed'}
                             </span>
                           </td>
                         </tr>
@@ -556,14 +556,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
           {activeSettingSection === 'profile' && (
             <div className="flex flex-col gap-6 text-left">
               <div>
-                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '프로필 관리' : 'Profile Management'}</h3>
-                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '내 아티스트 채널에 표시될 프로필 정보를 편집합니다.' : 'Edit display info visible on your artist channel.'}</p>
+                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '프로필 관리' : uiLanguage === 'JA' ? 'プロフィール管理' : 'Profile Management'}</h3>
+                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '내 아티스트 채널에 표시될 프로필 정보를 편집합니다.' : uiLanguage === 'JA' ? 'アーティストチャンネルに表示される情報を編集します。' : 'Edit display info visible on your artist channel.'}</p>
               </div>
 
               {/* Banner Image Upload */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-zinc-400 font-sans">
-                  {uiLanguage === 'KO' ? '배너 이미지' : 'Banner Image'}
+                  {uiLanguage === 'KO' ? '배너 이미지' : uiLanguage === 'JA' ? 'バナー画像' : 'Banner Image'}
                 </label>
                 <div 
                   className="relative w-full h-36 bg-surface-container border border-dashed border-outline-variant/30 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer group overflow-hidden transition-colors"
@@ -593,7 +593,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
               {/* Avatar Image Upload */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-zinc-400 font-sans">
-                  {uiLanguage === 'KO' ? '프로필 사진' : 'Profile Picture'}
+                  {uiLanguage === 'KO' ? '프로필 사진' : uiLanguage === 'JA' ? 'プロフィール写真' : 'Profile Picture'}
                 </label>
                 <div 
                   className="relative w-20 h-20 rounded-full cursor-pointer group overflow-visible shrink-0 self-start"
@@ -621,7 +621,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
               {/* Display Name */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '닉네임 (표시 이름)' : 'Display Name'}</label>
+                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '닉네임 (표시 이름)' : uiLanguage === 'JA' ? '表示名' : 'Display Name'}</label>
                 <input 
                   type="text" 
                   value={editName}
@@ -633,7 +633,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
               {/* Handle */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '핸들 네임' : 'Handle'}</label>
+                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '핸들 네임' : uiLanguage === 'JA' ? 'ハンドルネーム' : 'Handle'}</label>
                 <div className="relative flex items-center">
                   <span className="absolute left-3 text-sm font-medium text-zinc-500 font-mono">@</span>
                   <input 
@@ -649,7 +649,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
               {/* Bio */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '소개글' : 'Bio'}</label>
+                  <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '소개글' : uiLanguage === 'JA' ? '自己紹介' : 'Bio'}</label>
                   <span className="text-[10px] font-medium text-zinc-500">{editBio.length}/1200</span>
                 </div>
                 <textarea 
@@ -664,7 +664,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 onClick={saveProfile}
                 className="px-6 py-2.5 rounded-xl bg-primary text-black font-extrabold hover:bg-primary/90 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm mt-2 self-start"
               >
-                <Check className="w-4 h-4" /> {uiLanguage === 'KO' ? '프로필 저장' : 'Save Changes'}
+                <Check className="w-4 h-4" /> {uiLanguage === 'KO' ? '프로필 저장' : uiLanguage === 'JA' ? '変更を保存' : 'Save Changes'}
               </button>
             </div>
           )}
@@ -674,17 +674,17 @@ export function SettingsClient({ user }: SettingsClientProps) {
           {activeSettingSection === 'preferences' && (
             <div className="flex flex-col gap-6 text-left">
               <div>
-                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '환경설정' : 'Preferences'}</h3>
-                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '다양한 재생 옵션 및 기본 언어를 설정할 수 있습니다.' : 'Configure language and play preferences.'}</p>
+                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '환경설정' : uiLanguage === 'JA' ? '環境設定' : 'Preferences'}</h3>
+                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '다양한 재생 옵션 및 기본 언어를 설정할 수 있습니다.' : uiLanguage === 'JA' ? '言語と再生の設定をします。' : 'Configure language and play preferences.'}</p>
               </div>
 
               {/* Language Toggler */}
               <div className="flex flex-col gap-2 border-b border-outline-variant/10 pb-5">
-                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '기본 언어' : 'Display Language'}</label>
+                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '기본 언어' : uiLanguage === 'JA' ? '表示言語' : 'Display Language'}</label>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => changeLanguage('KO')}
-                    className={`px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${uiLanguage === 'KO' ? 'bg-primary text-black' : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}`}
+                    className={`px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${uiLanguage === 'KO' ? 'bg-primary text-black' : uiLanguage === 'JA' ? 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant' : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}`}
                   >
                     한국어 (KO)
                   </button>
@@ -699,19 +699,19 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
               {/* Audio Quality Selection */}
               <div className="flex flex-col gap-2 border-b border-outline-variant/10 pb-5">
-                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '스트리밍 음질' : 'Streaming Quality'}</label>
+                <label className="text-xs font-bold text-zinc-400">{uiLanguage === 'KO' ? '스트리밍 음질' : uiLanguage === 'JA' ? 'ストリーミング音質' : 'Streaming Quality'}</label>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => handleQualityChange('high')}
                     className={`px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${audioQuality === 'high' ? 'bg-primary text-black' : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}`}
                   >
-                    {uiLanguage === 'KO' ? '고음질 (320kbps)' : 'High (320kbps)'}
+                    {uiLanguage === 'KO' ? '고음질 (320kbps)' : uiLanguage === 'JA' ? '高音質 (320kbps)' : 'High (320kbps)'}
                   </button>
                   <button 
                     onClick={() => handleQualityChange('standard')}
                     className={`px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${audioQuality === 'standard' ? 'bg-primary text-black' : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}`}
                   >
-                    {uiLanguage === 'KO' ? '일반음질 (128kbps)' : 'Standard (128kbps)'}
+                    {uiLanguage === 'KO' ? '일반음질 (128kbps)' : uiLanguage === 'JA' ? '標準音質 (128kbps)' : 'Standard (128kbps)'}
                   </button>
                 </div>
               </div>
@@ -719,8 +719,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
               {/* Autoplay Toggler */}
               <div className="flex items-center justify-between py-2">
                 <div className="flex flex-col gap-1 text-left">
-                  <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '다음 곡 자동 재생' : 'Autoplay Next Track'}</span>
-                  <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '곡이 끝나면 다음 곡을 자동으로 재생합니다.' : 'Automatically play the next song when current finishes.'}</span>
+                  <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '다음 곡 자동 재생' : uiLanguage === 'JA' ? '次の曲を自動再生' : 'Autoplay Next Track'}</span>
+                  <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '곡이 끝나면 다음 곡을 자동으로 재생합니다.' : uiLanguage === 'JA' ? '現在の曲が終わったら次の曲を自動的に再生します。' : 'Automatically play the next song when current finishes.'}</span>
                 </div>
                 
                 {/* Switch Toggle */}
@@ -734,17 +734,17 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
               {/* Danger Zone */}
               <div className="flex flex-col gap-2 border-t border-outline-variant/10 pt-5 mt-4">
-                <label className="text-xs font-bold text-red-500/80">{uiLanguage === 'KO' ? '위험 구역 (Danger Zone)' : 'Danger Zone'}</label>
+                <label className="text-xs font-bold text-red-500/80">{uiLanguage === 'KO' ? '위험 구역 (Danger Zone)' : uiLanguage === 'JA' ? '危険エリア' : 'Danger Zone'}</label>
                 <div className="flex items-center justify-between bg-red-500/5 border border-red-500/10 rounded-xl p-4">
                   <div className="flex flex-col gap-1 text-left">
-                    <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '계정 탈퇴' : 'Delete Account'}</span>
-                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.' : 'Permanently delete your account and all data.'}</span>
+                    <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '계정 탈퇴' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}</span>
+                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.' : uiLanguage === 'JA' ? 'アカウントとすべてのデータを完全に削除します。' : 'Permanently delete your account and all data.'}</span>
                   </div>
                   <button 
                     onClick={handleWithdraw}
                     className="px-4 py-2 text-xs font-extrabold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
                   >
-                    {uiLanguage === 'KO' ? '탈퇴하기' : 'Delete'}
+                    {uiLanguage === 'KO' ? '탈퇴하기' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -765,12 +765,12 @@ export function SettingsClient({ user }: SettingsClientProps) {
           >
             <div className="p-6">
               <h3 className="text-sm font-extrabold text-on-surface mb-2 tracking-tight text-left">
-                {uiLanguage === 'KO' ? '계정 삭제' : 'Delete Account'}
+                {uiLanguage === 'KO' ? '계정 삭제' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}
               </h3>
               <p className="text-on-surface-variant text-xs leading-relaxed text-left">
                 {uiLanguage === 'KO' 
                   ? '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.' 
-                  : 'Are you sure you want to delete your account? All data will be permanently erased.'}
+                  : uiLanguage === 'JA' ? '本当にアカウントを削除しますか？すべてのデータは完全に消去されます。' : 'Are you sure you want to delete your account? All data will be permanently erased.'}
               </p>
             </div>
             <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/10">
@@ -778,13 +778,13 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 onClick={() => setConfirmDeleteOpen(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-on-surface bg-white/[0.04] hover:bg-white/[0.08] transition-colors focus:outline-none cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '취소' : 'Cancel'}
+                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
               </button>
               <button 
                 onClick={confirmWithdraw}
                 className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-red-500 hover:brightness-105 shadow-md transition-all focus:outline-none cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '확인' : 'Confirm'}
+                {uiLanguage === 'KO' ? '확인' : uiLanguage === 'JA' ? '確認' : 'Confirm'}
               </button>
             </div>
           </div>

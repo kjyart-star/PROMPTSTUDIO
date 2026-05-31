@@ -516,7 +516,7 @@ export function LibraryClient({
           await fetchPlaylists()
           setIsEditModalOpen(false)
           setSelectedPlaylist(newPlaylist.id)
-          showToast(uiLanguage === 'KO' ? '플레이리스트가 생성되었습니다.' : 'Playlist created.', 'success')
+          showToast(uiLanguage === 'KO' ? '플레이리스트가 생성되었습니다.' : uiLanguage === 'JA' ? 'プレイリストが作成されました。' : 'Playlist created.', 'success')
         } else {
           const errData = await res.json()
           showToast(`플레이리스트 생성에 실패했습니다: ${errData.error || 'Server Error'}`, 'error')
@@ -543,7 +543,7 @@ export function LibraryClient({
         if (res.ok) {
           await fetchPlaylists()
           setIsEditModalOpen(false)
-          showToast(uiLanguage === 'KO' ? '플레이리스트 정보가 수정되었습니다.' : 'Playlist details updated.', 'success')
+          showToast(uiLanguage === 'KO' ? '플레이리스트 정보가 수정되었습니다.' : uiLanguage === 'JA' ? 'プレイリストの詳細が更新されました。' : 'Playlist details updated.', 'success')
         } else {
           const errData = await res.json()
           showToast(`플레이리스트 수정에 실패했습니다: ${errData.error || 'Server Error'}`, 'error')
@@ -551,19 +551,19 @@ export function LibraryClient({
       }
     } catch (e) {
       console.error('Error saving playlist:', e)
-      showToast(uiLanguage === 'KO' ? '저장 중 오류가 발생했습니다.' : 'Error saving playlist.', 'error')
+      showToast(uiLanguage === 'KO' ? '저장 중 오류가 발생했습니다.' : uiLanguage === 'JA' ? 'プレイリストの保存エラー。' : 'Error saving playlist.', 'error')
     }
   }
 
   const handleDeletePlaylist = async (id: string) => {
     setConfirmModal({
       isOpen: true,
-      title: uiLanguage === 'KO' ? '플레이리스트 삭제' : 'Delete Playlist',
+      title: uiLanguage === 'KO' ? '플레이리스트 삭제' : uiLanguage === 'JA' ? 'プレイリストを削除' : 'Delete Playlist',
       message: uiLanguage === 'KO'
         ? '정말로 이 플레이리스트를 삭제하시겠습니까? 플레이리스트는 삭제되지만 안에 들어있는 음원들은 삭제되지 않고 보관함에 보존됩니다.'
-        : 'Are you sure you want to delete this playlist? The playlist will be deleted, but the tracks inside it will not be deleted and will be preserved.',
-      confirmText: uiLanguage === 'KO' ? '삭제' : 'Delete',
-      cancelText: uiLanguage === 'KO' ? '취소' : 'Cancel',
+        : uiLanguage === 'JA' ? '本当にこのプレイリストを削除しますか？プレイリストは削除されますが、中のトラックは削除されず保存されます。' : 'Are you sure you want to delete this playlist? The playlist will be deleted, but the tracks inside it will not be deleted and will be preserved.',
+      confirmText: uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete',
+      cancelText: uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel',
       isDestructive: true,
       onConfirm: async () => {
         try {
@@ -574,7 +574,7 @@ export function LibraryClient({
           if (res.ok) {
             await fetchPlaylists()
             setSelectedPlaylist(null)
-            showToast(uiLanguage === 'KO' ? '플레이리스트가 삭제되었습니다.' : 'Playlist deleted.', 'success')
+            showToast(uiLanguage === 'KO' ? '플레이리스트가 삭제되었습니다.' : uiLanguage === 'JA' ? 'プレイリストが削除されました。' : 'Playlist deleted.', 'success')
           } else {
             const errData = await res.json()
             showToast(`플레이리스트 삭제에 실패했습니다: ${errData.error || 'Server Error'}`, 'error')
@@ -602,7 +602,7 @@ export function LibraryClient({
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 2 * 1024 * 1024) {
-      showToast(uiLanguage === 'KO' ? '이미지 크기는 2MB 이내여야 합니다.' : 'Image must be under 2MB.', 'error')
+      showToast(uiLanguage === 'KO' ? '이미지 크기는 2MB 이내여야 합니다.' : uiLanguage === 'JA' ? '画像は2MB以下である必要があります。' : 'Image must be under 2MB.', 'error')
       return
     }
     setIsUploadingCover(true)
@@ -612,10 +612,10 @@ export function LibraryClient({
       if (error) throw error
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
       setEditCoverUrl(data.publicUrl)
-      showToast(uiLanguage === 'KO' ? '커버 이미지가 업로드되었습니다.' : 'Cover image uploaded.', 'success')
+      showToast(uiLanguage === 'KO' ? '커버 이미지가 업로드되었습니다.' : uiLanguage === 'JA' ? 'カバー画像がアップロードされました。' : 'Cover image uploaded.', 'success')
     } catch (e: any) {
       console.error(e)
-      showToast(uiLanguage === 'KO' ? '업로드 실패' : 'Upload failed', 'error')
+      showToast(uiLanguage === 'KO' ? '업로드 실패' : uiLanguage === 'JA' ? 'アップロード失敗' : 'Upload failed', 'error')
     } finally {
       setIsUploadingCover(false)
     }
@@ -655,17 +655,17 @@ export function LibraryClient({
       setPublishGenre(playlist?.genre || '')
       setConfirmModal({
         isOpen: true,
-        title: uiLanguage === 'KO' ? '플레이리스트 공개 퍼블리싱' : 'Publish Playlist',
+        title: uiLanguage === 'KO' ? '플레이리스트 공개 퍼블리싱' : uiLanguage === 'JA' ? 'プレイリストを公開' : 'Publish Playlist',
         message: uiLanguage === 'KO'
           ? `'${title}' 플레이리스트를 공개하시겠습니까?\n퍼블리싱하려면 장르 카테고리를 필수로 선택해주셔야 합니다.`
-          : `Do you want to publish '${title}'?\nYou must select a genre category to publish.`,
-        confirmText: uiLanguage === 'KO' ? '공개 퍼블리싱' : 'Publish',
-        cancelText: uiLanguage === 'KO' ? '취소' : 'Cancel',
+          : uiLanguage === 'JA' ? `公開しますか: ` : `Do you want to publish '${title}'?\nYou must select a genre category to publish.`,
+        confirmText: uiLanguage === 'KO' ? '공개 퍼블리싱' : uiLanguage === 'JA' ? '公開する' : 'Publish',
+        cancelText: uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel',
         isDestructive: false,
         showGenreSelect: true,
         onConfirm: async (selectedGenre) => {
           if (!selectedGenre) {
-            showToast(uiLanguage === 'KO' ? '장르 카테고리를 선택해야 퍼블리싱할 수 있습니다.' : 'You must select a genre category.', 'error')
+            showToast(uiLanguage === 'KO' ? '장르 카테고리를 선택해야 퍼블리싱할 수 있습니다.' : uiLanguage === 'JA' ? 'ジャンルカテゴリーを選択する必要があります。' : 'You must select a genre category.', 'error')
             return
           }
           try {
@@ -676,7 +676,7 @@ export function LibraryClient({
             })
             if (res.ok) {
               await fetchPlaylists()
-              showToast(uiLanguage === 'KO' ? '플레이리스트가 퍼블리싱되었습니다.' : 'Playlist published.', 'success')
+              showToast(uiLanguage === 'KO' ? '플레이리스트가 퍼블리싱되었습니다.' : uiLanguage === 'JA' ? 'プレイリストが公開されました。' : 'Playlist published.', 'success')
             }
           } catch (e) {
             console.error(e)
@@ -687,12 +687,12 @@ export function LibraryClient({
     } else {
       setConfirmModal({
         isOpen: true,
-        title: uiLanguage === 'KO' ? '비공개 전환' : 'Make Private',
+        title: uiLanguage === 'KO' ? '비공개 전환' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private',
         message: uiLanguage === 'KO'
           ? `'${title}' 플레이리스트를 비공개로 전환하시겠습니까?`
-          : `Do you want to make '${title}' private?`,
-        confirmText: uiLanguage === 'KO' ? '비공개 전환' : 'Make Private',
-        cancelText: uiLanguage === 'KO' ? '취소' : 'Cancel',
+          : uiLanguage === 'JA' ? `変更しますか: ` : `Do you want to make '${title}' private?`,
+        confirmText: uiLanguage === 'KO' ? '비공개 전환' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private',
+        cancelText: uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel',
         isDestructive: false,
         onConfirm: async () => {
           try {
@@ -703,7 +703,7 @@ export function LibraryClient({
             })
             if (res.ok) {
               await fetchPlaylists()
-              showToast(uiLanguage === 'KO' ? '비공개로 전환되었습니다.' : 'Playlist set to private.', 'info')
+              showToast(uiLanguage === 'KO' ? '비공개로 전환되었습니다.' : uiLanguage === 'JA' ? 'プレイリストが非公開に設定されました。' : 'Playlist set to private.', 'info')
             }
           } catch (e) {
             console.error(e)
@@ -792,8 +792,8 @@ export function LibraryClient({
   const systemPlaylists = [
     {
       id: 'liked',
-      title: uiLanguage === 'KO' ? '좋아요 표시한 음악' : 'Liked Songs',
-      description: uiLanguage === 'KO' ? '내가 좋아하는 곡 보관함' : 'Your liked tracks',
+      title: uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs',
+      description: uiLanguage === 'KO' ? '내가 좋아하는 곡 보관함' : uiLanguage === 'JA' ? 'あなたのお気に入りのトラック' : 'Your liked tracks',
       cover_url: '/images/liked_cover.png',
       tracks: (likedTracks.length > 0 ? likedTracks : DUMMY_PLAYLIST) as Track[],
       type: 'PLAYLIST',
@@ -802,8 +802,8 @@ export function LibraryClient({
       isPublished: false,
       exposureOrder: null as number | null,
       stats: uiLanguage === 'KO' 
-        ? `회원님이 직접 만든 보관함 • ${likedTracks.length || DUMMY_PLAYLIST.length}곡` 
-        : `Created by you • ${likedTracks.length || DUMMY_PLAYLIST.length} songs`
+        ? `회원님이 직접 만든 보관함 • ${likedTracks.length || DUMMY_PLAYLIST.length} songs` 
+        : uiLanguage === 'JA' ? `作成者：あなた • ${likedTracks.length || DUMMY_PLAYLIST.length} 曲` : `Created by you • ${likedTracks.length || DUMMY_PLAYLIST.length} songs`
     }
   ]
 
@@ -903,8 +903,8 @@ export function LibraryClient({
         isPublished: cp.is_published || false,
         exposureOrder: cp.exposure_order,
         stats: uiLanguage === 'KO' 
-          ? `보관함 폴더 • ${pTracks.length}곡` 
-          : `Library folder • ${pTracks.length} songs`
+          ? `보관함 폴더 • ${pTracks.length} songs` 
+          : uiLanguage === 'JA' ? `ライブラリフォルダ • ${pTracks.length} 曲` : `Library folder • ${pTracks.length} songs`
       }
     })
   ]
@@ -913,12 +913,12 @@ export function LibraryClient({
 
   // Relative Date added formatter
   const formatDateAdded = (dateStr: string, id: string) => {
-    if (id === 'dummy-top-1') return uiLanguage === 'KO' ? '2일 전' : '2 days ago'
+    if (id === 'dummy-top-1') return uiLanguage === 'KO' ? '2일 전' : uiLanguage === 'JA' ? '2日前' : '2 days ago'
     if (id === 'dummy-top-2') return 'Oct 12, 2023'
-    if (id === 'dummy-top-3') return uiLanguage === 'KO' ? '어제' : 'Yesterday'
-    if (id === 'dummy-top-4') return uiLanguage === 'KO' ? '5일 전' : '5 days ago'
+    if (id === 'dummy-top-3') return uiLanguage === 'KO' ? '어제' : uiLanguage === 'JA' ? '昨日' : 'Yesterday'
+    if (id === 'dummy-top-4') return uiLanguage === 'KO' ? '5일 전' : uiLanguage === 'JA' ? '5日前' : '5 days ago'
     
-    return uiLanguage === 'KO' ? '최근 추가됨' : 'Recently added'
+    return uiLanguage === 'KO' ? '최근 추가됨' : uiLanguage === 'JA' ? '最近追加された項目' : 'Recently added'
   }
 
   // Rank shift details for Top 100 mockup
@@ -970,7 +970,7 @@ export function LibraryClient({
                 <ListMusic className="w-2.5 h-2.5 text-primary" />
               </span>
               <h1 className="text-sm font-black uppercase tracking-widest text-on-surface">
-                {uiLanguage === 'KO' ? '보관함 플레이리스트' : 'Library Playlists'}
+                {uiLanguage === 'KO' ? '보관함 플레이리스트' : uiLanguage === 'JA' ? 'ライブラリプレイリスト' : 'Library Playlists'}
               </h1>
             </div>
           </div>
@@ -985,7 +985,7 @@ export function LibraryClient({
                 <Plus className="w-6 h-6" />
               </div>
               <span className="font-bold text-[11px] text-on-surface-variant/70 group-hover:text-primary transition-colors">
-                {uiLanguage === 'KO' ? '새 플레이리스트 만들기' : 'Create New Playlist'}
+                {uiLanguage === 'KO' ? '새 플레이리스트 만들기' : uiLanguage === 'JA' ? '新しいプレイリストを作成' : 'Create New Playlist'}
               </span>
             </div>
 
@@ -1023,11 +1023,11 @@ export function LibraryClient({
                             ? 'bg-primary/20 text-primary border-primary/30' 
                             : 'bg-black/60 text-zinc-400 border-white/10'
                         }`}>
-                          {pl.isPublished ? (uiLanguage === 'KO' ? '공개됨' : 'Published') : (uiLanguage === 'KO' ? '비공개' : 'Private')}
+                          {pl.isPublished ? (uiLanguage === 'KO' ? '공개됨' : uiLanguage === 'JA' ? '公開済み' : 'Published') : (uiLanguage === 'KO' ? '비공개' : uiLanguage === 'JA' ? '非公開' : 'Private')}
                         </span>
                         {pl.exposureOrder && (
                           <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[9px] font-extrabold border border-primary bg-primary text-[#0b0c0b] shadow-sm z-20 select-none">
-                            {pl.exposureOrder}{uiLanguage === 'KO' ? '순위' : '순위'}
+                            {pl.exposureOrder}{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : ' Rank'}
                           </span>
                         )}
                       </>
@@ -1047,7 +1047,7 @@ export function LibraryClient({
                               ? 'bg-[#e3fe06] text-black font-extrabold'
                               : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
                           }`}
-                          title={uiLanguage === 'KO' ? '좋아요' : 'Like'}
+                          title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
                         >
                           <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
                         </button>
@@ -1066,7 +1066,7 @@ export function LibraryClient({
                             className={`w-8 h-8 rounded-full bg-black/70 flex items-center justify-center hover:bg-primary transition-all backdrop-blur-sm cursor-pointer hover:scale-110 active:scale-95 ${
                               pl.isPublished ? 'text-primary hover:text-white' : 'text-white'
                             }`}
-                            title={pl.isPublished ? (uiLanguage === 'KO' ? '비공개 전환' : 'Make Private') : (uiLanguage === 'KO' ? '공개 퍼블리싱' : 'Publish')}
+                            title={pl.isPublished ? (uiLanguage === 'KO' ? '비공개 전환' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private') : (uiLanguage === 'KO' ? '공개 퍼블리싱' : uiLanguage === 'JA' ? '公開する' : 'Publish')}
                           >
                             <Globe className="w-4 h-4" />
                           </button>
@@ -1076,7 +1076,7 @@ export function LibraryClient({
                               handleOpenEdit(pl); 
                             }} 
                             className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white hover:bg-primary transition-all backdrop-blur-sm cursor-pointer hover:scale-110 active:scale-95"
-                            title={uiLanguage === 'KO' ? '수정' : 'Edit'}
+                            title={uiLanguage === 'KO' ? '수정' : uiLanguage === 'JA' ? '編集' : 'Edit'}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -1086,7 +1086,7 @@ export function LibraryClient({
                               handleDeletePlaylist(pl.id); 
                             }} 
                             className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white hover:bg-red-500 transition-all backdrop-blur-sm cursor-pointer hover:scale-110 active:scale-95"
-                            title={uiLanguage === 'KO' ? '삭제' : 'Delete'}
+                            title={uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1108,7 +1108,7 @@ export function LibraryClient({
                       {pl.title}
                     </p>
                     <p className="text-[10px] text-on-surface-variant/80 mt-0.5 flex items-center gap-1.5 font-semibold">
-                      <span>{pl.tracks.length} {uiLanguage === 'KO' ? '곡' : 'songs'}</span>
+                      <span>{pl.tracks.length} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}</span>
                       <span className="text-zinc-700">•</span>
                       <span className="flex items-center gap-1">
                         <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-[#e3fe06]' : 'text-zinc-500'}`} />
@@ -1131,7 +1131,7 @@ export function LibraryClient({
               className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              {uiLanguage === 'KO' ? '목록으로' : 'Back'}
+              {uiLanguage === 'KO' ? '목록으로' : uiLanguage === 'JA' ? '戻る' : 'Back'}
             </button>
 
             {/* Hero Header Banner */}
@@ -1166,7 +1166,7 @@ export function LibraryClient({
                 </span>
                 <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mt-1">{activePlaylist.title}</h1>
                 <p className="text-xs text-zinc-400 font-semibold tracking-wide mt-1">
-                  {uiLanguage === 'KO' ? '보관함 폴더' : 'Library Folder'} • {activePlaylist.tracks.length}곡 {activePlaylist.genre && `• ${activePlaylist.genre}`}
+                  {uiLanguage === 'KO' ? '보관함 폴더' : uiLanguage === 'JA' ? 'ライブラリフォルダ' : 'Library Folder'} • {activePlaylist.tracks.length} songs {activePlaylist.genre && `• ${activePlaylist.genre}`}
                 </p>
 
                 {/* Actions Button Row */}
@@ -1186,7 +1186,7 @@ export function LibraryClient({
                         ? 'border-[#e3fe06] bg-[#e3fe06]/10 text-[#e3fe06] hover:bg-[#e3fe06]/25'
                         : 'border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white'
                     }`}
-                    title="좋아요"
+                    title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
                   >
                     <Heart className={`w-4 h-4 ${likedAlbums.includes(activePlaylist.id) ? 'fill-current' : ''}`} />
                   </button>
@@ -1205,7 +1205,7 @@ export function LibraryClient({
                             : 'border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
                         }`}
                       >
-                        {activePlaylist.isPublished ? (uiLanguage === 'KO' ? '공개 해제' : 'Make Private') : (uiLanguage === 'KO' ? '공개 퍼블리싱' : 'Publish')}
+                        {activePlaylist.isPublished ? (uiLanguage === 'KO' ? '공개 해제' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private') : (uiLanguage === 'KO' ? '공개 퍼블리싱' : uiLanguage === 'JA' ? '公開する' : 'Publish')}
                       </button>
                       <button 
                         onClick={() => {
@@ -1214,13 +1214,13 @@ export function LibraryClient({
                         }} 
                         className="px-4 py-1.5 rounded-full border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                       >
-                        {uiLanguage === 'KO' ? '편집' : 'Edit'}
+                        {uiLanguage === 'KO' ? '편집' : uiLanguage === 'JA' ? '編集' : 'Edit'}
                       </button>
                       <button 
                         onClick={() => handleDeletePlaylist(activePlaylist.id)} 
                         className="px-4 py-1.5 rounded-full border border-red-950/40 hover:border-red-900/60 text-red-400 hover:text-red-300 text-xs font-bold transition-colors cursor-pointer"
                       >
-                        {uiLanguage === 'KO' ? '삭제' : 'Delete'}
+                        {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
                       </button>
                     </div>
                   )}
@@ -1232,17 +1232,17 @@ export function LibraryClient({
             {activePlaylist.tracks.length === 0 ? (
               <div className="py-16 text-center text-sm text-zinc-400 bg-zinc-900/20 rounded-2xl border border-dashed border-zinc-800 mt-6">
                 {uiLanguage === 'KO' 
-                  ? '플레이리스트에 들어있는 곡이 없습니다.' 
-                  : 'This playlist is empty.'}
+                  ? (uiLanguage === 'KO' ? '플레이리스트에 들어있는 곡이 없습니다.' : uiLanguage === 'JA' ? 'プレイリストに曲がありません。' : 'No songs in this playlist.') 
+                  : uiLanguage === 'JA' ? 'このプレイリストは空です。' : 'This playlist is empty.'}
               </div>
             ) : (
               <div className="w-full mt-6 flex flex-col">
                 {/* Table Header */}
                 <div className="grid grid-cols-[50px_2fr_1.5fr_1.5fr_100px] gap-4 px-4 py-2 border-b border-zinc-800/40 text-xs font-bold text-zinc-500 uppercase tracking-wider text-left">
                   <div>#</div>
-                  <div>제목</div>
-                  <div>앨범</div>
-                  <div>추가된 날짜</div>
+                  <div>{uiLanguage === 'KO' ? '제목' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</div>
+                  <div>{uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Album'}</div>
+                  <div>{uiLanguage === 'KO' ? '추가된 날짜' : uiLanguage === 'JA' ? '追加された日付' : 'Date Added'}</div>
                   <div className="text-right flex justify-end items-center"><Clock className="w-4 h-4 text-zinc-500" /></div>
                 </div>
 
@@ -1326,7 +1326,7 @@ export function LibraryClient({
                               }
                             }}
                             className="text-primary hover:text-red-400 hover:scale-105 transition-all p-1 rounded-lg hover:bg-white/[0.04] cursor-pointer"
-                            title={uiLanguage === 'KO' ? '보관함에서 제거' : 'Remove from Library'}
+                            title={uiLanguage === 'KO' ? '보관함에서 제거' : uiLanguage === 'JA' ? 'ライブラリから削除' : 'Remove from Library'}
                           >
                             <Heart className="w-4 h-4 fill-current" />
                           </button>
@@ -1358,14 +1358,14 @@ export function LibraryClient({
                                         className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-400 hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2"
                                       >
                                         <X className="w-3.5 h-3.5" />
-                                        {uiLanguage === 'KO' ? '이 플레이리스트에서 빼기' : 'Remove from Playlist'}
+                                        {uiLanguage === 'KO' ? '이 플레이리스트에서 빼기' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}
                                       </button>
                                       <div className="h-px bg-outline-variant/10 my-1 mx-2"></div>
                                     </>
                                   )}
 
                                   <div className="px-3 py-1 text-[10px] font-black text-on-surface-variant/60 uppercase tracking-wider">
-                                    {uiLanguage === 'KO' ? '플레이리스트에 추가/이동' : 'Add/Move to Playlist'}
+                                    {uiLanguage === 'KO' ? '플레이리스트에 추가/이동' : uiLanguage === 'JA' ? 'プレイリストに追加/移動' : 'Add/Move to Playlist'}
                                   </div>
                                   <div className="max-h-40 overflow-y-auto scrollbar-none">
                                     {customPlaylists
@@ -1381,7 +1381,7 @@ export function LibraryClient({
                                       ))}
                                     {customPlaylists.filter(p => p.id !== activePlaylist.id).length === 0 && (
                                       <div className="px-4 py-2 text-xs text-on-surface-variant/40 italic font-medium">
-                                        {uiLanguage === 'KO' ? '추가할 플레이리스트 없음' : 'No playlists available'}
+                                        {uiLanguage === 'KO' ? '추가할 플레이리스트 없음' : uiLanguage === 'JA' ? '利用可能なプレイリストがありません' : 'No playlists available'}
                                       </div>
                                     )}
                                   </div>
@@ -1413,8 +1413,8 @@ export function LibraryClient({
                 <div className="flex items-center justify-between p-5 pb-3">
                   <h2 className="text-2xl font-sans text-white font-medium">
                     {editPlaylistId 
-                      ? (uiLanguage === 'KO' ? '플레이리스트 정보 수정' : 'Edit Playlist Info') 
-                      : (uiLanguage === 'KO' ? '새 플레이리스트 만들기' : 'Create New Playlist')}
+                      ? (uiLanguage === 'KO' ? '플레이리스트 정보 수정' : uiLanguage === 'JA' ? 'プレイリスト情報を編集' : 'Edit Playlist Info') 
+                      : (uiLanguage === 'KO' ? '새 플레이리스트 만들기' : uiLanguage === 'JA' ? '新しいプレイリストを作成' : 'Create New Playlist')}
                   </h2>
                   <button 
                     onClick={() => setIsEditModalOpen(false)}
@@ -1433,7 +1433,7 @@ export function LibraryClient({
                     type="text" 
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    placeholder={uiLanguage === 'KO' ? '플레이리스트 제목' : 'Playlist Title'}
+                    placeholder={uiLanguage === 'KO' ? '플레이리스트 제목' : uiLanguage === 'JA' ? 'プレイリストのタイトル' : 'Playlist Title'}
                     className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-white focus:outline-none focus:border-primary/50 font-semibold text-sm"
                   />
                   
@@ -1442,7 +1442,7 @@ export function LibraryClient({
                     <textarea 
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value.substring(0, 200))}
-                      placeholder={uiLanguage === 'KO' ? '플레이리스트 설명' : 'Playlist Description'}
+                      placeholder={uiLanguage === 'KO' ? '플레이리스트 설명' : uiLanguage === 'JA' ? 'プレイリストの説明' : 'Playlist Description'}
                       className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-white focus:outline-none focus:border-primary/50 h-28 resize-none font-semibold text-sm"
                     />
                     <div className="text-right text-[11px] text-on-surface-variant mt-1 font-bold">
@@ -1452,13 +1452,13 @@ export function LibraryClient({
 
                   {/* Genre Category (Required) */}
                   <div className="flex flex-col gap-1.5 text-xs font-bold text-on-surface-variant">
-                    <label>{uiLanguage === 'KO' ? '장르 카테고리 (필수)' : 'Genre Category (Required)'}</label>
+                    <label>{uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリー (必須)' : 'Genre Category (Required)'}</label>
                     <select
                       value={editGenre}
                       onChange={(e) => setEditGenre(e.target.value)}
                       className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary/50 cursor-pointer"
                     >
-                      <option value="">{uiLanguage === 'KO' ? '장르 카테고리 선택' : 'Select Genre Category'}</option>
+                      <option value="">{uiLanguage === 'KO' ? '장르 카테고리 선택' : uiLanguage === 'JA' ? 'ジャンルカテゴリーを選択' : 'Select Genre Category'}</option>
                       {GENRES.map(g => (
                         <option key={g.name} value={g.name}>
                           {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
@@ -1469,15 +1469,15 @@ export function LibraryClient({
 
                   {/* Exposure Order Setting */}
                   <div className="flex flex-col gap-1.5 text-xs font-bold text-on-surface-variant">
-                    <label>{uiLanguage === 'KO' ? '노출 순위 설정' : 'Exposure Order Setting'}</label>
+                    <label>{uiLanguage === 'KO' ? '노출 순위 설정' : uiLanguage === 'JA' ? '表示順序の設定' : 'Exposure Order Setting'}</label>
                     <select
                       value={editExposureOrder || ''}
                       onChange={(e) => setEditExposureOrder(e.target.value ? Number(e.target.value) : '')}
                       className="w-full bg-[#141415] border border-outline-variant/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary/50 cursor-pointer"
                     >
-                      <option value="">{uiLanguage === 'KO' ? '기본 (최신 등록순)' : 'Default (Latest)'}</option>
+                      <option value="">{uiLanguage === 'KO' ? '기본 (최신 등록순)' : uiLanguage === 'JA' ? 'デフォルト (最新)' : 'Default (Latest)'}</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                        <option key={num} value={num}>{num}{uiLanguage === 'KO' ? '순위 (우선 노출)' : ' Rank (Prioritized)'}</option>
+                        <option key={num} value={num}>{num}{uiLanguage === 'KO' ? '순위 (우선 노출)' : uiLanguage === 'JA' ? ' ランク (優先)' : ' Rank (Prioritized)'}</option>
                       ))}
                     </select>
                   </div>
@@ -1486,10 +1486,10 @@ export function LibraryClient({
                   <div className="flex items-center justify-between bg-[#141415] border border-outline-variant/15 p-3 rounded-lg mt-1 text-left select-none">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-white">
-                        {uiLanguage === 'KO' ? '플레이리스트 퍼블리싱 (공개 여부)' : 'Playlist Publishing (Public)'}
+                        {uiLanguage === 'KO' ? '플레이리스트 퍼블리싱 (공개 여부)' : uiLanguage === 'JA' ? 'プレイリストの公開 (パブリック)' : 'Playlist Publishing (Public)'}
                       </span>
                       <span className="text-[10px] text-zinc-500 font-semibold leading-normal">
-                        {uiLanguage === 'KO' ? '내 채널(공개 프로필)에 이 플레이리스트를 공개합니다.' : 'Publish this playlist on my channel.'}
+                        {uiLanguage === 'KO' ? '내 채널(공개 프로필)에 이 플레이리스트를 공개합니다.' : uiLanguage === 'JA' ? 'このプレイリストをマイチャンネルに公開します。' : 'Publish this playlist on my channel.'}
                       </span>
                     </div>
                     <input 
@@ -1517,7 +1517,7 @@ export function LibraryClient({
                         <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-primary transition-colors">
                           <Upload className="w-8 h-8 mb-2 opacity-50 text-zinc-400" />
                           <span className="text-sm font-medium text-zinc-300">
-                            {uiLanguage === 'KO' ? '플레이리스트 커버 업로드' : 'Upload Playlist Cover'}
+                            {uiLanguage === 'KO' ? '플레이리스트 커버 업로드' : uiLanguage === 'JA' ? 'プレイリストのカバーをアップロード' : 'Upload Playlist Cover'}
                           </span>
                           <input type="file" accept="image/*" className="hidden" onChange={handlePlaylistCoverUpload} />
                         </label>
@@ -1527,7 +1527,7 @@ export function LibraryClient({
                     {/* Preset Suggestions */}
                     <div className="w-full">
                       <span className="text-[9px] font-black uppercase text-on-surface-variant/60 tracking-wider block mb-1 text-center">
-                        {uiLanguage === 'KO' ? '추천 프리셋 커버' : 'Suggested Preset Covers'}
+                        {uiLanguage === 'KO' ? '추천 프리셋 커버' : uiLanguage === 'JA' ? 'おすすめのプリセットカバー' : 'Suggested Preset Covers'}
                       </span>
                       <div className="flex gap-1.5 justify-center flex-wrap">
                         <button 
@@ -1572,7 +1572,7 @@ export function LibraryClient({
                     <button 
                       type="button"
                       className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold rounded-lg transition-colors whitespace-nowrap"
-                      onClick={() => alert(uiLanguage === 'KO' ? "현재는 디자인(UI) 레이아웃만 적용되어 있습니다. 실제 AI 이미지 생성 API 연동이 필요합니다!" : "Currently, only the UI layout is implemented. API integration is required!")}
+                      onClick={() => alert(uiLanguage === 'KO' ? "현재는 디자인(UI) 레이아웃만 적용되어 있습니다. 실제 AI 이미지 생성 API 연동이 필요합니다!" : uiLanguage === 'JA' ? "現在、UIレイアウトのみが実装されています。API連携が必要です！" : "Currently, only the UI layout is implemented. API integration is required!")}
                     >
                       Generate
                     </button>
@@ -1585,14 +1585,14 @@ export function LibraryClient({
                     onClick={() => setIsEditModalOpen(false)}
                     className="px-5 py-2.5 bg-[#2C2C2E] hover:bg-[#3A3A3C] text-sm font-bold text-white rounded-xl transition-all cursor-pointer"
                   >
-                    {uiLanguage === 'KO' ? 'Cancel' : 'Cancel'}
+                    {uiLanguage === 'KO' ? 'Cancel' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
                   </button>
                   <button 
                     onClick={handleSaveEdit}
                     disabled={!editTitle.trim()}
                     className="px-6 py-2.5 bg-[#F2F2F7] hover:bg-white text-black text-sm font-bold rounded-xl disabled:opacity-50 transition-all cursor-pointer"
                   >
-                    {uiLanguage === 'KO' ? 'Save' : 'Save'}
+                    {uiLanguage === 'KO' ? 'Save' : uiLanguage === 'JA' ? '保存' : 'Save'}
                   </button>
                 </div>
               </div>
@@ -1626,14 +1626,14 @@ export function LibraryClient({
                 {confirmModal.showGenreSelect && (
                   <div className="space-y-1.5 text-xs font-bold text-on-surface-variant">
                     <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-                      {uiLanguage === 'KO' ? '장르 카테고리 선택' : 'Select Genre Category'}
+                      {uiLanguage === 'KO' ? '장르 카테고리 선택' : uiLanguage === 'JA' ? 'ジャンルカテゴリーを選択' : 'Select Genre Category'}
                     </label>
                     <select
                       value={publishGenre}
                       onChange={(e) => setPublishGenre(e.target.value)}
                       className="w-full bg-[#070b08] border border-emerald-950/30 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
                     >
-                      <option value="">{uiLanguage === 'KO' ? '장르 선택' : 'Select Genre'}</option>
+                      <option value="">{uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre'}</option>
                       {GENRES.map(g => (
                         <option key={g.name} value={g.name}>
                           {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
