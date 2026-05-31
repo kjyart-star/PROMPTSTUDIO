@@ -198,8 +198,7 @@ export function PublicLayoutClient({
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
             <Link href="/" className="select-none flex flex-col items-center">
-              <h1 className="text-[32px] leading-[32px] font-black tracking-tighter text-primary italic">BEATZ</h1>
-              <p className="text-[9px] leading-[14px] font-bold text-primary tracking-widest mt-1 text-center">AI MUSIC PLATFORM</p>
+              <img src="/images/logo.png" alt="BEATZ AI MUSIC PLATFORM" className="h-9 object-contain" />
             </Link>
           </div>
 
