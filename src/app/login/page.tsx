@@ -87,8 +87,8 @@ function LoginContent() {
             priority
             unoptimized={true}
           />
-          {/* Simple overlay for text readability */}
-          <div className="absolute inset-0 bg-black/40"></div>
+          {/* Gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-black/30"></div>
         </div>
         
         {/* Background glow effect (Subtle neon yellow) */}
