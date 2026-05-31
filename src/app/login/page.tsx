@@ -95,11 +95,8 @@ function LoginContent() {
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#e3fe06]/15 blur-[120px] rounded-full pointer-events-none z-0" />
         
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-16">
-            <div className="w-8 h-8 rounded-full border-2 border-[#e3fe06] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-              <div className="w-3 h-3 rounded-full bg-[#e3fe06] animate-pulse shadow-[0_0_10px_#e3fe06]"></div>
-            </div>
-            <span className="text-white font-black text-xl italic tracking-tighter drop-shadow-md">BEATZ</span>
+          <div className="mb-16">
+            <img src="/images/logo.png" alt="BEATZ" className="h-10 object-contain drop-shadow-md" />
           </div>
           
           <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-6 tracking-tight drop-shadow-lg">
@@ -163,11 +160,8 @@ function LoginContent() {
         
         {/* Mobile Logo */}
         <div className="absolute top-0 right-0 p-6 flex lg:hidden">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full border-2 border-[#e3fe06] flex items-center justify-center bg-black">
-              <div className="w-2 h-2 rounded-full bg-[#e3fe06] shadow-[0_0_5px_#e3fe06]"></div>
-            </div>
-            <span className="text-white font-black italic tracking-tighter text-sm">BEATZ</span>
+          <div className="flex items-center">
+            <img src="/images/logo.png" alt="BEATZ" className="h-8 object-contain drop-shadow-md" />
           </div>
         </div>
 

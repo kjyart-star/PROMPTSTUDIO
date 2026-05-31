@@ -47,8 +47,7 @@ export default async function AdminLayout({
           <aside className="w-64 bg-[#161d16] border-r border-[#242c24] shrink-0 hidden md:flex flex-col">
             <div className="h-16 flex items-center justify-center border-b border-[#242c24]">
               <Link href="/admin/music" className="select-none flex flex-col items-center">
-                <h1 className="text-[28px] leading-[28px] font-black tracking-tighter text-[#e3fe06] italic">BEATZ</h1>
-                <p className="text-[9px] leading-[10px] font-bold text-[#e3fe06] tracking-widest mt-1 text-center">ADMIN</p>
+                <img src="/images/logo.png" alt="BEATZ ADMIN" className="h-8 object-contain" />
               </Link>
             </div>
             
@@ -90,9 +89,8 @@ export default async function AdminLayout({
             {/* Top Bar (브랜드 컬러 테마) */}
             <header className="h-16 border-b border-[#242c24] bg-[#0e150e]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
               <div className="md:hidden flex items-center gap-2">
-                <Link href="/admin/music" className="select-none flex flex-col items-start">
-                  <h1 className="text-[20px] leading-[20px] font-black tracking-tighter text-[#e3fe06] italic">BEATZ</h1>
-                  <p className="text-[8px] leading-[10px] font-bold text-[#e3fe06] tracking-widest mt-0.5">ADMIN</p>
+                <Link href="/admin/music" className="select-none flex items-center">
+                  <img src="/images/logo.png" alt="BEATZ ADMIN" className="h-6 object-contain" />
                 </Link>
               </div>
               
