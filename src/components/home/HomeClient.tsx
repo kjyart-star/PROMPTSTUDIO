@@ -9,6 +9,7 @@ import {
   MoreVertical, X, MessageSquare
 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
+import { AudioDuration } from '@/components/player/AudioDuration'
 import { createClient } from '@/lib/supabase/client'
 
 interface HomeClientProps {
@@ -1003,9 +1004,9 @@ export function HomeClient({
                     <span className="text-[11px] font-mono text-on-surface-variant w-24 text-right">
                       {playCount.toLocaleString()}
                     </span>
-                    <span className="text-[10px] font-mono text-on-surface-variant/60 font-bold w-10 text-right">
-                      {track.duration_sec ? `${Math.floor(track.duration_sec / 60)}:${(track.duration_sec % 60).toString().padStart(2, '0')}` : '-'}
-                    </span>
+                      <div className="text-xs text-on-surface-variant w-12 text-right tabular-nums">
+                        <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
+                      </div>
                   </div>
                 </div>
               )
@@ -1164,13 +1165,6 @@ export function HomeClient({
             const playCount = track.play_count || (track.id.startsWith('dummy-') ? (track.title.length * 900 + 1500) : 0)
             const likeCount = track.like_count || (track.id.startsWith('dummy-') ? (track.title.length * 40 + 90) : 0)
 
-            const formatDuration = (sec?: number) => {
-              if (!sec) return '3:00'
-              const m = Math.floor(sec / 60)
-              const s = (sec % 60).toString().padStart(2, '0')
-              return `${m}:${s}`
-            }
-
             return (
               <div
                 key={track.id}
@@ -1212,9 +1206,9 @@ export function HomeClient({
                   </div>
 
                   {/* Duration Badge */}
-                  <span className="absolute bottom-1 right-1.5 bg-black/70 text-[8px] font-bold text-zinc-300 px-1 py-0.2 rounded font-mono">
-                    {formatDuration(track.duration_sec)}
-                  </span>
+                  <div className="absolute bottom-1 right-1.5 bg-black/70 text-[8px] font-bold text-zinc-300 px-1 py-0.2 rounded font-mono">
+                    <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
+                  </div>
                 </div>
 
                 {/* Track Info */}

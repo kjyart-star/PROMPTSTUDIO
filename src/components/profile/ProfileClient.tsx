@@ -2566,7 +2566,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><Folder className="w-5 h-5 text-primary" /> 내 앨범</h2>
+                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><Folder className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '내 앨범' : 'My Albums'}</h2>
               </div>
               
               {(() => {
@@ -2594,7 +2594,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                               <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                 <Plus className="w-6 h-6" />
                               </div>
-                              <span className="text-sm font-bold text-on-surface-variant group-hover:text-primary">새 앨범 만들기</span>
+                              <span className="text-sm font-bold text-on-surface-variant group-hover:text-primary">{uiLanguage === 'KO' ? '새 앨범 만들기' : 'Create New Album'}</span>
                             </button>
                           )
                         }
@@ -3638,7 +3638,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_songs')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      Songs <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '음원 목록' : 'Songs'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {visibleLooseTracks.length > 9 && (
                       <button 
@@ -3735,7 +3735,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_albums')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      Albums <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '앨범' : 'Albums'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {sortedPublicAlbums.length > 10 && (
                       <button 
@@ -3764,7 +3764,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       onClick={() => handleSetPublicSubView('all_playlists')}
                       className="text-lg font-bold text-on-surface flex items-center gap-1 tracking-tight hover:text-primary transition-colors cursor-pointer group"
                     >
-                      Playlists <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
+                      {uiLanguage === 'KO' ? '플레이리스트' : 'Playlists'} <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-primary transition-colors" />
                     </button>
                     {visiblePlaylists.length > 5 && (
                       <button 

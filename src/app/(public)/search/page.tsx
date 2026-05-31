@@ -50,7 +50,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       id: song.id,
       title: song.title,
       file_url: song.audio_url || '',
-      duration_sec: song.form?.duration_sec || 180,
+      duration_sec: song.form?.duration_sec || null,
       like_count: dbLikeCount,
       play_count: dbPlayCount,
       album_id: `suno-album-${song.id}`,

@@ -106,11 +106,28 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       profilesData = data || []
     }
 
+    const channelIds = [...new Set((realSongs || []).map((s: any) => s.channel_id).filter(Boolean))]
+    let channelsData: any[] = []
+    if (channelIds.length > 0) {
+      const { data } = await supabase
+        .from('artists')
+        .select('*')
+        .in('id', channelIds)
+      channelsData = data || []
+    }
+
     const mappedRealSongs = (realSongs || []).map((song: any, idx: number) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'
       const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
       const dbPlayCount = Number(song.form?.play_count || 0)
+      const songChannel = channelsData.find((c: any) => c.id === song.channel_id)
       const songProfile = profilesData.find((p: any) => p.id === song.user_id)
+
+      const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
+      const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
+      const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'suno-ai')
+      const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+      const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator')
 
       return {
         id: song.id,
@@ -124,7 +141,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
           id: song.id,
           title: song.title,
           file_url: song.audio_url || '',
-          duration_sec: song.form?.duration_sec || 180,
+          duration_sec: song.form?.duration_sec || null,
           like_count: dbLikeCount,
           play_count: dbPlayCount,
           album_id: `suno-album-${song.id}`,
@@ -138,83 +155,25 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
             id: `suno-album-${song.id}`,
             title: song.form?.styleDesc || song.title,
             cover_url: song.image_url || '/default-album.png',
-            artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
+            artist_id: finalArtistId,
             genres: [formGenre],
             artist: {
-              id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
-              name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
-              slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai'
+              id: finalArtistId,
+              name: finalArtistName,
+              slug: finalArtistSlug,
+              avatar_url: finalAvatarUrl,
+              bio: finalBio
             }
           }
         }
       }
     })
 
-    const MOCK_TITLES = [
-      { title: "Neon City Nights", artist: "Synthwave Kid", genre: "Electronic", duration: 184, cover: "/images/retro_future_cover.png" },
-      { title: "빗소리와 커피 한 잔 (Rainy Day Coffee)", artist: "Lofi Beats Collective", genre: "Ballad", duration: 210, cover: "/images/live_tokyo_cover.png" },
-      { title: "Cyberpunk Horizon", artist: "Cyber Sound", genre: "Electronic", duration: 195, cover: "/images/vanguard_cover.png" },
-      { title: "마지막 여름 밤 (Last Summer Dream)", artist: "Pop Queen", genre: "Pop", duration: 178, cover: "/images/silent_tides_cover.png" },
-      { title: "Lost in the Woods", artist: "Acoustic Duo", genre: "Classical", duration: 220, cover: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=350&auto=format&fit=crop" },
-      { title: "Midnight Highway Drive", artist: "Future DJ", genre: "Rock", duration: 202, cover: "/images/retro_future_cover.png" },
-      { title: "Tokyo Rain Reflections", artist: "Soul Vocalist", genre: "Jazz", duration: 235, cover: "/images/live_tokyo_cover.png" },
-      { title: "Electric Heartbeat", artist: "Synthwave Kid", genre: "Electronic", duration: 168, cover: "/images/vanguard_cover.png" },
-      { title: "가끔은 쉼표가 필요해 (Rest Time)", artist: "Chill Sunset", genre: "Ballad", duration: 190, cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=350&auto=format&fit=crop" },
-      { title: "Smooth Saxophone Vibes", artist: "Jazz Masters", genre: "Jazz", duration: 245, cover: "/images/silent_tides_cover.png" },
-      { title: "Dancing in the Storm", artist: "Rock Band AI", genre: "Rock", duration: 215, cover: "/images/retro_future_cover.png" },
-      { title: "Deep Blue Ocean", artist: "Acoustic Duo", genre: "Classical", duration: 180, cover: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=350&auto=format&fit=crop" },
-      { title: "Urban Hip Hop Flow", artist: "Street Rapper AI", genre: "Hip Hop", duration: 198, cover: "/images/vanguard_cover.png" },
-      { title: "Starlight Serenade", artist: "Classic Vibe", genre: "Classical", duration: 260, cover: "/images/silent_tides_cover.png" },
-      { title: "너와 나 둘이서 (Us Two)", artist: "Soul Vocalist", genre: "R&B", duration: 204, cover: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=350&auto=format&fit=crop" },
-      { title: "Summer Wave Energy", artist: "Pop Queen", genre: "Pop", duration: 182, cover: "/images/retro_future_cover.png" },
-      { title: "Vintage Dreamer memories", artist: "Vintage Mood", genre: "R&B", duration: 212, cover: "/images/live_tokyo_cover.png" },
-      { title: "Winter Breeze", artist: "Chill Sunset", genre: "Ballad", duration: 224, cover: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=350&auto=format&fit=crop" },
-      { title: "Epic Symphony of AI", artist: "Classic Vibe", genre: "Classical", duration: 310, cover: "/images/vanguard_cover.png" },
-      { title: "Golden hour sunset", artist: "Future DJ", genre: "Pop", duration: 189, cover: "/images/silent_tides_cover.png" }
-    ]
-
-    const todayStr = new Date().toISOString().split('T')[0]
-    let mockList = MOCK_TITLES.map((m, idx) => ({
-      id: `mock-chart-${idx + 1}`,
-      period_type: periodType,
-      period_date: todayStr,
-      track_id: `mock-track-${idx + 1}`,
-      rank: idx + 1,
-      play_count: 50000 - (idx * 2300),
-      rank_change: idx === 0 ? null : (idx % 3 === 0 ? 2 : idx % 3 === 1 ? -1 : 0),
-      track: {
-        id: `mock-track-${idx + 1}`,
-        title: m.title,
-        file_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        duration_sec: m.duration,
-        like_count: 1200 - (idx * 50),
-        play_count: 50000 - (idx * 2300),
-        album_id: `mock-album-${idx + 1}`,
-        created_at: new Date().toISOString(),
-        album: {
-          id: `mock-album-${idx + 1}`,
-          title: `${m.title} (Album)`,
-          cover_url: m.cover,
-          artist_id: `mock-artist-${idx + 1}`,
-          genres: [m.genre],
-          artist: {
-            id: `mock-artist-${idx + 1}`,
-            name: m.artist,
-            slug: `mock-artist-slug-${idx + 1}`
-          }
-        }
-      }
-    }))
-
     // Skip genre filtering on server to allow instant client-side filtering
-    let filteredRealSongs = mappedRealSongs
-
-    // Combine real songs and mockups
-    const realCount = filteredRealSongs.length
-    const neededMockCount = Math.max(0, 20 - realCount)
-    const slicedMocks = mockList.slice(0, neededMockCount)
+    let combinedList = [...mappedRealSongs]
     
-    let combinedList = [...filteredRealSongs, ...slicedMocks]
+    // Sort combined list by play_count descending
+    combinedList.sort((a, b) => b.play_count - a.play_count)
     
     // Re-index ranks
     combinedList = combinedList.map((item, index) => ({

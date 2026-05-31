@@ -65,7 +65,7 @@ export default function TracksPage() {
       id: trackId,
       title: song.title || 'UGC Preview Track',
       file_url: song.audio_url,
-      duration_sec: 180,
+      duration_sec: null,
       album_id: 'ugc-album',
       album: {
         id: 'ugc-album',

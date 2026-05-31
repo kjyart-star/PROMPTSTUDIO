@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Track, Album, Artist } from '@/types/music'
 import { Play, Pause, Heart, Trophy, ArrowUp, ArrowDown, Minus, RefreshCw, Music, Search } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
+import { AudioDuration } from '@/components/player/AudioDuration'
 import { createClient } from '@/lib/supabase/client'
 
 const formatCount = (count: number) => {
@@ -496,7 +497,7 @@ export function ChartClient({
  
                       {/* 시간 */}
                       <td className="py-4 px-6 font-mono text-xs text-on-surface-variant text-right w-20">
-                        {track.duration_sec ? `${Math.floor(track.duration_sec / 60)}:${(track.duration_sec % 60).toString().padStart(2, '0')}` : '-'}
+                        <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
                       </td>
                     </tr>
                   )

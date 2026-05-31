@@ -92,6 +92,12 @@ export function PublicLayoutClient({
       setUiLanguage(defaultLang)
       localStorage.setItem('language', defaultLang)
     }
+
+    const handleLangChange = (e: any) => {
+      setUiLanguage(e.detail.toUpperCase())
+    }
+    window.addEventListener('languageChange', handleLangChange)
+    return () => window.removeEventListener('languageChange', handleLangChange)
   }, [])
 
   // 공지사항 변경 감지 및 실시간 업데이트 처리
