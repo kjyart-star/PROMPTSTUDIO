@@ -1671,7 +1671,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   const isPrivateView = activeTab === 'private'
   
   const dbPublicLooseTracks = history.filter(h => {
-    return !!(h.is_published && (h.audio_url || h.file_url))
+    return !!(h.is_published && (h.audio_url || h.file_url) && !h.channel_id)
   })
 
   const totalProfilePlays = useMemo(() => {
@@ -3488,7 +3488,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-surface-container/30 border border-outline-variant/10 p-3 rounded-2xl backdrop-blur-sm">
                   <div className="flex flex-wrap gap-2">
                     <div className="px-4 py-2 bg-surface-container-high rounded-xl text-xs font-bold text-on-surface flex items-center gap-2 border border-outline-variant/10 shadow-sm">
-                      <span className="text-primary font-extrabold">{history.filter(h => h.is_published && (h.audio_url || h.file_url)).length}</span> songs
+                      <span className="text-primary font-extrabold">{dbPublicLooseTracks.length}</span> songs
                     </div>
                     <div className="px-4 py-2 bg-surface-container-high rounded-xl text-xs font-bold text-on-surface flex items-center gap-2 border border-outline-variant/10 shadow-sm">
                       <span className="text-primary font-extrabold">{profileFollowers}</span> followers
