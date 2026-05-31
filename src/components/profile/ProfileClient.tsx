@@ -1629,9 +1629,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             title: song.playlist_title || 'Single Track',
             cover_url: song.image_url || '/default-album.png',
             artist: {
-              name: profile?.display_name || user?.email?.split('@')[0] || 'AI Artist',
-              slug: user?.email?.split('@')[0] || 'user',
-              avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+              name: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.name || profile?.display_name || user?.email?.split('@')[0] || 'AI Artist') : (profile?.display_name || user?.email?.split('@')[0] || 'AI Artist'),
+              slug: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
+              avatar_url: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
             }
           }
         }
@@ -1829,9 +1829,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         title: item.playlist_title || 'Single Track',
         cover_url: item.image_url || '/default-album.png',
         artist: {
-          name: profile?.display_name || user.email.split('@')[0],
-          slug: user.email.split('@')[0],
-          avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+          name: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.name || profile?.display_name || user.email.split('@')[0]) : (profile?.display_name || user.email.split('@')[0]),
+          slug: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.slug || user.email.split('@')[0]) : (user.email.split('@')[0]),
+          avatar_url: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
         }
       }
     };
@@ -1858,9 +1858,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           title: h.playlist_title || 'Single Track',
           cover_url: h.image_url || '/default-album.png',
           artist: {
-            name: profile?.display_name || user.email.split('@')[0],
-            slug: user.email.split('@')[0],
-            avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+            name: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.name || profile?.display_name || user.email.split('@')[0]) : (profile?.display_name || user.email.split('@')[0]),
+            slug: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.slug || user.email.split('@')[0]) : (user.email.split('@')[0]),
+            avatar_url: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
           }
         }
       }));
@@ -2250,9 +2250,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                             title: selectedPlaylist.title,
                             cover_url: selectedPlaylist.cover_url || '/default-album.png',
                             artist: {
-                              name: profile?.display_name || 'AI Artist',
-                              slug: user?.email?.split('@')[0] || 'user',
-                              avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+                              name: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
+                              slug: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
+                              avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
                             }
                           }
                         }));
@@ -2351,9 +2351,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       title: selectedPlaylist.title,
                       cover_url: selectedPlaylist.cover_url || '/default-album.png',
                       artist: {
-                        name: profile?.display_name || 'AI Artist',
-                        slug: user?.email?.split('@')[0] || 'user',
-                        avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+                        name: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
+                        slug: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
+                        avatar_url: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
                       }
                     }
                   };
@@ -2393,9 +2393,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                   title: selectedPlaylist.title,
                                   cover_url: selectedPlaylist.cover_url || '/default-album.png',
                                   artist: {
-                                    name: profile?.display_name || 'AI Artist',
-                                    slug: user?.email?.split('@')[0] || 'user',
-                                    avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png'
+                                    name: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
+                                    slug: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
+                                    avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
                                   }
                                 }
                               })));
