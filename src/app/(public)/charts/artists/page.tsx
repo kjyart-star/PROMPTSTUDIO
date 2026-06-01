@@ -9,11 +9,11 @@ export const fetchCache = 'force-no-store'
 export default async function PublicArtistChartPage({
   searchParams
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const supabase = await createClient()
-
-  const periodType = (searchParams?.type as 'daily' | 'weekly' | 'monthly') || 'daily'
+  const resolvedSearchParams = await searchParams
+  const periodType = (resolvedSearchParams?.type as 'daily' | 'weekly' | 'monthly') || 'daily'
 
   // 1. Get logged in user info
   const { data: { user } } = await supabase.auth.getUser()
