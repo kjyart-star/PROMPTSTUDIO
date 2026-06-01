@@ -94,7 +94,7 @@ export function TrackDropdown({
 
   const handleGoToAlbum = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onClose()
+    setShowDropdown(false)
     const slug = track.album?.slug || track.album_id
     if (slug && slug !== 'loose') {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
