@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AlbumClient } from '@/components/album/AlbumClient'
 import { Album, Track } from '@/types/music'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 interface PageProps {
   params: Promise<{
