@@ -12,7 +12,6 @@ interface PageProps {
 
 export const revalidate = 0
 
-export default async function PublicAlbumDetailPage({ params }: PageProps) {
 export default async function PublicAlbumDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params
   const resolvedSearchParams = await searchParams;
