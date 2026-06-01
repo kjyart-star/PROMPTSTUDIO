@@ -44,7 +44,7 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
       'homegrown-sessions', 'folkways', 'vintage-vibe', 'cabin-songs',
       'grand-reflections', 'acoustic-hearts', 'rust-and-resonance', 'echoes-in-the-valley'
     ]
-    const isMockSlug = slug.startsWith('album-') || mockSlugs.includes(slug.toLowerCase())
+    const isMockSlug = slug.startsWith('album-') || slug.startsWith('dummy-album-') || mockSlugs.includes(slug.toLowerCase())
 
     if (isMockSlug) {
       const titles = [
@@ -53,8 +53,9 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
         'Grand Reflections', 'Acoustic Hearts', 'Rust & Resonance', 'Echoes in the Valley'
       ]
       let idx = 0
-      if (slug.startsWith('album-')) {
-        idx = (parseInt(slug.replace('album-', '')) - 1) || 0
+      if (slug.startsWith('album-') || slug.startsWith('dummy-album-')) {
+        const numMatch = slug.match(/\d+/)
+        idx = numMatch ? (parseInt(numMatch[0]) - 1) : 0
       } else {
         idx = mockSlugs.indexOf(slug.toLowerCase())
       }
