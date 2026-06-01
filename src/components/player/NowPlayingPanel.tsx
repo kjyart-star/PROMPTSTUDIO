@@ -526,7 +526,7 @@ export function NowPlayingPanel() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const slug = track.album?.slug || track.album_id;
-                      if (slug && slug !== 'loose') {
+                      if (slug && slug !== 'loose' && !slug.includes('dummy')) {
                         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
                         if (isUUID) {
                           if (typeof window !== 'undefined') window.location.href = `/profile?tab=albums&playlistId=${slug}`
@@ -534,7 +534,12 @@ export function NowPlayingPanel() {
                           if (typeof window !== 'undefined') window.location.href = `/albums/${slug}`
                         }
                       } else {
-                        alert(lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.' : 'This track does not have an associated album.')
+                        if (window.confirm(lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : 'This track does not have an associated album.\nGo to the creator\\'s channel?')) {
+                          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+                          if (typeof window !== 'undefined') {
+                            window.location.href = `/artists/${artistSlug}`;
+                          }
+                        }
                       }
                       setShowDropdown(false);
                     }}
