@@ -88,7 +88,7 @@ export function PublicLayoutClient({
       setUiLanguage(storedLang.toUpperCase())
     } else {
       const browserLang = navigator.language || ''
-      const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+      const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : browserLang.toLowerCase().startsWith('ja') ? 'JA' : 'EN'
       setUiLanguage(defaultLang)
       localStorage.setItem('language', defaultLang)
     }
@@ -359,16 +359,16 @@ export function PublicLayoutClient({
               {/* Language Switcher */}
               <div className="flex items-center rounded-full border border-outline-variant/15 bg-surface-container-lowest/60 p-0.5">
                 <button 
-                  onClick={() => handleLanguageChange('KO')}
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'KO' ? 'bg-white/[0.06] text-white' : uiLanguage === 'JA' ? 'text-on-surface-variant hover:text-on-surface' : 'text-on-surface-variant hover:text-on-surface'}`}
-                >
-                  KO
-                </button>
-                <button 
                   onClick={() => handleLanguageChange('EN')}
                   className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'EN' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
                 >
                   EN
+                </button>
+                <button 
+                  onClick={() => handleLanguageChange('KO')}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${uiLanguage === 'KO' ? 'bg-white/[0.06] text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  KO
                 </button>
                 <button 
                   onClick={() => handleLanguageChange('JA')}
