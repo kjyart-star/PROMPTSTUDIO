@@ -72,13 +72,15 @@ export default async function PublicHomePage() {
   // 2. Dependent queries in parallel
   const userIds = [...new Set(realSongs.map((s: any) => s.user_id).filter(Boolean))]
   const channelIds = [...new Set(realSongs.map((s: any) => s.channel_id).filter(Boolean))]
+  const playlistIds = [...new Set(realSongs.map((s: any) => s.playlist_id).filter(Boolean))]
   const latestDateStr = latestSnapshot?.period_date || null
 
   const [
     userLikedSongsRes,
     profilesRes,
     channelsRes,
-    chartDataRes
+    chartDataRes,
+    playlistsRes
   ] = await Promise.all([
     user 
       ? supabase.from('song_history').select('id').eq('user_id', user.id).eq('liked', true)
@@ -96,6 +98,9 @@ export default async function PublicHomePage() {
           .eq('period_date', latestDateStr)
           .order('rank', { ascending: true })
           .limit(10)
+      : Promise.resolve({ data: null }),
+    playlistIds.length > 0
+      ? supabase.from('user_playlists').select('*').in('id', playlistIds)
       : Promise.resolve({ data: null })
   ])
 
@@ -104,6 +109,7 @@ export default async function PublicHomePage() {
   const profilesData = profilesRes.data || []
   const channelsData = channelsRes.data || []
   const chartData = chartDataRes.data || []
+  const playlistsData = playlistsRes.data || []
 
   const mappedRealSongs = realSongs.map((song: any) => {
     const formGenre = song.form?.genre || song.genre || 'Pop'
@@ -112,6 +118,8 @@ export default async function PublicHomePage() {
     
     const songChannel = channelsData.find((c: any) => c.id === song.channel_id)
     const songProfile = profilesData.find((p: any) => p.id === song.user_id)
+
+    const playlist = playlistsData.find((p: any) => p.id === song.playlist_id)
 
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
     const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
@@ -126,7 +134,7 @@ export default async function PublicHomePage() {
       duration_sec: song.form?.duration_sec || null,
       like_count: dbLikeCount,
       play_count: dbPlayCount,
-      album_id: `suno-album-${song.id}`,
+      album_id: song.playlist_id || `suno-album-${song.id}`,
       created_at: song.created_at,
       status: 'published',
       lyricist: song.form?.lyricist || '',
@@ -134,8 +142,26 @@ export default async function PublicHomePage() {
       arranger: song.form?.arranger || '',
       lyrics: song.lyrics || '',
       style_prompt: song.prompt || song.form?.prompt || '',
-      album: {
+      album: playlist ? {
+        id: playlist.id,
+        slug: playlist.id,
+        title: playlist.title,
+        cover_url: playlist.cover_url || '/default-album.png',
+        release_type: 'playlist',
+        status: 'published',
+        created_at: playlist.created_at,
+        artist_id: finalArtistId,
+        artist: {
+          id: finalArtistId,
+          name: finalArtistName,
+          slug: finalArtistSlug,
+          avatar_url: finalAvatarUrl,
+          bio: finalBio,
+          created_at: song.created_at
+        }
+      } : {
         id: `suno-album-${song.id}`,
+        slug: `suno-album-${song.id}`,
         title: song.form?.styleDesc || song.title,
         cover_url: song.image_url || '/default-album.png',
         release_type: 'single',
