@@ -41,7 +41,7 @@ export default async function PublicAlbumDetailPage({ params }: PageProps) {
         <p className="text-on-surface-variant mb-6">존재하지 않거나 삭제된 앨범입니다.</p>
         <Link 
           href="/" 
-          className="px-6 py-2 bg-primary text-on-primary rounded-full font-medium hover:bg-primary/90 transition-colors"
+          className="px-6 py-2 bg-primary text-black rounded-full font-bold hover:bg-primary/90 transition-colors"
         >
           홈으로 돌아가기
         </Link>
