@@ -2010,6 +2010,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     visibleLooseTracks = visibleLooseTracks.filter(h => h.source === 'upload' || h.type === 'upload')
   } else if (selectedPlaylistFilter === 'default' || selectedPlaylistFilter === 'all') {
     visibleLooseTracks = visibleLooseTracks.filter(h => {
+      if (isPublicView) return true;
       if (!h.playlist_id) return true;
       const parentPlaylist = playlists.find(p => p.id === h.playlist_id);
       if (!parentPlaylist) return true;
@@ -2589,7 +2590,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Album Details Info */}
               <div className="flex-1 flex flex-col gap-2 w-full md:w-auto">
                 <span className="text-[10px] font-extrabold text-primary border border-primary/30 bg-primary/5 px-2.5 py-0.5 rounded-full tracking-wider uppercase inline-block self-start">
-                  {selectedPlaylist.is_mock ? 'ALBUM' : 'PLAYLIST'}
+                  {selectedPlaylist.is_mock || (selectedPlaylist.description && selectedPlaylist.description.includes('"type":"album"')) || (!selectedPlaylist.description?.includes('{"') && selectedPlaylist.description?.includes('album')) || parsePlaylistDescription(selectedPlaylist.description).type === 'album' ? 'ALBUM' : 'PLAYLIST'}
                 </span>
                 <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mt-1">{selectedPlaylist.title}</h1>
                 <p className="text-xs text-zinc-400 font-semibold tracking-wide mt-1">

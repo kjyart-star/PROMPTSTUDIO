@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Heart, ListMusic, Music, Info, Share2, MoreHorizontal, Plus, Search, Check } from 'lucide-react';
+import { X, Heart, ListMusic, Music, Info, Share2, MoreHorizontal, Plus, Search, Check, Disc3 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import type { Track } from '@/types/music';
@@ -517,6 +517,59 @@ export function NowPlayingPanel() {
                   >
                     <ListMusic className="w-4 h-4" />
                     <span>{lang === 'KO' ? '재생목록에 추가하기' : 'Add to queue'}</span>
+                  </button>
+
+                  <div className="border-b border-zinc-800 my-0.5 mx-2"></div>
+
+                  {/* 앨범 보러가기 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const slug = track.album?.slug || track.album_id;
+                      if (slug && slug !== 'loose') {
+                        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+                        if (isUUID) {
+                          if (typeof window !== 'undefined') window.location.href = `/profile?tab=albums&playlistId=${slug}`
+                        } else {
+                          if (typeof window !== 'undefined') window.location.href = `/albums/${slug}`
+                        }
+                      } else {
+                        alert(lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.' : 'This track does not have an associated album.')
+                      }
+                      setShowDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-zinc-200"
+                  >
+                    <Disc3 className="w-4 h-4" />
+                    <span>{lang === 'KO' ? '앨범 보러가기' : 'Go to album'}</span>
+                  </button>
+
+                  {/* 크레딧 보기 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(lang === 'KO' ? '크레딧 기능은 준비중입니다.' : 'Credits feature coming soon.')
+                      setShowDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-zinc-200"
+                  >
+                    <Info className="w-4 h-4" />
+                    <span>{lang === 'KO' ? '크레딧 보기' : 'Show credits'}</span>
+                  </button>
+
+                  {/* 공유 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const url = typeof window !== 'undefined' ? window.location.href : '';
+                      navigator.clipboard.writeText(`${url} (Track: ${track.title})`);
+                      alert(lang === 'KO' ? '주소가 복사되었습니다.' : 'Link copied to clipboard.');
+                      setShowDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-zinc-200"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>{lang === 'KO' ? '공유 (주소 복사)' : 'Share'}</span>
                   </button>
                 </div>
               )}

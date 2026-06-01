@@ -94,10 +94,17 @@ export function TrackDropdown({
 
   const handleGoToAlbum = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (track.album?.slug || track.album_id) {
-      const slug = track.album?.slug || track.album_id
-      if (typeof window !== 'undefined') {
-        window.location.href = `/albums/${slug}`
+    const slug = track.album?.slug || track.album_id
+    if (slug && slug !== 'loose') {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      if (isUUID) {
+        if (typeof window !== 'undefined') {
+          window.location.href = `/profile?tab=albums&playlistId=${slug}`
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          window.location.href = `/albums/${slug}`
+        }
       }
     } else {
       alert(uiLanguage === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.' : 'This track does not have an associated album.')
