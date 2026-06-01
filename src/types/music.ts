@@ -1,4 +1,4 @@
-export type ReleaseType = 'single' | 'ep' | 'lp' | 'compilation';
+export type ReleaseType = 'single' | 'ep' | 'lp' | 'compilation' | 'playlist';
 export type Status = 'draft' | 'published' | 'archived';
 
 export interface Artist {

@@ -39,12 +39,20 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
 
   const profiles = profilesData || []
 
+  // 3.5. song_history 플레이리스트 로드
+  const playlistIds = Array.from(new Set(songHistory.map((song: any) => song.playlist_id).filter(Boolean)))
+  const { data: playlistsData } = playlistIds.length > 0
+    ? await supabase.from('user_playlists').select('*').in('id', playlistIds)
+    : { data: [] }
+  const playlists = playlistsData || []
+
   // 4. song_history 음원을 Track 형태로 변환
   const mappedRealSongs = songHistory.map((song: any) => {
     const formGenre = song.form?.genre || song.genre || 'Pop'
     const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
     const dbPlayCount = Number(song.form?.play_count || 0)
     const songProfile = profiles.find((p: any) => p.id === song.user_id)
+    const playlist = playlists.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
 
     return {
       id: song.id,
@@ -53,7 +61,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       duration_sec: song.form?.duration_sec || null,
       like_count: dbLikeCount,
       play_count: dbPlayCount,
-      album_id: `suno-album-${song.id}`,
+      album_id: song.playlist_id || 'loose',
       created_at: song.created_at,
       status: 'published',
       lyricist: song.form?.lyricist || '',
@@ -62,8 +70,27 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       lyrics: song.lyrics || '',
       style_prompt: song.prompt || song.form?.prompt || '',
       image_url: song.image_url || '',
-      album: {
+      album: playlist ? {
+        id: playlist.id,
+        slug: playlist.id,
+        title: playlist.title,
+        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+        release_type: 'playlist',
+        status: 'published',
+        genres: [formGenre],
+        created_at: playlist.created_at,
+        artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
+        artist: {
+          id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
+          name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
+          slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
+          avatar_url: songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png',
+          bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
+          created_at: song.created_at
+        }
+      } : {
         id: `suno-album-${song.id}`,
+        slug: 'loose',
         title: song.form?.styleDesc || song.title,
         cover_url: song.image_url || '/default-album.png',
         release_type: 'single',

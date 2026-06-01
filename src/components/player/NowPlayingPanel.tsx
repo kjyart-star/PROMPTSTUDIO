@@ -7,6 +7,7 @@ import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import type { Track } from '@/types/music';
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 export function NowPlayingPanel() {
   const {
@@ -25,6 +26,7 @@ export function NowPlayingPanel() {
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSubmenu, setShowSubmenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -146,6 +148,17 @@ export function NowPlayingPanel() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setShowDropdown(false)
+        setShowSubmenu(false)
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
 
   if (!isNowPlayingOpen) return null;
 
@@ -536,12 +549,7 @@ export function NowPlayingPanel() {
                           if (typeof window !== 'undefined') window.location.href = `/albums/${slug}?artist=${artistSlug}`
                         }
                       } else {
-                        if (window.confirm(lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : "This track does not have an associated album.\nGo to the creator's channel?")) {
-                          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
-                          if (typeof window !== 'undefined') {
-                            window.location.href = `/artists/${artistSlug}`;
-                          }
-                        }
+                        setShowConfirm(true);
                       }
                       setShowDropdown(false);
                     }}
@@ -919,6 +927,20 @@ export function NowPlayingPanel() {
           </div>
         </div>
       )}
+      
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title={lang === 'KO' ? '채널로 이동' : 'Go to Channel'}
+        message={lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : "This track does not have an associated album.\nGo to the creator's channel?"}
+        onConfirm={() => {
+          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+          if (typeof window !== 'undefined') {
+            window.location.href = `/artists/${artistSlug}`;
+          }
+          setShowConfirm(false);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
     </>
   );
 }

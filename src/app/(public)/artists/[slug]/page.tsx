@@ -79,7 +79,19 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
 
+    const playlistIds = Array.from(new Set(userSongs?.map((song: any) => song.playlist_id).filter(Boolean) || []))
+    let playlistsData: any[] = []
+    if (playlistIds.length > 0) {
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .in('id', playlistIds)
+      playlistsData = data || []
+    }
+
     initialTracks = (userSongs || []).map((song: any, idx: number) => {
+      const playlist = playlistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
+
       return {
         id: song.id,
         title: song.title,
@@ -87,11 +99,22 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
         duration_sec: null,
         like_count: song.liked ? 1200 - idx * 50 : 35,
         play_count: song.play_count || (10000 - idx * 250),
-        album_id: `user-album-${song.id}`,
+        album_id: song.playlist_id || 'loose',
         created_at: song.created_at,
         status: 'published',
-        album: {
+        album: playlist ? {
+          id: playlist.id,
+          slug: playlist.id,
+          title: playlist.title,
+          cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+          release_type: 'playlist',
+          status: 'published',
+          created_at: playlist.created_at,
+          artist_id: artist.id,
+          artist: artist
+        } : {
           id: `user-album-${song.id}`,
+          slug: 'loose',
           title: song.form?.styleDesc || song.title,
           cover_url: song.image_url || '/default-album.png',
           release_type: 'single',
@@ -145,32 +168,57 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
-  const ugcTracks = (ugcTracksData || []).map((song: any) => ({
-    id: song.id,
-    title: song.title,
-    file_url: song.audio_url || '',
-    duration_sec: song.form?.duration_sec || null,
-    like_count: song.like_count || 0,
-    play_count: song.play_count || 0,
-    album_id: `ugc-${song.id}`,
-    created_at: song.created_at,
-    status: 'published',
-    lyrics: song.lyrics || '',
-    image_url: song.image_url || '',
-    lyricist: song.form?.lyricist || song.lyricist || '',
-    composer: song.form?.composer || song.composer || '',
-    arranger: song.form?.arranger || song.arranger || '',
-    album: {
-      id: `ugc-${song.id}`,
-      title: 'Single',
-      cover_url: song.image_url || '/default-album.png',
-      release_type: 'single',
-      status: 'published',
+  const ugcPlaylistIds = Array.from(new Set(ugcTracksData?.map((song: any) => song.playlist_id).filter(Boolean) || []))
+  let ugcPlaylistsData: any[] = []
+  if (ugcPlaylistIds.length > 0) {
+    const { data } = await supabase
+      .from('user_playlists')
+      .select('*')
+      .in('id', ugcPlaylistIds)
+    ugcPlaylistsData = data || []
+  }
+
+  const ugcTracks = (ugcTracksData || []).map((song: any) => {
+    const playlist = ugcPlaylistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
+
+    return {
+      id: song.id,
+      title: song.title,
+      file_url: song.audio_url || '',
+      duration_sec: song.form?.duration_sec || null,
+      like_count: song.like_count || 0,
+      play_count: song.play_count || 0,
+      album_id: song.playlist_id || 'loose',
       created_at: song.created_at,
-      artist_id: artist.id,
-      artist: artist
+      status: 'published',
+      lyrics: song.lyrics || '',
+      image_url: song.image_url || '',
+      lyricist: song.form?.lyricist || song.lyricist || '',
+      composer: song.form?.composer || song.composer || '',
+      arranger: song.form?.arranger || song.arranger || '',
+      album: playlist ? {
+        id: playlist.id,
+        slug: playlist.id,
+        title: playlist.title,
+        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+        release_type: 'playlist',
+        status: 'published',
+        created_at: playlist.created_at,
+        artist_id: artist.id,
+        artist: artist
+      } : {
+        id: `ugc-${song.id}`,
+        slug: 'loose',
+        title: 'Single',
+        cover_url: song.image_url || '/default-album.png',
+        release_type: 'single',
+        status: 'published',
+        created_at: song.created_at,
+        artist_id: artist.id,
+        artist: artist
+      }
     }
-  })) as unknown as Track[]
+  }) as unknown as Track[]
 
   if (ugcTracks.length > 0) {
     initialTracks = [...initialTracks, ...ugcTracks]
@@ -180,7 +228,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
   let playlists: any[] = []
   if (artist) {
     const { data: playlistsData } = await supabase
-      .from('playlists')
+      .from('user_playlists')
       .select('*')
       .eq('user_id', artist.id)
       .eq('is_published', true)

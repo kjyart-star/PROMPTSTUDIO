@@ -6,8 +6,14 @@ export const revalidate = 0
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-export default async function PublicArtistChartPage() {
+export default async function PublicArtistChartPage({
+  searchParams
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
   const supabase = await createClient()
+
+  const periodType = (searchParams?.type as 'daily' | 'weekly' | 'monthly') || 'daily'
 
   // 1. Get logged in user info
   const { data: { user } } = await supabase.auth.getUser()
@@ -52,6 +58,8 @@ export default async function PublicArtistChartPage() {
   } as any))
 
   // 5. Merge and sort by followers descending
+  // (In a real scenario, artist charting might use a different logic per period. 
+  // For now, we use standard followers count as requested)
   const combined = [...profileArtists, ...systemArtists].sort((a, b) => {
     return (b.followers || 0) - (a.followers || 0)
   })
@@ -63,6 +71,7 @@ export default async function PublicArtistChartPage() {
     <ArtistChartClient 
       initialArtists={top100Artists}
       currentUserId={user?.id || null}
+      periodType={periodType}
     />
   )
 }

@@ -116,12 +116,23 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       channelsData = data || []
     }
 
+    const playlistIds = [...new Set((realSongs || []).map((s: any) => s.playlist_id).filter(Boolean))]
+    let playlistsData: any[] = []
+    if (playlistIds.length > 0) {
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .in('id', playlistIds)
+      playlistsData = data || []
+    }
+
     const mappedRealSongs = (realSongs || []).map((song: any, idx: number) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'
       const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
       const dbPlayCount = Number(song.form?.play_count || 0)
       const songChannel = channelsData.find((c: any) => c.id === song.channel_id)
       const songProfile = profilesData.find((p: any) => p.id === song.user_id)
+      const playlist = playlistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
 
       const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
       const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
@@ -144,15 +155,34 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
           duration_sec: song.form?.duration_sec || null,
           like_count: dbLikeCount,
           play_count: dbPlayCount,
-          album_id: `suno-album-${song.id}`,
+          album_id: song.playlist_id || 'loose',
           created_at: song.created_at,
           lyricist: song.form?.lyricist || '',
           composer: song.form?.composer || '',
           arranger: song.form?.arranger || '',
           lyrics: song.lyrics || '',
           style_prompt: song.prompt || song.form?.prompt || '',
-          album: {
+          album: playlist ? {
+            id: playlist.id,
+            slug: playlist.id,
+            title: playlist.title,
+            cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+            release_type: 'playlist',
+            status: 'published',
+            created_at: playlist.created_at,
+            artist_id: finalArtistId,
+            genres: [formGenre],
+            artist: {
+              id: finalArtistId,
+              name: finalArtistName,
+              slug: finalArtistSlug,
+              avatar_url: finalAvatarUrl,
+              bio: finalBio,
+              created_at: song.created_at
+            }
+          } : {
             id: `suno-album-${song.id}`,
+            slug: 'loose',
             title: song.form?.styleDesc || song.title,
             cover_url: song.image_url || '/default-album.png',
             artist_id: finalArtistId,

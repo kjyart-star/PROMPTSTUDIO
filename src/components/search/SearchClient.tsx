@@ -85,13 +85,18 @@ export function SearchClient({
       }
       return result
     }
-    return tracks.filter((track) => {
+    const result = tracks.filter((track) => {
       const titleMatch = track.title.toLowerCase().includes(q)
       const artistMatch = track.album?.artist?.name?.toLowerCase().includes(q)
       const albumMatch = track.album?.title?.toLowerCase().includes(q)
       const genreMatch = track.album?.genres?.some(g => g.toLowerCase().includes(q))
       return titleMatch || artistMatch || albumMatch || genreMatch
     })
+    
+    // Sort by latest by default
+    result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+    
+    return result
   }, [tracks, query])
 
   const filteredArtists = useMemo(() => {
@@ -291,13 +296,13 @@ export function SearchClient({
               <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl shadow-xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                      <th className="py-4.5 px-6 font-black tracking-widest text-center w-20 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</th>
-                      <th className="py-4.5 px-4 font-black tracking-widest border-b border-white/[0.04]">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</th>
-                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-24 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</th>
-                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-24 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</th>
-                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-20 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</th>
-                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-16 border-b border-white/[0.04]"></th>
+                    <tr className="text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
+                      <th className="p-0 font-black tracking-widest text-center w-20 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 rounded-tl-[15px] w-full h-full">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</div></th>
+                      <th className="p-0 font-black tracking-widest border-b border-white/[0.04]"><div className="py-4.5 px-4 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</div></th>
+                      <th className="p-0 font-black tracking-widest text-right w-24 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</div></th>
+                      <th className="p-0 font-black tracking-widest text-right w-24 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</div></th>
+                      <th className="p-0 font-black tracking-widest text-right w-20 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</div></th>
+                      <th className="p-0 font-black tracking-widest text-right w-16 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 rounded-tr-[15px] w-full h-full select-none text-transparent">&nbsp;</div></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03] text-xs">

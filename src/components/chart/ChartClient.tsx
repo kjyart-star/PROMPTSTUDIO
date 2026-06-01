@@ -248,6 +248,7 @@ export function ChartClient({
 
   // 단일 재생 및 큐 세팅
   const handlePlayTrack = async (track: Track) => {
+    setNowPlayingOpen(true)
     if (currentTrack?.id === track.id) {
       togglePlay()
       return
@@ -399,7 +400,8 @@ export function ChartClient({
         </div>
       </section>
 
-      <section className="flex flex-wrap gap-2 pb-2 overflow-x-auto scrollbar-none">
+      {/* 카테고리 (장르) 필터 - 임시 숨김 처리 */}
+      <section className="hidden flex-wrap gap-2 pb-2 overflow-x-auto scrollbar-none">
         {['All', 'K-Pop', 'Pop', 'Hip Hop', 'R&B', 'Dance', 'Electronic', 'Rock', 'Indie Rock', 'J-Pop', 'City Pop', 'Jazz', 'Classical', 'Ambient', 'Chill', 'Soundtrack', 'Animation', 'Trot', 'Blues', 'Country', 'Latin', 'Afrobeats', 'Shoegaze', 'Experimental', 'Alternative', 'Folk', 'House', 'Punk', 'Reggae', 'Hyperpop', 'Metal', 'Funk Soul', 'Gospel', 'Podcasts', 'Other'].map((genre) => (
           <button
             key={genre}
@@ -460,12 +462,13 @@ export function ChartClient({
         <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl shadow-xl">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                <th className="py-4.5 px-6 w-20 text-center">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</th>
-                <th className="py-4.5 px-4">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</th>
-                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</th>
-                <th className="py-4.5 px-6 w-24 text-right">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</th>
-                <th className="py-4.5 px-6 w-20 text-right">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</th>
+              <tr className="text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
+                <th className="p-0 w-20 text-center border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 rounded-tl-[15px] w-full h-full">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</div></th>
+                <th className="p-0 border-b border-white/[0.04]"><div className="py-4.5 px-4 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</div></th>
+                <th className="p-0 w-24 text-right border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</div></th>
+                <th className="p-0 w-24 text-right border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</div></th>
+                <th className="p-0 w-20 text-right border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 w-full h-full">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</div></th>
+                <th className="p-0 w-16 border-b border-white/[0.04]"><div className="py-4.5 px-6 bg-surface-container-lowest/80 rounded-tr-[15px] w-full h-full select-none text-transparent">&nbsp;</div></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.03] text-xs">

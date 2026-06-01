@@ -119,7 +119,7 @@ export default async function PublicHomePage() {
     const songChannel = channelsData.find((c: any) => c.id === song.channel_id)
     const songProfile = profilesData.find((p: any) => p.id === song.user_id)
 
-    const playlist = playlistsData.find((p: any) => p.id === song.playlist_id)
+    const playlist = playlistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
 
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
     const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
@@ -134,7 +134,7 @@ export default async function PublicHomePage() {
       duration_sec: song.form?.duration_sec || null,
       like_count: dbLikeCount,
       play_count: dbPlayCount,
-      album_id: song.playlist_id || `suno-album-${song.id}`,
+      album_id: song.playlist_id || 'loose',
       created_at: song.created_at,
       status: 'published',
       lyricist: song.form?.lyricist || '',
@@ -146,7 +146,7 @@ export default async function PublicHomePage() {
         id: playlist.id,
         slug: playlist.id,
         title: playlist.title,
-        cover_url: playlist.cover_url || '/default-album.png',
+        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
         release_type: 'playlist',
         status: 'published',
         created_at: playlist.created_at,
@@ -161,7 +161,7 @@ export default async function PublicHomePage() {
         }
       } : {
         id: `suno-album-${song.id}`,
-        slug: `suno-album-${song.id}`,
+        slug: 'loose',
         title: song.form?.styleDesc || song.title,
         cover_url: song.image_url || '/default-album.png',
         release_type: 'single',

@@ -57,7 +57,7 @@ export async function PUT(request: Request) {
           .update({ is_published: false })
           .eq('user_id', target_user_id),
         supabase
-          .from('playlists')
+          .from('user_playlists')
           .update({ is_published: false })
           .eq('user_id', target_user_id)
       ])

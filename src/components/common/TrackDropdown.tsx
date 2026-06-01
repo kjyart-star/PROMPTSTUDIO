@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import { MoreHorizontal, Plus, Search, Check, Heart, ListMusic, Share2, Disc3, Info } from 'lucide-react'
 import { Track } from '@/types/music'
 import { usePlayerStore } from '@/stores/playerStore'
+import { useRouter } from 'next/navigation'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { ShareDialog } from '@/components/common/ShareDialog'
 
 interface TrackDropdownProps {
   track: Track;
@@ -24,8 +27,11 @@ export function TrackDropdown({
   onSaveToPlaylist,
   onShowCredits
 }: TrackDropdownProps) {
+  const router = useRouter()
   const [showDropdown, setShowDropdown] = useState(false)
   const [showSubmenu, setShowSubmenu] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
   
@@ -52,6 +58,17 @@ export function TrackDropdown({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
+  }, [])
+
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setShowDropdown(false)
+        setShowSubmenu(false)
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
   }, [])
 
   useEffect(() => {
@@ -86,10 +103,14 @@ export function TrackDropdown({
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    navigator.clipboard.writeText(`${url} (Track: ${track.title})`)
-    alert(uiLanguage === 'KO' ? '주소가 복사되었습니다.' : uiLanguage === 'JA' ? 'リンクがコピーされました。' : 'Link copied to clipboard.')
+    setShowShare(true)
     setShowDropdown(false)
+  }
+
+  const handleConfirmChannel = () => {
+    const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+    setShowConfirm(false)
+    router.push(`/artists/${artistSlug}`);
   }
 
   const handleGoToAlbum = (e: React.MouseEvent) => {
@@ -99,24 +120,14 @@ export function TrackDropdown({
     if (slug && slug !== 'loose') {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
       if (isUUID) {
-        if (typeof window !== 'undefined') {
-          window.location.href = `/profile?tab=albums&playlistId=${slug}`
-        }
+        router.push(`/albums/${slug}`);
       } else {
-        if (typeof window !== 'undefined') {
-          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
-          window.location.href = `/albums/${slug}?artist=${artistSlug}`
-        }
+        const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+        router.push(`/albums/${slug}?artist=${artistSlug}`);
       }
     } else {
-      if (window.confirm(uiLanguage === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : "This track does not have an associated album.\nGo to the creator's channel?")) {
-        const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
-        if (typeof window !== 'undefined') {
-          window.location.href = `/artists/${artistSlug}`;
-        }
-      }
+      setShowConfirm(true)
     }
-    setShowDropdown(false)
   }
 
   const addToQueue = (e: React.MouseEvent) => {
@@ -136,6 +147,7 @@ export function TrackDropdown({
 
   return (
     <div 
+      ref={dropdownRef}
       className="relative"
       onMouseEnter={handleMouseEnterDropdown}
       onMouseLeave={handleMouseLeaveDropdown}
@@ -153,7 +165,6 @@ export function TrackDropdown({
 
       {showDropdown && (
         <div 
-          ref={dropdownRef}
           className="absolute right-0 top-full mt-2 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-50 p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-in fade-in slide-in-from-top-2 duration-100"
           onClick={(e) => e.stopPropagation()}
         >
@@ -270,22 +281,7 @@ export function TrackDropdown({
             <span>{uiLanguage === 'KO' ? '앨범 보러가기' : uiLanguage === 'JA' ? 'アルバムを見る' : 'Go to album'}</span>
           </button>
 
-          {/* 크레딧 보기 (Optional) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              if (onShowCredits) {
-                onShowCredits()
-              } else {
-                alert(uiLanguage === 'KO' ? '크레딧 기능은 준비중입니다.' : 'Credits feature coming soon.')
-              }
-              setShowDropdown(false)
-            }}
-            className="w-full text-left px-3 py-2.5 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-zinc-200"
-          >
-            <Info className="w-4 h-4" />
-            <span>{uiLanguage === 'KO' ? '크레딧 보기' : uiLanguage === 'JA' ? 'クレジットを見る' : 'Show credits'}</span>
-          </button>
+
 
           {/* 공유 */}
           <button
@@ -298,6 +294,25 @@ export function TrackDropdown({
 
         </div>
       )}
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleConfirmChannel}
+        title={uiLanguage === 'KO' ? '앨범 정보 없음' : 'No Album Info'}
+        message={uiLanguage === 'KO' 
+          ? '해당 음원은 연결된 앨범이 없습니다. 제작자 채널로 이동하시겠습니까?' 
+          : 'This track has no linked album. Do you want to go to the creator\'s channel?'}
+        confirmText={uiLanguage === 'KO' ? '이동하기' : 'Go to Channel'}
+        cancelText={uiLanguage === 'KO' ? '취소' : 'Cancel'}
+      />
+
+      <ShareDialog
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        title={track.title}
+        url={typeof window !== 'undefined' ? `${window.location.origin}/tracks/${track.id}` : ''}
+        uiLanguage={uiLanguage}
+      />
     </div>
   )
 }

@@ -149,7 +149,7 @@ export function GenerateClient({
         setUiLanguage(storedLang.toUpperCase())
       } else {
         const browserLang = navigator.language || ''
-        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : browserLang.toLowerCase().startsWith('ja') ? 'JA' : 'EN'
         setUiLanguage(defaultLang)
         localStorage.setItem('language', defaultLang)
       }

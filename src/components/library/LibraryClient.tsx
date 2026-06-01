@@ -329,6 +329,7 @@ export function LibraryClient({
   const [editIsPublished, setEditIsPublished] = useState(false)
   const [editExposureOrder, setEditExposureOrder] = useState<number | ''>('')
   const [likedAlbums, setLikedAlbums] = useState<string[]>([])
+  const [likedAlbumsData, setLikedAlbumsData] = useState<any[]>([])
 
   // User tracks (from song_history) and track menu
   const [userTracks, setUserTracks] = useState<any[]>([])
@@ -415,6 +416,24 @@ export function LibraryClient({
       window.dispatchEvent(new Event('storage'))
     }
   }
+
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      if (likedAlbums.length === 0) {
+        setLikedAlbumsData([])
+        return
+      }
+      try {
+        const { data } = await supabase.from('user_playlists').select('*').in('id', likedAlbums)
+        if (data) {
+          setLikedAlbumsData(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch liked albums:', e)
+      }
+    }
+    fetchAlbums()
+  }, [likedAlbums])
 
   // Helper to show custom toast message
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -804,6 +823,21 @@ export function LibraryClient({
       stats: uiLanguage === 'KO' 
         ? `회원님이 직접 만든 보관함 • ${likedTracks.length || DUMMY_PLAYLIST.length} songs` 
         : uiLanguage === 'JA' ? `作成者：あなた • ${likedTracks.length || DUMMY_PLAYLIST.length} 曲` : `Created by you • ${likedTracks.length || DUMMY_PLAYLIST.length} songs`
+    },
+    {
+      id: 'liked-albums',
+      title: uiLanguage === 'KO' ? '좋아요 표시한 앨범' : uiLanguage === 'JA' ? 'お気に入りのアルバム' : 'Liked Albums',
+      description: uiLanguage === 'KO' ? '내가 좋아하는 앨범 보관함' : uiLanguage === 'JA' ? 'あなたのお気に入りのアルバム' : 'Your liked albums',
+      cover_url: '',
+      tracks: [],
+      type: 'ALBUM_LIST',
+      isSystem: true,
+      genre: '',
+      isPublished: false,
+      exposureOrder: null as number | null,
+      stats: uiLanguage === 'KO' 
+        ? `회원님이 직접 만든 보관함 • ${likedAlbums.length} albums` 
+        : uiLanguage === 'JA' ? `作成者：あなた • ${likedAlbums.length} アルバム` : `Created by you • ${likedAlbums.length} albums`
     }
   ]
 
@@ -1006,6 +1040,16 @@ export function LibraryClient({
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
                         <Heart className="w-12 h-12 text-primary fill-primary filter drop-shadow-[0_0_25px_rgba(227,254,6,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
                       </div>
+                    ) : pl.id === 'liked-albums' ? (
+                      <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
+                        <Disc className="w-12 h-12 text-primary filter drop-shadow-[0_0_25px_rgba(227,254,6,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                    ) : !pl.cover_url || pl.cover_url.includes('default-album') || pl.cover_url.includes('top100_cover') ? (
+                      <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
+                        <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(227,254,6,0.5)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                      </div>
                     ) : (
                       <img
                         src={pl.cover_url}
@@ -1092,7 +1136,7 @@ export function LibraryClient({
                           </button>
                         </div>
                       </div>
-                    ) : (
+                    ) : pl.id === 'liked-albums' ? null : (
                       /* System playlist play overlay */
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 z-10">
                         <div className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg shadow-primary/20">
@@ -1121,8 +1165,75 @@ export function LibraryClient({
             })}
           </div>
         </div>
+      ) : selectedPlaylist === 'liked-albums' ? (
+        // 2. Liked Albums Detail View
+        <div className="flex flex-col gap-6">
+          {/* Back Button */}
+          <button 
+            onClick={() => setSelectedPlaylist(null)}
+            className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-2 self-start cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {uiLanguage === 'KO' ? '목록으로' : uiLanguage === 'JA' ? '戻る' : 'Back'}
+          </button>
+          
+          <h1 className="text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+             <Disc className="w-6 h-6 text-primary shrink-0" />
+             {uiLanguage === 'KO' ? '좋아요 표시한 앨범' : uiLanguage === 'JA' ? 'お気に入りのアルバム' : 'Liked Albums'}
+          </h1>
+          
+          {likedAlbumsData.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              {likedAlbumsData.map(album => (
+                <Link key={album.id} href={`/albums/${album.id}`} className="group cursor-pointer">
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container relative group">
+                    {!album.cover_url || album.cover_url.includes('default-album') || album.cover_url.includes('top100_cover') ? (
+                      <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
+                        <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(227,254,6,0.5)] z-0 transform group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                    ) : (
+                      <img 
+                        src={album.cover_url} 
+                        alt={album.title}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 z-0 relative"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity z-10 pointer-events-none"></div>
+                    <div className="absolute bottom-3 left-3 right-3 text-left">
+                      <p className="font-bold text-white text-sm truncate">{album.title}</p>
+                      {album.genre && <p className="text-[10px] text-emerald-400 mt-0.5">{album.genre}</p>}
+                    </div>
+                    {/* Heart button */}
+                    <div className="absolute top-2 right-2">
+                       <button
+                         onClick={(e) => {
+                           e.preventDefault(); e.stopPropagation();
+                           handleAlbumLikeToggle(album.id);
+                         }}
+                         className="w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg bg-[#e3fe06] text-black font-extrabold"
+                       >
+                         <Heart className="w-3.5 h-3.5 fill-current" />
+                       </button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-3xl border border-outline-variant/10 text-center px-4">
+              <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-4">
+                <Disc className="w-8 h-8 text-on-surface-variant/40" />
+              </div>
+              <p className="text-on-surface font-bold mb-1">
+                {uiLanguage === 'KO' ? '좋아요 표시한 앨범이 없습니다.' : uiLanguage === 'JA' ? 'お気に入りのアルバムはありません。' : 'No liked albums yet.'}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
-        // 2. Playlist Detail View (Matching My Music Management style)
+        // 3. Playlist Detail View (Matching My Music Management style)
         activePlaylist && (
           <div className="flex flex-col gap-6">
             {/* Back Button */}

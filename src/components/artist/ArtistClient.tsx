@@ -219,7 +219,7 @@ export function ArtistClient({
         setUiLanguage(storedLang.toUpperCase() as any)
       } else {
         const browserLang = navigator.language || ''
-        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : 'EN'
+        const defaultLang = browserLang.toLowerCase().startsWith('ko') ? 'KO' : browserLang.toLowerCase().startsWith('ja') ? 'JA' : 'EN'
         setUiLanguage(defaultLang)
         localStorage.setItem('language', defaultLang)
       }

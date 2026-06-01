@@ -31,7 +31,118 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
     initialUserLikes = likesData?.map((l) => l.track_id) || []
   }
 
-  // 2. 앨범 정보 로드
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+  if (isUUID) {
+    // 2. 미니 앨범 (플레이리스트) 정보 로드
+    const { data: playlistData, error: playlistError } = await supabase
+      .from('user_playlists')
+      .select('*')
+      .eq('id', slug)
+      .single()
+
+      if (playlistError || !playlistData) {
+        console.error('Playlist not found:', playlistError)
+        return notFound()
+      }
+
+      // 폴더는 앨범/플레이리스트 페이지로 렌더링하지 않음
+      if (playlistData.description?.startsWith('[folder]')) {
+        return notFound()
+      }
+
+      // 3. 앨범 제작자 (아티스트) 정보 로드
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', playlistData.user_id)
+        .single()
+        
+      const { data: channelsData } = await supabase
+        .from('channels')
+        .select('*')
+        .eq('user_id', playlistData.user_id)
+      const mainChannel = channelsData?.find((c: any) => c.is_main) || channelsData?.[0]
+      const artistName = mainChannel?.name || profileData?.display_name || 'Unknown Artist'
+      const artistSlug = mainChannel?.slug || profileData?.username || 'user'
+      const artistAvatar = mainChannel?.avatar_url || profileData?.avatar_url || '/default-album.png'
+
+      const album: Album = {
+        id: playlistData.id,
+        slug: playlistData.id,
+        artist_id: playlistData.user_id,
+        title: playlistData.title,
+        release_type: 'playlist',
+        cover_url: playlistData.cover_url || '/default-album.png',
+        release_date: playlistData.created_at,
+        genres: playlistData.genre ? [playlistData.genre] : [],
+        moods: [],
+        description: playlistData.description || `${playlistData.title} 플레이리스트입니다.`,
+        status: 'published',
+        generation_tool: 'Suno AI',
+        total_plays: playlistData.plays || 0,
+        total_likes: 0,
+        created_at: playlistData.created_at,
+        updated_at: playlistData.created_at,
+        artist: {
+          id: playlistData.user_id,
+          slug: artistSlug,
+          name: artistName,
+          bio: '',
+          avatar_url: artistAvatar,
+          banner_url: mainChannel?.banner_url || null,
+          links: null,
+          is_ai_generated: true,
+          owner_user_id: playlistData.user_id,
+          created_at: playlistData.created_at,
+          updated_at: playlistData.created_at,
+          is_user: true
+        }
+      }
+
+      // 4. 수록 트랙 목록 로드 (song_history에서 playlist_id로 매칭)
+      const { data: tracksData } = await supabase
+        .from('song_history')
+        .select('*')
+        .eq('playlist_id', playlistData.id)
+        .order('created_at', { ascending: true })
+
+      const initialTracks: Track[] = (tracksData || []).map((song: any) => ({
+        id: song.id,
+        album_id: playlistData.id,
+        track_number: 1,
+        title: song.title,
+        duration_sec: song.duration_sec || 180,
+        file_url: song.audio_url || '',
+        file_size: null,
+        waveform_data: null,
+        lyrics: null,
+        style_prompt: song.style_desc || null,
+        bpm: null,
+        song_key: null,
+        prompt_meta: null,
+        lyricist: song.form?.lyricist || '',
+        composer: song.form?.composer || '',
+        arranger: song.form?.arranger || '',
+        play_count: song.like_count || 0, // Fallback
+        like_count: song.like_count || 0,
+        status: 'published',
+        created_at: song.created_at,
+        updated_at: song.created_at,
+        album: { ...album },
+        image_url: song.image_url || ''
+      }))
+
+      return (
+        <AlbumClient
+          album={album}
+          initialTracks={initialTracks}
+          initialUserLikes={initialUserLikes}
+        />
+      )
+  }
+
+  // 2. 정규 앨범 (albums 테이블) 정보 로드
   const { data: albumData, error: albumError } = await supabase
     .from('albums')
     .select('*, artists(*)')

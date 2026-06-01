@@ -290,9 +290,11 @@ export function AlbumClient({
 
         {/* 정보 텍스트 */}
         <div className="space-y-4 text-center md:text-left flex-1 min-w-0 z-10">
-          <span className="text-[10px] font-extrabold text-primary border border-primary/30 bg-primary/5 px-2.5 py-0.5 rounded-full tracking-wider uppercase inline-block self-start">
-            ALBUM
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-extrabold tracking-widest text-[#e3fe06] uppercase border border-[#e3fe06]/30 px-2 py-0.5 rounded-full bg-[#e3fe06]/10">
+              {album.release_type === 'playlist' ? 'PLAYLIST' : 'ALBUM'}
+            </span>
+          </div>
           <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mt-1 truncate">
             {album.title}
           </h1>
@@ -340,7 +342,7 @@ export function AlbumClient({
                   ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20' 
                   : 'border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white'
               }`}
-              title="앨범 좋아요"
+              title={album.release_type === 'playlist' ? "플레이리스트 좋아요" : "앨범 좋아요"}
             >
               <Heart className={`w-4 h-4 ${isAlbumLiked ? 'fill-current' : ''}`} />
             </button>

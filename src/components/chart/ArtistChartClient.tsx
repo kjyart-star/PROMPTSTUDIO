@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Artist } from '@/types/music'
 import { Trophy, ArrowLeft, Users, Plus, Check } from 'lucide-react'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 interface ArtistChartClientProps {
   initialArtists: Artist[]
   currentUserId: string | null
+  periodType: 'daily' | 'weekly' | 'monthly'
 }
 
 const formatCount = (count: number) => {
@@ -25,9 +26,11 @@ const formatCount = (count: number) => {
 
 export function ArtistChartClient({
   initialArtists,
-  currentUserId
+  currentUserId,
+  periodType
 }: ArtistChartClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [artists, setArtists] = useState<Artist[]>(initialArtists)
   const [followedIds, setFollowedIds] = useState<string[]>([])
   const supabase = createClient()
@@ -134,19 +137,48 @@ export function ArtistChartClient({
           </div>
         </div>
 
-        {/* Tab Controls (Music vs Artist Chart) */}
-        <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl">
-          <Link
-            href="/charts"
-            className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
-          >
-            {uiLanguage === 'KO' ? '음원 차트' : uiLanguage === 'JA' ? 'トラックチャート' : 'Track Chart'}
-          </Link>
-          <button
-            className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
-          >
-            {uiLanguage === 'KO' ? '아티스트 차트' : uiLanguage === 'JA' ? 'アーティストチャート' : 'Artist Chart'}
-          </button>
+        {/* Tab Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          {/* Music vs Artist Chart */}
+          <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl shrink-0">
+            <Link
+              href="/charts"
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
+            >
+              {uiLanguage === 'KO' ? '음원 차트' : uiLanguage === 'JA' ? 'トラックチャート' : 'Track Chart'}
+            </Link>
+            <button
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
+            >
+              {uiLanguage === 'KO' ? '아티스트 차트' : uiLanguage === 'JA' ? 'アーティストチャート' : 'Artist Chart'}
+            </button>
+          </div>
+
+          {/* Period Tabs */}
+          <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl shrink-0">
+            {(['daily', 'weekly', 'monthly'] as const).map((tab) => {
+              const currentType = searchParams.get('type') || 'daily'
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.set('type', tab)
+                    router.push(`/charts/artists?${params.toString()}`)
+                  }}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer capitalize ${
+                    currentType === tab
+                      ? 'bg-primary text-[#080d08] shadow shadow-primary/10'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  {uiLanguage === 'KO' 
+                    ? (tab === 'daily' ? '일간' : tab === 'weekly' ? '주간' : '월간')
+                    : (tab === 'daily' ? 'Daily' : tab === 'weekly' ? 'Weekly' : 'Monthly')}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </section>
 
