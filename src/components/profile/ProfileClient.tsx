@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download, Search } from 'lucide-react'
@@ -234,6 +234,147 @@ const MOCK_SAMPLE_PLAYLISTS = [
   }
 ]
 
+
+
+function FolderTreeNode({ node, selectedPlaylist, setSelectedPlaylist, expandedFolders, handleToggleFolder, depth = 0, handleCreateSubfolder, handleRenameFolder, deletePlaylist, handleMoveTrack, showToast, folderTrackCounts }: any) {
+  const isExpanded = expandedFolders.has(node.id)
+  const isSelected = selectedPlaylist === node.id
+  const hasChildren = node.children && node.children.length > 0
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [menuCoords, setMenuCoords] = useState<{top: number, right: number} | null>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(event.target as Node))
+      ) {
+        setIsMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  return (
+    <div className="flex flex-col w-full">
+      <div 
+        className={`group relative flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-primary/10 text-primary' : 'text-zinc-300 hover:bg-white/5'}`}
+        style={{ paddingLeft: `${depth * 12 + 8}px` }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const trackId = e.dataTransfer.getData('track-id') || e.dataTransfer.getData('text/plain');
+          if (trackId && handleMoveTrack && showToast) {
+            handleMoveTrack(trackId, node.id);
+            showToast(`'${node.title}' 폴더로 이동되었습니다.`, 'success');
+          }
+        }}
+        onClick={(e) => {
+          setSelectedPlaylist(node.id);
+          if (hasChildren) {
+            handleToggleFolder(e, node.id);
+          }
+        }}
+      >
+        <div className="flex items-center gap-1.5 overflow-hidden pr-6">
+          {hasChildren ? (
+            <button 
+              onClick={(e) => handleToggleFolder(e, node.id)} 
+              className="p-0.5 text-zinc-500 hover:text-white shrink-0"
+            >
+              <svg className={`w-3.5 h-3.5 fill-current transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </button>
+          ) : (
+            <div className="w-4.5 shrink-0"></div>
+          )}
+          <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+          <span className="text-sm truncate font-medium">{node.title}</span>
+          <span className="text-xs text-on-surface-variant/50 shrink-0 ml-1">
+            ({folderTrackCounts ? (folderTrackCounts[node.id] || 0) : 0})
+          </span>
+        </div>
+
+        {/* The 3-dot menu icon */}
+        <div className={`absolute right-2 top-1/2 -translate-y-1/2 ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} ref={menuRef}>
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (!isMenuOpen && menuRef.current) {
+                const rect = menuRef.current.getBoundingClientRect();
+                setMenuCoords({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+              }
+              setIsMenuOpen(!isMenuOpen); 
+            }}
+            className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-white"
+          >
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </button>
+          
+          {isMenuOpen && menuCoords && typeof window !== 'undefined' && require('react-dom').createPortal(
+            <div 
+              ref={dropdownRef}
+              className="fixed w-36 bg-white border border-gray-200 rounded shadow-xl z-[9999] text-sm font-medium overflow-hidden text-black"
+              style={{ top: menuCoords.top, right: menuCoords.right }}
+            >
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); handleCreateSubfolder(node.id); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 text-gray-700 transition-colors"
+              >
+                <svg className="w-4 h-4 fill-gray-500" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3V9h2v3h3v2z"/></svg>
+                하위 폴더 생성
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); handleRenameFolder(node.id, node.title); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 text-gray-700 transition-colors"
+              >
+                <svg className="w-4 h-4 fill-gray-500" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                이름 변경
+              </button>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setIsMenuOpen(false); 
+                  deletePlaylist(node.id); 
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-red-50 text-[#d32f2f] transition-colors"
+              >
+                <svg className="w-4 h-4 fill-[#d32f2f]" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                삭제
+              </button>
+            </div>,
+            document.body
+          )}
+        </div>
+      </div>
+      
+      {isExpanded && hasChildren && (
+        <div className="flex flex-col w-full">
+          {node.children.map((child: any) => (
+            <FolderTreeNode 
+              key={child.id} 
+              node={child} 
+              selectedPlaylist={selectedPlaylist}
+              setSelectedPlaylist={setSelectedPlaylist}
+              expandedFolders={expandedFolders}
+              handleToggleFolder={handleToggleFolder}
+              handleCreateSubfolder={handleCreateSubfolder}
+              handleRenameFolder={handleRenameFolder}
+              deletePlaylist={deletePlaylist}
+              handleMoveTrack={handleMoveTrack}
+              showToast={showToast}
+              folderTrackCounts={folderTrackCounts}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ProfileClient({ user, isAdmin = false, initialProfile }: ProfileClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -274,8 +415,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
   const [history, setHistory] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<'private' | 'public' | 'channels'>('public')
+  const [activeTab, setActiveTab] = useState<'private' | 'public' | 'channels' | 'albums'>(() => {
+    const tab = searchParams?.get('tab');
+    if (tab === 'private' || tab === 'public' || tab === 'channels') return tab as 'private' | 'public' | 'channels';
+    return 'public';
+  })
   const [trackSearchQuery, setTrackSearchQuery] = useState('')
+  const [trackSortOrder, setTrackSortOrder] = useState<'newest' | 'oldest'>('newest')
   const [showComingSoon, setShowComingSoon] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
@@ -344,6 +490,138 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
 
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null)
+
+  
+  const handleRenameFolder = async (folderId: string, oldName: string) => {
+    const newName = window.prompt('새 폴더 이름을 입력하세요:', oldName)
+    if (!newName || newName === oldName) return;
+    try {
+      const folder = playlists.find(p => p.id === folderId)
+      if (!folder) return
+      
+      const res = await fetch(`/api/playlists/${folderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: newName.trim(), 
+          description: folder.description 
+        })
+      })
+      if (res.ok) {
+        fetchPlaylists()
+        showToast('폴더 이름이 변경되었습니다.', 'success')
+      } else {
+        showToast('이름 변경 실패', 'error')
+      }
+    } catch (e) {
+      showToast('오류가 발생했습니다.', 'error')
+    }
+  }
+
+  const handleCreateSubfolder = async (parentId: string) => {
+    const newName = window.prompt('새 하위 폴더 이름을 입력하세요:')
+    if (!newName) return;
+    try {
+      const descriptionToSave = serializePlaylistDescription('folder', '', parentId)
+      const res = await fetch('/api/playlists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newName.trim(),
+          description: descriptionToSave,
+          cover_url: '',
+          genre: '',
+          is_published: false,
+          exposure_order: null
+        })
+      })
+      if (res.ok) {
+        fetchPlaylists()
+        setExpandedFolders(prev => new Set(prev).add(parentId))
+        showToast('하위 폴더가 생성되었습니다.', 'success')
+      } else {
+        showToast('하위 폴더 생성 실패', 'error')
+      }
+    } catch (e) {
+      showToast('오류가 발생했습니다.', 'error')
+    }
+  }
+
+  // --- Folder Management State ---
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [isFolderManageModalOpen, setIsFolderManageModalOpen] = useState(false)
+
+  const [newQuickFolderName, setNewQuickFolderName] = useState('')
+  const [isQuickCreating, setIsQuickCreating] = useState(false)
+
+  const handleQuickCreateFolder = async () => {
+    if (!newQuickFolderName.trim()) return showToast('폴더 이름을 입력해주세요.', 'error')
+    if (isQuickCreating) return;
+    setIsQuickCreating(true)
+    try {
+      const descriptionToSave = serializePlaylistDescription('folder', '', null)
+      const res = await fetch('/api/playlists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newQuickFolderName.trim(),
+          description: descriptionToSave,
+          cover_url: '',
+          genre: '',
+          is_published: false,
+          exposure_order: null
+        })
+      })
+      if (res.ok) {
+        fetchPlaylists()
+        setNewQuickFolderName('')
+        showToast('새 폴더가 생성되었습니다.', 'success')
+      } else {
+        const err = await res.json()
+        showToast('폴더 생성 실패: ' + (err.error || '오류가 발생했습니다.'), 'error')
+      }
+    } catch (e) {
+      showToast('네트워크 오류가 발생했습니다.', 'error')
+    } finally {
+      setIsQuickCreating(false)
+    }
+  }
+
+  const [moveTrackModalData, setMoveTrackModalData] = useState<any | null>(null)
+  const [selectedPlaylistFilter, setSelectedPlaylistFilter] = useState<string>('all')
+  
+  const handleToggleFolder = (e: React.MouseEvent, folderId: string) => {
+    e.stopPropagation()
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(folderId)) next.delete(folderId)
+      else next.add(folderId)
+      return next
+    })
+  }
+
+  const buildFolderTree = (folders: any[]) => {
+    const map = new Map<string, any>()
+    folders.forEach(f => map.set(f.id, { ...f, children: [] }))
+    const rootNodes: any[] = []
+    map.forEach(node => {
+      let parentId = null;
+      try {
+        const parsed = parsePlaylistDescription(node.description);
+        parentId = parsed.parentId;
+      } catch (e) {}
+        
+      if (parentId && map.has(parentId)) {
+        map.get(parentId).children.push(node)
+      } else {
+        rootNodes.push(node)
+      }
+    })
+    return rootNodes
+  }
+
+  const folderTree = buildFolderTree(playlists.filter(p => !p.isSystem && parsePlaylistDescription(p.description).type === 'folder'))
+
 
   // Channels state
   const [channels, setChannels] = useState<any[]>([])
@@ -492,7 +770,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   }
   
   // Playlist Modal State
-  const [playlistType, setPlaylistType] = useState<'album' | 'playlist'>('album')
+  const [playlistType, setPlaylistType] = useState<'album' | 'playlist' | 'folder'>('album')
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null)
   const [playlistTitle, setPlaylistTitle] = useState('')
@@ -1241,7 +1519,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     } catch (e: any) { showToast('업로드 실패', 'error') }
   }
 
-  const openCreateModal = (type: 'album' | 'playlist') => {
+  const openCreateModal = (type: 'album' | 'playlist' | 'folder') => {
     setPlaylistType(type)
     setEditingPlaylistId(null)
     setPlaylistTitle('')
@@ -1584,6 +1862,30 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     } catch (e) { console.error(e) }
   }
 
+  const assignPlaylistToChannel = async (playlistId: string, channelId: string | null) => {
+    try {
+      const res = await fetch(`/api/playlists/${playlistId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel_id: channelId })
+      })
+      if (res.ok) {
+        fetchPlaylists()
+        if (selectedPlaylist && selectedPlaylist.id === playlistId) {
+          setSelectedPlaylist(await res.json())
+        }
+        showToast(channelId 
+          ? (uiLanguage === 'KO' ? '앨범이 채널에 연결되었습니다.' : uiLanguage === 'JA' ? 'アルバムがチャンネルに割り当てられました。' : 'Album assigned to channel.')
+          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : uiLanguage === 'JA' ? 'チャンネルの接続が解除されました。' : 'Channel unlinked.'), 'success')
+      } else {
+        throw new Error('Failed to change channel link')
+      }
+    } catch (e) {
+      console.error(e)
+      showToast(uiLanguage === 'KO' ? '채널 연결 변경 실패' : uiLanguage === 'JA' ? 'チャンネルの変更に失敗しました' : 'Failed to change channel link', 'error')
+    }
+  }
+
   const toggleLikeSong = (song: any) => {
     try {
       const savedIdsStr = localStorage.getItem('profile-liked-song-ids') || '[]'
@@ -1669,6 +1971,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
   const isPublicView = activeTab === 'public'
   const isPrivateView = activeTab === 'private'
+  const isAlbumsView = activeTab === 'albums'
   
   const dbPublicLooseTracks = history.filter(h => {
     return !!(h.is_published && (h.audio_url || h.file_url) && !h.channel_id)
@@ -1693,13 +1996,48 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     ? dbPublicLooseTracks
     : history
 
-  const visibleLooseTracks = trackSearchQuery
+  
+  let visibleLooseTracks = trackSearchQuery
     ? visibleLooseTracksRaw.filter(h => 
         h.title?.toLowerCase().includes(trackSearchQuery.toLowerCase()) || 
         h.genre?.toLowerCase().includes(trackSearchQuery.toLowerCase())
       )
     : visibleLooseTracksRaw
 
+  if (selectedPlaylistFilter === 'liked') {
+    visibleLooseTracks = visibleLooseTracks.filter(h => isSongLiked(h.id))
+  } else if (selectedPlaylistFilter === 'uploaded') {
+    visibleLooseTracks = visibleLooseTracks.filter(h => h.source === 'upload' || h.type === 'upload')
+  } else if (selectedPlaylistFilter === 'default' || selectedPlaylistFilter === 'all') {
+    visibleLooseTracks = visibleLooseTracks.filter(h => {
+      if (!h.playlist_id) return true;
+      const parentPlaylist = playlists.find(p => p.id === h.playlist_id);
+      if (!parentPlaylist) return true;
+      const type = parsePlaylistDescription(parentPlaylist.description).type;
+      return type === 'album'; // Only show if it's an album. If it's a playlist (folder), hide it.
+    })
+  } else {
+    visibleLooseTracks = visibleLooseTracks.filter(h => h.playlist_id === selectedPlaylistFilter)
+  }
+
+  // Apply sorting
+  if (trackSortOrder === 'newest') {
+    visibleLooseTracks = [...visibleLooseTracks].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  } else if (trackSortOrder === 'oldest') {
+    visibleLooseTracks = [...visibleLooseTracks].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  }
+
+
+
+  const folderTrackCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    history.forEach(h => {
+      if (h.playlist_id) {
+        counts[h.playlist_id] = (counts[h.playlist_id] || 0) + 1
+      }
+    })
+    return counts
+  }, [history])
 
   const userAlbums = playlists.filter(p => parsePlaylistDescription(p.description).type === 'album')
   const userPlaylists = playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist')
@@ -2061,15 +2399,44 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         {/* Edit, Publish and Delete buttons on Hover */}
         {!isPublicView && (
           <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button 
-              onClick={(e) => { e.stopPropagation(); togglePublishPlaylist(playlist.id, playlist.is_published); }} 
-              className={`w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-primary transition-colors backdrop-blur-sm ${
-                playlist.is_published ? 'text-primary hover:text-white' : 'text-white'
-              }`}
-              title={playlist.is_published ? '비공개 전환' : '퍼블리싱 공개'}
+            <div 
+              className="relative w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-primary hover:text-black transition-colors backdrop-blur-sm cursor-pointer group/btn"
+              title="공개 범위 설정"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Globe className="w-4 h-4" />
-            </button>
+              {(() => {
+                const parsedDesc = parsePlaylistDescription(playlist.description);
+                const plChannelId = parsedDesc.channelId;
+                return (
+                  <>
+                    {playlist.is_published ? (plChannelId ? <Users className="w-4 h-4 text-primary group-hover/btn:text-black" /> : <Globe className="w-4 h-4 text-primary group-hover/btn:text-black" />) : <Lock className="w-4 h-4 text-white group-hover/btn:text-black" />}
+                    <select 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      value={playlist.is_published ? (plChannelId || 'public') : 'private'}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const val = e.target.value;
+                        if (val === 'private') {
+                          if (playlist.is_published) togglePublishPlaylist(playlist.id, true);
+                        } else if (val === 'public') {
+                          if (!playlist.is_published) togglePublishPlaylist(playlist.id, false);
+                          if (plChannelId) assignPlaylistToChannel(playlist.id, null);
+                        } else {
+                          if (!playlist.is_published) togglePublishPlaylist(playlist.id, false);
+                          if (plChannelId !== val) assignPlaylistToChannel(playlist.id, val);
+                        }
+                      }}
+                    >
+                      <option value="private">나만 보기 (비공개)</option>
+                      <option value="public">전체 공개 (기본 채널)</option>
+                      {channels && channels.map((ch: any) => (
+                        <option key={ch.id} value={ch.id}>채널 공개 ({ch.name})</option>
+                      ))}
+                    </select>
+                  </>
+                );
+              })()}
+            </div>
             <button 
               onClick={(e) => { e.stopPropagation(); openEditModal(playlist); }} 
               className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-primary transition-colors backdrop-blur-sm"
@@ -2106,7 +2473,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     <>
       <div className="max-w-7xl mx-auto px-[32px] pt-0 md:pt-0">
         {/* --- Conditionally Render Headers --- */}
-        {selectedPlaylist || activeTab === 'private' || activeTab === 'channels' ? (
+        {selectedPlaylist || activeTab === 'private' || activeTab === 'channels' || activeTab === 'albums' ? (
           /* Standard Header for Private view / Playlist Detail */
           <div className="flex items-start justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -2284,16 +2651,46 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                   {!isPublicView && !selectedPlaylist.is_mock && (
                     <div className="flex gap-2 ml-auto">
-                      <button 
-                        onClick={() => togglePublishPlaylist(selectedPlaylist.id, selectedPlaylist.is_published)} 
-                        className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-colors ${
-                          selectedPlaylist.is_published 
-                            ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary hover:text-black' 
-                            : 'border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
-                        }`}
-                      >
-                        {selectedPlaylist.is_published ? '공개 해제' : '공개 퍼블리싱'}
-                      </button>
+                      <div className="relative">
+                        {(() => {
+                          const parsedDesc = parsePlaylistDescription(selectedPlaylist.description);
+                          const plChannelId = parsedDesc.channelId;
+                          return (
+                            <>
+                              <div className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                                selectedPlaylist.is_published 
+                                  ? plChannelId ? 'border-primary bg-primary text-black' : 'border-primary/30 bg-primary/10 text-primary' 
+                                  : 'border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
+                              }`}>
+                                {selectedPlaylist.is_published ? (plChannelId ? <Users className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />) : <Lock className="w-3.5 h-3.5" />}
+                                {selectedPlaylist.is_published ? (plChannelId ? '채널 공개' : '전체 공개') : '비공개'}
+                              </div>
+                              <select 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                value={selectedPlaylist.is_published ? (plChannelId || 'public') : 'private'}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === 'private') {
+                                    if (selectedPlaylist.is_published) togglePublishPlaylist(selectedPlaylist.id, true);
+                                  } else if (val === 'public') {
+                                    if (!selectedPlaylist.is_published) togglePublishPlaylist(selectedPlaylist.id, false);
+                                    if (plChannelId) assignPlaylistToChannel(selectedPlaylist.id, null);
+                                  } else {
+                                    if (!selectedPlaylist.is_published) togglePublishPlaylist(selectedPlaylist.id, false);
+                                    if (plChannelId !== val) assignPlaylistToChannel(selectedPlaylist.id, val);
+                                  }
+                                }}
+                              >
+                                <option value="private">나만 보기 (비공개)</option>
+                                <option value="public">전체 공개 (기본 채널)</option>
+                                {channels && channels.map((ch: any) => (
+                                  <option key={ch.id} value={ch.id}>채널 공개 ({ch.name})</option>
+                                ))}
+                              </select>
+                            </>
+                          );
+                        })()}
+                      </div>
                       <button 
                         onClick={() => openEditModal(selectedPlaylist)} 
                         className="px-4 py-1.5 rounded-full border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold transition-colors"
@@ -2520,9 +2917,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               )}
             </div>
           </div>
-        ) : activeTab === 'private' ? (
-          /* Private Tab View (Management Dashboard) */
-          <>
+        ) : activeTab === 'albums' ? (
+          <div className="flex flex-col w-full">
             <div className="flex gap-4 mb-6 border-b border-outline-variant/20 pb-4">
               <button 
                 onClick={() => {
@@ -2531,9 +2927,20 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   url.searchParams.set('tab', 'private');
                   window.history.pushState({ tab: 'private' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPrivateView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
                 <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('albums');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'albums');
+                  window.history.pushState({ tab: 'albums' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer bg-surface-container-high text-on-surface`}
+              >
+                <Folder className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 앨범 관리' : uiLanguage === 'JA' ? 'アルバム管理' : 'My Albums'}
               </button>
               <button 
                 onClick={() => {
@@ -2558,12 +2965,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   url.searchParams.set('tab', 'public');
                   window.history.pushState({ tab: 'public' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPublicView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
                 <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : uiLanguage === 'JA' ? 'マイチャンネル (公開済み)' : 'My Channel (Published)'}
               </button>
             </div>
-
+            
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-on-surface flex items-center gap-2"><Folder className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'マイアルバム' : 'My Albums'}</h2>
@@ -2638,11 +3045,141 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               })()}
               {visibleAlbums.length === 0 && <p className="text-sm text-on-surface-variant mt-4">앨범을 만들어 음악을 폴더처럼 관리해보세요.</p>}
             </div>
+          </div>
+        ) : activeTab === 'private' ? (
+          /* Private Tab View (Management Dashboard) */
+          <div className="flex flex-col w-full">
+            <div className="flex gap-4 mb-6 border-b border-outline-variant/20 pb-4">
+              <button 
+                onClick={() => {
+                  setActiveTab('private');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'private');
+                  window.history.pushState({ tab: 'private' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPrivateView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+              >
+                <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('albums');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'albums');
+                  window.history.pushState({ tab: 'albums' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isAlbumsView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+              >
+                <Folder className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 앨범 관리' : uiLanguage === 'JA' ? 'アルバム管理' : 'My Albums'}
+              </button>
+              <button 
+                onClick={() => {
+                  if (isAdmin) {
+                    setActiveTab('channels');
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'channels');
+                    window.history.pushState({ tab: 'channels' }, '', url.toString());
+                  } else {
+                    setShowComingSoon(true);
+                  }
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
+              >
+                <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Channel Mgt'}
+              </button>
+              <button 
+                onClick={() => { 
+                  setActiveTab('public'); 
+                  handleSetPublicSubView('main'); 
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'public');
+                  window.history.pushState({ tab: 'public' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPublicView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+              >
+                <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : uiLanguage === 'JA' ? 'マイチャンネル (公開済み)' : 'My Channel (Published)'}
+              </button>
+            </div>
+            
+
+
+            <div className="flex gap-6 min-h-[80vh]">
+              {/* --- SIDEBAR --- */}
+              <div className="w-64 shrink-0 flex flex-col border-r border-outline-variant/10 pr-6">
+                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-3 flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <button 
+                      onClick={() => setSelectedPlaylistFilter('all')}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${selectedPlaylistFilter === 'all' ? 'bg-primary text-black' : 'text-zinc-300 hover:bg-white/5'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                        <span>모든 폴더</span>
+                      </div>
+                      <span className="text-xs opacity-50 font-mono">
+                        {history.filter(h => {
+                          if (!h.playlist_id) return true;
+                          const parentPlaylist = playlists.find(p => p.id === h.playlist_id);
+                          if (!parentPlaylist) return true;
+                          return parsePlaylistDescription(parentPlaylist.description).type === 'album';
+                        }).length || 0}
+                      </span>
+                    </button>
+
+                    <button 
+                      onClick={() => setSelectedPlaylistFilter('uploaded')}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${selectedPlaylistFilter === 'uploaded' ? 'bg-primary text-black' : 'text-zinc-300 hover:bg-white/5'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                        <span>업로드</span>
+                      </div>
+                      <span className="text-xs opacity-50 font-mono">
+                        {history.filter(h => h.source === 'upload' || h.type === 'upload').length || 0}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="h-px bg-white/10 mx-2"></div>
+
+                  {/* Custom Folder Tree */}
+                  <div className="flex flex-col gap-1 overflow-y-auto pb-2 scrollbar-thin">
+                    {folderTree.map(node => (
+                      <FolderTreeNode 
+                        key={node.id} 
+                        node={node} 
+                        selectedPlaylist={selectedPlaylistFilter}
+                        setSelectedPlaylist={setSelectedPlaylistFilter}
+                        expandedFolders={expandedFolders}
+                        handleToggleFolder={handleToggleFolder}
+                        handleCreateSubfolder={handleCreateSubfolder}
+                        handleRenameFolder={handleRenameFolder}
+                        deletePlaylist={deletePlaylist}
+                        handleMoveTrack={handleMoveTrack}
+                        showToast={showToast}
+                        folderTrackCounts={folderTrackCounts}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* --- MAIN CONTENT --- */}
+              <div className="flex-1 min-w-0">
+
+
 
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : uiLanguage === 'JA' ? '曲' : 'Songs'}
+                  {(() => {
+                    if (selectedPlaylistFilter === 'all') return <><Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '모든 폴더 (전체 음원)' : 'All Songs'}</>
+                    if (selectedPlaylistFilter === 'liked') return <><Heart className="w-5 h-5 text-primary fill-current" /> {uiLanguage === 'KO' ? '좋아요 표시한 음악' : 'Liked Songs'}</>
+                    if (selectedPlaylistFilter === 'uploaded') return <><Upload className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '업로드' : 'Uploads'}</>
+                    const folder = playlists.find(p => p.id === selectedPlaylistFilter)
+                    if (folder) return <><Folder className="w-5 h-5 text-primary fill-current" /> {folder.title}</>
+                    return <><Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : 'Songs'}</>
+                  })()}
                 </h2>
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -2658,7 +3195,24 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       className="w-48 pl-8 pr-3 py-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
-                  {isAdmin && (
+                  <select
+                    value={trackSortOrder}
+                    onChange={(e) => {
+                      setTrackSortOrder(e.target.value as 'newest' | 'oldest')
+                      setCurrentPage(1)
+                    }}
+                    className="pl-3 pr-8 py-1.5 bg-surface-container-low border border-outline-variant/20 hover:bg-white/5 rounded-lg text-xs font-bold text-zinc-300 focus:outline-none focus:border-primary/50 transition-colors shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:0.65em_auto] bg-no-repeat bg-[position:right_0.5rem_center]"
+                  >
+                    <option value="newest">{uiLanguage === 'KO' ? '최신순' : 'Newest'}</option>
+                    <option value="oldest">{uiLanguage === 'KO' ? '오래된순' : 'Oldest'}</option>
+                  </select>
+                  <button 
+                    onClick={() => setIsFolderManageModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low border border-outline-variant/20 hover:bg-white/5 rounded-lg text-xs font-bold text-zinc-300 transition-colors shadow-sm cursor-pointer"
+                  >
+                    <Settings className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '폴더 관리' : 'Manage Folders'}
+                  </button>
+                  {selectedPlaylistFilter === 'uploaded' && isAdmin && (
                     <button 
                       onClick={openUploadModal}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-black hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
@@ -2706,38 +3260,47 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                             if (folder) {
                               const { type } = parsePlaylistDescription(folder.description)
                               const isAlbum = type === 'album'
-                              folderTypeLabel = isAlbum ? `앨범: ${folder.title}` : `플레이리스트: ${folder.title}`
+                              folderTypeLabel = isAlbum ? `앨범: ${folder.title}` : `폴더: ${folder.title}`
                               folderBgClass = isAlbum 
                                 ? 'text-primary bg-primary/10 border border-primary/20' 
                                 : 'text-emerald-400 bg-emerald-950/20 border border-emerald-900/30'
                             }
 
                             return (
-                              <tr key={song.id} className={`hover:bg-white/[0.02] border-b border-white/[0.03] last:border-0 transition-all duration-200 group ${isPlayingThis ? 'bg-primary/5' : ''}`}>
-                                {/* Number & Play Button */}
-                                <td className="py-4 px-4 font-mono text-on-surface-variant/60 text-center w-14 relative">
-                                  <span className="group-hover:hidden">{globalIdx}</span>
-                                  <button 
-                                    onClick={() => handlePlayMusic(song)}
-                                    className="hidden group-hover:inline-block text-primary cursor-pointer hover:scale-110 transition-transform absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                                  >
-                                    {isPlayingThis ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-                                  </button>
+                              <tr 
+                                key={song.id} 
+                                className={`hover:bg-white/[0.02] border-b border-white/[0.03] last:border-0 transition-all duration-200 group ${isPlayingThis ? 'bg-primary/5' : ''}`}>
+                                {/* Number */}
+                                <td className="py-4 px-4 font-mono text-on-surface-variant/60 text-center w-14">
+                                  <span>{globalIdx}</span>
                                 </td>
-
                                 {/* Song Info */}
                                 <td className="py-4 px-4">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/20 border border-outline-variant/10 shrink-0 shadow-sm relative">
+                                    <div 
+                                      draggable={true}
+                                      onDragStart={(e) => {
+                                        e.dataTransfer.setData('track-id', song.id)
+                                        e.dataTransfer.effectAllowed = 'move'
+                                      }}
+                                      className="w-10 h-10 rounded-lg overflow-hidden bg-black/20 border border-outline-variant/10 shrink-0 shadow-sm relative cursor-pointer group/thumb cursor-grab active:cursor-grabbing select-none"
+                                      onClick={() => handlePlayMusic(song)}
+                                    >
                                       <img 
+                                        draggable={false}
                                         src={song.image_url || "/default-album.png"} 
                                         alt="Cover" 
-                                        className={`w-full h-full object-cover ${isPlayingThis ? 'opacity-40' : ''}`}
+                                        className={`w-full h-full object-cover transition-opacity ${isPlayingThis ? 'opacity-40' : 'group-hover/thumb:opacity-50'}`}
                                         onError={(e) => {
                                           e.currentTarget.onerror = null;
                                           e.currentTarget.src = "/default-album.png";
                                         }}
                                       />
+                                      {!isPlayingThis && (
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                          <Play className="w-4 h-4 fill-white ml-0.5" />
+                                        </div>
+                                      )}
                                       {isPlayingThis && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                           <div className="flex items-end justify-center gap-[2px] h-3.5 w-3.5">
@@ -2788,47 +3351,68 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                 {!isPublicView && (
                                   <td className="py-4 px-4 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                      <button 
-                                        onClick={() => togglePublishMusic(song.id, song.is_published)}
-                                        className={`p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer relative group/btn ${
-                                          song.is_published ? 'text-primary' : 'text-zinc-500'
-                                        }`}
-                                        title={song.is_published ? '비공개 전환' : '채널 공개'}
-                                      >
-                                        <Globe className="w-3.5 h-3.5" />
-                                      </button>
-
-                                      <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500 hover:text-black" title="채널 연결">
-                                        <Users className="w-3.5 h-3.5" />
+                                      <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer group/btn" title="공개 범위 설정">
+                                        {song.is_published ? (song.channel_id ? <Users className="w-3.5 h-3.5 text-primary" /> : <Globe className="w-3.5 h-3.5 text-primary" />) : <Lock className="w-3.5 h-3.5 text-zinc-500" />}
                                         <select 
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          value={song.channel_id || ''}
-                                          onChange={(e) => assignSongToChannel(song.id, e.target.value || null)}
+                                          value={song.is_published ? (song.channel_id || 'public') : 'private'}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === 'private') {
+                                              if (song.is_published) togglePublishMusic(song.id, true);
+                                            } else if (val === 'public') {
+                                              if (!song.is_published) togglePublishMusic(song.id, false);
+                                              if (song.channel_id) assignSongToChannel(song.id, null);
+                                            } else {
+                                              if (!song.is_published) togglePublishMusic(song.id, false);
+                                              if (song.channel_id !== val) assignSongToChannel(song.id, val);
+                                            }
+                                          }}
                                         >
-                                          <option value="">메인 채널 (기본)</option>
+                                          <option value="private">나만 보기 (비공개)</option>
+                                          <option value="public">전체 공개 (기본 채널)</option>
                                           {channels.map(ch => (
-                                            <option key={ch.id} value={ch.id}>{ch.name}</option>
+                                            <option key={ch.id} value={ch.id}>채널 공개 ({ch.name})</option>
                                           ))}
                                         </select>
                                       </div>
 
-                                      <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500 hover:text-black" title="폴더 이동">
+                                      <button 
+                                        onClick={() => setMoveTrackModalData(song)}
+                                        className="p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500" 
+                                        title="폴더 이동"
+                                      >
                                         <Folder className="w-3.5 h-3.5" />
+                                      </button>
+
+                                      <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer text-zinc-500 hover:text-black" title="앨범/플레이리스트에 등록">
+                                        <ListMusic className="w-3.5 h-3.5" />
                                         <select 
                                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                          value={song.playlist_id || ''}
-                                          onChange={(e) => addMusicToPlaylist(song.id, e.target.value || null)}
+                                          value={(userAlbums.some(a => a.id === song.playlist_id) || userPlaylists.some(p => p.id === song.playlist_id)) ? song.playlist_id : 'default'}
+                                          onChange={(e) => {
+                                            if (e.target.value !== 'default') {
+                                              handleMoveTrack(song.id, e.target.value === 'none' ? null : e.target.value);
+                                            }
+                                          }}
                                         >
-                                          <option value="">단일 곡 (지정 안 함)</option>
+                                          <option value="default" disabled>등록...</option>
                                           {userAlbums.length > 0 && (
-                                            <optgroup label="내 앨범">
-                                              {userAlbums.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                            <optgroup label={uiLanguage === 'KO' ? '앨범' : 'Albums'}>
+                                              {userAlbums.map(album => (
+                                                <option key={album.id} value={album.id}>{album.title}</option>
+                                              ))}
                                             </optgroup>
                                           )}
                                           {userPlaylists.length > 0 && (
-                                            <optgroup label="나만의 플레이리스트">
-                                              {userPlaylists.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                            <optgroup label={uiLanguage === 'KO' ? '플레이리스트' : 'Playlists'}>
+                                              {userPlaylists.map(pl => (
+                                                <option key={pl.id} value={pl.id}>{pl.title}</option>
+                                              ))}
                                             </optgroup>
+                                          )}
+                                          {(userAlbums.some(a => a.id === song.playlist_id) || userPlaylists.some(p => p.id === song.playlist_id)) && (
+                                            <option value="none">{uiLanguage === 'KO' ? '제외 (기본 폴더로)' : 'Remove (to Default)'}</option>
                                           )}
                                         </select>
                                       </div>
@@ -2931,7 +3515,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             </div>
 
 
-          </>
+          </div>
+            </div>
+          </div>
         ) : activeTab === 'channels' ? (
           /* Channels Tab View (Channel Management) */
           <>
@@ -2946,6 +3532,17 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
                 <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('albums');
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'albums');
+                  window.history.pushState({ tab: 'albums' }, '', url.toString());
+                }} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
+              >
+                <Folder className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 앨범 관리' : uiLanguage === 'JA' ? 'アルバム管理' : 'My Albums'}
               </button>
               <button 
                 onClick={() => {
@@ -3504,7 +4101,18 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         }} 
                         className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${isPrivateView ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-white'}`}
                       >
-                        <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '관리 대시보드' : uiLanguage === 'JA' ? '管理ダッシュボード' : 'Admin Dashboard'}
+                        <Lock className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? '管理ダッシュボード' : 'Admin Dashboard'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setActiveTab('albums');
+                          const url = new URL(window.location.href);
+                          url.searchParams.set('tab', 'albums');
+                          window.history.pushState({ tab: 'albums' }, '', url.toString());
+                        }} 
+                        className={`text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer ${isAlbumsView ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-white'}`}
+                      >
+                        <Folder className="w-3.5 h-3.5" /> {uiLanguage === 'KO' ? '내 앨범 관리' : uiLanguage === 'JA' ? 'アルバム管理' : 'My Albums'}
                       </button>
                       <button 
                         onClick={() => {
@@ -4512,6 +5120,160 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                 className="px-5 py-2.5 text-sm font-bold bg-primary text-background hover:bg-primary/95 rounded-xl transition-all"
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      
+      {/* Move Track Modal */}
+      {moveTrackModalData && typeof window !== 'undefined' && require('react-dom').createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md grid place-items-center z-[9999] p-4" onClick={() => setMoveTrackModalData(null)}>
+          <div className="bg-surface-container border border-outline-variant/10 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden text-left flex flex-col max-h-[80vh] text-on-surface" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-outline-variant/10 flex justify-between items-center">
+              <h2 className="text-xl font-bold">폴더로 이동</h2>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 flex flex-col p-2">
+              <button
+                onClick={() => {
+                  handleMoveTrack(moveTrackModalData.id, null);
+                  setMoveTrackModalData(null);
+                  showToast('기본 폴더로 이동되었습니다.', 'success');
+                }}
+                className="flex items-center gap-4 px-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left w-full"
+              >
+                <Folder className="w-5 h-5 text-primary fill-current" />
+                <span className="text-sm font-bold text-white">기본 폴더 (모든 폴더)</span>
+              </button>
+
+              {/* Recursive render for folder tree in Move Modal */}
+              {(() => {
+                const renderMoveFolders = (nodes: any[], depth = 0): any[] => {
+                  let result: any[] = [];
+                  for (const folder of nodes) {
+                    result.push(
+                      <button
+                        key={folder.id}
+                        onClick={() => {
+                          handleMoveTrack(moveTrackModalData.id, folder.id);
+                          setMoveTrackModalData(null);
+                          showToast(`'${folder.title}' 폴더로 이동되었습니다.`, 'success');
+                        }}
+                        className="flex items-center gap-4 py-3.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left w-full"
+                        style={{ paddingLeft: `${16 + depth * 24}px`, paddingRight: '16px' }}
+                      >
+                        {depth > 0 ? (
+                          <div className="w-5 h-5 flex justify-center items-center opacity-50"><div className="w-1.5 h-1.5 border-l-2 border-b-2 border-zinc-400 rounded-bl-sm"></div></div>
+                        ) : (
+                          <Folder className="w-5 h-5 text-zinc-400" />
+                        )}
+                        <span className="text-sm font-bold text-zinc-200">{folder.title}</span>
+                      </button>
+                    );
+                    if (folder.children && folder.children.length > 0) {
+                      result = result.concat(renderMoveFolders(folder.children, depth + 1));
+                    }
+                  }
+                  return result;
+                };
+                return renderMoveFolders(folderTree);
+              })()}
+            </div>
+
+            <div className="p-4 border-t border-outline-variant/10 flex justify-end bg-surface-container-low/50">
+              <button 
+                onClick={() => setMoveTrackModalData(null)} 
+                className="px-6 py-2 rounded-xl text-sm font-bold text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Folder Management Modal */}
+      {isFolderManageModalOpen && typeof window !== 'undefined' && require('react-dom').createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md grid place-items-center z-[9999] p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface-container border border-outline-variant/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden text-left flex flex-col max-h-[80vh] text-on-surface" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-outline-variant/10 flex justify-between items-center">
+              <h2 className="text-xl font-bold">폴더 관리</h2>
+              <button onClick={() => setIsFolderManageModalOpen(false)} className="p-1 rounded-full hover:bg-white/10 text-on-surface-variant hover:text-white transition-colors">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-8">
+              {/* 새 폴더 만들기 */}
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-on-surface-variant">새 폴더 만들기</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={newQuickFolderName}
+                    onChange={(e) => setNewQuickFolderName(e.target.value)}
+                    placeholder="새 폴더 이름..."
+                    className="flex-1 bg-surface-container-low border border-outline-variant/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-zinc-600"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleQuickCreateFolder()
+                    }}
+                  />
+                  <button 
+                    onClick={handleQuickCreateFolder}
+                    disabled={isQuickCreating}
+                    className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-black px-6 py-3 rounded-xl text-sm font-bold transition-colors whitespace-nowrap"
+                  >
+                    {isQuickCreating ? '추가 중...' : '추가'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 시스템 폴더 */}
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-on-surface-variant">시스템 폴더</label>
+                
+                <div className="flex flex-col gap-3">
+                  {/* 모든 폴더 */}
+                  <div className="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant/10 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center bg-surface-container-high rounded-lg text-primary">
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">모든 폴더</span>
+                        <span className="text-xs text-on-surface-variant">{visibleLooseTracksRaw.length} 곡</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant/50 px-2 py-1 bg-white/5 rounded">수정 불가</span>
+                  </div>
+
+                  {/* 업로드 */}
+                  <div className="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant/10 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center bg-surface-container-high rounded-lg text-primary">
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">업로드</span>
+                        <span className="text-xs text-on-surface-variant">{visibleLooseTracksRaw.filter(h => h.source === 'upload' || h.type === 'upload').length} 곡</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant/50 px-2 py-1 bg-white/5 rounded">수정 불가</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-outline-variant/10 flex justify-end bg-surface-container-low/50">
+              <button 
+                onClick={() => setIsFolderManageModalOpen(false)} 
+                className="px-6 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              >
+                닫기
               </button>
             </div>
           </div>

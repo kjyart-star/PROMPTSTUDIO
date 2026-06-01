@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Artist, Album, Track } from '@/types/music'
 import { Play, Pause, Heart, Users, Library, Music, Check, MoreHorizontal, User, Lock, Globe, Pencil, X, Info, Upload, Download, ChevronRight } from 'lucide-react'
+import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
+import { parsePlaylistDescription } from '@/lib/utils'
 
 interface ArtistClientProps {
   artist: Artist
@@ -169,6 +171,25 @@ export function ArtistClient({
 
   const [tracks, setTracks] = useState<Track[]>(defaultTracks as Track[])
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
+  const [myPlaylists, setMyPlaylists] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        
+      if (data) {
+        setMyPlaylists(data.filter((p: any) => parsePlaylistDescription(p.description).type === 'playlist'))
+      }
+    }
+    fetchPlaylists()
+  }, [])
 
   useEffect(() => {
     try {
@@ -471,6 +492,28 @@ export function ArtistClient({
     }
   }
 
+  // Save to Playlist handler
+  const handleSaveToPlaylist = async (trackId: string, playlistId: string) => {
+    try {
+      const res = await fetch('/api/playlists/save-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track_id: trackId, playlist_id: playlistId })
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert('로그인이 필요한 기능입니다.')
+          return
+        }
+        throw new Error('Failed to save track')
+      }
+      alert(uiLanguage === 'KO' ? '플레이리스트에 담겼습니다.' : uiLanguage === 'JA' ? 'プレイリストに追加されました。' : 'Saved to playlist.')
+    } catch (err) {
+      console.error(err)
+      alert(uiLanguage === 'KO' ? '플레이리스트 담기에 실패했습니다.' : uiLanguage === 'JA' ? '追加に失敗しました。' : 'Failed to save track.')
+    }
+  }
+
   const handlePlayTrack = async (track: Track) => {
     if (currentTrack?.id === track.id) {
       togglePlay()
@@ -662,7 +705,7 @@ export function ArtistClient({
               {tracks.slice(0, 2).map((song, index) => {
                 const isPlayingThis = currentTrack?.id === song.id && isPlaying;
                 return (
-                  <div key={song.id} className="relative rounded-3xl overflow-hidden border border-[#1b3a2a] shadow-2xl p-6 bg-gradient-to-r from-[#07140e] via-[#0b170f] to-[#050a06] flex flex-col sm:flex-row items-center gap-6 min-h-[180px] group">
+                  <div key={song.id} className="relative rounded-3xl border border-[#1b3a2a] shadow-2xl p-6 bg-gradient-to-r from-[#07140e] via-[#0b170f] to-[#050a06] flex flex-col sm:flex-row items-center gap-6 min-h-[180px] group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] pointer-events-none"></div>
                     
                     <div className="relative w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-lg">
@@ -718,6 +761,16 @@ export function ArtistClient({
                         >
                           <Heart className={`w-3.5 h-3.5 ${userLikes.includes(song.id) ? 'fill-current text-primary' : 'text-zinc-500'}`} /> {song.like_count || 0} Likes
                         </button>
+                        <div className="flex items-center justify-center gap-1">
+                          <TrackDropdown
+                            track={song}
+                            myPlaylists={myPlaylists}
+                            userLikes={userLikes}
+                            uiLanguage={uiLanguage}
+                            onLikeToggle={handleLikeToggle}
+                            onSaveToPlaylist={handleSaveToPlaylist}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -786,6 +839,16 @@ export function ArtistClient({
                     >
                       <Heart className={`w-4 h-4 ${userLikes.includes(song.id) ? 'fill-current' : ''}`} />
                     </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <TrackDropdown
+                        track={song}
+                        myPlaylists={myPlaylists}
+                        userLikes={userLikes}
+                        uiLanguage={uiLanguage}
+                        onLikeToggle={handleLikeToggle}
+                        onSaveToPlaylist={handleSaveToPlaylist}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -1219,18 +1282,28 @@ export function ArtistClient({
                     </div>
 
                     <div className="flex items-center gap-6 shrink-0">
-                      <button
-                        onClick={() => handleLikeToggle(track.id)}
-                        className="text-on-surface-variant/80 hover:text-primary transition-colors p-1"
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
-                      </button>
+                        <button
+                          onClick={() => handleLikeToggle(track.id)}
+                          className="text-on-surface-variant/80 hover:text-primary transition-colors p-1"
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
+                        </button>
                       <span className="text-[11px] font-mono text-on-surface-variant w-24 text-right">
                         {track.like_count ? track.like_count.toLocaleString() : '0'}
                       </span>
                       <span className="text-[10px] font-mono text-on-surface-variant/60 font-bold w-10 text-right">
                         {track.duration_sec ? `${Math.floor(track.duration_sec / 60)}:${(track.duration_sec % 60).toString().padStart(2, '0')}` : '-'}
                       </span>
+                      <div className="flex items-center justify-center gap-1 ml-2">
+                        <TrackDropdown
+                          track={track}
+                          myPlaylists={myPlaylists}
+                          userLikes={userLikes}
+                          uiLanguage={uiLanguage}
+                          onLikeToggle={handleLikeToggle}
+                          onSaveToPlaylist={handleSaveToPlaylist}
+                        />
+                      </div>
                     </div>
                   </div>
                 )

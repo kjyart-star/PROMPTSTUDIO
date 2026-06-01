@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Track, Album, Artist } from '@/types/music'
 import { Play, Pause, Heart, Trophy, ArrowUp, ArrowDown, Minus, RefreshCw, Music, Search } from 'lucide-react'
+import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { usePlayerStore } from '@/stores/playerStore'
 import { AudioDuration } from '@/components/player/AudioDuration'
 import { createClient } from '@/lib/supabase/client'
+import { parsePlaylistDescription } from '@/lib/utils'
 
 const formatCount = (count: number) => {
   if (!count) return '0'
@@ -60,9 +62,28 @@ export function ChartClient({
   }, [initialChartItems])
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [myPlaylists, setMyPlaylists] = useState<any[]>([])
   
   const { currentTrack, isPlaying, playTrack, togglePlay, setNowPlayingOpen } = usePlayerStore()
   const supabase = createClient()
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        
+      if (data) {
+        setMyPlaylists(data.filter((p: any) => parsePlaylistDescription(p.description).type === 'playlist'))
+      }
+    }
+    fetchPlaylists()
+  }, [])
 
   const [localGenre, setLocalGenre] = useState(searchParams.get('genre') || 'All')
   const [uiLanguage, setUiLanguage] = useState('KO')
@@ -200,6 +221,28 @@ export function ChartClient({
     } catch (err) {
       console.error(err)
       alert('좋아요 처리에 실패했습니다.')
+    }
+  }
+
+  // 플레이리스트에 담기
+  const handleSaveToPlaylist = async (trackId: string, playlistId: string) => {
+    try {
+      const res = await fetch('/api/playlists/save-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track_id: trackId, playlist_id: playlistId })
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert('로그인이 필요한 기능입니다.')
+          return
+        }
+        throw new Error('Failed to save track')
+      }
+      alert(uiLanguage === 'KO' ? '플레이리스트에 담겼습니다.' : uiLanguage === 'JA' ? 'プレイリストに追加されました。' : 'Saved to playlist.')
+    } catch (err) {
+      console.error(err)
+      alert(uiLanguage === 'KO' ? '플레이리스트 담기에 실패했습니다.' : uiLanguage === 'JA' ? '追加に失敗しました。' : 'Failed to save track.')
     }
   }
 
@@ -414,7 +457,7 @@ export function ChartClient({
 
       {/* 랭킹 리스트 */}
       <section className="space-y-4">
-        <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl shadow-xl">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
@@ -504,22 +547,38 @@ export function ChartClient({
                         {formatCount(playCount)}
                       </td>
  
-                      {/* 좋아요 */}
+                      {/* 좋아요 및 담기 */}
                       <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => handleLikeToggle(track.id)}
-                          className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-white/[0.04] transition-all text-xs font-bold cursor-pointer ${
-                            userLikes.includes(track.id) ? 'text-primary' : 'text-on-surface-variant/60 hover:text-primary'
-                          }`}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
-                          <span className="font-mono">{track.like_count || 0}</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleLikeToggle(track.id)}
+                            className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-white/[0.04] transition-all text-xs font-bold cursor-pointer ${
+                              userLikes.includes(track.id) ? 'text-primary' : 'text-on-surface-variant/60 hover:text-primary'
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
+                            <span className="font-mono">{track.like_count || 0}</span>
+                          </button>
+                        </div>
                       </td>
  
                       {/* 시간 */}
                       <td className="py-4 px-6 font-mono text-xs text-on-surface-variant text-right w-20">
                         <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
+                      </td>
+
+                      {/* 더보기 (점) */}
+                      <td className="py-4 px-6 text-right w-16">
+                        <div className="flex items-center justify-center gap-1">
+                          <TrackDropdown
+                            track={track}
+                            myPlaylists={myPlaylists}
+                            userLikes={userLikes}
+                            uiLanguage={uiLanguage}
+                            onLikeToggle={handleLikeToggle}
+                            onSaveToPlaylist={handleSaveToPlaylist}
+                          />
+                        </div>
                       </td>
                     </tr>
                   )

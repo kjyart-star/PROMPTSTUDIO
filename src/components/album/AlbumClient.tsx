@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Album, Track } from '@/types/music'
 import { Play, Pause, Heart, Clock, Library, FileText, MoreHorizontal } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { usePlayerStore } from '@/stores/playerStore'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -67,6 +69,25 @@ export function AlbumClient({
   const [expandedLyricsTrackId, setExpandedLyricsTrackId] = useState<string | null>(null)
   
   const [isAlbumLiked, setIsAlbumLiked] = useState<boolean>(false)
+  const [myPlaylists, setMyPlaylists] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        
+      if (data) {
+        setMyPlaylists(data.filter((p: any) => parsePlaylistDescription(p.description).type === 'playlist'))
+      }
+    }
+    fetchPlaylists()
+  }, [])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -176,6 +197,27 @@ export function AlbumClient({
     } catch (err) {
       console.error(err)
       alert('좋아요 처리에 실패했습니다.')
+    }
+  }
+
+  const handleSaveToPlaylist = async (trackId: string, playlistId: string) => {
+    try {
+      const res = await fetch('/api/playlists/save-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track_id: trackId, playlist_id: playlistId })
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert('로그인이 필요한 기능입니다.')
+          return
+        }
+        throw new Error('Failed to save track')
+      }
+      alert('플레이리스트에 담겼습니다.')
+    } catch (err) {
+      console.error(err)
+      alert('플레이리스트 담기에 실패했습니다.')
     }
   }
 
@@ -416,22 +458,34 @@ export function AlbumClient({
                     </div>
                   </div>
 
-                  {/* Likes */}
-                  <div className="text-right">
+                  {/* Likes and Add to Playlist */}
+                  <div className="text-right flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleLikeToggle(track.id)}
                       className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-slate-900/50 transition-all text-xs font-semibold cursor-pointer ${
                         userLikes.includes(track.id) ? 'text-primary' : 'text-slate-400 hover:text-primary'
                       }`}
                     >
-                      <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
+                      <Heart className={`w-4 h-4 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
                       <span className="font-mono">{track.like_count || 0}</span>
                     </button>
                   </div>
 
                   {/* Duration */}
-                  <div className="font-mono text-xs text-slate-400 text-right">
+                  <div className="font-mono text-xs text-slate-400 text-right w-16">
                     {track.duration_sec ? `${Math.floor(track.duration_sec / 60)}:${(track.duration_sec % 60).toString().padStart(2, '0')}` : '-'}
+                  </div>
+                  
+                  {/* More Options */}
+                  <div className="flex items-center justify-center gap-1">
+                    <TrackDropdown
+                      track={track}
+                      myPlaylists={myPlaylists}
+                      userLikes={userLikes}
+                      uiLanguage="KO"
+                      onLikeToggle={handleLikeToggle}
+                      onSaveToPlaylist={handleSaveToPlaylist}
+                    />
                   </div>
 
                 </div>

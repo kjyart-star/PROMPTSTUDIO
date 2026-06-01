@@ -5,8 +5,10 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Track, Album, Artist } from '@/types/music'
 import { Play, Pause, Heart, Users, Library, Music, Search } from 'lucide-react'
+import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
+import { parsePlaylistDescription } from '@/lib/utils'
 
 interface SearchClientProps {
   initialQuery: string
@@ -33,6 +35,25 @@ export function SearchClient({
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [localSearchQuery, setLocalSearchQuery] = useState('')
+  const [myPlaylists, setMyPlaylists] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      
+      const { data } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        
+      if (data) {
+        setMyPlaylists(data.filter((p: any) => parsePlaylistDescription(p.description).type === 'playlist'))
+      }
+    }
+    fetchPlaylists()
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -144,6 +165,28 @@ export function SearchClient({
     }
   }
 
+  // Save to Playlist handler
+  const handleSaveToPlaylist = async (trackId: string, playlistId: string) => {
+    try {
+      const res = await fetch('/api/playlists/save-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track_id: trackId, playlist_id: playlistId })
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert('로그인이 필요한 기능입니다.')
+          return
+        }
+        throw new Error('Failed to save track')
+      }
+      alert(uiLanguage === 'KO' ? '플레이리스트에 담겼습니다.' : uiLanguage === 'JA' ? 'プレイリストに追加されました。' : 'Saved to playlist.')
+    } catch (err) {
+      console.error(err)
+      alert(uiLanguage === 'KO' ? '플레이리스트 담기에 실패했습니다.' : uiLanguage === 'JA' ? '追加に失敗しました。' : 'Failed to save track.')
+    }
+  }
+
   // Play handler
   const handlePlayTrack = async (track: Track) => {
     setNowPlayingOpen(true)
@@ -245,16 +288,16 @@ export function SearchClient({
             {displayedTracks.length === 0 ? (
               <p className="text-xs text-on-surface-variant/60 font-medium">No matching songs found.</p>
             ) : (
-              <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl overflow-hidden shadow-xl">
+              <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl shadow-xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
-                      <th className="py-4 px-6 w-16 text-center">#</th>
-                      <th className="py-4 px-6">Title</th>
-                      <th className="py-4 px-6">Album</th>
-                      <th className="py-4 px-6 w-24 text-right">Plays</th>
-                      <th className="py-4 px-6 w-24 text-center">Like</th>
-                      <th className="py-4 px-6 w-20 text-right">Time</th>
+                      <th className="py-4.5 px-6 font-black tracking-widest text-center w-20 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '순위' : uiLanguage === 'JA' ? '順位' : 'Rank'}</th>
+                      <th className="py-4.5 px-4 font-black tracking-widest border-b border-white/[0.04]">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック' : 'Track'}</th>
+                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-24 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '재생수' : uiLanguage === 'JA' ? '再生数' : 'Plays'}</th>
+                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-24 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね数' : 'Likes'}</th>
+                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-20 border-b border-white/[0.04]">{uiLanguage === 'KO' ? '시간' : uiLanguage === 'JA' ? '時間' : 'Time'}</th>
+                      <th className="py-4.5 px-6 font-black tracking-widest text-right w-16 border-b border-white/[0.04]"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03] text-xs">
@@ -264,17 +307,18 @@ export function SearchClient({
                       return (
                         <tr
                           key={track.id}
-                          className={`hover:bg-white/[0.02] border-b border-white/[0.03] last:border-0 transition-all duration-200 group ${
+                          className={`hover:bg-white/[0.02] transition-all group ${
                             isCurrent ? 'bg-primary/10' : ''
                           }`}
                         >
-                          <td className="py-4 px-6 font-mono text-on-surface-variant/60 text-center w-16">
-                            <span className={`${isCurrent ? 'text-primary' : ''}`}>{idx + 1}</span>
+                          <td className="py-4 px-6 text-center w-20">
+                            <span className={`font-mono font-black text-sm ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>{idx + 1}</span>
                           </td>
-                          <td className="py-4 px-6">
+                          
+                          <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
-                              <div 
-                                className="relative w-10 h-10 bg-surface-container-lowest border border-outline-variant/20 rounded overflow-hidden shrink-0 flex items-center justify-center cursor-pointer group/cover"
+                              <button 
+                                className="w-14 h-14 bg-surface-container-lowest border border-outline-variant/20 rounded overflow-hidden shrink-0 flex items-center justify-center relative cursor-pointer group/cover"
                                 onClick={() => handlePlayTrack(track)}
                               >
                                 {track.album?.cover_url ? (
@@ -284,47 +328,64 @@ export function SearchClient({
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <Music className="w-4 h-4 text-zinc-700" />
+                                  <Music className="w-5 h-5 text-zinc-650" />
                                 )}
                                 
-                                <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-200 ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-200 ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                   {isCurrent && isPlaying ? (
-                                    <div className="flex items-end justify-center gap-[3px] h-3.5 w-3.5">
-                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                      <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="flex items-end justify-center gap-[3px] h-4 w-4">
+                                      <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                      <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                      <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
                                     </div>
                                   ) : (
-                                    <Play className="w-4 h-4 fill-white text-white drop-shadow-md" />
+                                    <Play className="w-5 h-5 fill-current text-white" />
                                   )}
                                 </div>
-                              </div>
+                              </button>
                               <div className="min-w-0">
-                                <span className={`font-bold block truncate max-w-md ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>
+                                <span 
+                                  onClick={() => handlePlayTrack(track)}
+                                  className={`font-bold block truncate max-w-sm sm:max-w-md cursor-pointer hover:underline ${isCurrent ? 'text-primary' : 'text-on-surface'}`}
+                                >
                                   {track.title}
                                 </span>
-                                <span className="text-[10px] text-on-surface-variant/80 truncate max-w-md block mt-0.5 font-medium">
-                                  {track.album?.artist?.name}
+                                <span className="text-[10px] text-on-surface-variant/80 truncate max-w-sm sm:max-w-md block mt-0.5 font-medium">
+                                  {track.album?.artist?.name || 'Unknown Artist'} &bull; {track.album?.title || 'Single'}
                                 </span>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-on-surface-variant font-medium truncate max-w-xs">
-                            {track.album?.title}
-                          </td>
-                          <td className="py-4 px-6 text-right font-mono text-on-surface-variant">
+                          <td className="py-4 px-6 text-right font-mono text-on-surface-variant/80 text-xs">
                             {playCount.toLocaleString()}
                           </td>
-                          <td className="py-4 px-6 text-center">
-                            <button
-                              onClick={() => handleLikeToggle(track.id)}
-                              className="text-on-surface-variant/80 hover:text-primary transition-colors p-1"
-                            >
-                              <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
-                            </button>
+                          <td className="py-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => handleLikeToggle(track.id)}
+                                className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-white/[0.04] transition-all text-xs font-bold cursor-pointer ${
+                                  userLikes.includes(track.id) ? 'text-primary' : 'text-on-surface-variant/60 hover:text-primary'
+                                }`}
+                              >
+                                <Heart className={`w-4 h-4 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
+                                <span className="font-mono">{track.like_count || 0}</span>
+                              </button>
+                            </div>
                           </td>
-                          <td className="py-4 px-6 font-mono text-on-surface-variant/60 text-right w-20">
+                          <td className="py-4 px-6 font-mono text-xs text-on-surface-variant text-right w-20">
                             {track.duration_sec ? `${Math.floor(track.duration_sec / 60)}:${(track.duration_sec % 60).toString().padStart(2, '0')}` : '-'}
+                          </td>
+                          <td className="py-4 px-6 text-right w-16">
+                            <div className="flex items-center justify-center gap-1">
+                              <TrackDropdown
+                                track={track}
+                                myPlaylists={myPlaylists}
+                                userLikes={userLikes}
+                                uiLanguage={uiLanguage}
+                                onLikeToggle={handleLikeToggle}
+                                onSaveToPlaylist={handleSaveToPlaylist}
+                              />
+                            </div>
                           </td>
                         </tr>
                       )

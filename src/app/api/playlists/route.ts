@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 
 export async function GET(request: Request) {
   try {
@@ -77,6 +78,15 @@ export async function GET(request: Request) {
       filteredData = filteredData.filter(item => !item.description?.startsWith('[playlist]'))
     }
 
+    // Add parent_id to the response by parsing the description
+    filteredData = filteredData.map(item => {
+      const parsed = parsePlaylistDescription(item.description)
+      return {
+        ...item,
+        parent_id: parsed.parentId || null
+      }
+    })
+
     return NextResponse.json(filteredData)
   } catch (err: any) {
     console.error('API GET playlists error:', err)
@@ -94,10 +104,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, cover_url, description, genre, is_published, exposure_order } = body
+    const { title, cover_url, description, genre, is_published, exposure_order, parent_id, type } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    }
+    
+    // Default to playlist if parent_id is provided, otherwise let caller specify description
+    // If description is already serialized, use it, else serialize it
+    let finalDescription = description || '';
+    if (parent_id !== undefined || type === 'playlist') {
+      const descObj = parsePlaylistDescription(description);
+      finalDescription = serializePlaylistDescription('playlist', descObj.text || description || '', parent_id || descObj.parentId);
     }
 
     const { data, error } = await supabase
@@ -106,7 +124,7 @@ export async function POST(request: Request) {
         user_id: user.id,
         title,
         cover_url: cover_url || '/default-album.png',
-        description: description || '',
+        description: finalDescription,
         genre: genre || '',
         is_published: is_published !== undefined ? is_published : false,
         exposure_order: exposure_order !== undefined ? exposure_order : null
@@ -118,6 +136,9 @@ export async function POST(request: Request) {
       console.error('API POST playlists DB error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    
+    const parsed = parsePlaylistDescription(data.description)
+    data.parent_id = parsed.parentId || null;
 
     return NextResponse.json(data)
   } catch (err: any) {
