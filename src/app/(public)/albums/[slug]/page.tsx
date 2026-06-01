@@ -13,7 +13,11 @@ interface PageProps {
 export const revalidate = 0
 
 export default async function PublicAlbumDetailPage({ params }: PageProps) {
+export default async function PublicAlbumDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params
+  const resolvedSearchParams = await searchParams;
+  const artistSlug = resolvedSearchParams?.artist as string | undefined;
+
   const supabase = await createClient()
 
   // 1. 로그인 사용자 좋아요 목록 로드
@@ -39,12 +43,22 @@ export default async function PublicAlbumDetailPage({ params }: PageProps) {
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4">
         <h2 className="text-2xl font-bold text-on-surface mb-2">앨범을 찾을 수 없습니다.</h2>
         <p className="text-on-surface-variant mb-6">존재하지 않거나 삭제된 앨범입니다.</p>
-        <Link 
-          href="/" 
-          className="px-6 py-2 bg-primary text-black rounded-full font-bold hover:bg-primary/90 transition-colors"
-        >
-          홈으로 돌아가기
-        </Link>
+        <div className="flex items-center justify-center gap-4">
+          <Link 
+            href="/" 
+            className="px-6 py-2 bg-primary text-black rounded-full font-bold hover:bg-primary/90 transition-colors"
+          >
+            홈으로 돌아가기
+          </Link>
+          {artistSlug && (
+            <Link 
+              href={`/artists/${artistSlug}`} 
+              className="px-6 py-2 bg-surface-container-highest text-on-surface rounded-full font-bold hover:bg-surface-container-highest/80 transition-colors"
+            >
+              제작자 채널로 이동
+            </Link>
+          )}
+        </div>
       </div>
     )
   }

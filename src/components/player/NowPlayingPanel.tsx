@@ -532,7 +532,8 @@ export function NowPlayingPanel() {
                         if (isUUID) {
                           if (typeof window !== 'undefined') window.location.href = `/profile?tab=albums&playlistId=${slug}`
                         } else {
-                          if (typeof window !== 'undefined') window.location.href = `/albums/${slug}`
+                          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+                          if (typeof window !== 'undefined') window.location.href = `/albums/${slug}?artist=${artistSlug}`
                         }
                       } else {
                         if (window.confirm(lang === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : "This track does not have an associated album.\nGo to the creator's channel?")) {

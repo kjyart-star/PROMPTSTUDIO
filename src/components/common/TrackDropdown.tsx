@@ -104,7 +104,8 @@ export function TrackDropdown({
         }
       } else {
         if (typeof window !== 'undefined') {
-          window.location.href = `/albums/${slug}`
+          const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
+          window.location.href = `/albums/${slug}?artist=${artistSlug}`
         }
       }
     } else {
