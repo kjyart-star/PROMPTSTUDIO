@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { HomeClient } from '@/components/home/HomeClient'
 import { Track, Album, Artist } from '@/types/music'
+import { parsePlaylistDescription } from '@/lib/utils'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -16,8 +17,7 @@ export default async function PublicHomePage() {
     latestSnapshotRes,
     recommendedRes,
     latestTracksRes,
-    albumsRes,
-    popularAlbumsRes,
+    userPlaylistsRes,
     artistsRes
   ] = await Promise.all([
     supabase.auth.getUser(),
@@ -43,16 +43,10 @@ export default async function PublicHomePage() {
       .eq('status', 'published')
       .order('created_at', { ascending: false })
       .limit(10),
-    supabase.from('albums')
-      .select('*, artists(*)')
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(10),
-    supabase.from('albums')
-      .select('*, artists(*)')
-      .eq('status', 'published')
-      .order('total_likes', { ascending: false })
-      .limit(10),
+    supabase.from('user_playlists')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false }),
     supabase.from('artists')
       .select('*')
       .order('created_at', { ascending: false })
@@ -64,14 +58,25 @@ export default async function PublicHomePage() {
   const latestSnapshot = latestSnapshotRes.data
   const dbRecommended = recommendedRes.data || []
   const dbLatest = latestTracksRes.data || []
-  const albumsData = albumsRes.data || []
-  const popularAlbumsData = popularAlbumsRes.data || []
+  const userPlaylistsData = userPlaylistsRes.data || []
   const artistsData = artistsRes.data || []
   console.log('=== DEBUG ARTISTS_DATA ===', artistsData.map((a: any) => a.name))
 
+  // Filter user_playlists to get only albums
+  const dbAlbums = userPlaylistsData.filter((p: any) => {
+    const { type } = parsePlaylistDescription(p.description)
+    return type === 'album'
+  })
+
   // 2. Dependent queries in parallel
-  const userIds = [...new Set(realSongs.map((s: any) => s.user_id).filter(Boolean))]
-  const channelIds = [...new Set(realSongs.map((s: any) => s.channel_id).filter(Boolean))]
+  const albumUserIds = dbAlbums.map((a: any) => a.user_id).filter(Boolean)
+  const userIds = [...new Set([...realSongs.map((s: any) => s.user_id), ...albumUserIds].filter(Boolean))]
+
+  const albumChannelIds = dbAlbums
+    .map((a: any) => parsePlaylistDescription(a.description).channelId)
+    .filter(Boolean)
+  const channelIds = [...new Set([...realSongs.map((s: any) => s.channel_id), ...albumChannelIds].filter(Boolean))]
+
   const playlistIds = [...new Set(realSongs.map((s: any) => s.playlist_id).filter(Boolean))]
   const latestDateStr = latestSnapshot?.period_date || null
 
@@ -88,8 +93,10 @@ export default async function PublicHomePage() {
     userIds.length > 0
       ? supabase.from('profiles').select('*').in('id', userIds)
       : Promise.resolve({ data: null }),
-    channelIds.length > 0
-      ? supabase.from('artists').select('*').in('id', channelIds)
+    channelIds.length > 0 || userIds.length > 0
+      ? supabase.from('artists')
+          .select('*')
+          .or(`id.in.(${[...channelIds, '00000000-0000-0000-0000-000000000000'].join(',')}),owner_user_id.in.(${[...userIds, '00000000-0000-0000-0000-000000000000'].join(',')})`)
       : Promise.resolve({ data: null }),
     latestDateStr
       ? supabase.from('chart_snapshots')
@@ -251,15 +258,54 @@ export default async function PublicHomePage() {
   initialLatestTracks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   initialLatestTracks = initialLatestTracks.slice(0, 10)
 
-  const initialAlbums: Album[] = albumsData.map((album: any) => ({
-    ...album,
-    artist: album.artists
-  }))
+  // Map user_playlists to Album structures
+  const mappedAlbums: Album[] = dbAlbums.map((playlist: any) => {
+    const parsedDesc = parsePlaylistDescription(playlist.description)
+    const songChannel = channelsData.find((c: any) => c.id === parsedDesc.channelId || c.owner_user_id === playlist.user_id)
+    const songProfile = profilesData.find((p: any) => p.id === playlist.user_id)
 
-  const initialPopularAlbums: Album[] = popularAlbumsData.map((album: any) => ({
-    ...album,
-    artist: album.artists
-  }))
+    const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
+    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
+    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
+    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+    const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
+
+    return {
+      id: playlist.id,
+      slug: playlist.id,
+      artist_id: finalArtistId,
+      title: playlist.title,
+      release_type: 'lp',
+      cover_url: playlist.cover_url || '/default-album.png',
+      release_date: playlist.created_at,
+      genres: playlist.genre ? [playlist.genre] : [],
+      moods: [],
+      description: parsedDesc.text || `${playlist.title} 앨범입니다.`,
+      status: 'published',
+      generation_tool: 'Suno AI',
+      total_plays: playlist.plays || 0,
+      total_likes: 0,
+      created_at: playlist.created_at,
+      updated_at: playlist.created_at,
+      artist: {
+        id: finalArtistId,
+        slug: finalArtistSlug,
+        name: finalArtistName,
+        bio: finalBio,
+        avatar_url: finalAvatarUrl,
+        banner_url: songChannel?.banner_url || null,
+        links: null,
+        is_ai_generated: true,
+        owner_user_id: playlist.user_id,
+        created_at: playlist.created_at,
+        updated_at: playlist.created_at,
+        is_user: true
+      }
+    }
+  })
+
+  const initialAlbums: Album[] = mappedAlbums
+  const initialPopularAlbums: Album[] = [...mappedAlbums].sort((a, b) => (b.total_plays || 0) - (a.total_plays || 0))
 
   const profileArtists: Artist[] = profilesData.map((profile: any) => {
     return {
@@ -295,3 +341,4 @@ export default async function PublicHomePage() {
     />
   )
 }
+

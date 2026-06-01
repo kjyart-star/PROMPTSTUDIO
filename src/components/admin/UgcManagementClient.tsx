@@ -172,11 +172,11 @@ export function UgcManagementClient() {
   return (
     <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-          <Shield className="w-8 h-8 text-violet-400" />
+        <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+          <Shield className="w-6 h-6 text-primary shrink-0" />
           사용자 퍼블리싱 관리 (UGC)
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-xs sm:text-sm text-zinc-400 mt-2">
           일반 사용자들이 내 채널에 퍼블리싱한 음원 및 앨범을 모니터링하고, 저작권 침해나 약관 위반 시 즉시 비공개(퍼블리싱 가리기) 처리합니다.
         </p>
       </div>

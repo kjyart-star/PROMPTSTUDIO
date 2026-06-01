@@ -13,6 +13,7 @@ import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { AudioDuration } from '@/components/player/AudioDuration'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { AlbumCard } from '@/components/common/AlbumCard'
 
 interface HomeClientProps {
   initialTracks: Track[]
@@ -634,42 +635,19 @@ export function HomeClient({
   initialRecommendedTracks = [],
   initialLatestTracks = []
 }: HomeClientProps) {
-  const displayTracks = (initialTracks.length > 0 ? initialTracks : DUMMY_TRACKS) as Track[]
-  const initialMergedArtists = (() => {
-    const merged = [...initialArtists]
-    DUMMY_ARTISTS.forEach((dummy) => {
-      if (!merged.some((a) => a.slug === dummy.slug)) {
-        merged.push({ ...dummy, is_user: false, is_dummy: true } as any)
-      }
-    })
-    return merged.sort((a, b) => {
-      const isDummyA = !!(a as any).is_dummy
-      const isDummyB = !!(b as any).is_dummy
-      if (isDummyA !== isDummyB) {
-        return isDummyA ? 1 : -1
-      }
-      const isUserA = !!a.is_user
-      const isUserB = !!b.is_user
-      if (isUserA !== isUserB) {
-        return isUserA ? -1 : 1
-      }
-      return (b.followers || 0) - (a.followers || 0)
-    })
-  })()
-  const displayAlbums = (initialAlbums.length > 0 ? initialAlbums : DUMMY_ALBUMS) as Album[]
-  const displayPopularAlbums = (initialPopularAlbums.length > 0 ? initialPopularAlbums : DUMMY_ALBUMS) as Album[]
-
-  const displayRecommendedTracks = (() => {
-    if (initialRecommendedTracks.length >= 12) {
-      return initialRecommendedTracks
+  const displayTracks = initialTracks as Track[]
+  const initialMergedArtists = [...(initialArtists || [])].sort((a, b) => {
+    const isUserA = !!a.is_user
+    const isUserB = !!b.is_user
+    if (isUserA !== isUserB) {
+      return isUserA ? -1 : 1
     }
-    const dummies = generateDummyTracks(DUMMY_RECOMMENDED_BASE_TRACKS, 12 - initialRecommendedTracks.length)
-    return [...initialRecommendedTracks, ...dummies]
-  })() as Track[]
-
-  const displayLatestTracks = (initialLatestTracks.length > 0
-    ? initialLatestTracks
-    : generateDummyTracks(DUMMY_LATEST_BASE_TRACKS, 10)) as Track[]
+    return (b.followers || 0) - (a.followers || 0)
+  })
+  const displayAlbums = initialAlbums || []
+  const displayPopularAlbums = initialPopularAlbums || []
+  const displayRecommendedTracks = initialRecommendedTracks || []
+  const displayLatestTracks = initialLatestTracks || []
 
   const [tracks, setTracks] = useState<Track[]>(displayTracks)
   const isRealTrack = (track: any) => {
@@ -730,7 +708,6 @@ export function HomeClient({
   }, [])
 
   const [activeTab, setActiveTab] = useState<'trending' | 'latest' | 'featured'>('trending')
-  const [likedAlbums, setLikedAlbums] = useState<string[]>([])
   const [heroImageIndex, setHeroImageIndex] = useState(0)
 
   const heroImages = [
@@ -746,29 +723,7 @@ export function HomeClient({
     return () => clearInterval(interval)
   }, [heroImages.length])
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('user_liked_albums')
-      if (stored) {
-        try {
-          setLikedAlbums(JSON.parse(stored))
-        } catch (e) {
-          console.error(e)
-        }
-      }
-    }
-  }, [])
 
-  const handleAlbumLikeToggle = (albumId: string) => {
-    let next: string[]
-    if (likedAlbums.includes(albumId)) {
-      next = likedAlbums.filter((id) => id !== albumId)
-    } else {
-      next = [...likedAlbums, albumId]
-    }
-    setLikedAlbums(next)
-    localStorage.setItem('user_liked_albums', JSON.stringify(next))
-  }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1040,14 +995,26 @@ export function HomeClient({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 shrink-0">
-                    <span className="text-[11px] font-mono text-on-surface-variant w-24 text-right">
+                  <div className="flex items-center gap-4 shrink-0">
+                    <span className="text-[11px] font-mono text-on-surface-variant w-16 text-right">
                       {playCount.toLocaleString()}
                     </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleLikeToggle(track.id)
+                      }}
+                      className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-white/[0.04] transition-all text-xs font-bold cursor-pointer ${
+                        userLikes.includes(track.id) ? 'text-primary' : 'text-on-surface-variant/60 hover:text-primary'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
+                      <span className="font-mono w-8 text-left">{track.like_count || 0}</span>
+                    </button>
                     <div className="text-xs text-on-surface-variant w-12 text-right tabular-nums">
                       <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
                     </div>
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1 ml-2">
                       <TrackDropdown
                         track={track}
                         myPlaylists={myPlaylists}
@@ -1121,75 +1088,9 @@ export function HomeClient({
 
         <Carousel
           items={displayPopularAlbums.slice(0, 10)}
-          renderItem={(album, index) => {
-            const playCount = album.total_plays || (album.id.startsWith('album-') ? (album.title.length * 850 + 1200) : 0)
-            const likeCount = album.total_likes || (album.id.startsWith('album-') ? (album.title.length * 35 + 80) : 0)
-            return (
-              <div
-                key={album.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
-              >
-                <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
-                  <Link 
-                    href={`/albums/${album.slug || album.id}`} 
-                    className="block w-full h-full cursor-pointer z-10"
-                  >
-                    {album.cover_url ? (
-                      <img
-                        src={album.cover_url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                      />
-                    ) : (
-                      <Library className="w-8 h-8 text-on-surface-variant/40" />
-                    )}
-                  </Link>
-
-                  {/* Rank badge top-left */}
-                  <span className="absolute top-2.5 left-2.5 text-[9px] font-black px-2 py-0.5 rounded bg-primary text-[#070709] tracking-wider scale-95 z-20 shadow-md">
-                    {index + 1}위
-                  </span>
-                  
-                  {/* Floating Circular Heart Button on Hover */}
-                  <div className="absolute top-2.5 right-2.5 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleAlbumLikeToggle(album.id)
-                      }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
-                        likedAlbums.includes(album.id)
-                          ? 'bg-primary text-[#080d08]'
-                          : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
-                      }`}
-                      title="앨범 좋아요"
-                    >
-                      <Heart className={`w-4 h-4 ${likedAlbums.includes(album.id) ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-
-                  {/* Bottom Text Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end pt-8 z-10 pointer-events-none">
-                    <p className="font-bold text-xs text-white truncate">
-                      {album.title}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-semibold mt-1 font-mono">
-                      <span className="flex items-center gap-0.5">
-                        <Play className="w-2.5 h-2.5 text-zinc-300 fill-current" />
-                        {formatCount(playCount)}
-                      </span>
-                      <span className="text-zinc-500">•</span>
-                      <span className="flex items-center gap-0.5">
-                        <Heart className={`w-2.5 h-2.5 text-zinc-300 ${likedAlbums.includes(album.id) ? 'fill-current text-primary' : ''}`} />
-                        <span>{formatCount(likeCount + (likedAlbums.includes(album.id) ? 1 : 0))}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          }}
+          renderItem={(album, index) => (
+            <AlbumCard key={album.id} album={album} variant="home" rank={index + 1} />
+          )}
         />
       </section>
 
@@ -1293,25 +1194,25 @@ export function HomeClient({
                   </div>
 
                   {/* Stats Row */}
-                  <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5 justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1">
-                        <Play className="w-3.5 h-3.5 text-zinc-500 fill-current" />
-                        {formatCount(playCount)} Plays
-                      </span>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleLikeToggle(track.id)
-                        }}
-                        className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        title="좋아요"
-                      >
-                        <Heart className={`w-3.5 h-3.5 text-zinc-500 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
-                        <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))} Likes</span>
-                      </button>
-                    </div>
-                    <TrackDropdown
+                    <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5 justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          <Play className="w-3.5 h-3.5 text-zinc-500 fill-current" />
+                          {formatCount(playCount)} Plays
+                        </span>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleLikeToggle(track.id)
+                          }}
+                          className={`flex items-center gap-1 transition-colors cursor-pointer ${userLikes.includes(track.id) ? 'text-primary font-bold' : 'hover:text-primary'}`}
+                          title="좋아요"
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : 'text-zinc-500'}`} />
+                          <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))} Likes</span>
+                        </button>
+                      </div>
+                      <TrackDropdown
                       track={track}
                       myPlaylists={myPlaylists}
                       userLikes={userLikes}
@@ -1343,75 +1244,9 @@ export function HomeClient({
 
         <Carousel
           items={displayAlbums.slice(0, 10)}
-          renderItem={(album) => {
-            const playCount = album.total_plays || (album.id.startsWith('album-') ? (album.title.length * 850 + 1200) : 0)
-            const likeCount = album.total_likes || (album.id.startsWith('album-') ? (album.title.length * 35 + 80) : 0)
-            return (
-              <div
-                key={album.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
-              >
-                <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
-                  <Link 
-                    href={`/albums/${album.slug || album.id}`} 
-                    className="block w-full h-full cursor-pointer z-10"
-                  >
-                    {album.cover_url ? (
-                      <img
-                        src={album.cover_url}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                      />
-                    ) : (
-                      <Library className="w-8 h-8 text-on-surface-variant/40" />
-                    )}
-                  </Link>
-
-                  {/* Album badge top-left */}
-                  <span className="absolute top-2.5 left-2.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-[#070709] uppercase tracking-wider scale-90 z-20">
-                    {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'ALBUM'}
-                  </span>
-                  
-                  {/* Floating Circular Heart Button on Hover */}
-                  <div className="absolute top-2.5 right-2.5 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleAlbumLikeToggle(album.id)
-                      }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
-                        likedAlbums.includes(album.id)
-                          ? 'bg-primary text-[#080d08]'
-                          : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
-                      }`}
-                      title="앨범 좋아요"
-                    >
-                      <Heart className={`w-4 h-4 ${likedAlbums.includes(album.id) ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-
-                  {/* Bottom Text Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end pt-8 z-10 pointer-events-none">
-                    <p className="font-bold text-xs text-white truncate">
-                      {album.title}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-semibold mt-1 font-mono">
-                      <span className="flex items-center gap-0.5">
-                        <Play className="w-2.5 h-2.5 text-zinc-300 fill-current" />
-                        {formatCount(playCount)}
-                      </span>
-                      <span className="text-zinc-500">•</span>
-                      <span className="flex items-center gap-0.5">
-                        <Heart className={`w-2.5 h-2.5 text-zinc-300 ${likedAlbums.includes(album.id) ? 'fill-current text-primary' : ''}`} />
-                        <span>{formatCount(likeCount + (likedAlbums.includes(album.id) ? 1 : 0))}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          }}
+          renderItem={(album) => (
+            <AlbumCard key={album.id} album={album} variant="home" />
+          )}
         />
       </section>
 
@@ -1483,7 +1318,22 @@ export function HomeClient({
                   
                   {/* Top Right Quick Controls */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center gap-1">
-                    <div className="bg-black/60 hover:bg-black/80 rounded-full">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleLikeToggle(track.id)
+                      }}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
+                        userLikes.includes(track.id)
+                          ? 'bg-primary text-[#080d08]'
+                          : 'bg-black/60 hover:bg-black/80 text-white'
+                      }`}
+                      title="좋아요"
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
+                    </button>
+                    <div className="bg-black/60 hover:bg-black/80 rounded-full w-8 h-8 flex items-center justify-center">
                       <TrackDropdown
                         track={track}
                         myPlaylists={myPlaylists}
@@ -1525,10 +1375,17 @@ export function HomeClient({
                       <Play className="w-2.5 h-2.5 text-zinc-500 fill-current" />
                       {formatCount(playCount)}
                     </span>
-                    <span className="flex items-center gap-0.5">
-                      <Heart className={`w-2.5 h-2.5 text-zinc-500 ${userLikes.includes(track.id) ? 'fill-current text-primary' : ''}`} />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleLikeToggle(track.id)
+                      }}
+                      className={`flex items-center gap-0.5 transition-colors cursor-pointer ${userLikes.includes(track.id) ? 'text-primary font-bold' : 'hover:text-primary'}`}
+                      title="좋아요"
+                    >
+                      <Heart className={`w-2.5 h-2.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : 'text-zinc-500'}`} />
                       <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))}</span>
-                    </span>
+                    </button>
                   </div>
                 </div>
               </div>

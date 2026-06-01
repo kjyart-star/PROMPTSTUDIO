@@ -7,6 +7,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { ShareDialog } from '@/components/common/ShareDialog'
+import { createPortal } from 'react-dom'
 
 interface TrackDropdownProps {
   track: Track;
@@ -34,22 +35,24 @@ export function TrackDropdown({
   const [showShare, setShowShare] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
-  
-  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isLiked = userLikes.includes(track.id)
 
-  useEffect(() => {
-    return () => {
-      if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current)
-      if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current)
-    }
-  }, [])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        (!menuRef.current || !menuRef.current.contains(target))
+      ) {
         setShowDropdown(false)
         setShowSubmenu(false)
       }
@@ -78,28 +81,6 @@ export function TrackDropdown({
     }
   }, [showDropdown])
 
-  const handleMouseEnterDropdown = () => {
-    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current)
-    setShowDropdown(true)
-  }
-
-  const handleMouseLeaveDropdown = () => {
-    dropdownTimeoutRef.current = setTimeout(() => {
-      setShowDropdown(false)
-      setShowSubmenu(false)
-    }, 150)
-  }
-
-  const handleMouseEnterPlaylist = () => {
-    if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current)
-    setShowSubmenu(true)
-  }
-
-  const handleMouseLeavePlaylist = () => {
-    submenuTimeoutRef.current = setTimeout(() => {
-      setShowSubmenu(false)
-    }, 150)
-  }
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -149,12 +130,23 @@ export function TrackDropdown({
     <div 
       ref={dropdownRef}
       className="relative"
-      onMouseEnter={handleMouseEnterDropdown}
-      onMouseLeave={handleMouseLeaveDropdown}
     >
       <button 
         onClick={(e) => {
           e.stopPropagation()
+          if (!showDropdown && dropdownRef.current) {
+            const rect = dropdownRef.current.getBoundingClientRect()
+            let top = rect.bottom + 8
+            if (top + 200 > window.innerHeight) {
+              top = rect.top - 200 // open upwards if not enough space below
+            }
+            setMenuStyle({
+              position: 'fixed',
+              top: top,
+              left: Math.max(8, rect.right - 224),
+              zIndex: 99999
+            })
+          }
           setShowDropdown(!showDropdown)
         }}
         className={`text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-white/[0.04] transition-all cursor-pointer flex items-center justify-center ${showDropdown ? 'text-primary bg-white/[0.04]' : ''}`}
@@ -163,16 +155,16 @@ export function TrackDropdown({
         <MoreHorizontal className="w-5 h-5" />
       </button>
 
-      {showDropdown && (
+      {mounted && showDropdown && createPortal(
         <div 
-          className="absolute right-0 top-full mt-2 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-50 p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-in fade-in slide-in-from-top-2 duration-100"
+          ref={menuRef}
+          style={menuStyle}
+          className="bg-[#282828] w-56 border border-zinc-800 rounded-lg shadow-2xl p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-in fade-in zoom-in-95 duration-100"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 플레이리스트에 추가하기 (Trigger sub-menu on hover) */}
           <div 
             className="relative"
-            onMouseEnter={handleMouseEnterPlaylist}
-            onMouseLeave={handleMouseLeavePlaylist}
           >
             <button
               onClick={(e) => {
@@ -192,8 +184,6 @@ export function TrackDropdown({
             {showSubmenu && (
               <div 
                 className="absolute right-[224px] top-0 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-[60] p-1.5 flex flex-col gap-1 text-xs font-bold text-zinc-200"
-                onMouseEnter={handleMouseEnterPlaylist}
-                onMouseLeave={handleMouseLeavePlaylist}
               >
                 {/* Search playlist */}
                 <div className="relative px-1 py-1">
@@ -292,11 +282,12 @@ export function TrackDropdown({
             <span>{uiLanguage === 'KO' ? '공유 (주소 복사)' : uiLanguage === 'JA' ? '共有' : 'Share'}</span>
           </button>
 
-        </div>
+        </div>,
+        document.body
       )}
       <ConfirmDialog
         isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
+        onCancel={() => setShowConfirm(false)}
         onConfirm={handleConfirmChannel}
         title={uiLanguage === 'KO' ? '앨범 정보 없음' : 'No Album Info'}
         message={uiLanguage === 'KO' 

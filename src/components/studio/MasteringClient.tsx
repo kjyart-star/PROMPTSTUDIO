@@ -493,12 +493,12 @@ export function MasteringClient() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto p-4 md:p-8 animate-in fade-in zoom-in-95 duration-500 text-white">
-      <div className="mb-10 flex flex-col items-center text-center">
-        <h1 className="text-4xl font-black tracking-tight flex items-center justify-center gap-4 mb-3 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-blue-500">
-          <Settings2 className="w-10 h-10 text-primary" />
-          Pro Audio Mastering Console
+      <div className="mb-8 flex flex-col gap-2">
+        <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+          <Sliders className="w-6 h-6 text-primary shrink-0" />
+          {uiLanguage === 'KO' ? 'AI 마스터링 스튜디오' : uiLanguage === 'JA' ? 'AIマスタリングスタジオ' : 'AI Mastering Studio'}
         </h1>
-        <p className="text-zinc-400 max-w-2xl text-lg">
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-3xl">
           {uiLanguage === 'KO' ? 'Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.' : uiLanguage === 'JA' ? 'Web Audio APIを使用した超高速オフラインレンダリング。真空管サチュレーションとステレオワイドナーを備えたプロフェッショナルなマスタリングツールです。' : 'Ultra-fast offline rendering based on Web Audio API. Professional studio mastering tool equipped with tube saturation and stereo widener.'}
         </p>
       </div>

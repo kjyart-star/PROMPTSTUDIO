@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { SearchClient } from '@/components/search/SearchClient'
+import { parsePlaylistDescription } from '@/lib/utils'
+import { Track, Album } from '@/types/music'
 
 interface PageProps {
   searchParams: Promise<{
@@ -20,12 +22,12 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
   const [
     { data: tracksData },
     { data: artistsData },
-    { data: albumsData },
+    { data: userPlaylistsData },
     { data: songHistoryData }
   ] = await Promise.all([
     supabase.from('tracks').select('*, album:albums(*, artist:artists(*))'),
     supabase.from('artists').select('*'),
-    supabase.from('albums').select('*, artist:artists(*)'),
+    supabase.from('user_playlists').select('*').eq('is_published', true).order('created_at', { ascending: false }),
     supabase.from('song_history').select('*').eq('status', 'completed')
   ])
 
@@ -144,13 +146,61 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
     }))
   ]
 
-  // 7. 앨범 정보 병합 (suno 가상 앨범 + albums)
-  const baseAlbums = (albumsData || []).map((album: any) => ({
-    ...album,
-    artist: album.artist
-  }))
-  const sunoAlbums = mappedRealSongs.map(song => song.album)
-  const initialAlbums = [...sunoAlbums, ...baseAlbums]
+  // 7. Filter and map user_playlists to Album structures
+  const rawPlaylists = userPlaylistsData || []
+  const dbAlbums = rawPlaylists.filter((p: any) => {
+    const { type } = parsePlaylistDescription(p.description)
+    return type === 'album'
+  })
+
+  const mappedAlbums: Album[] = dbAlbums.map((playlist: any) => {
+    const parsedDesc = parsePlaylistDescription(playlist.description)
+    const songChannel = (artistsData || []).find(
+      (c: any) => c.id === parsedDesc.channelId || c.owner_user_id === playlist.user_id
+    )
+    const songProfile = profiles.find((p: any) => p.id === playlist.user_id)
+
+    const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
+    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
+    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
+    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+    const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
+
+    return {
+      id: playlist.id,
+      slug: playlist.id,
+      artist_id: finalArtistId,
+      title: playlist.title,
+      release_type: 'lp',
+      cover_url: playlist.cover_url || '/default-album.png',
+      release_date: playlist.created_at,
+      genres: playlist.genre ? [playlist.genre] : [],
+      moods: [],
+      description: parsedDesc.text || `${playlist.title} 앨범입니다.`,
+      status: 'published',
+      generation_tool: 'Suno AI',
+      total_plays: playlist.plays || 0,
+      total_likes: 0,
+      created_at: playlist.created_at,
+      updated_at: playlist.created_at,
+      artist: {
+        id: finalArtistId,
+        slug: finalArtistSlug,
+        name: finalArtistName,
+        bio: finalBio,
+        avatar_url: finalAvatarUrl,
+        banner_url: songChannel?.banner_url || null,
+        links: null,
+        is_ai_generated: true,
+        owner_user_id: playlist.user_id,
+        created_at: playlist.created_at,
+        updated_at: playlist.created_at,
+        is_user: true
+      }
+    }
+  })
+
+  const initialAlbums: Album[] = mappedAlbums
 
   // 8. 로그인 사용자 좋아요 목록 로드 (likes + song_history liked)
   let initialUserLikes: string[] = []

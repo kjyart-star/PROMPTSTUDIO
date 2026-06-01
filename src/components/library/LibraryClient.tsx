@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
+import { AlbumCard } from '@/components/common/AlbumCard'
 
 
 interface LibraryClientProps {
@@ -814,15 +815,15 @@ export function LibraryClient({
       title: uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs',
       description: uiLanguage === 'KO' ? '내가 좋아하는 곡 보관함' : uiLanguage === 'JA' ? 'あなたのお気に入りのトラック' : 'Your liked tracks',
       cover_url: '/images/liked_cover.png',
-      tracks: (likedTracks.length > 0 ? likedTracks : DUMMY_PLAYLIST) as Track[],
+      tracks: likedTracks as Track[],
       type: 'PLAYLIST',
       isSystem: true,
       genre: '',
       isPublished: false,
       exposureOrder: null as number | null,
       stats: uiLanguage === 'KO' 
-        ? `회원님이 직접 만든 보관함 • ${likedTracks.length || DUMMY_PLAYLIST.length} songs` 
-        : uiLanguage === 'JA' ? `作成者：あなた • ${likedTracks.length || DUMMY_PLAYLIST.length} 曲` : `Created by you • ${likedTracks.length || DUMMY_PLAYLIST.length} songs`
+        ? `회원님이 직접 만든 보관함 • ${likedTracks.length} songs` 
+        : uiLanguage === 'JA' ? `作成者：あなた • ${likedTracks.length} 曲` : `Created by you • ${likedTracks.length} songs`
     },
     {
       id: 'liked-albums',
@@ -999,11 +1000,9 @@ export function LibraryClient({
         // 1. Folders List View (Initial state)
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2 border-b border-outline-variant/15">
-            <div className="flex items-center gap-2.5">
-              <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
-                <ListMusic className="w-2.5 h-2.5 text-primary" />
-              </span>
-              <h1 className="text-sm font-black uppercase tracking-widest text-on-surface">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+                <ListMusic className="w-6 h-6 text-primary shrink-0" />
                 {uiLanguage === 'KO' ? '보관함 플레이리스트' : uiLanguage === 'JA' ? 'ライブラリプレイリスト' : 'Library Playlists'}
               </h1>
             </div>
@@ -1152,11 +1151,43 @@ export function LibraryClient({
                       {pl.title}
                     </p>
                     <p className="text-[10px] text-on-surface-variant/80 mt-0.5 flex items-center gap-1.5 font-semibold">
-                      <span>{pl.tracks.length} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}</span>
+                      {pl.id === 'liked-albums' ? (
+                        <span>
+                          {likedAlbums.length}{' '}
+                          {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'albums'}
+                        </span>
+                      ) : (
+                        <span>
+                          {pl.tracks.length}{' '}
+                          {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}
+                        </span>
+                      )}
                       <span className="text-zinc-700">•</span>
                       <span className="flex items-center gap-1">
-                        <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-[#e3fe06]' : 'text-zinc-500'}`} />
-                        <span>{isLiked ? 1 : 0}</span>
+                        <Heart
+                          className={`w-2.5 h-2.5 ${
+                            pl.id === 'liked-albums'
+                              ? likedAlbums.length > 0
+                                ? 'fill-current text-primary'
+                                : 'text-zinc-500'
+                              : pl.id === 'liked'
+                              ? likedTracks.length > 0
+                                ? 'fill-current text-primary'
+                                : 'text-zinc-500'
+                              : isLiked
+                              ? 'fill-current text-primary'
+                              : 'text-zinc-500'
+                          }`}
+                        />
+                        <span>
+                          {pl.id === 'liked-albums'
+                            ? likedAlbums.length
+                            : pl.id === 'liked'
+                            ? likedTracks.length
+                            : isLiked
+                            ? 1
+                            : 0}
+                        </span>
                       </span>
                     </p>
                   </div>
@@ -1177,7 +1208,7 @@ export function LibraryClient({
             {uiLanguage === 'KO' ? '목록으로' : uiLanguage === 'JA' ? '戻る' : 'Back'}
           </button>
           
-          <h1 className="text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+          <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
              <Disc className="w-6 h-6 text-primary shrink-0" />
              {uiLanguage === 'KO' ? '좋아요 표시한 앨범' : uiLanguage === 'JA' ? 'お気に入りのアルバム' : 'Liked Albums'}
           </h1>
@@ -1185,40 +1216,7 @@ export function LibraryClient({
           {likedAlbumsData.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
               {likedAlbumsData.map(album => (
-                <Link key={album.id} href={`/albums/${album.id}`} className="group cursor-pointer">
-                  <div className="aspect-square w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container relative group">
-                    {!album.cover_url || album.cover_url.includes('default-album') || album.cover_url.includes('top100_cover') ? (
-                      <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
-                        <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(227,254,6,0.5)] z-0 transform group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                    ) : (
-                      <img 
-                        src={album.cover_url} 
-                        alt={album.title}
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 z-0 relative"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity z-10 pointer-events-none"></div>
-                    <div className="absolute bottom-3 left-3 right-3 text-left">
-                      <p className="font-bold text-white text-sm truncate">{album.title}</p>
-                      {album.genre && <p className="text-[10px] text-emerald-400 mt-0.5">{album.genre}</p>}
-                    </div>
-                    {/* Heart button */}
-                    <div className="absolute top-2 right-2">
-                       <button
-                         onClick={(e) => {
-                           e.preventDefault(); e.stopPropagation();
-                           handleAlbumLikeToggle(album.id);
-                         }}
-                         className="w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg bg-[#e3fe06] text-black font-extrabold"
-                       >
-                         <Heart className="w-3.5 h-3.5 fill-current" />
-                       </button>
-                    </div>
-                  </div>
-                </Link>
+                <AlbumCard key={album.id} album={album} variant="library" />
               ))}
             </div>
           ) : (

@@ -365,7 +365,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
           <ArrowLeft className="w-5 h-5 text-on-surface" />
         </button>
         <div>
-          <h1 className="text-2xl font-black text-on-surface tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+            <Settings className="w-6 h-6 text-primary shrink-0" />
             {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">

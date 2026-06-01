@@ -31,8 +31,6 @@ export function NowPlayingPanel() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const submenuTimeoutRef = useRef<any>(null);
-  const dropdownTimeoutRef = useRef<any>(null);
 
   // Custom alert/prompt states
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -51,27 +49,6 @@ export function NowPlayingPanel() {
     }, 2500);
   };
 
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
-      if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
-    };
-  }, []);
-
-  const handleMouseEnterDropdown = () => {
-    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
-    setShowDropdown(true);
-    fetchPlaylists();
-  };
-
-  const handleMouseLeaveDropdown = () => {
-    dropdownTimeoutRef.current = setTimeout(() => {
-      setShowDropdown(false);
-      setShowSubmenu(false);
-    }, 150);
-  };
-
   // Reset searchQuery on dropdown close
   useEffect(() => {
     if (!showDropdown) {
@@ -80,17 +57,6 @@ export function NowPlayingPanel() {
     }
   }, [showDropdown]);
 
-  const handleMouseEnterPlaylist = () => {
-    if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
-    setShowSubmenu(true);
-    fetchPlaylists();
-  };
-
-  const handleMouseLeavePlaylist = () => {
-    submenuTimeoutRef.current = setTimeout(() => {
-      setShowSubmenu(false);
-    }, 150);
-  };
 
   // Sync language
   useEffect(() => {
@@ -391,8 +357,6 @@ export function NowPlayingPanel() {
             {/* More options button wrapper with hover activation */}
             <div 
               className="relative"
-              onMouseEnter={handleMouseEnterDropdown}
-              onMouseLeave={handleMouseLeaveDropdown}
             >
               <button 
                 onClick={() => {
@@ -416,8 +380,6 @@ export function NowPlayingPanel() {
                   {/* 플레이리스트에 추가하기 (Trigger sub-menu on hover) */}
                   <div 
                     className="relative"
-                    onMouseEnter={handleMouseEnterPlaylist}
-                    onMouseLeave={handleMouseLeavePlaylist}
                   >
                     <button
                       onClick={(e) => {
@@ -438,8 +400,6 @@ export function NowPlayingPanel() {
                     {showSubmenu && (
                       <div 
                         className="absolute right-[224px] top-0 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-50 p-1.5 flex flex-col gap-1 text-xs font-bold text-zinc-200"
-                        onMouseEnter={handleMouseEnterPlaylist}
-                        onMouseLeave={handleMouseLeavePlaylist}
                       >
                         {/* Search playlist */}
                         <div className="relative px-1 py-1">

@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Track, Album, Artist } from '@/types/music'
-import { Play, Pause, Heart, Users, Library, Music, Search } from 'lucide-react'
+import { Play, Pause, Heart, Users, Library, Music, Search, TrendingUp, Sparkles, Compass } from 'lucide-react'
 import { TrackDropdown } from '@/components/common/TrackDropdown'
+import { AlbumCard } from '@/components/common/AlbumCard'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -228,9 +229,10 @@ export function SearchClient({
 
           {/* Browse All */}
           <div className="space-y-6">
-            <h2 className="text-sm font-black text-on-surface uppercase tracking-widest">
+            <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+              <Compass className="w-6 h-6 text-primary shrink-0" />
               {uiLanguage === 'KO' ? '모두 둘러보기' : uiLanguage === 'JA' ? 'すべて表示' : 'Browse all'}
-            </h2>
+            </h1>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {GENRES.map((g) => (
                 <button
@@ -257,13 +259,18 @@ export function SearchClient({
         // Search Results state
         <div className="space-y-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-outline-variant/10 pb-4 gap-4">
-            <h2 className="text-xs font-black text-on-surface-variant uppercase tracking-widest">
-              {query.toLowerCase() === 'popular-albums' ? (uiLanguage === 'KO' ? '인기 앨범 (Popular Albums)' : uiLanguage === 'JA' ? '人気のアルバム' : 'Popular Albums') :
-               query.toLowerCase() === 'latest-albums' ? (uiLanguage === 'KO' ? '최신 앨범 (Latest Albums)' : uiLanguage === 'JA' ? '最新のアルバム' : 'Latest Albums') :
-               query.toLowerCase() === 'recommended-tracks' ? (uiLanguage === 'KO' ? '추천 음원 (Recommended Tracks)' : uiLanguage === 'JA' ? 'おすすめのトラック' : 'Recommended Tracks') :
-               query.toLowerCase() === 'latest-tracks' ? (uiLanguage === 'KO' ? '최신 음원 (Latest Tracks)' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks') :
+            <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
+              {query.toLowerCase() === 'popular-albums' ? <TrendingUp className="w-6 h-6 text-primary shrink-0" /> :
+               query.toLowerCase() === 'latest-albums' ? <Library className="w-6 h-6 text-primary shrink-0" /> :
+               query.toLowerCase() === 'recommended-tracks' ? <Music className="w-6 h-6 text-primary shrink-0" /> :
+               query.toLowerCase() === 'latest-tracks' ? <Sparkles className="w-6 h-6 text-primary shrink-0" /> :
+               <Search className="w-6 h-6 text-primary shrink-0" />}
+              {query.toLowerCase() === 'popular-albums' ? (uiLanguage === 'KO' ? '인기 앨범' : uiLanguage === 'JA' ? '人気のアルバム' : 'Popular Albums') :
+               query.toLowerCase() === 'latest-albums' ? (uiLanguage === 'KO' ? '최신 앨범' : uiLanguage === 'JA' ? '最新のアルバム' : 'Latest Albums') :
+               query.toLowerCase() === 'recommended-tracks' ? (uiLanguage === 'KO' ? '추천 음원' : uiLanguage === 'JA' ? 'おすすめのトラック' : 'Recommended Tracks') :
+               query.toLowerCase() === 'latest-tracks' ? (uiLanguage === 'KO' ? '최신 음원' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks') :
                <>{uiLanguage === 'KO' ? '검색 결과:' : uiLanguage === 'JA' ? '検索結果: ' : 'Search Results for'} <span className="text-primary">"{query}"</span></>}
-            </h2>
+            </h1>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-none">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
@@ -402,42 +409,8 @@ export function SearchClient({
           </div>
           )}
 
-          {/* 2. Matching Artists */}
-          {showArtists && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
-              {uiLanguage === 'KO' ? '아티스트 (Artists)' : uiLanguage === 'JA' ? 'アーティスト' : 'Artists'}
-            </h3>
-            {filteredArtists.length === 0 ? (
-              <p className="text-xs text-on-surface-variant/60 font-medium">No matching artists found.</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-                {filteredArtists.map((artist) => (
-                  <Link
-                    key={artist.id}
-                    href={`/artists/${artist.slug}`}
-                    className="bg-surface-container-low border border-outline-variant/10 hover:border-white/[0.12] hover:bg-white/[0.01] p-5 rounded-2xl flex flex-col items-center text-center group shadow-lg transition-all duration-300 cursor-pointer"
-                  >
-                    <div className="relative aspect-square w-24 rounded-full overflow-hidden bg-surface-container-lowest border border-outline-variant/20 mb-4">
-                      {artist.avatar_url ? (
-                        <img src={artist.avatar_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" />
-                      ) : (
-                        <Users className="w-8 h-8 text-zinc-700" />
-                      )}
-                    </div>
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="font-bold text-xs truncate text-on-surface group-hover:text-white transition-colors">{artist.name}</p>
-                      <p className="text-[10px] text-on-surface-variant/60 font-bold uppercase tracking-wider">Artist</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-          )}
-
-          {/* 3. Matching Albums */}
-          {showAlbums && (
+          {/* 3. Matching Albums (Rendered on Popular/Latest Albums Special Queries) */}
+          {(query.toLowerCase() === 'popular-albums' || query.toLowerCase() === 'latest-albums') && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">
               {uiLanguage === 'KO' ? '앨범 (Albums)' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
@@ -447,34 +420,14 @@ export function SearchClient({
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
                 {filteredAlbums.map((album) => (
-                  <Link
-                    key={album.id}
-                    href={`/albums/${album.slug || 'neonecho'}`}
-                    className="bg-surface-container-low border border-outline-variant/10 hover:border-[#e3fe06]/30 hover:bg-white/[0.01] p-4 rounded-2xl flex flex-col justify-between group shadow-lg transition-all duration-300 cursor-pointer"
-                  >
-                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-outline-variant/20">
-                      {album.cover_url ? (
-                        <img
-                          src={album.cover_url}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                        />
-                      ) : (
-                        <Library className="w-8 h-8 text-zinc-700" />
-                      )}
-                    </div>
-                    <div className="pt-3 min-w-0">
-                      <p className="font-bold text-xs truncate text-on-surface group-hover:text-primary transition-colors">{album.title}</p>
-                      <p className="text-[10px] text-on-surface-variant/60 truncate mt-0.5 font-bold">
-                        {album.artist?.name}
-                      </p>
-                    </div>
-                  </Link>
+                  <AlbumCard key={album.id} album={album} variant="grid" />
                 ))}
               </div>
             )}
           </div>
           )}
+
+
 
         </div>
       )}

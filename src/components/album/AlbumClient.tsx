@@ -27,44 +27,12 @@ interface AlbumClientProps {
   initialUserLikes: string[]
 }
 
-const generateMockTracksForAlbum = (album: Album): Track[] => {
-  const trackCount = album.release_type === 'single' ? 1 : album.release_type === 'ep' ? 4 : 8
-  const tracks: Track[] = []
-  const songNames = [
-    'Horizon Echoes', 'Electric Resonance', 'Midnight Serenade', 'Sunlight Rays',
-    'Neon Forest', 'Void Whispers', 'Velocity of Sound', 'Digital Tide',
-    'Analog Sunset', 'Synthesized Hearts', 'Quantum Beat', 'Frequency Wave'
-  ]
-  
-  for (let i = 0; i < trackCount; i++) {
-    const title = `${album.title} - ${songNames[(album.title.length + i) % songNames.length]}`
-    tracks.push({
-      id: `mock-track-${album.id}-${i + 1}`,
-      album_id: album.id,
-      track_number: i + 1,
-      title: title,
-      duration_sec: 180 + (i * 15) % 90,
-      file_url: `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${(i % 5) + 1}.mp3`,
-      file_size: 5000000,
-      play_count: Math.floor((album.total_plays || 12000) / trackCount) + i * 20,
-      like_count: Math.floor((album.total_likes || 450) / trackCount) + i * 5,
-      status: 'published',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      album: album
-    } as any)
-  }
-  return tracks
-}
-
 export function AlbumClient({
   album,
   initialTracks,
   initialUserLikes
 }: AlbumClientProps) {
-  const [tracks, setTracks] = useState<Track[]>(
-    initialTracks.length > 0 ? initialTracks : generateMockTracksForAlbum(album)
-  )
+  const [tracks, setTracks] = useState<Track[]>(initialTracks)
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
   const [expandedLyricsTrackId, setExpandedLyricsTrackId] = useState<string | null>(null)
   

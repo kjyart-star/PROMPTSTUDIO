@@ -10,6 +10,7 @@ import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { AlbumCard } from '@/components/common/AlbumCard'
 
 interface ArtistClientProps {
   artist: Artist
@@ -18,127 +19,7 @@ interface ArtistClientProps {
   initialUserLikes: string[]
 }
 
-// Dummy database fallbacks for Neon Echo to match the mockup exactly
-const DUMMY_POPULAR_TRACKS = [
-  {
-    id: 'dummy-1',
-    title: 'Electric Dreams',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    duration_sec: 222,
-    like_count: 342109002, // 342,109,002 plays in mockup
-    status: 'published',
-    created_at: '',
-    album_id: 'dummy-album-1',
-    album: {
-      id: 'dummy-album-1',
-      title: 'Electric Dreams',
-      cover_url: '/images/vanguard_cover.png',
-      release_type: 'album',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: { name: 'Neon Echo', slug: 'neonecho' }
-    }
-  },
-  {
-    id: 'dummy-2',
-    title: 'Midnight Pulse',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    duration_sec: 255,
-    like_count: 289551920, // 289,551,920 plays
-    status: 'published',
-    created_at: '',
-    album_id: 'dummy-album-2',
-    album: {
-      id: 'dummy-album-2',
-      title: 'Midnight Pulse',
-      cover_url: '/images/silent_tides_cover.png',
-      release_type: 'single',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: { name: 'Neon Echo', slug: 'neonecho' }
-    }
-  },
-  {
-    id: 'dummy-3',
-    title: 'Shadow Dance',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    duration_sec: 198,
-    like_count: 158003441, // 158,003,441 plays
-    status: 'published',
-    created_at: '',
-    album_id: 'dummy-album-3',
-    album: {
-      id: 'dummy-album-3',
-      title: 'Shadow Dance',
-      cover_url: '/images/retro_future_cover.png',
-      release_type: 'ep',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: { name: 'Neon Echo', slug: 'neonecho' }
-    }
-  },
-  {
-    id: 'dummy-4',
-    title: 'Static Sky',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    duration_sec: 301,
-    like_count: 102994122, // 102,994,122 plays
-    status: 'published',
-    created_at: '',
-    album_id: 'dummy-album-4',
-    album: {
-      id: 'dummy-album-4',
-      title: 'Static Sky',
-      cover_url: '/images/live_tokyo_cover.png',
-      release_type: 'album',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: { name: 'Neon Echo', slug: 'neonecho' }
-    }
-  },
-  {
-    id: 'dummy-5',
-    title: 'Vibration Theory',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    duration_sec: 235,
-    like_count: 94332100, // 94,332,100 plays
-    status: 'published',
-    created_at: '',
-    album_id: 'dummy-album-5',
-    album: {
-      id: 'dummy-album-5',
-      title: 'Vibration Theory',
-      cover_url: '/images/vanguard_cover.png',
-      release_type: 'single',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: { name: 'Neon Echo', slug: 'neonecho' }
-    }
-  }
-]
 
-const DUMMY_DISCOGRAPHY = [
-  { id: 'disco-1', title: 'Electric Dreams', cover_url: '/images/vanguard_cover.png', release_type: 'lp', release_year: '2024' },
-  { id: 'disco-2', title: 'Midnight Pulse', cover_url: '/images/silent_tides_cover.png', release_type: 'single', release_year: '2023' },
-  { id: 'disco-3', title: 'Shadow Dance', cover_url: '/images/retro_future_cover.png', release_type: 'ep', release_year: '2023' },
-  { id: 'disco-4', title: 'Static Sky', cover_url: '/images/live_tokyo_cover.png', release_type: 'lp', release_year: '2022' },
-  { id: 'disco-5', title: 'Vibration Theory', cover_url: '/images/vanguard_cover.png', release_type: 'single', release_year: '2022' },
-  { id: 'disco-6', title: 'Echoes of Tomorrow', cover_url: '/images/silent_tides_cover.png', release_type: 'lp', release_year: '2021' }
-]
-
-const DUMMY_RELATED_ARTISTS = [
-  { id: 'rel-1', name: 'Solaris', slug: 'solaris', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' },
-  { id: 'rel-2', name: 'Pulse Unit', slug: 'pulse_unit', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop' },
-  { id: 'rel-3', name: 'Void Voyager', slug: 'void_voyager', avatar_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop' },
-  { id: 'rel-4', name: 'Electric Aura', slug: 'electric_aura', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop' },
-  { id: 'rel-5', name: 'Lumina', slug: 'lumina', avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=200&auto=format&fit=crop' },
-  { id: 'rel-6', name: 'Analog Soul', slug: 'analog_soul', avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop' }
-]
 
 interface ArtistClientProps {
   artist: Artist
@@ -160,14 +41,8 @@ export function ArtistClient({
   const isNeonEcho = artist.slug === 'neonecho'
   const router = useRouter()
 
-  // If the artist is Neon Echo, load mockup tracks, else database tracks
-  const defaultTracks = isNeonEcho 
-    ? DUMMY_POPULAR_TRACKS 
-    : initialTracks
-
-  const defaultAlbums = isNeonEcho 
-    ? DUMMY_DISCOGRAPHY 
-    : albums
+  const defaultTracks = initialTracks
+  const defaultAlbums = albums
 
   const [tracks, setTracks] = useState<Track[]>(defaultTracks as Track[])
   const [userLikes, setUserLikes] = useState<string[]>(initialUserLikes)
@@ -869,34 +744,9 @@ export function ArtistClient({
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {(albums || []).slice(0, 10).map((album) => {
-              const tracksCount = initialTracks.filter(t => t.album_id === album.id).length;
-              return (
-                <Link
-                  key={album.id}
-                  href={`/albums/${album.slug || album.id}`}
-                  className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-outline-variant/10 shadow-lg group cursor-pointer"
-                >
-                  <img 
-                    src={album.cover_url || "/default-album.png"} 
-                    alt={album.title} 
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/default-album.png";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-4">
-                    <div className="space-y-1">
-                      <span className="text-xs font-extrabold text-white tracking-tight line-clamp-1">{album.title}</span>
-                      <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1">
-                        ▶ {tracksCount} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+            {(albums || []).slice(0, 10).map((album) => (
+              <AlbumCard key={album.id} album={album} variant="grid" />
+            ))}
             {(!albums || albums.length === 0) && (
               <div className="col-span-full py-10 text-center text-sm text-zinc-400 bg-surface-container/20 rounded-2xl border border-dashed border-outline-variant/10">
                 {uiLanguage === 'KO' ? '공개된 앨범이 없습니다.' : uiLanguage === 'JA' ? '公開されたアルバムがありません。' : 'No public albums.'}
@@ -1396,67 +1246,13 @@ export function ArtistClient({
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
             {(defaultAlbums as any[]).map((album) => (
-              <Link
-                key={album.id}
-                href={`/albums/${album.slug || 'neonecho'}`}
-                className="bg-surface-container-low border border-outline-variant/15 hover:border-[#e3fe06]/30 hover:bg-white/[0.01] p-4 rounded-2xl flex flex-col justify-between group shadow-lg transition-all duration-300 cursor-pointer"
-              >
-                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-outline-variant/20">
-                  {album.cover_url ? (
-                    <img
-                      src={album.cover_url}
-                      alt=""
-                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                    />
-                  ) : (
-                    <Library className="w-8 h-8 text-zinc-700" />
-                  )}
-                  <span className="absolute top-2 right-2 text-[8px] font-bold px-2 py-0.5 rounded bg-primary text-[#080d08] uppercase tracking-widest scale-90">
-                    {album.release_type}
-                  </span>
-                </div>
-                <div className="pt-3 min-w-0">
-                  <p className="font-bold text-xs truncate text-on-surface group-hover:text-primary transition-colors">{album.title}</p>
-                  <p className="text-[10px] text-on-surface-variant/80 truncate mt-0.5 font-bold">
-                    {album.release_year || (album.release_date ? new Date(album.release_date).getFullYear() : '2024')} • Album
-                  </p>
-                </div>
-              </Link>
+              <AlbumCard key={album.id} album={album} variant="grid" />
             ))}
           </div>
         </section>
       )}
 
-      {/* 4. Fans Also Like Grid */}
-      {!artist.is_user && (
-        <section className="space-y-6">
-          <h2 className="text-xs font-black text-on-surface uppercase tracking-widest">
-            Fans also like
-          </h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-            {DUMMY_RELATED_ARTISTS.map((rel) => (
-              <Link
-                key={rel.id}
-                href={`/artists/${rel.slug}`}
-                className="bg-surface-container-low border border-outline-variant/15 hover:border-white/[0.12] hover:bg-white/[0.01] p-5 rounded-2xl flex flex-col items-center text-center group shadow-lg transition-all duration-300 cursor-pointer"
-              >
-                <div className="relative aspect-square w-24 rounded-full overflow-hidden bg-surface-container-lowest border border-outline-variant/20 mb-4">
-                  <img
-                    src={rel.avatar_url}
-                    alt=""
-                    className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
-                  />
-                </div>
-                <div className="min-w-0 space-y-0.5">
-                  <p className="font-bold text-xs truncate text-on-surface group-hover:text-white transition-colors">{rel.name}</p>
-                  <p className="text-[10px] text-on-surface-variant/60 font-bold uppercase tracking-wider">Artist</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       </div>
     </div>
