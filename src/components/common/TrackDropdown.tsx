@@ -107,7 +107,7 @@ export function TrackDropdown({
         }
       }
     } else {
-      if (window.confirm(uiLanguage === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : 'This track does not have an associated album.\nGo to the creator\\'s channel?')) {
+      if (window.confirm(uiLanguage === 'KO' ? '해당 음원은 연결된 앨범이 없습니다.\n제작자 채널로 이동하시겠습니까?' : "This track does not have an associated album.\nGo to the creator's channel?")) {
         const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
         if (typeof window !== 'undefined') {
           window.location.href = `/artists/${artistSlug}`;
