@@ -526,8 +526,7 @@ export function NowPlayingPanel() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const slug = track.album?.slug || track.album_id;
-                      const isDummy = track.id?.includes('mock') || track.album_id?.includes('dummy') || track.album?.id?.includes('dummy') || false;
-                      if (slug && slug !== 'loose' && !isDummy) {
+                      if (slug && slug !== 'loose') {
                         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
                         if (isUUID) {
                           if (typeof window !== 'undefined') window.location.href = `/profile?tab=albums&playlistId=${slug}`
