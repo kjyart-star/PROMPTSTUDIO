@@ -174,7 +174,7 @@ export function UgcManagementClient() {
 
       if (res.ok) {
         setSongs(prev => prev.map(s => s.id === selectedSong.id ? { ...s, ...payload } : s))
-        setSelectedSong(prev => prev ? { ...prev, ...payload } : null)
+        setSelectedSong((prev: any) => prev ? { ...prev, ...payload } : null)
         alert(`${type === 'image' ? '썸네일이' : '동영상이'} 업로드되었습니다.`)
       } else {
         const err = await res.json()

@@ -791,7 +791,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
       if (res.ok) {
         setHistory(prev => prev.map(s => s.id === selectedSong.id ? { ...s, ...payload } : s))
-        setSelectedSong(prev => prev ? { ...prev, ...payload } : null)
+        setSelectedSong((prev: any) => prev ? { ...prev, ...payload } : null)
         showToast(uiLanguage === 'KO' ? `${type === 'image' ? '썸네일이' : '동영상이'} 업로드되었습니다.` : 'Media uploaded.', 'success')
       } else {
         const err = await res.json()

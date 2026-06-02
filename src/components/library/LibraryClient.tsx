@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Track } from '@/types/music'
-import { Play, Pause, Heart, Music, Disc, ListMusic, ArrowLeft, MoreHorizontal, Clock, Check, X, Globe, Lock, Upload, Plus, Edit2, Trash2, Download } from 'lucide-react'
+import { Play, Pause, Heart, Music, Disc, ListMusic, ArrowLeft, MoreHorizontal, Clock, Check, X, Globe, Lock, Upload, Plus, Edit2, Trash2, Download, Loader2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
@@ -707,7 +707,7 @@ export function LibraryClient({
 
       if (res.ok) {
         setUserTracks(prev => prev.map(s => s.id === selectedSong.id ? { ...s, ...payload } : s))
-        setSelectedSong(prev => prev ? { ...prev, ...payload } : null)
+        setSelectedSong((prev: any) => prev ? { ...prev, ...payload } : null)
         showToast(uiLanguage === 'KO' ? `${type === 'image' ? '썸네일이' : '동영상이'} 업로드되었습니다.` : 'Media uploaded.', 'success')
       } else {
         const err = await res.json()
@@ -1843,7 +1843,7 @@ export function LibraryClient({
       )}
 
       {/* Side Panel for Song Details */}
-      {selectedSong && (
+      {selectedSong && createPortal(
         <>
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm sm:hidden" onClick={() => setSelectedSong(null)} />
           <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#111a12] border-l border-emerald-950/30 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
@@ -1913,8 +1913,11 @@ export function LibraryClient({
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
+    </>
+  )}
       
     </div>
   )
