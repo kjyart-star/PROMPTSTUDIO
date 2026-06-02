@@ -340,6 +340,10 @@ export function LibraryClient({
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
+  // Media Upload State
+  const [selectedSong, setSelectedSong] = useState<any | null>(null)
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false)
+
   // Custom Confirm Modal State
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -665,6 +669,56 @@ export function LibraryClient({
       showToast('네트워크 오류가 발생했습니다.', 'error')
     }
     setOpenPlaylistTrackMenuId(null)
+  }
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = e.target.files?.[0]
+    if (!file || !selectedSong) return
+    
+    // Max 16MB for video to match Spotify Canvas standards, 5MB for image
+    const maxSize = type === 'video' ? 16 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast(`${type === 'video' ? '동영상은 16MB' : '이미지는 5MB'} 이하만 업로드 가능합니다.`, 'error');
+      return;
+    }
+
+    setIsUploadingMedia(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `ugc-${type}-${selectedSong.id}-${Date.now()}.${ext}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars') // Reusing avatars bucket
+        .upload(fileName, file)
+        
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+
+      const payload = type === 'image' ? { image_url: publicUrl } : { video_url: publicUrl }
+
+      const res = await fetch(`/api/song-history/${selectedSong.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (res.ok) {
+        setUserTracks(prev => prev.map(s => s.id === selectedSong.id ? { ...s, ...payload } : s))
+        setSelectedSong(prev => prev ? { ...prev, ...payload } : null)
+        showToast(uiLanguage === 'KO' ? `${type === 'image' ? '썸네일이' : '동영상이'} 업로드되었습니다.` : 'Media uploaded.', 'success')
+      } else {
+        const err = await res.json()
+        showToast(uiLanguage === 'KO' ? '업데이트 실패: ' + (err.error || '오류 발생') : 'Update failed', 'error')
+      }
+    } catch (err: any) {
+      console.error('Media upload error:', err)
+      showToast(uiLanguage === 'KO' ? '업로드 중 오류가 발생했습니다.' : 'Error during upload.', 'error')
+    } finally {
+      setIsUploadingMedia(false)
+    }
   }
 
   const togglePublishPlaylist = async (id: string, currentStatus: boolean) => {
@@ -1380,7 +1434,7 @@ export function LibraryClient({
                         <div className="flex items-center gap-3 min-w-0 text-left">
                           <div 
                             className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/5 bg-zinc-900 cursor-pointer"
-                            onClick={() => handlePlay(track, activePlaylist.tracks)}
+                            onClick={(e) => { e.stopPropagation(); handlePlay(track, activePlaylist.tracks); }}
                           >
                             <img 
                               src={track.image_url || track.album?.cover_url || '/default-album.png'} 
@@ -1463,15 +1517,24 @@ export function LibraryClient({
                                   {!activePlaylist.isSystem && (
                                     <>
                                       <button
-                                        onClick={() => handleMoveTrack(track.id, null)}
+                                        onClick={(e) => { e.stopPropagation(); handleMoveTrack(track.id, null); }}
                                         className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-400 hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                         {uiLanguage === 'KO' ? '이 플레이리스트에서 빼기' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}
                                       </button>
                                       <div className="h-px bg-outline-variant/10 my-1 mx-2"></div>
                                     </>
                                   )}
+                                  
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedSong(track); setOpenPlaylistTrackMenuId(null); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/5 transition-colors cursor-pointer flex items-center gap-2"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                    {uiLanguage === 'KO' ? '썸네일 및 동영상 편집' : uiLanguage === 'JA' ? 'メディア編集' : 'Edit Media'}
+                                  </button>
+                                  <div className="h-px bg-outline-variant/10 my-1 mx-2"></div>
 
                                   <div className="px-3 py-1 text-[10px] font-black text-on-surface-variant/60 uppercase tracking-wider">
                                     {uiLanguage === 'KO' ? '플레이리스트에 추가/이동' : uiLanguage === 'JA' ? 'プレイリストに追加/移動' : 'Add/Move to Playlist'}
@@ -1778,6 +1841,78 @@ export function LibraryClient({
         </div>,
         document.body
       )}
+
+      {/* Side Panel for Song Details */}
+      {selectedSong && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm sm:hidden" onClick={() => setSelectedSong(null)} />
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#111a12] border-l border-emerald-950/30 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-5 border-b border-emerald-950/30 flex justify-between items-center bg-[#0d140e] shrink-0">
+              <h2 className="text-lg font-black text-white truncate pr-4">{selectedSong.title}</h2>
+              <button onClick={() => setSelectedSong(null)} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto space-y-8 bg-[#111a12]/50">
+              
+              {/* Thumbnail Upload */}
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-zinc-300 flex items-center gap-2">
+                  <Music className="w-4 h-4 text-primary" />
+                  {uiLanguage === 'KO' ? '음원 썸네일' : uiLanguage === 'JA' ? 'サムネイル' : 'Thumbnail'}
+                </label>
+                <div className="aspect-square bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 relative group shadow-inner">
+                  {selectedSong.image_url ? (
+                    <img src={selectedSong.image_url} alt="Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 bg-zinc-900/50">
+                      <Music className="w-12 h-12 mb-3 opacity-30" />
+                      <span className="text-sm font-medium">{uiLanguage === 'KO' ? '이미지 없음' : 'No image'}</span>
+                    </div>
+                  )}
+                  <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-300 backdrop-blur-sm">
+                    <div className="bg-white/10 px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-2 hover:bg-white/20 hover:scale-105 transition-all">
+                      {isUploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {uiLanguage === 'KO' ? '썸네일 업로드' : 'Upload'}
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleMediaUpload(e, 'image')} disabled={isUploadingMedia} />
+                  </label>
+                </div>
+                <p className="text-xs text-zinc-500 px-1">{uiLanguage === 'KO' ? '최대 5MB 이하의 이미지 파일(JPG, PNG 등)을 권장합니다.' : 'Max 5MB image'}</p>
+              </div>
+
+              <div className="h-px bg-emerald-950/30 w-full" />
+
+              {/* Video Upload & Viewer */}
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-zinc-300 flex items-center gap-2">
+                  <Play className="w-4 h-4 text-rose-400" />
+                  {uiLanguage === 'KO' ? '뮤직 비디오 (MP4)' : uiLanguage === 'JA' ? 'ミュージックビデオ' : 'Music Video'}
+                </label>
+                {selectedSong.video_url || userTracks.find(t => t.id === selectedSong.id)?.video_url ? (
+                  <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-black aspect-[9/16] max-h-[400px] w-full max-w-[225px] mx-auto relative group shadow-2xl">
+                    <video src={selectedSong.video_url || userTracks.find(t => t.id === selectedSong.id)?.video_url} controls className="w-full h-full object-cover bg-black" />
+                    <label className="absolute top-3 right-3 bg-black/70 hover:bg-black/90 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all backdrop-blur-md flex items-center gap-2 z-10 border border-white/10 opacity-0 group-hover:opacity-100 hover:scale-105">
+                      {isUploadingMedia ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />} 
+                      {uiLanguage === 'KO' ? '영상 변경' : 'Change Video'}
+                      <input type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => handleMediaUpload(e, 'video')} disabled={isUploadingMedia} />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-emerald-950/40 hover:border-primary/50 bg-[#111a12] hover:bg-[#152017] rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 text-zinc-500 hover:text-zinc-300 group">
+                    <div className="w-12 h-12 rounded-full bg-emerald-950/30 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
+                      <Upload className="w-5 h-5 text-zinc-400 group-hover:text-primary" />
+                    </div>
+                    <span className="text-sm font-bold mb-1.5 text-zinc-300">{uiLanguage === 'KO' ? '동영상 업로드' : 'Upload Video'}</span>
+                    <span className="text-xs text-zinc-500 text-center leading-relaxed">
+                      {uiLanguage === 'KO' ? 'Spotify 캔버스 스타일의 세로형 짧은 영상(9:16 비율, 3~8초)을 올려주세요.\n(최대 16MB)' : 'Upload short looping video like Spotify Canvas (9:16, 3-8s).\n(Max 16MB)'}
+                    </span>
+                    <input type="file" accept="video/mp4,video/webm" className="hidden" onChange={(e) => handleMediaUpload(e, 'video')} disabled={isUploadingMedia} />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
         </>
       )}
       

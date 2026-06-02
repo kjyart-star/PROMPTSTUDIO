@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked } = body
+    const { is_published, playlist_id, liked, image_url, video_url } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
@@ -43,14 +43,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const updateData: any = {}
     if (!isOwner && isAdmin) {
       if (playlist_id !== undefined) {
-        return NextResponse.json({ error: 'Admins can only change the publishing status of other users\' songs.' }, { status: 403 })
+        return NextResponse.json({ error: 'Admins can only change the publishing status or media of other users\' songs.' }, { status: 403 })
       }
       if (is_published !== undefined) updateData.is_published = is_published
+      if (image_url !== undefined) updateData.image_url = image_url
+      if (video_url !== undefined) updateData.video_url = video_url
     } else {
       // 소유자인 경우 모든 항목 수정 가능
       if (is_published !== undefined) updateData.is_published = is_published
       if (playlist_id !== undefined) updateData.playlist_id = playlist_id
       if (liked !== undefined) updateData.liked = liked
+      if (image_url !== undefined) updateData.image_url = image_url
+      if (video_url !== undefined) updateData.video_url = video_url
     }
 
     const { data, error } = await supabase
