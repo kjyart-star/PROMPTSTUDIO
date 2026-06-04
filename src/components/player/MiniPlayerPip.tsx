@@ -288,10 +288,6 @@ function Disc({
   return (
     <div
       className={`pip-disc-mask ${isZoomed ? 'is-zoomed' : ''}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onZoomToggle();
-      }}
     >
       <div className="pip-disc-spin" ref={spinRef}>
         {layers.map((l, i) => {
@@ -552,6 +548,62 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
     };
   }, [pipWindow]);
 
+  // Handle keyboard shortcuts in PiP window
+  useEffect(() => {
+    if (!pipWindow) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = pipWindow.document.activeElement;
+      if (activeEl) {
+        const tagName = activeEl.tagName.toLowerCase();
+        if (
+          tagName === 'input' || 
+          tagName === 'textarea' || 
+          activeEl.hasAttribute('contenteditable') ||
+          activeEl.getAttribute('contenteditable') === 'true'
+        ) {
+          return;
+        }
+      }
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        const state = usePlayerStore.getState();
+        if (!state.currentTrack) {
+          state.playTrack(DEFAULT_TRACK as any, [DEFAULT_TRACK] as any);
+        } else {
+          state.togglePlay();
+        }
+      } else if (e.code === 'ArrowUp' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const state = usePlayerStore.getState();
+        const newVol = Math.min(1.0, state.volume + 0.05);
+        state.setVolume(newVol);
+      } else if (e.code === 'ArrowDown' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const state = usePlayerStore.getState();
+        const newVol = Math.max(0.0, state.volume - 0.05);
+        state.setVolume(newVol);
+      } else if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const state = usePlayerStore.getState();
+        const duration = state.duration || (state.currentTrack?.duration_sec ?? 0);
+        const newTime = Math.min(duration, state.currentTime + 5);
+        state.seek(newTime);
+      } else if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const state = usePlayerStore.getState();
+        const newTime = Math.max(0, state.currentTime - 5);
+        state.seek(newTime);
+      }
+    };
+
+    pipWindow.addEventListener('keydown', handleKeyDown);
+    return () => {
+      pipWindow.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pipWindow]);
+
   useEffect(() => {
     let activeWindow: Window | null = null;
 
@@ -696,7 +748,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
         {/* Disc section, Lyrics board, or Queue board */}
         {showQueue ? (
           <div 
-            className={`w-[320px] h-[320px] rounded-2xl bg-white/[0.03] border border-outline-variant/10 backdrop-blur-xl flex flex-col p-4 text-left shadow-2xl relative transition-all duration-300 ${
+            className={`w-[320px] h-[240px] rounded-2xl bg-white/[0.03] border border-outline-variant/10 backdrop-blur-xl flex flex-col p-4 text-left shadow-2xl relative transition-all duration-300 overflow-hidden ${
               isZoomed ? 'scale-105 mt-[40px]' : 'mt-[10px]'
             }`}
           >
@@ -748,11 +800,11 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
           </div>
         ) : showLyrics ? (
           <div 
-            className={`w-[320px] h-[320px] rounded-2xl bg-white/[0.03] border border-outline-variant/10 backdrop-blur-xl flex flex-col p-6 text-center shadow-2xl relative transition-all duration-300 ${
+            className={`w-[320px] h-[240px] rounded-2xl bg-white/[0.03] border border-outline-variant/10 backdrop-blur-xl flex flex-col p-6 text-center shadow-2xl relative transition-all duration-300 overflow-hidden ${
               isZoomed ? 'scale-105 mt-[40px]' : 'mt-[10px]'
             }`}
           >
-            <div className="w-full h-full overflow-y-auto pr-2 flex flex-col gap-2.5 justify-start scroll-smooth select-text custom-scrollbar">
+            <div className="w-full flex-1 min-h-0 overflow-y-auto pr-2 flex flex-col gap-2.5 justify-start scroll-smooth select-text custom-scrollbar">
               {activeTrack.lyrics ? (
                 activeTrack.lyrics.split('\n').map((line: string, idx: number) => (
                   <p key={idx} className="text-zinc-200 text-[12px] font-bold leading-relaxed my-0.5 hover:text-primary transition-colors">
@@ -783,10 +835,12 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
           
           <div className="flex flex-col items-center w-full">
             {/* Visualizer (Scales) */}
-            <ScalesMixer
-              isPlaying={isPlaying}
-              getFrequencyData={getFrequencyData}
-            />
+            {!showQueue && !showLyrics && (
+              <ScalesMixer
+                isPlaying={isPlaying}
+                getFrequencyData={getFrequencyData}
+              />
+            )}
 
             {/* Track metadata with sliding effect */}
             <div className="w-full px-4 relative flex flex-col items-center gap-3">

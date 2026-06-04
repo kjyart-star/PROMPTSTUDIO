@@ -238,17 +238,19 @@ textarea:focus {
   height: 240px;
   border-radius: 50%;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   background: #111811;
   margin-top: 10px;
 }
 
+/* Commented out hover zoom effect for now
 .pip-disc-mask:hover {
   transform: scale(1.03) translateY(-2px);
   box-shadow: 0 20px 56px rgba(0, 0, 0, 0.8), 0 0 24px rgba(227, 254, 6, 0.2);
 }
+*/
 
 .pip-disc-mask.is-zoomed {
   width: 320px;
