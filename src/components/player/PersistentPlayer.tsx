@@ -17,8 +17,11 @@ export function PersistentPlayer() {
   const {
     currentTrack, isPlaying, progress, currentTime, duration,
     volume, isMuted, hasLoggedPlay, isNowPlayingOpen,
+    isShuffle, repeatMode, seekTrigger,
     playTrack, togglePlay, next, prev, seek, setVolume, toggleMute, setNowPlayingOpen,
+    toggleShuffle, toggleRepeatMode,
     _setIsPlaying, _setProgress, _markPlayLogged,
+    _setGetFrequencyData,
   } = usePlayerStore();
 
   const [isLiked, setIsLiked] = useState(false);
@@ -26,6 +29,34 @@ export function PersistentPlayer() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   const queueRef = useRef<HTMLDivElement>(null);
+
+  const [lang, setLang] = useState('KO');
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedLang = localStorage.getItem('language') || 'KO';
+    setLang(storedLang.toUpperCase());
+    const handleLangChange = (e: any) => {
+      setLang(e.detail.toUpperCase());
+    };
+    window.addEventListener('languageChange', handleLangChange);
+    return () => window.removeEventListener('languageChange', handleLangChange);
+  }, []);
+
+  const getShuffleTooltip = () => {
+    if (lang === 'KO') return isShuffle ? '셔플: 켬' : '셔플: 끔';
+    if (lang === 'JA') return isShuffle ? 'シャッフル: オン' : 'シャッフル: オフ';
+    return isShuffle ? 'Shuffle: On' : 'Shuffle: Off';
+  };
+
+  const getRepeatTooltip = () => {
+    if (lang === 'KO') {
+      return repeatMode === 'all' ? '전체 반복' : repeatMode === 'one' ? '한 곡 반복' : '반복 안함';
+    }
+    if (lang === 'JA') {
+      return repeatMode === 'all' ? 'すべてリピート' : repeatMode === 'one' ? '1曲リピート' : 'リピートオフ';
+    }
+    return repeatMode === 'all' ? 'Repeat All' : repeatMode === 'one' ? 'Repeat One' : 'Repeat Off';
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -113,7 +144,24 @@ export function PersistentPlayer() {
     let isCurrent = true;
     const loadAndPlay = async () => {
       let url = currentTrack.file_url;
-      if (url && !url.startsWith('http')) {
+
+      // If absolute HTTP/HTTPS URL, load and play synchronously
+      // to bypass strict browser autoplay/async microtask block rules
+      if (url && url.startsWith('http')) {
+        if (isCurrent && audioRef.current) {
+          audioRef.current.src = url;
+          audioRef.current.load();
+          if (isPlaying) {
+            audioRef.current.play().catch((err) => {
+              console.error('Direct autoplay blocked:', err);
+              _setIsPlaying(false);
+            });
+          }
+        }
+        return;
+      }
+
+      if (url) {
         try {
           const supabase = createClient();
           const { data, error } = await supabase.storage
@@ -132,7 +180,8 @@ export function PersistentPlayer() {
         audioRef.current.src = url;
         audioRef.current.load();
         if (isPlaying) {
-          audioRef.current.play().catch(() => {
+          audioRef.current.play().catch((err) => {
+            console.error('Autoplay after sign blocked:', err);
             _setIsPlaying(false);
           });
         }
@@ -161,6 +210,13 @@ export function PersistentPlayer() {
     if (!audioRef.current) return;
     audioRef.current.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
+
+  // 외부(예: 미니플레이어 PiP 또는 prev로 시간만 리셋할 때)에서 시킹한 타임 동기화
+  useEffect(() => {
+    if (seekTrigger !== null && audioRef.current) {
+      audioRef.current.currentTime = currentTime;
+    }
+  }, [seekTrigger]);
 
   // 스페이스바 전역 단축키 (재생/정지 토글)
   useEffect(() => {
@@ -295,11 +351,20 @@ export function PersistentPlayer() {
           _setProgress(el.currentTime, el.duration || 0);
         }}
         onEnded={() => {
-          const autoplay = localStorage.getItem('pref-autoplay') !== 'false';
-          if (autoplay) {
-            next();
+          const { repeatMode, next, _setIsPlaying } = usePlayerStore.getState();
+          if (repeatMode === 'one') {
+            if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(() => _setIsPlaying(false));
+            }
+            usePlayerStore.setState({ progress: 0, currentTime: 0, playStartTime: Date.now(), hasLoggedPlay: false });
           } else {
-            _setIsPlaying(false);
+            const autoplay = localStorage.getItem('pref-autoplay') !== 'false';
+            if (autoplay) {
+              next();
+            } else {
+              _setIsPlaying(false);
+            }
           }
         }}
         preload="metadata"
@@ -351,34 +416,85 @@ export function PersistentPlayer() {
         {/* 중: 컨트롤 + 진행바 */}
         <div className="flex flex-col items-center gap-[4px] flex-1 max-w-xl">
           <div className="flex items-center gap-[24px]">
-            <button className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center">
-              <Shuffle className="w-5 h-5" />
-            </button>
-            <button
-              onClick={prev}
-              className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center"
-            >
-              <SkipBack className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handlePlayClick}
-              className="w-10 h-10 rounded-full bg-on-surface text-surface flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
-            >
-              {isPlaying && currentTrack ? (
-                <Pause className="w-5 h-5 text-surface fill-current" />
-              ) : (
-                <Play className="w-5 h-5 text-surface fill-current ml-0.5" />
-              )}
-            </button>
-            <button
-              onClick={next}
-              className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center"
-            >
-              <SkipForward className="w-5 h-5" />
-            </button>
-            <button className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center">
-              <Repeat className="w-5 h-5" />
-            </button>
+            {/* 셔플 */}
+            <div className="relative group flex items-center justify-center">
+              <button 
+                onClick={toggleShuffle}
+                className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${
+                  isShuffle ? 'text-primary' : 'text-on-surface-variant'
+                }`}
+              >
+                <Shuffle className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-full mb-2.5 px-2.5 py-1.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[11px] font-black rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
+                {getShuffleTooltip()}
+              </div>
+            </div>
+
+            {/* 이전곡 */}
+            <div className="relative group flex items-center justify-center">
+              <button
+                onClick={prev}
+                className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center"
+              >
+                <SkipBack className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-full mb-2.5 px-2.5 py-1.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[11px] font-black rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
+                {lang === 'KO' ? '이전 곡' : lang === 'JA' ? '前の曲' : 'Previous Song'}
+              </div>
+            </div>
+
+            {/* 재생/일시정지 */}
+            <div className="relative group flex items-center justify-center">
+              <button
+                onClick={handlePlayClick}
+                className="w-10 h-10 rounded-full bg-on-surface text-surface flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+              >
+                {isPlaying && currentTrack ? (
+                  <Pause className="w-5 h-5 text-surface fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 text-surface fill-current ml-0.5" />
+                )}
+              </button>
+              <div className="absolute bottom-full mb-2.5 px-2.5 py-1.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[11px] font-black rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
+                {isPlaying && currentTrack 
+                  ? (lang === 'KO' ? '일시 정지' : lang === 'JA' ? '一時停止' : 'Pause') 
+                  : (lang === 'KO' ? '재생' : lang === 'JA' ? '再生' : 'Play')}
+              </div>
+            </div>
+
+            {/* 다음곡 */}
+            <div className="relative group flex items-center justify-center">
+              <button
+                onClick={next}
+                className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center"
+              >
+                <SkipForward className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-full mb-2.5 px-2.5 py-1.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[11px] font-black rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
+                {lang === 'KO' ? '다음 곡' : lang === 'JA' ? '다음 곡' : 'Next Song'}
+              </div>
+            </div>
+
+            {/* 반복 */}
+            <div className="relative group flex items-center justify-center">
+              <button 
+                onClick={toggleRepeatMode}
+                className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors relative ${
+                  repeatMode !== 'off' ? 'text-primary' : 'text-on-surface-variant'
+                }`}
+              >
+                <Repeat className="w-5 h-5" />
+                {repeatMode === 'one' && (
+                  <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-[#080d08] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center scale-75 border border-[#080d08]">
+                    1
+                  </span>
+                )}
+              </button>
+              <div className="absolute bottom-full mb-2.5 px-2.5 py-1.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[11px] font-black rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
+                {getRepeatTooltip()}
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center gap-[8px] w-full">

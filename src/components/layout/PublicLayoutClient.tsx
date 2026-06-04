@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Home, Sparkles, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
-  Search, Settings, Heart, ListMusic, CreditCard, Music, Coins
+  Search, Settings, Heart, ListMusic, CreditCard, Music, Coins, Disc
 } from 'lucide-react'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
@@ -45,6 +45,8 @@ export function PublicLayoutClient({
 
   const [activeTab, setActiveTab] = useState('')
   const [userCredits, setUserCredits] = useState<number>(0)
+  const [playlists, setPlaylists] = useState<any[]>([])
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -67,9 +69,12 @@ export function PublicLayoutClient({
       if (pathname === '/search') return 'search'
       if (pathname === '/library') {
         const params = new URLSearchParams(window.location.search)
-        if (params.get('playlistId') === 'recommended') return 'recommended'
+        const plId = params.get('playlistId')
+        setActivePlaylistId(plId)
+        if (plId === 'recommended') return 'recommended'
         return params.get('tab') === 'liked' ? 'liked' : 'library'
       }
+      setActivePlaylistId(null)
       if (pathname === '/profile') {
         const params = new URLSearchParams(window.location.search)
         return params.get('tab') === 'private' ? 'audio-management' : 'profile'
@@ -79,6 +84,35 @@ export function PublicLayoutClient({
     }
     setActiveTab(getActiveTab())
   }, [pathname])
+
+  // Load custom playlists for the sidebar
+  useEffect(() => {
+    const loadSidebarPlaylists = async () => {
+      if (!user) {
+        setPlaylists([])
+        return
+      }
+      try {
+        const res = await fetch('/api/playlists?type=playlist')
+        if (res.ok) {
+          const data = await res.json()
+          setPlaylists(data || [])
+        }
+      } catch (e) {
+        console.error('Error fetching sidebar playlists:', e)
+      }
+    }
+
+    loadSidebarPlaylists()
+
+    const handlePlaylistChange = () => {
+      loadSidebarPlaylists()
+    }
+    window.addEventListener('playlistChanged', handlePlaylistChange)
+    return () => {
+      window.removeEventListener('playlistChanged', handlePlaylistChange)
+    }
+  }, [user])
 
   // 언어 초기 로드 및 이벤트 리스너
   useEffect(() => {
@@ -249,19 +283,6 @@ export function PublicLayoutClient({
             </Link>
 
             <Link 
-              href="/library" 
-              onClick={() => setActiveTab('library')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
-                activeTab === 'library'
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              <Library className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
-            </Link>
-
-            <Link 
               href="/profile?tab=public" 
               onClick={() => setActiveTab('profile')}
               className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
@@ -287,7 +308,6 @@ export function PublicLayoutClient({
               <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : uiLanguage === 'JA' ? 'チャンネル & オーディオ管理' : 'Channel & Audio Management'}</span>
             </Link>
 
-
             <Link 
               href="/studio" 
               onClick={() => setActiveTab('studio')}
@@ -300,6 +320,84 @@ export function PublicLayoutClient({
               <Sparkles className="w-5 h-5 text-current" />
               <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '스튜디오' : uiLanguage === 'JA' ? 'スタジオ' : 'Studio'}</span>
             </Link>
+
+            {/* Divider to separate Playlists section */}
+            <div className="h-px bg-outline-variant/10 my-1 mx-4" />
+
+            <div className="flex flex-col gap-1">
+              <Link 
+                href="/library" 
+                onClick={() => {
+                  setActiveTab('library')
+                  setActivePlaylistId(null)
+                }}
+                className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                  activeTab === 'library' && !activePlaylistId
+                    ? 'text-on-surface bg-white/[0.05]' 
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <Library className="w-5 h-5 text-current" />
+                <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
+              </Link>
+
+              {/* Nested playlists (subfolder style) */}
+              <div className="flex flex-col pl-[12px] pr-[4px] mt-1 gap-0.5 max-h-[220px] overflow-y-auto custom-scrollbar border-l border-outline-variant/15 ml-[24px]">
+                {/* 좋아요 표시한 음악 (Liked Songs) */}
+                <Link
+                  href="/library?playlistId=liked"
+                  onClick={() => {
+                    setActiveTab('library')
+                    setActivePlaylistId('liked')
+                  }}
+                  className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                    activeTab === 'library' && activePlaylistId === 'liked'
+                      ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <Heart className="w-3.5 h-3.5 shrink-0 text-current" />
+                  <span className="truncate">{uiLanguage === 'KO' ? '좋아요 표시한 곡' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs'}</span>
+                </Link>
+
+                {/* 좋아요 표시한 앨범 (Liked Albums) */}
+                <Link
+                  href="/library?playlistId=liked-albums"
+                  onClick={() => {
+                    setActiveTab('library')
+                    setActivePlaylistId('liked-albums')
+                  }}
+                  className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                    activeTab === 'library' && activePlaylistId === 'liked-albums'
+                      ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <Disc className="w-3.5 h-3.5 shrink-0 text-current" />
+                  <span className="truncate">{uiLanguage === 'KO' ? '좋아요 표시한 앨범' : uiLanguage === 'JA' ? 'お気に入りのアルバム' : 'Liked Albums'}</span>
+                </Link>
+
+                {/* Custom user playlists list */}
+                {user && playlists.map((pl) => (
+                  <Link
+                    key={pl.id}
+                    href={`/library?playlistId=${pl.id}`}
+                    onClick={() => {
+                      setActiveTab('library')
+                      setActivePlaylistId(pl.id)
+                    }}
+                    className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                      activeTab === 'library' && activePlaylistId === pl.id
+                        ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <ListMusic className="w-3.5 h-3.5 text-current shrink-0" />
+                    <span className="truncate" title={pl.title}>{pl.title}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
 

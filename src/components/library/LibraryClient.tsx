@@ -455,6 +455,9 @@ export function LibraryClient({
       if (res.ok) {
         const data = await res.json()
         setCustomPlaylists(data || [])
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('playlistChanged'))
+        }
       }
     } catch (e) {
       console.error('Error loading playlists from server:', e)
