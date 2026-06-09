@@ -45,10 +45,10 @@ export async function GET() {
       })
     }
 
-    const buffer = Buffer.from(await data.arrayBuffer())
+    const buffer = Buffer.from(await fileData.arrayBuffer())
     const tags = NodeID3.read(buffer)
 
-    if (!tags || !tags.image) {
+    if (!tags || !tags.image || typeof tags.image === 'string') {
       return NextResponse.json({
         message: `No embedded cover art found in MP3 file for "${targetSong.title}".`,
         songId: targetSong.id,

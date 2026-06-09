@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         if (!downloadError && fileData) {
           const buffer = Buffer.from(await fileData.arrayBuffer())
           const tags = NodeID3.read(buffer)
-          if (tags && tags.image) {
+          if (tags && tags.image && typeof tags.image !== 'string') {
             const mimeType = tags.image.mime || 'image/jpeg'
             const fileExt = mimeType.split('/').pop() || 'jpg'
             const imageFileName = `${user.id}-extracted-cover-${crypto.randomUUID()}.${fileExt}`
