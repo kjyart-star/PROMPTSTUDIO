@@ -197,6 +197,7 @@ export default async function PublicHomePage() {
 
       return rawTrack ? {
         ...rawTrack,
+        rank: item.rank,
         album: rawAlbum ? {
           ...rawAlbum,
           artist: rawArtist
@@ -232,6 +233,12 @@ export default async function PublicHomePage() {
     // Sort by play_count
     initialTracks.sort((a, b) => (b.play_count || 0) - (a.play_count || 0))
     initialTracks = initialTracks.slice(0, 10)
+    
+    // Assign ranks based on sorted index
+    initialTracks = initialTracks.map((t, idx) => ({
+      ...t,
+      rank: idx + 1
+    }))
   }
 
   let initialRecommendedTracks = [...mappedRealSongs, ...dbRecommended]

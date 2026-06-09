@@ -667,6 +667,13 @@ export function HomeClient({
       return isRealA ? -1 : 1
     }
 
+    const rankA = a.rank || 999
+    const rankB = b.rank || 999
+    
+    if (rankA !== rankB) {
+      return rankA - rankB
+    }
+
     const playA = a.play_count || 0
     const playB = b.play_count || 0
     const likeA = a.like_count || 0
@@ -675,12 +682,7 @@ export function HomeClient({
     const scoreA = playA + likeA
     const scoreB = playB + likeB
     
-    if (scoreB !== scoreA) {
-      return scoreB - scoreA
-    }
-    const rankA = (a as any).rank || 999
-    const rankB = (b as any).rank || 999
-    return rankA - rankB
+    return scoreB - scoreA
   })
 
   const [artists, setArtists] = useState<Artist[]>(initialMergedArtists)

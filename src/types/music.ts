@@ -63,4 +63,5 @@ export interface Track {
   composer?: string;
   arranger?: string;
   image_url?: string;
+  rank?: number;
 }
