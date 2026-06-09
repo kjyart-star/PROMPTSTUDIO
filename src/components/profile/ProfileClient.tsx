@@ -1075,12 +1075,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       // Save this path as the song's audio_url so it is resolved dynamically
       const audioUrl = signData.path
 
-      // 3. Insert into database song_history
-      const supabase = createClient()
-      const { error: insertError } = await supabase
-        .from('song_history')
-        .insert({
-          user_id: user.id,
+      // 3. Insert into database song_history via server API
+      const insertRes = await fetch('/api/song-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           title: uploadTitle.trim(),
           channel_id: uploadChannelId || null,
           prompt: uploadPrompt.trim() || '',
@@ -1096,11 +1095,16 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             genre: uploadGenre,
             lyricist: uploadLyricist.trim(),
             composer: uploadComposer.trim(),
-            arranger: uploadArranger.trim()
+            arranger: uploadArranger.trim(),
+            source: 'upload'
           }
         })
+      })
 
-      if (insertError) throw insertError
+      if (!insertRes.ok) {
+        const insertData = await insertRes.json()
+        throw new Error(insertData.error || '음원 등록 실패')
+      }
 
       showToast('음원이 성공적으로 등록되었습니다.', 'success')
       setIsUploadModalOpen(false)
@@ -2064,7 +2068,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   if (selectedPlaylistFilter === 'liked') {
     visibleLooseTracks = visibleLooseTracks.filter(h => isSongLiked(h.id))
   } else if (selectedPlaylistFilter === 'uploaded') {
-    visibleLooseTracks = visibleLooseTracks.filter(h => h.source === 'upload' || h.type === 'upload')
+    visibleLooseTracks = visibleLooseTracks.filter(h => h.source === 'upload' || h.type === 'upload' || h.form?.source === 'upload' || h.form?.type === 'upload' || (!h.suno_task_id && h.audio_url?.startsWith('audio/')))
   } else if (selectedPlaylistFilter === 'default' || selectedPlaylistFilter === 'all') {
     visibleLooseTracks = visibleLooseTracks.filter(h => {
       if (isPublicView) return true;
@@ -3193,7 +3197,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         <span>업로드</span>
                       </div>
                       <span className="text-xs opacity-50 font-mono">
-                        {history.filter(h => h.source === 'upload' || h.type === 'upload').length || 0}
+                        {history.filter(h => h.source === 'upload' || h.type === 'upload' || h.form?.source === 'upload' || h.form?.type === 'upload' || (!h.suno_task_id && h.audio_url?.startsWith('audio/'))).length || 0}
                       </span>
                     </button>
                   </div>
@@ -5325,7 +5329,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-white">업로드</span>
-                        <span className="text-xs text-on-surface-variant">{visibleLooseTracksRaw.filter(h => h.source === 'upload' || h.type === 'upload').length} 곡</span>
+                        <span className="text-xs text-on-surface-variant">{visibleLooseTracksRaw.filter(h => h.source === 'upload' || h.type === 'upload' || h.form?.source === 'upload' || h.form?.type === 'upload' || (!h.suno_task_id && h.audio_url?.startsWith('audio/'))).length} 곡</span>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant/50 px-2 py-1 bg-white/5 rounded">수정 불가</span>

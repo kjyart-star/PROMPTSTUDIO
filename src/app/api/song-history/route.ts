@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import NodeID3 from 'node-id3'
 
 // GET: Fetch all song histories for the authenticated user (or all published songs for admin)
 export async function GET(request: Request) {
@@ -94,21 +95,79 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, prompt, lyrics, notes, negative_prompt, form } = body
+    const {
+      title,
+      prompt,
+      lyrics,
+      notes,
+      genre,
+      audio_url,
+      image_url,
+      status,
+      is_published,
+      channel_id,
+      form,
+      negative_prompt
+    } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    const updatedForm = { ...form, negativePrompt: negative_prompt }
+    let finalImageUrl = image_url || ''
+
+    // If no cover image was provided but we have an uploaded audio file,
+    // try to extract the embedded cover image from its ID3 metadata.
+    if (!finalImageUrl && audio_url && audio_url.startsWith('audio/')) {
+      try {
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('tracks')
+          .download(audio_url)
+
+        if (!downloadError && fileData) {
+          const buffer = Buffer.from(await fileData.arrayBuffer())
+          const tags = NodeID3.read(buffer)
+          if (tags && tags.image) {
+            const mimeType = tags.image.mime || 'image/jpeg'
+            const fileExt = mimeType.split('/').pop() || 'jpg'
+            const imageFileName = `${user.id}-extracted-cover-${crypto.randomUUID()}.${fileExt}`
+
+            const { error: uploadError } = await supabase.storage
+              .from('avatars')
+              .upload(imageFileName, tags.image.imageBuffer, {
+                contentType: mimeType
+              })
+
+            if (!uploadError) {
+              const { data: publicUrlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(imageFileName)
+              if (publicUrlData?.publicUrl) {
+                finalImageUrl = publicUrlData.publicUrl
+              }
+            }
+          }
+        }
+      } catch (extractErr) {
+        console.error('Failed to extract embedded cover art:', extractErr)
+      }
+    }
+
+    const updatedForm = form || { negativePrompt: negative_prompt || '' }
     const { data, error } = await supabase
       .from('song_history')
       .insert({
         user_id: user.id,
-        title,
-        prompt: prompt || '',
-        lyrics: lyrics || '',
-        notes: notes || '',
+        title: title.trim(),
+        prompt: prompt?.trim() || '',
+        lyrics: lyrics?.trim() || '',
+        notes: notes?.trim() || '',
+        genre: genre || '',
+        audio_url: audio_url || null,
+        image_url: finalImageUrl,
+        status: status || 'completed',
+        is_published: is_published || false,
+        channel_id: channel_id || null,
         form: updatedForm
       })
       .select()

@@ -314,11 +314,21 @@ export function ChartClient({
   }
 
   // 순위 변동폭 렌더러
-  const renderRankChange = (change: number | null) => {
+  const renderRankChange = (change: number | null, createdAt?: string) => {
+    // 1주일 내 등록된 신곡인 경우에만 NEW 배지 표시
+    const isNew = createdAt && (new Date().getTime() - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000)
+
     if (change === null) {
+      if (isNew) {
+        return (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/10 border border-[#e3fe06]/20 text-primary">
+            NEW
+          </span>
+        )
+      }
       return (
-        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/10 border border-[#e3fe06]/20 text-primary">
-          NEW
+        <span className="flex items-center gap-0.5 text-xs text-on-surface-variant/60">
+          <Minus className="w-3 h-3 text-on-surface-variant/40" />
         </span>
       )
     }
@@ -494,7 +504,7 @@ export function ChartClient({
                             </span>
                           </div>
                           <div className="text-[9px] font-bold">
-                            {renderRankChange(item.rank_change)}
+                            {renderRankChange(item.rank_change, track.created_at)}
                           </div>
                         </div>
                       </td>

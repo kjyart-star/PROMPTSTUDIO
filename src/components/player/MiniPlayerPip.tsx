@@ -514,7 +514,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
     lastTrackId.current = activeTrack.id;
 
     // Transition sound (triangle bass)
-    playTransitionSound(0.55);
+    // playTransitionSound(0.55);
 
     const id = idRef.current++;
     setLayers((prevLayers) => [
