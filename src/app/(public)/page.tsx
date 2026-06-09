@@ -26,7 +26,7 @@ export default async function PublicHomePage() {
       .eq('status', 'completed')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(12),
+      .limit(100),
     supabase.from('chart_snapshots')
       .select('period_date')
       .eq('period_type', 'daily')
