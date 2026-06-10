@@ -619,6 +619,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
         const newPipWindow = await dpip.requestWindow({
           width: 380,
           height: 680,
+          disallowReturnToOpener: true,
         });
 
         activeWindow = newPipWindow;

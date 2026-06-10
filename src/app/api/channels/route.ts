@@ -108,9 +108,10 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, name, slug, bio, avatar_url, banner_url, tags } = body
+    const { id, channelId, name, slug, bio, avatar_url, banner_url, tags } = body
+    const targetId = id || channelId
 
-    if (!id) {
+    if (!targetId) {
       return NextResponse.json({ error: 'Channel ID is required' }, { status: 400 })
     }
 
@@ -118,7 +119,7 @@ export async function PUT(request: Request) {
     const { data: existingChannel } = await supabase
       .from('artists')
       .select('owner_user_id')
-      .eq('id', id)
+      .eq('id', targetId)
       .single()
 
     if (!existingChannel || existingChannel.owner_user_id !== user.id) {
@@ -136,7 +137,7 @@ export async function PUT(request: Request) {
     const { data, error } = await supabase
       .from('artists')
       .update(updateData)
-      .eq('id', id)
+      .eq('id', targetId)
       .select()
       .single()
 

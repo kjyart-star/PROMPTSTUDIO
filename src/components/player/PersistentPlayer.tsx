@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Play, Pause, SkipBack, SkipForward,
-  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, Maximize2, Heart
+  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart
 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
@@ -598,8 +598,12 @@ export function PersistentPlayer() {
               className="w-24 h-1 bg-on-surface/10 accent-primary rounded-full cursor-pointer transition-all"
             />
           </div>
-          <button onClick={() => setIsPipOpen(true)} className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center">
-            <Maximize2 className="w-5 h-5" />
+          <button 
+            onClick={() => setIsPipOpen(true)} 
+            className="text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center justify-center"
+            title={lang === 'KO' ? '미니 플레이어 열기' : lang === 'JA' ? 'ミニプレイヤーを開く' : 'Open Mini Player'}
+          >
+            <PictureInPicture2 className="w-5 h-5" />
           </button>
         </div>
       </footer>
