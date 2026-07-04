@@ -34,11 +34,6 @@ export async function GET(request: Request) {
     } else {
       // 일반 사용자는 본인 음원 기록만 조회
       query = query.eq('user_id', user.id)
-      
-      // 임시: 사용자가 생성하지 않은 더미 데이터(비 오는 밤의 드라이브) 자동 삭제
-      await supabase.from('song_history').delete()
-        .eq('user_id', user.id)
-        .eq('title', '비 오는 밤의 드라이브')
     }
 
     let result = await query

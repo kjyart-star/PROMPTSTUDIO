@@ -28,10 +28,15 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
   if (dbArtist) {
     artistData = dbArtist
   } else {
-    // Try to load from profiles table using slug/email prefix
+    // Try to load from profiles table using slug/email prefix.
+    // Query by email prefix instead of scanning the whole table.
+    // Escape LIKE wildcards in the slug so it can't broaden the match.
+    const escapedSlug = slug.replace(/[\\%_]/g, (ch: string) => `\\${ch}`)
     const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
+      .like('email', `${escapedSlug}@%`)
+      .limit(10)
 
     const matchingProfile = (profiles || []).find(
       (p: any) => (p.email && p.email.split('@')[0] === slug)
@@ -160,13 +165,27 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
     }
   }
 
-  // 3.5. UGC tracks (User generated content uploaded to this channel)
-  const { data: ugcTracksData } = await supabase
-    .from('song_history')
-    .select('*')
-    .eq('channel_id', artist.id)
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
+  // 3.5. UGC tracks / 아티스트 플레이리스트 / 좋아요 목록을 병렬로 로드
+  const [ugcTracksRes, artistPlaylistsRes, likesRes] = await Promise.all([
+    supabase
+      .from('song_history')
+      .select('*')
+      .eq('channel_id', artist.id)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('user_playlists')
+      .select('*')
+      .eq('user_id', artist.id)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    user
+      ? supabase.from('likes').select('track_id').eq('user_id', user.id)
+      : Promise.resolve({ data: null as { track_id: string }[] | null })
+  ])
+
+  const ugcTracksData = ugcTracksRes.data
 
   const ugcPlaylistIds = Array.from(new Set(ugcTracksData?.map((song: any) => song.playlist_id).filter(Boolean) || []))
   let ugcPlaylistsData: any[] = []
@@ -224,29 +243,11 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
     initialTracks = [...initialTracks, ...ugcTracks]
   }
 
-  // 4. 아티스트의 플레이리스트 로드
-  let playlists: any[] = []
-  if (artist) {
-    const { data: playlistsData } = await supabase
-      .from('user_playlists')
-      .select('*')
-      .eq('user_id', artist.id)
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .limit(10)
+  // 4. 아티스트의 플레이리스트 (위에서 병렬 조회한 결과 사용)
+  const playlists: any[] = artistPlaylistsRes.data || []
 
-    playlists = playlistsData || []
-  }
-
-  // 5. 로그인 사용자의 좋아요 목록 로드 (앞서 조회한 user 변수 활용)
-  let initialUserLikes: string[] = []
-  if (user) {
-    const { data: likesData } = await supabase
-      .from('likes')
-      .select('track_id')
-      .eq('user_id', user.id)
-    initialUserLikes = likesData?.map((l) => l.track_id) || []
-  }
+  // 5. 로그인 사용자의 좋아요 목록 (위에서 병렬 조회한 결과 사용)
+  const initialUserLikes: string[] = likesRes.data?.map((l) => l.track_id) || []
 
   return (
     <ArtistClient

@@ -95,36 +95,26 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       .order('created_at', { ascending: false })
       .limit(100)
 
-    // 4.1. Fetch only corresponding profiles
+    // 4.1. Fetch corresponding profiles / channels / playlists in parallel
     const userIds = Array.from(new Set(realSongs?.map((song: any) => song.user_id).filter(Boolean) || []))
-    let profilesData: any[] = []
-    if (userIds.length > 0) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', userIds)
-      profilesData = data || []
-    }
-
     const channelIds = [...new Set((realSongs || []).map((s: any) => s.channel_id).filter(Boolean))]
-    let channelsData: any[] = []
-    if (channelIds.length > 0) {
-      const { data } = await supabase
-        .from('artists')
-        .select('*')
-        .in('id', channelIds)
-      channelsData = data || []
-    }
-
     const playlistIds = [...new Set((realSongs || []).map((s: any) => s.playlist_id).filter(Boolean))]
-    let playlistsData: any[] = []
-    if (playlistIds.length > 0) {
-      const { data } = await supabase
-        .from('user_playlists')
-        .select('*')
-        .in('id', playlistIds)
-      playlistsData = data || []
-    }
+
+    const [profilesRes, channelsRes, playlistsRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from('profiles').select('*').in('id', userIds)
+        : Promise.resolve({ data: [] as any[] }),
+      channelIds.length > 0
+        ? supabase.from('artists').select('*').in('id', channelIds)
+        : Promise.resolve({ data: [] as any[] }),
+      playlistIds.length > 0
+        ? supabase.from('user_playlists').select('*').in('id', playlistIds)
+        : Promise.resolve({ data: [] as any[] })
+    ])
+
+    const profilesData: any[] = profilesRes.data || []
+    const channelsData: any[] = channelsRes.data || []
+    const playlistsData: any[] = playlistsRes.data || []
 
     const mappedRealSongs = (realSongs || []).map((song: any, idx: number) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'

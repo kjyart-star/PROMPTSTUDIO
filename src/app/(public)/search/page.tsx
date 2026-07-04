@@ -19,34 +19,35 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // 2. 검색 대상 데이터 prefetch (song_history 추가)
+  // 전체 테이블 덤프를 피하기 위해 상한을 둔다 (검색 필터링은 SearchClient에서 수행)
   const [
     { data: tracksData },
     { data: artistsData },
     { data: userPlaylistsData },
     { data: songHistoryData }
   ] = await Promise.all([
-    supabase.from('tracks').select('*, album:albums(*, artist:artists(*))'),
-    supabase.from('artists').select('*'),
-    supabase.from('user_playlists').select('*').eq('is_published', true).order('created_at', { ascending: false }),
-    supabase.from('song_history').select('*').eq('status', 'completed')
+    supabase.from('tracks').select('*, album:albums(*, artist:artists(*))').order('created_at', { ascending: false }).limit(300),
+    supabase.from('artists').select('*').order('created_at', { ascending: false }).limit(200),
+    supabase.from('user_playlists').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(200),
+    supabase.from('song_history').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(300)
   ])
 
-  // 3. song_history 작성자 프로필 로드
+  // 3. song_history 작성자 프로필 + 플레이리스트 병렬 로드
   const songHistory = songHistoryData || []
   const userIds = Array.from(new Set(songHistory.map((song: any) => song.user_id).filter(Boolean)))
-
-  const { data: profilesData } = userIds.length > 0
-    ? await supabase.from('profiles').select('*').in('id', userIds)
-    : { data: [] }
-
-  const profiles = profilesData || []
-
-  // 3.5. song_history 플레이리스트 로드
   const playlistIds = Array.from(new Set(songHistory.map((song: any) => song.playlist_id).filter(Boolean)))
-  const { data: playlistsData } = playlistIds.length > 0
-    ? await supabase.from('user_playlists').select('*').in('id', playlistIds)
-    : { data: [] }
-  const playlists = playlistsData || []
+
+  const [profilesRes, playlistsRes] = await Promise.all([
+    userIds.length > 0
+      ? supabase.from('profiles').select('id, email, display_name, avatar_url, is_admin, created_at').in('id', userIds)
+      : Promise.resolve({ data: [] as any[] }),
+    playlistIds.length > 0
+      ? supabase.from('user_playlists').select('*').in('id', playlistIds)
+      : Promise.resolve({ data: [] as any[] })
+  ])
+
+  const profiles = profilesRes.data || []
+  const playlists = playlistsRes.data || []
 
   // 4. song_history 음원을 Track 형태로 변환
   const mappedRealSongs = songHistory.map((song: any) => {

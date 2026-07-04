@@ -72,11 +72,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'targetUserId and creditDelta are required' }, { status: 400 })
     }
 
-    // Create a service role client to bypass RLS for admin operations
-    const adminSupabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY! || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    // Create a service role client to bypass RLS for admin operations.
+    // Fail loudly if the service key is missing rather than silently
+    // falling back to the anon key (which would behave inconsistently).
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!serviceRoleKey || !supabaseUrl) {
+      console.error('Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL')
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+    }
+    const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
 
     // Get current credits
     const { data: profile, error: fetchError } = await adminSupabase

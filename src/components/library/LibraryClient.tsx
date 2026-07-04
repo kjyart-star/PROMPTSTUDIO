@@ -551,8 +551,14 @@ export function LibraryClient({
       } else {
         // Edit Playlist Flow
         const original = customPlaylists.find(p => p.id === editPlaylistId)
-        const originalType = original ? parsePlaylistDescription(original.description).type : 'playlist'
-        const descriptionToSave = serializePlaylistDescription(originalType, editDescription)
+        const originalInfo = original ? parsePlaylistDescription(original.description) : { type: 'playlist' as const, text: '', parentId: null, channelId: null }
+        // Preserve folder/channel linkage when editing title/description.
+        const descriptionToSave = serializePlaylistDescription(
+          originalInfo.type,
+          editDescription,
+          originalInfo.parentId,
+          originalInfo.channelId
+        )
 
         const res = await fetch(`/api/playlists/${editPlaylistId}`, {
           method: 'PUT',

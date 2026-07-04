@@ -192,15 +192,16 @@ export function SettingsClient({ user }: SettingsClientProps) {
     }
 
 
-    const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | null
-    if (savedLanguage === 'KO' || savedLanguage === 'EN') {
+    const savedLanguage = localStorage.getItem('language')?.toUpperCase()
+    if (savedLanguage === 'KO' || savedLanguage === 'EN' || savedLanguage === 'JA') {
       setUiLanguage(savedLanguage)
     }
 
     const handleLanguageChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>
-      if (customEvent.detail === 'KO' || customEvent.detail === 'EN') {
-        setUiLanguage(customEvent.detail as 'KO' | 'EN')
+      const lang = customEvent.detail?.toUpperCase()
+      if (lang === 'KO' || lang === 'EN' || lang === 'JA') {
+        setUiLanguage(lang as 'KO' | 'EN' | 'JA')
       }
     }
     window.addEventListener('languageChange', handleLanguageChange)
@@ -333,6 +334,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
       const { error } = await supabase.storage.from('avatars').upload(fileName, file)
       if (error) throw error
       const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+      setEditBanner(data.publicUrl)
       showToast('배너 이미지가 업로드되었습니다.', 'success')
     } catch (e: any) {
       showToast('업로드 실패', 'error')

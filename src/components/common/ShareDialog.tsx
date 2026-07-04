@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Copy, Check, Share2, X } from 'lucide-react'
 
@@ -21,9 +21,13 @@ export function ShareDialog({
 }: ShareDialogProps) {
   const [mounted, setMounted] = useState(false)
   const [copied, setCopied] = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setMounted(true)
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -38,12 +42,18 @@ export function ShareDialog({
     }
   }, [isOpen])
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => {
-      onClose()
-    }, 1500)
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+      closeTimer.current = setTimeout(() => {
+        onClose()
+      }, 1500)
+    } catch {
+      // Clipboard can fail on non-secure contexts / denied permission.
+      setCopied(false)
+    }
   }
 
   if (!isOpen || !mounted) return null

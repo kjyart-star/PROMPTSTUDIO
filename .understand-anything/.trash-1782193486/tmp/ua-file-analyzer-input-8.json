@@ -1,0 +1,84 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {
+      "path": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "language": "sql",
+      "sizeLines": 312,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/20_SCHEMA_ADD_CREDITS.sql",
+      "language": "sql",
+      "sizeLines": 18,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+      "language": "sql",
+      "sizeLines": 10,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+      "language": "sql",
+      "sizeLines": 47,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/22_SCHEMA_MULTI_MODEL.sql",
+      "language": "sql",
+      "sizeLines": 15,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "language": "sql",
+      "sizeLines": 33,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+      "language": "sql",
+      "sizeLines": 5,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+      "language": "sql",
+      "sizeLines": 75,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/25_FIX_STORAGE_RLS_INLINE.sql",
+      "language": "sql",
+      "sizeLines": 38,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "language": "sql",
+      "sizeLines": 105,
+      "fileCategory": "data"
+    },
+    {
+      "path": "docs/SUPABASE_GOOGLE_SETUP.md",
+      "language": "markdown",
+      "sizeLines": 79,
+      "fileCategory": "docs"
+    }
+  ],
+  "batchImportData": {
+    "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql": [],
+    "docs/20_SCHEMA_ADD_CREDITS.sql": [],
+    "docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql": [],
+    "docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql": [],
+    "docs/22_SCHEMA_MULTI_MODEL.sql": [],
+    "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql": [],
+    "docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql": [],
+    "docs/24_FIX_IS_ADMIN_FUNCTION.sql": [],
+    "docs/25_FIX_STORAGE_RLS_INLINE.sql": [],
+    "docs/CONSOLIDATED_DATABASE_FIX.sql": [],
+    "docs/SUPABASE_GOOGLE_SETUP.md": []
+  }
+}

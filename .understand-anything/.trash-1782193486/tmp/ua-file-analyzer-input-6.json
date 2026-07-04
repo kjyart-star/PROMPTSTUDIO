@@ -1,0 +1,91 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {
+      "path": "all_missing_en.json",
+      "language": "json",
+      "sizeLines": 267,
+      "fileCategory": "config"
+    },
+    {
+      "path": "ja_translations.json",
+      "language": "json",
+      "sizeLines": 223,
+      "fileCategory": "config"
+    },
+    {
+      "path": "ja_translations_v2.json",
+      "language": "json",
+      "sizeLines": 268,
+      "fileCategory": "config"
+    },
+    {
+      "path": "ko_strings.txt",
+      "language": "txt",
+      "sizeLines": 847,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "missing_en.json",
+      "language": "json",
+      "sizeLines": 222,
+      "fileCategory": "config"
+    },
+    {
+      "path": "missing_translations.json",
+      "language": "json",
+      "sizeLines": 225,
+      "fileCategory": "config"
+    },
+    {
+      "path": "package.json",
+      "language": "json",
+      "sizeLines": 32,
+      "fileCategory": "config"
+    },
+    {
+      "path": "supabase_schema.sql",
+      "language": "sql",
+      "sizeLines": 199,
+      "fileCategory": "data"
+    },
+    {
+      "path": "ternary_strings.json",
+      "language": "json",
+      "sizeLines": 1173,
+      "fileCategory": "config"
+    },
+    {
+      "path": "tsconfig.json",
+      "language": "json",
+      "sizeLines": 34,
+      "fileCategory": "config"
+    },
+    {
+      "path": "vercel.json",
+      "language": "json",
+      "sizeLines": 4,
+      "fileCategory": "config"
+    },
+    {
+      "path": "vercel_logs.txt",
+      "language": "txt",
+      "sizeLines": 0,
+      "fileCategory": "docs"
+    }
+  ],
+  "batchImportData": {
+    "all_missing_en.json": [],
+    "ja_translations.json": [],
+    "ja_translations_v2.json": [],
+    "ko_strings.txt": [],
+    "missing_en.json": [],
+    "missing_translations.json": [],
+    "package.json": [],
+    "supabase_schema.sql": [],
+    "ternary_strings.json": [],
+    "tsconfig.json": [],
+    "vercel.json": [],
+    "vercel_logs.txt": []
+  }
+}

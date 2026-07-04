@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(req: Request) {
   try {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     // 2. Clone the track to the current user's song_history with the target playlist_id
     const newTrack = {
-      user_id: session.user.id,
+      user_id: user.id,
       title: originalTrack.title,
       prompt: originalTrack.prompt,
       lyrics: originalTrack.lyrics,

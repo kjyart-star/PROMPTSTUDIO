@@ -1,0 +1,729 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 21,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "docs/00_PROJECT_BRIEF.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 157,
+      "nonEmptyLines": 117,
+      "sections": [
+        {
+          "heading": "🎵 AI Music Platform — 프로젝트 브리프",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "1. 한 줄 설명",
+          "level": 2,
+          "line": 8
+        },
+        {
+          "heading": "2. 현재 단계",
+          "level": 2,
+          "line": 13
+        },
+        {
+          "heading": "3. 핵심 차별점",
+          "level": 2,
+          "line": 23
+        },
+        {
+          "heading": "4. 기술 스택",
+          "level": 2,
+          "line": 35
+        },
+        {
+          "heading": "5. 데이터 모델 (요약)",
+          "level": 2,
+          "line": 48
+        },
+        {
+          "heading": "6. 폴더 구조",
+          "level": 2,
+          "line": 64
+        },
+        {
+          "heading": "7. 작업 우선순위 (Phase 1 — 이번에 만들 것)",
+          "level": 2,
+          "line": 102
+        },
+        {
+          "heading": "8. 안티그라비티 작업 규칙 (중요)",
+          "level": 2,
+          "line": 119
+        },
+        {
+          "heading": "세션마다 지킬 것",
+          "level": 3,
+          "line": 121
+        },
+        {
+          "heading": "코딩 규칙",
+          "level": 3,
+          "line": 128
+        },
+        {
+          "heading": "9. 환경변수 (.env.local)",
+          "level": 2,
+          "line": 137
+        },
+        {
+          "heading": "10. 다음 단계",
+          "level": 2,
+          "line": 147
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 13
+      }
+    },
+    {
+      "path": "docs/02_PERSISTENT_PLAYER.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 546,
+      "nonEmptyLines": 467,
+      "sections": [
+        {
+          "heading": "🎧 Persistent Player — 완성 코드 패키지",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "아키텍처 개요",
+          "level": 2,
+          "line": 8
+        },
+        {
+          "heading": "1. 의존성 설치",
+          "level": 2,
+          "line": 35
+        },
+        {
+          "heading": "2. 타입 정의 — `src/types/music.ts`",
+          "level": 2,
+          "line": 45
+        },
+        {
+          "heading": "3. Zustand Store — `src/stores/playerStore.ts`",
+          "level": 2,
+          "line": 85
+        },
+        {
+          "heading": "4. Persistent Player 컴포넌트 — `src/components/player/PersistentPlayer.tsx`",
+          "level": 2,
+          "line": 218
+        },
+        {
+          "heading": "5. 루트 레이아웃에 마운트 — `src/app/(public)/layout.tsx`",
+          "level": 2,
+          "line": 426
+        },
+        {
+          "heading": "6. 재생 이벤트 API — `src/app/api/play/route.ts`",
+          "level": 2,
+          "line": 449
+        },
+        {
+          "heading": "7. 사용 예시 — 어디서든 재생 시작",
+          "level": 2,
+          "line": 491
+        },
+        {
+          "heading": "8. 체크리스트",
+          "level": 2,
+          "line": 517
+        },
+        {
+          "heading": "9. 자주 막히는 부분",
+          "level": 2,
+          "line": 530
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 11
+      }
+    },
+    {
+      "path": "supabase/schema.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 106,
+      "nonEmptyLines": 89,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "prompt",
+            "lyrics",
+            "notes",
+            "form",
+            "suno_task_id",
+            "status",
+            "audio_url",
+            "image_url",
+            "is_published",
+            "created_at"
+          ],
+          "startLine": 1,
+          "endLine": 15
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 34,
+          "endLine": 41
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "stripe_customer_id",
+            "stripe_subscription_id",
+            "plan",
+            "status",
+            "current_period_end",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 56,
+          "endLine": 66
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "description",
+            "cover_url",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 76,
+          "endLine": 84
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 4
+      }
+    },
+    {
+      "path": "docs/01_SUPABASE_SETUP.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 387,
+      "nonEmptyLines": 304,
+      "definitions": [
+        {
+          "name": "user_roles",
+          "kind": "table",
+          "fields": [
+            "user_id",
+            "role",
+            "created_at"
+          ],
+          "startLine": 15,
+          "endLine": 20
+        },
+        {
+          "name": "artists",
+          "kind": "table",
+          "fields": [
+            "id",
+            "slug",
+            "name",
+            "bio",
+            "avatar_url",
+            "banner_url",
+            "links",
+            "is_ai_generated",
+            "owner_user_id",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 37,
+          "endLine": 49
+        },
+        {
+          "name": "albums",
+          "kind": "table",
+          "fields": [
+            "id",
+            "slug",
+            "artist_id",
+            "title",
+            "release_type",
+            "cover_url",
+            "release_date",
+            "genres",
+            "moods",
+            "description",
+            "status",
+            "generation_tool",
+            "total_plays",
+            "total_likes",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 57,
+          "endLine": 76
+        },
+        {
+          "name": "tracks",
+          "kind": "table",
+          "fields": [
+            "id",
+            "album_id",
+            "track_number",
+            "title",
+            "duration_sec",
+            "file_url",
+            "file_size",
+            "waveform_data",
+            "style_prompt",
+            "bpm",
+            "song_key",
+            "prompt_meta",
+            "like_count",
+            "status",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 87,
+          "endLine": 110
+        },
+        {
+          "name": "play_events",
+          "kind": "table",
+          "fields": [
+            "id",
+            "track_id",
+            "user_id",
+            "played_at",
+            "duration_played"
+          ],
+          "startLine": 120,
+          "endLine": 128
+        },
+        {
+          "name": "likes",
+          "kind": "table",
+          "fields": [
+            "user_id",
+            "track_id",
+            "created_at"
+          ],
+          "startLine": 139,
+          "endLine": 144
+        },
+        {
+          "name": "chart_snapshots",
+          "kind": "table",
+          "fields": [
+            "id",
+            "period_type",
+            "period_date",
+            "track_id",
+            "rank",
+            "play_count",
+            "rank_change"
+          ],
+          "startLine": 152,
+          "endLine": 161
+        },
+        {
+          "name": "idx_artists_slug",
+          "kind": "index",
+          "fields": [],
+          "startLine": 51,
+          "endLine": 51
+        },
+        {
+          "name": "idx_albums_slug",
+          "kind": "index",
+          "fields": [],
+          "startLine": 78,
+          "endLine": 78
+        },
+        {
+          "name": "idx_albums_status",
+          "kind": "index",
+          "fields": [],
+          "startLine": 79,
+          "endLine": 79
+        },
+        {
+          "name": "idx_albums_artist",
+          "kind": "index",
+          "fields": [],
+          "startLine": 80,
+          "endLine": 80
+        },
+        {
+          "name": "idx_albums_release",
+          "kind": "index",
+          "fields": [],
+          "startLine": 81,
+          "endLine": 81
+        },
+        {
+          "name": "idx_tracks_album",
+          "kind": "index",
+          "fields": [],
+          "startLine": 112,
+          "endLine": 112
+        },
+        {
+          "name": "idx_tracks_status",
+          "kind": "index",
+          "fields": [],
+          "startLine": 113,
+          "endLine": 113
+        },
+        {
+          "name": "idx_tracks_plays",
+          "kind": "index",
+          "fields": [],
+          "startLine": 114,
+          "endLine": 114
+        },
+        {
+          "name": "idx_play_events_track_time",
+          "kind": "index",
+          "fields": [],
+          "startLine": 130,
+          "endLine": 130
+        },
+        {
+          "name": "idx_play_events_time",
+          "kind": "index",
+          "fields": [],
+          "startLine": 132,
+          "endLine": 132
+        },
+        {
+          "name": "idx_likes_track",
+          "kind": "index",
+          "fields": [],
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "name": "idx_chart_lookup",
+          "kind": "index",
+          "fields": [],
+          "startLine": 163,
+          "endLine": 163
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 19
+      }
+    },
+    {
+      "path": "docs/03_SCHEMA_UPDATE.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 87,
+      "nonEmptyLines": 81,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/04_SCHEMA_FIX_GUIDES.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 43,
+      "nonEmptyLines": 36,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "body",
+            "created_at"
+          ],
+          "startLine": 10,
+          "endLine": 16
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 1
+      }
+    },
+    {
+      "path": "docs/05_SCHEMA_PUBLISH.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 16,
+      "nonEmptyLines": 15,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/06_SCHEMA_PROFILE_EDIT.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 23,
+      "nonEmptyLines": 21,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/07_PROFILE_UPLOAD_SETUP.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 46,
+      "nonEmptyLines": 38,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/08_SCHEMA_SONG_HISTORY_FIX.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 25,
+      "nonEmptyLines": 21,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/09_SCHEMA_PLAYLISTS.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 40,
+      "nonEmptyLines": 33,
+      "definitions": [
+        {
+          "name": "user_playlists",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "cover_url",
+            "is_published",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 7,
+          "endLine": 15
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 1
+      }
+    },
+    {
+      "path": "docs/10_SCHEMA_PLAYLIST_DESC.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 11,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/11_SCHEMA_ADMIN_UNPUBLISH.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 54,
+      "nonEmptyLines": 47,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/12_SCHEMA_PLAYLIST_GENRE.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 10,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/13_SCHEMA_EXPOSURE_ORDER.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/14_SCHEMA_SONG_HISTORY_LIKED.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 15,
+      "nonEmptyLines": 13,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/15_SCHEMA_SONG_VIDEO_URL.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/15_SCHEMA_STATUS_COLUMN_FIX.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 10,
+      "nonEmptyLines": 8,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 15,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/17_CLEANUP_OLD_SONGS.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 8,
+      "nonEmptyLines": 7,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "docs/18_SCHEMA_PROFILE_EXTENSIONS.sql",
+      "language": "sql",
+      "fileCategory": "code",
+      "totalLines": 79,
+      "nonEmptyLines": 71,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    }
+  ]
+}

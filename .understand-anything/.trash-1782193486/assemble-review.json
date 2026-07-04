@@ -1,0 +1,19 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 5,
+  "edgesRestored": 7,
+  "crossBatchEdgesAdded": 0,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "notes": [
+    "병합 스크립트의 기계적 수정 결과는 정상입니다. 조립된 그래프에는 id 누락 노드, 알 수 없는 노드 타입, 알 수 없는 complexity 값, 중복 id, 중복 엣지가 전혀 없었습니다.",
+    "드롭된 7개 엣지는 모두 batch-3에서 발생한 LLM 누락이 원인이었습니다. batch-3는 5개 API 라우트 파일 노드와 관련 엣지는 emit했지만 핸들러 함수 서브노드(GET/POST)는 emit하지 않았습니다. 라우트 파일이 실제로 존재하고 핵심 흐름(인증, 크레딧, 음악 생성)이라 가치가 높아 복구했습니다.",
+    "복구한 5개 핸들러 노드: auth/callback:GET, auth/login:POST, auth/signout:POST, credits/history:GET, music/generate:POST. 요약은 실제 소스 파일을 읽어 한국어로 작성했고 lineRange도 소스 기준으로 채웠습니다.",
+    "복구한 7개 드롭 엣지를 모두 복원했습니다(4 calls -> createClient, music/generate 파일의 contains/exports, music/generate:POST -> suno generate:POST calls).",
+    "추가 정합성 보정: auth/credits 4개 핸들러는 batch-3가 calls 엣지만 emit하고 file->handler의 contains/exports 구조 엣지를 누락했기에, 그래프 일관성을 위해 8개 구조 엣지(각 4 contains + 4 exports)를 보강했습니다. 해당 핸들러들은 각 라우트 파일의 유일한 export라 안전합니다.",
+    "크로스배치 검증: scan-result.json의 importMap 152개 엔트리(intra-project import 168개 specifier)를 전부 해석한 결과 누락된 imports 엣지가 0개였습니다. 모든 import 관계가 이미 배치 출력에 반영되어 있어 추가한 imports 엣지는 없습니다.",
+    "시맨틱 dedup 검사 통과: type+filePath+name이 동일하면서 id가 다른 잠재적 중복 노드가 없었고, 보고된 52개 docs SQL 중복(batch 7&8 중첩)은 id 기준으로 정상 병합되어 table 29 / schema 29 노드로 깔끔하게 남았습니다.",
+    "최종 그래프: 281 노드 / 473 엣지, dangling 엣지 0, 모든 complexity는 simple/moderate/complex, 모든 노드 타입 유효(file 101, function 105, table 29, schema 29, config 12, document 5).",
+    "업스트림 관찰: ID 정규화 비율이나 complexity 편향 문제는 없었으나, batch-3가 일부 함수 노드를 누락한 채 엣지만 emit하는 패턴을 보였습니다. file-analyzer가 엣지를 만들 때 양쪽 엔드포인트 노드도 함께 emit하도록 보강하면 향후 복구 batch 의존도를 줄일 수 있습니다."
+  ]
+}

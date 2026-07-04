@@ -1,0 +1,2846 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "louvain",
+  "totalFiles": 152,
+  "totalBatches": 9,
+  "exportsByPath": {
+    ".understand-anything/.understandignore": [],
+    "eslint.config.mjs": [],
+    "next-env.d.ts": [],
+    "next.config.ts": [],
+    "postcss.config.mjs": [],
+    "scripts/check_tables.js": [],
+    "scripts/dev-stable.mjs": [],
+    "scripts/find_db_impl.js": [],
+    "scripts/serve-dist.mjs": [],
+    "src/app/(admin)/admin/music/albums/page.tsx": [
+      "AlbumsPage"
+    ],
+    "src/app/(admin)/admin/music/artists/page.tsx": [
+      "ArtistsPage"
+    ],
+    "src/app/(admin)/admin/music/credits/page.tsx": [
+      "AdminCreditsPage"
+    ],
+    "src/app/(admin)/admin/music/guides/page.tsx": [
+      "AdminGuidesPage"
+    ],
+    "src/app/(admin)/admin/music/layout.tsx": [
+      "AdminLayout"
+    ],
+    "src/app/(admin)/admin/music/notices/page.tsx": [
+      "AdminNoticesPage"
+    ],
+    "src/app/(admin)/admin/music/page.tsx": [
+      "revalidate",
+      "AdminDashboardPage"
+    ],
+    "src/app/(admin)/admin/music/tracks/page.tsx": [
+      "TracksPage"
+    ],
+    "src/app/(admin)/admin/music/ugc/page.tsx": [
+      "revalidate",
+      "UgcManagementPage"
+    ],
+    "src/app/(public)/albums/[slug]/page.tsx": [
+      "revalidate",
+      "PublicAlbumDetailPage"
+    ],
+    "src/app/(public)/artists/[slug]/page.tsx": [
+      "revalidate",
+      "PublicArtistDetailPage"
+    ],
+    "src/app/(public)/charts/artists/page.tsx": [
+      "revalidate",
+      "dynamic",
+      "fetchCache",
+      "PublicArtistChartPage"
+    ],
+    "src/app/(public)/charts/page.tsx": [
+      "revalidate",
+      "PublicChartPage"
+    ],
+    "src/app/(public)/cover/page.tsx": [
+      "revalidate",
+      "CoverPage"
+    ],
+    "src/app/(public)/layout.tsx": [
+      "PublicLayout"
+    ],
+    "src/app/(public)/library/page.tsx": [
+      "revalidate",
+      "LibraryPage"
+    ],
+    "src/app/(public)/page.tsx": [
+      "revalidate",
+      "dynamic",
+      "fetchCache",
+      "PublicHomePage"
+    ],
+    "src/app/(public)/pricing/page.tsx": [
+      "revalidate",
+      "PricingPage"
+    ],
+    "src/app/(public)/profile/page.tsx": [
+      "revalidate",
+      "ProfilePage"
+    ],
+    "src/app/(public)/search/page.tsx": [
+      "revalidate",
+      "PublicSearchPage"
+    ],
+    "src/app/(public)/settings/page.tsx": [
+      "revalidate",
+      "SettingsPage"
+    ],
+    "src/app/(public)/studio/generate/page.tsx": [
+      "revalidate",
+      "GeneratePage"
+    ],
+    "src/app/(public)/studio/page.tsx": [
+      "revalidate",
+      "StudioPage"
+    ],
+    "src/app/api/admin/users/ban/route.ts": [
+      "PUT"
+    ],
+    "src/app/api/admin/users/route.ts": [
+      "GET",
+      "POST"
+    ],
+    "src/app/api/announcements/route.ts": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "src/app/api/auth/callback/route.ts": [
+      "GET"
+    ],
+    "src/app/api/auth/login/route.ts": [
+      "POST"
+    ],
+    "src/app/api/auth/signout/route.ts": [
+      "POST"
+    ],
+    "src/app/api/channels/[id]/route.ts": [
+      "dynamic",
+      "DELETE"
+    ],
+    "src/app/api/channels/route.ts": [
+      "dynamic",
+      "GET",
+      "POST",
+      "PUT"
+    ],
+    "src/app/api/charts/cron/route.ts": [
+      "GET"
+    ],
+    "src/app/api/credits/history/route.ts": [
+      "dynamic",
+      "GET"
+    ],
+    "src/app/api/debug-download/route.ts": [
+      "GET"
+    ],
+    "src/app/api/download/route.ts": [
+      "GET"
+    ],
+    "src/app/api/generate-prompt/route.ts": [
+      "POST"
+    ],
+    "src/app/api/likes/route.ts": [
+      "POST"
+    ],
+    "src/app/api/music/generate/route.ts": [
+      "POST"
+    ],
+    "src/app/api/play/route.ts": [
+      "POST"
+    ],
+    "src/app/api/playlists/[id]/route.ts": [
+      "PUT",
+      "DELETE"
+    ],
+    "src/app/api/playlists/route.ts": [
+      "GET",
+      "POST"
+    ],
+    "src/app/api/playlists/save-track/route.ts": [
+      "POST"
+    ],
+    "src/app/api/profile/active-guides/route.ts": [
+      "GET",
+      "PUT"
+    ],
+    "src/app/api/profile/route.ts": [
+      "dynamic",
+      "GET",
+      "PUT"
+    ],
+    "src/app/api/seed-samples/route.ts": [
+      "GET"
+    ],
+    "src/app/api/song-history/[id]/route.ts": [
+      "PUT"
+    ],
+    "src/app/api/song-history/route.ts": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "src/app/api/suno/cover/generate/route.ts": [
+      "POST"
+    ],
+    "src/app/api/suno/cover/status/route.ts": [
+      "GET"
+    ],
+    "src/app/api/suno/generate/route.ts": [
+      "POST"
+    ],
+    "src/app/api/suno/publish/route.ts": [
+      "POST"
+    ],
+    "src/app/api/suno/status/route.ts": [
+      "GET"
+    ],
+    "src/app/api/system-guides/route.ts": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "src/app/api/temp-cleanup/route.ts": [
+      "GET"
+    ],
+    "src/app/api/upload/route.ts": [
+      "POST"
+    ],
+    "src/app/api/user-guides/route.ts": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "src/app/layout.tsx": [
+      "metadata",
+      "RootLayout"
+    ],
+    "src/app/login/page.tsx": [
+      "LoginPage"
+    ],
+    "src/components/admin/AdminAuthGuard.tsx": [
+      "AdminAuthGuard"
+    ],
+    "src/components/admin/UgcManagementClient.tsx": [
+      "UgcManagementClient"
+    ],
+    "src/components/album/AlbumClient.tsx": [
+      "AlbumClient"
+    ],
+    "src/components/artist/ArtistClient.tsx": [
+      "ArtistClient"
+    ],
+    "src/components/chart/ArtistChartClient.tsx": [
+      "ArtistChartClient"
+    ],
+    "src/components/chart/ChartClient.tsx": [
+      "ChartClient"
+    ],
+    "src/components/common/AlbumCard.tsx": [
+      "AlbumCard"
+    ],
+    "src/components/common/ConfirmDialog.tsx": [
+      "ConfirmDialog"
+    ],
+    "src/components/common/ShareDialog.tsx": [
+      "ShareDialog"
+    ],
+    "src/components/common/TrackDropdown.tsx": [
+      "TrackDropdown"
+    ],
+    "src/components/home/HomeClient.tsx": [
+      "HomeClient"
+    ],
+    "src/components/layout/Header.tsx": [
+      "Header"
+    ],
+    "src/components/layout/PublicLayoutClient.tsx": [
+      "PublicLayoutClient"
+    ],
+    "src/components/library/LibraryClient.tsx": [
+      "LibraryClient"
+    ],
+    "src/components/player/AudioDuration.tsx": [
+      "AudioDuration"
+    ],
+    "src/components/player/MiniPlayerPip.tsx": [
+      "MiniPlayerPip"
+    ],
+    "src/components/player/NowPlayingPanel.tsx": [
+      "NowPlayingPanel"
+    ],
+    "src/components/player/PersistentPlayer.tsx": [
+      "PersistentPlayer"
+    ],
+    "src/components/profile/ProfileClient.tsx": [
+      "ProfileClient"
+    ],
+    "src/components/search/SearchClient.tsx": [
+      "SearchClient"
+    ],
+    "src/components/settings/SettingsClient.tsx": [
+      "SettingsClient"
+    ],
+    "src/components/studio/CoverClient.tsx": [
+      "CoverClient"
+    ],
+    "src/components/studio/GenerateClient.tsx": [
+      "AudioDuration",
+      "GenerateClient"
+    ],
+    "src/components/studio/GenreModal.tsx": [
+      "GenreModal"
+    ],
+    "src/components/studio/MasteringClient.tsx": [
+      "MasteringClient"
+    ],
+    "src/components/studio/StudioClient.tsx": [
+      "StudioClient"
+    ],
+    "src/components/subscription/PricingClient.tsx": [
+      "PricingClient"
+    ],
+    "src/lib/audioUtils.ts": [
+      "audioBufferToWav",
+      "estimateTruePeak",
+      "makeDistortionCurve",
+      "makeSoftClipCurve"
+    ],
+    "src/lib/charts/aggregate.ts": [
+      "aggregateCharts"
+    ],
+    "src/lib/constants.ts": [
+      "GENRES"
+    ],
+    "src/lib/constants/genres.ts": [
+      "GENRE_CATEGORIES",
+      "GENRE_TRANSLATIONS",
+      "GENRE_TRANSLATIONS_JA"
+    ],
+    "src/lib/supabase/client.ts": [
+      "createClient"
+    ],
+    "src/lib/supabase/middleware.ts": [
+      "updateSession"
+    ],
+    "src/lib/supabase/server.ts": [
+      "createClient"
+    ],
+    "src/lib/utils.ts": [
+      "parsePlaylistDescription",
+      "serializePlaylistDescription"
+    ],
+    "src/stores/playerStore.ts": [
+      "usePlayerStore"
+    ],
+    "src/types/music.ts": [],
+    "src/types/node-id3.d.ts": [],
+    "tsconfig.tsbuildinfo": []
+  },
+  "batches": [
+    {
+      "batchIndex": 1,
+      "files": [
+        {
+          "path": "src/app/(admin)/admin/music/albums/page.tsx",
+          "language": "typescript",
+          "sizeLines": 240,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/albums/[slug]/page.tsx",
+          "language": "typescript",
+          "sizeLines": 201,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/artists/[slug]/page.tsx",
+          "language": "typescript",
+          "sizeLines": 261,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/charts/artists/page.tsx",
+          "language": "typescript",
+          "sizeLines": 77,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/charts/page.tsx",
+          "language": "typescript",
+          "sizeLines": 237,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/library/page.tsx",
+          "language": "typescript",
+          "sizeLines": 110,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/page.tsx",
+          "language": "typescript",
+          "sizeLines": 351,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/search/page.tsx",
+          "language": "typescript",
+          "sizeLines": 226,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/playlists/[id]/route.ts",
+          "language": "typescript",
+          "sizeLines": 126,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/playlists/route.ts",
+          "language": "typescript",
+          "sizeLines": 148,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/album/AlbumClient.tsx",
+          "language": "typescript",
+          "sizeLines": 474,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/artist/ArtistClient.tsx",
+          "language": "typescript",
+          "sizeLines": 1261,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/chart/ArtistChartClient.tsx",
+          "language": "typescript",
+          "sizeLines": 300,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/chart/ChartClient.tsx",
+          "language": "typescript",
+          "sizeLines": 660,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/common/AlbumCard.tsx",
+          "language": "typescript",
+          "sizeLines": 249,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/common/ShareDialog.tsx",
+          "language": "typescript",
+          "sizeLines": 109,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/common/TrackDropdown.tsx",
+          "language": "typescript",
+          "sizeLines": 309,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/home/HomeClient.tsx",
+          "language": "typescript",
+          "sizeLines": 1467,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/library/LibraryClient.tsx",
+          "language": "typescript",
+          "sizeLines": 1927,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/player/AudioDuration.tsx",
+          "language": "typescript",
+          "sizeLines": 49,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/search/SearchClient.tsx",
+          "language": "typescript",
+          "sizeLines": 436,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants.ts",
+          "language": "typescript",
+          "sizeLines": 45,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/utils.ts",
+          "language": "typescript",
+          "sizeLines": 71,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/types/music.ts",
+          "language": "typescript",
+          "sizeLines": 67,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/app/(admin)/admin/music/albums/page.tsx": [
+          "src/lib/utils.ts"
+        ],
+        "src/app/(public)/albums/[slug]/page.tsx": [
+          "src/components/album/AlbumClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/(public)/artists/[slug]/page.tsx": [
+          "src/components/artist/ArtistClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/(public)/charts/artists/page.tsx": [
+          "src/components/chart/ArtistChartClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/(public)/charts/page.tsx": [
+          "src/components/chart/ChartClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/library/page.tsx": [
+          "src/components/library/LibraryClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/(public)/page.tsx": [
+          "src/components/home/HomeClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/lib/utils.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/(public)/search/page.tsx": [
+          "src/components/search/SearchClient.tsx",
+          "src/lib/supabase/server.ts",
+          "src/lib/utils.ts",
+          "src/types/music.ts"
+        ],
+        "src/app/api/playlists/[id]/route.ts": [
+          "src/lib/supabase/server.ts",
+          "src/lib/utils.ts"
+        ],
+        "src/app/api/playlists/route.ts": [
+          "src/lib/supabase/server.ts",
+          "src/lib/utils.ts"
+        ],
+        "src/components/album/AlbumClient.tsx": [
+          "src/components/common/TrackDropdown.tsx",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/artist/ArtistClient.tsx": [
+          "src/components/common/AlbumCard.tsx",
+          "src/components/common/TrackDropdown.tsx",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/chart/ArtistChartClient.tsx": [
+          "src/lib/supabase/client.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/chart/ChartClient.tsx": [
+          "src/components/common/TrackDropdown.tsx",
+          "src/components/player/AudioDuration.tsx",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/common/AlbumCard.tsx": [
+          "src/types/music.ts"
+        ],
+        "src/components/common/ShareDialog.tsx": [],
+        "src/components/common/TrackDropdown.tsx": [
+          "src/components/common/ConfirmDialog.tsx",
+          "src/components/common/ShareDialog.tsx",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/home/HomeClient.tsx": [
+          "src/components/common/AlbumCard.tsx",
+          "src/components/common/TrackDropdown.tsx",
+          "src/components/player/AudioDuration.tsx",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/library/LibraryClient.tsx": [
+          "src/components/common/AlbumCard.tsx",
+          "src/lib/constants.ts",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/player/AudioDuration.tsx": [],
+        "src/components/search/SearchClient.tsx": [
+          "src/components/common/AlbumCard.tsx",
+          "src/components/common/TrackDropdown.tsx",
+          "src/lib/constants.ts",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/lib/constants.ts": [],
+        "src/lib/utils.ts": [],
+        "src/types/music.ts": []
+      },
+      "neighborMap": {
+        "src/app/(public)/albums/[slug]/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/artists/[slug]/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/charts/artists/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/charts/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/library/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/search/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/playlists/[id]/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/playlists/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/components/album/AlbumClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/artist/ArtistClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/chart/ArtistChartClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/components/chart/ChartClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/common/TrackDropdown.tsx": [
+          {
+            "path": "src/components/common/ConfirmDialog.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "ConfirmDialog"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/home/HomeClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/library/LibraryClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/search/SearchClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/lib/constants.ts": [
+          {
+            "path": "src/components/profile/ProfileClient.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "ProfileClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/GenerateClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "AudioDuration",
+              "GenerateClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/StudioClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "StudioClient"
+            ]
+          }
+        ],
+        "src/lib/utils.ts": [
+          {
+            "path": "src/components/admin/UgcManagementClient.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "UgcManagementClient"
+            ]
+          },
+          {
+            "path": "src/components/player/NowPlayingPanel.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "NowPlayingPanel"
+            ]
+          },
+          {
+            "path": "src/components/profile/ProfileClient.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "ProfileClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/GenerateClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "AudioDuration",
+              "GenerateClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/StudioClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "StudioClient"
+            ]
+          }
+        ],
+        "src/types/music.ts": [
+          {
+            "path": "src/components/player/NowPlayingPanel.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "NowPlayingPanel"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 2,
+      "files": [
+        {
+          "path": "src/app/(admin)/admin/music/credits/page.tsx",
+          "language": "typescript",
+          "sizeLines": 246,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/guides/page.tsx",
+          "language": "typescript",
+          "sizeLines": 544,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/layout.tsx",
+          "language": "typescript",
+          "sizeLines": 126,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/notices/page.tsx",
+          "language": "typescript",
+          "sizeLines": 322,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/tracks/page.tsx",
+          "language": "typescript",
+          "sizeLines": 403,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/ugc/page.tsx",
+          "language": "typescript",
+          "sizeLines": 27,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/layout.tsx",
+          "language": "typescript",
+          "sizeLines": 44,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/profile/page.tsx",
+          "language": "typescript",
+          "sizeLines": 34,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/login/page.tsx",
+          "language": "typescript",
+          "sizeLines": 273,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/admin/AdminAuthGuard.tsx",
+          "language": "typescript",
+          "sizeLines": 127,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/admin/UgcManagementClient.tsx",
+          "language": "typescript",
+          "sizeLines": 579,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/common/ConfirmDialog.tsx",
+          "language": "typescript",
+          "sizeLines": 73,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/layout/Header.tsx",
+          "language": "typescript",
+          "sizeLines": 359,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/layout/PublicLayoutClient.tsx",
+          "language": "typescript",
+          "sizeLines": 734,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/player/MiniPlayerPip.tsx",
+          "language": "typescript",
+          "sizeLines": 996,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/player/NowPlayingPanel.tsx",
+          "language": "typescript",
+          "sizeLines": 906,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/player/PersistentPlayer.tsx",
+          "language": "typescript",
+          "sizeLines": 622,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/profile/ProfileClient.tsx",
+          "language": "typescript",
+          "sizeLines": 5441,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/supabase/client.ts",
+          "language": "typescript",
+          "sizeLines": 8,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/stores/playerStore.ts",
+          "language": "typescript",
+          "sizeLines": 187,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/app/(admin)/admin/music/credits/page.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/app/(admin)/admin/music/guides/page.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/app/(admin)/admin/music/layout.tsx": [
+          "src/components/admin/AdminAuthGuard.tsx",
+          "src/components/player/PersistentPlayer.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(admin)/admin/music/notices/page.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/app/(admin)/admin/music/tracks/page.tsx": [
+          "src/stores/playerStore.ts"
+        ],
+        "src/app/(admin)/admin/music/ugc/page.tsx": [
+          "src/components/admin/UgcManagementClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/layout.tsx": [
+          "src/components/layout/PublicLayoutClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/profile/page.tsx": [
+          "src/components/profile/ProfileClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/login/page.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/components/admin/AdminAuthGuard.tsx": [],
+        "src/components/admin/UgcManagementClient.tsx": [
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/common/ConfirmDialog.tsx": [],
+        "src/components/layout/Header.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/components/layout/PublicLayoutClient.tsx": [
+          "src/components/player/NowPlayingPanel.tsx",
+          "src/components/player/PersistentPlayer.tsx",
+          "src/lib/supabase/client.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/player/MiniPlayerPip.tsx": [
+          "src/lib/supabase/client.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/player/NowPlayingPanel.tsx": [
+          "src/components/common/ConfirmDialog.tsx",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts",
+          "src/types/music.ts"
+        ],
+        "src/components/player/PersistentPlayer.tsx": [
+          "src/components/player/MiniPlayerPip.tsx",
+          "src/lib/supabase/client.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/profile/ProfileClient.tsx": [
+          "src/lib/constants.ts",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/lib/supabase/client.ts": [],
+        "src/stores/playerStore.ts": [
+          "src/types/music.ts"
+        ]
+      },
+      "neighborMap": {
+        "src/app/(admin)/admin/music/layout.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(admin)/admin/music/ugc/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/layout.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/profile/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/components/admin/UgcManagementClient.tsx": [
+          {
+            "path": "src/lib/utils.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "parsePlaylistDescription",
+              "serializePlaylistDescription"
+            ]
+          }
+        ],
+        "src/components/common/ConfirmDialog.tsx": [
+          {
+            "path": "src/components/common/TrackDropdown.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "TrackDropdown"
+            ]
+          }
+        ],
+        "src/components/player/NowPlayingPanel.tsx": [
+          {
+            "path": "src/lib/utils.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "parsePlaylistDescription",
+              "serializePlaylistDescription"
+            ]
+          },
+          {
+            "path": "src/types/music.ts",
+            "batchIndex": 1,
+            "symbols": []
+          }
+        ],
+        "src/components/profile/ProfileClient.tsx": [
+          {
+            "path": "src/lib/constants.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "GENRES"
+            ]
+          },
+          {
+            "path": "src/lib/utils.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "parsePlaylistDescription",
+              "serializePlaylistDescription"
+            ]
+          }
+        ],
+        "src/lib/supabase/client.ts": [
+          {
+            "path": "src/components/album/AlbumClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "AlbumClient"
+            ]
+          },
+          {
+            "path": "src/components/artist/ArtistClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "ArtistClient"
+            ]
+          },
+          {
+            "path": "src/components/chart/ArtistChartClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "ArtistChartClient"
+            ]
+          },
+          {
+            "path": "src/components/chart/ChartClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "ChartClient"
+            ]
+          },
+          {
+            "path": "src/components/home/HomeClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "HomeClient"
+            ]
+          },
+          {
+            "path": "src/components/library/LibraryClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "LibraryClient"
+            ]
+          },
+          {
+            "path": "src/components/search/SearchClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "SearchClient"
+            ]
+          },
+          {
+            "path": "src/components/settings/SettingsClient.tsx",
+            "batchIndex": 4,
+            "symbols": [
+              "SettingsClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/CoverClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "CoverClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/StudioClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "StudioClient"
+            ]
+          }
+        ],
+        "src/stores/playerStore.ts": [
+          {
+            "path": "src/types/music.ts",
+            "batchIndex": 1,
+            "symbols": []
+          },
+          {
+            "path": "src/components/album/AlbumClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "AlbumClient"
+            ]
+          },
+          {
+            "path": "src/components/artist/ArtistClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "ArtistClient"
+            ]
+          },
+          {
+            "path": "src/components/chart/ChartClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "ChartClient"
+            ]
+          },
+          {
+            "path": "src/components/common/TrackDropdown.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "TrackDropdown"
+            ]
+          },
+          {
+            "path": "src/components/home/HomeClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "HomeClient"
+            ]
+          },
+          {
+            "path": "src/components/library/LibraryClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "LibraryClient"
+            ]
+          },
+          {
+            "path": "src/components/search/SearchClient.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "SearchClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/CoverClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "CoverClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/GenerateClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "AudioDuration",
+              "GenerateClient"
+            ]
+          },
+          {
+            "path": "src/components/studio/StudioClient.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "StudioClient"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 3,
+      "files": [
+        {
+          "path": "src/app/(admin)/admin/music/page.tsx",
+          "language": "typescript",
+          "sizeLines": 188,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/pricing/page.tsx",
+          "language": "typescript",
+          "sizeLines": 16,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/settings/page.tsx",
+          "language": "typescript",
+          "sizeLines": 21,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/admin/users/ban/route.ts",
+          "language": "typescript",
+          "sizeLines": 74,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/admin/users/route.ts",
+          "language": "typescript",
+          "sizeLines": 113,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/announcements/route.ts",
+          "language": "typescript",
+          "sizeLines": 108,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/auth/callback/route.ts",
+          "language": "typescript",
+          "sizeLines": 24,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/auth/login/route.ts",
+          "language": "typescript",
+          "sizeLines": 33,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/auth/signout/route.ts",
+          "language": "typescript",
+          "sizeLines": 16,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/channels/[id]/route.ts",
+          "language": "typescript",
+          "sizeLines": 52,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/channels/route.ts",
+          "language": "typescript",
+          "sizeLines": 155,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/charts/cron/route.ts",
+          "language": "typescript",
+          "sizeLines": 56,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/credits/history/route.ts",
+          "language": "typescript",
+          "sizeLines": 33,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/debug-download/route.ts",
+          "language": "typescript",
+          "sizeLines": 108,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/generate-prompt/route.ts",
+          "language": "typescript",
+          "sizeLines": 65,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/likes/route.ts",
+          "language": "typescript",
+          "sizeLines": 111,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/music/generate/route.ts",
+          "language": "typescript",
+          "sizeLines": 19,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/play/route.ts",
+          "language": "typescript",
+          "sizeLines": 79,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/app/(admin)/admin/music/page.tsx": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/pricing/page.tsx": [
+          "src/components/subscription/PricingClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/settings/page.tsx": [
+          "src/components/settings/SettingsClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/admin/users/ban/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/admin/users/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/announcements/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/auth/callback/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/auth/login/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/auth/signout/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/channels/[id]/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/channels/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/charts/cron/route.ts": [
+          "src/lib/charts/aggregate.ts",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/credits/history/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/debug-download/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/generate-prompt/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/likes/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/music/generate/route.ts": [
+          "src/app/api/suno/generate/route.ts"
+        ],
+        "src/app/api/play/route.ts": [
+          "src/lib/supabase/server.ts"
+        ]
+      },
+      "neighborMap": {
+        "src/app/(admin)/admin/music/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/pricing/page.tsx": [
+          {
+            "path": "src/components/subscription/PricingClient.tsx",
+            "batchIndex": 4,
+            "symbols": [
+              "PricingClient"
+            ]
+          },
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/settings/page.tsx": [
+          {
+            "path": "src/components/settings/SettingsClient.tsx",
+            "batchIndex": 4,
+            "symbols": [
+              "SettingsClient"
+            ]
+          },
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/admin/users/ban/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/admin/users/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/announcements/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/auth/callback/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/auth/login/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/auth/signout/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/channels/[id]/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/channels/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/charts/cron/route.ts": [
+          {
+            "path": "src/lib/charts/aggregate.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "aggregateCharts"
+            ]
+          },
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/credits/history/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/debug-download/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/generate-prompt/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/likes/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/api/music/generate/route.ts": [
+          {
+            "path": "src/app/api/suno/generate/route.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "POST"
+            ]
+          }
+        ],
+        "src/app/api/play/route.ts": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 4,
+      "files": [
+        {
+          "path": "src/app/api/playlists/save-track/route.ts",
+          "language": "typescript",
+          "sizeLines": 65,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/profile/active-guides/route.ts",
+          "language": "typescript",
+          "sizeLines": 71,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/profile/route.ts",
+          "language": "typescript",
+          "sizeLines": 96,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/seed-samples/route.ts",
+          "language": "typescript",
+          "sizeLines": 74,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/song-history/[id]/route.ts",
+          "language": "typescript",
+          "sizeLines": 76,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/song-history/route.ts",
+          "language": "typescript",
+          "sizeLines": 221,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/suno/cover/generate/route.ts",
+          "language": "typescript",
+          "sizeLines": 84,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/suno/generate/route.ts",
+          "language": "typescript",
+          "sizeLines": 116,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/suno/publish/route.ts",
+          "language": "typescript",
+          "sizeLines": 38,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/suno/status/route.ts",
+          "language": "typescript",
+          "sizeLines": 194,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/system-guides/route.ts",
+          "language": "typescript",
+          "sizeLines": 199,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/temp-cleanup/route.ts",
+          "language": "typescript",
+          "sizeLines": 51,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/upload/route.ts",
+          "language": "typescript",
+          "sizeLines": 56,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/user-guides/route.ts",
+          "language": "typescript",
+          "sizeLines": 104,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/settings/SettingsClient.tsx",
+          "language": "typescript",
+          "sizeLines": 798,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/subscription/PricingClient.tsx",
+          "language": "typescript",
+          "sizeLines": 526,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/charts/aggregate.ts",
+          "language": "typescript",
+          "sizeLines": 142,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/supabase/server.ts",
+          "language": "typescript",
+          "sizeLines": 29,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/app/api/playlists/save-track/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/profile/active-guides/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/profile/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/seed-samples/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/song-history/[id]/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/song-history/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/suno/cover/generate/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/suno/generate/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/suno/publish/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/suno/status/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/system-guides/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/temp-cleanup/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/upload/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/api/user-guides/route.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/components/settings/SettingsClient.tsx": [
+          "src/lib/supabase/client.ts"
+        ],
+        "src/components/subscription/PricingClient.tsx": [],
+        "src/lib/charts/aggregate.ts": [
+          "src/lib/supabase/server.ts"
+        ],
+        "src/lib/supabase/server.ts": []
+      },
+      "neighborMap": {
+        "src/app/api/suno/generate/route.ts": [
+          {
+            "path": "src/app/api/music/generate/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          }
+        ],
+        "src/components/settings/SettingsClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/app/(public)/settings/page.tsx",
+            "batchIndex": 3,
+            "symbols": [
+              "revalidate",
+              "SettingsPage"
+            ]
+          }
+        ],
+        "src/components/subscription/PricingClient.tsx": [
+          {
+            "path": "src/app/(public)/pricing/page.tsx",
+            "batchIndex": 3,
+            "symbols": [
+              "revalidate",
+              "PricingPage"
+            ]
+          }
+        ],
+        "src/lib/charts/aggregate.ts": [
+          {
+            "path": "src/app/api/charts/cron/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET"
+            ]
+          }
+        ],
+        "src/lib/supabase/server.ts": [
+          {
+            "path": "src/app/(admin)/admin/music/layout.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "AdminLayout"
+            ]
+          },
+          {
+            "path": "src/app/(admin)/admin/music/page.tsx",
+            "batchIndex": 3,
+            "symbols": [
+              "revalidate",
+              "AdminDashboardPage"
+            ]
+          },
+          {
+            "path": "src/app/(admin)/admin/music/ugc/page.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "revalidate",
+              "UgcManagementPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/albums/[slug]/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "PublicAlbumDetailPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/artists/[slug]/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "PublicArtistDetailPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/charts/artists/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "dynamic",
+              "fetchCache",
+              "PublicArtistChartPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/charts/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "PublicChartPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/cover/page.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "revalidate",
+              "CoverPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/layout.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "PublicLayout"
+            ]
+          },
+          {
+            "path": "src/app/(public)/library/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "LibraryPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "dynamic",
+              "fetchCache",
+              "PublicHomePage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/pricing/page.tsx",
+            "batchIndex": 3,
+            "symbols": [
+              "revalidate",
+              "PricingPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/profile/page.tsx",
+            "batchIndex": 2,
+            "symbols": [
+              "revalidate",
+              "ProfilePage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/search/page.tsx",
+            "batchIndex": 1,
+            "symbols": [
+              "revalidate",
+              "PublicSearchPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/settings/page.tsx",
+            "batchIndex": 3,
+            "symbols": [
+              "revalidate",
+              "SettingsPage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/studio/generate/page.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "revalidate",
+              "GeneratePage"
+            ]
+          },
+          {
+            "path": "src/app/(public)/studio/page.tsx",
+            "batchIndex": 5,
+            "symbols": [
+              "revalidate",
+              "StudioPage"
+            ]
+          },
+          {
+            "path": "src/app/api/admin/users/ban/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "PUT"
+            ]
+          },
+          {
+            "path": "src/app/api/admin/users/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET",
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/announcements/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE"
+            ]
+          },
+          {
+            "path": "src/app/api/auth/callback/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET"
+            ]
+          },
+          {
+            "path": "src/app/api/auth/login/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/auth/signout/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/channels/[id]/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "dynamic",
+              "DELETE"
+            ]
+          },
+          {
+            "path": "src/app/api/channels/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "dynamic",
+              "GET",
+              "POST",
+              "PUT"
+            ]
+          },
+          {
+            "path": "src/app/api/charts/cron/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET"
+            ]
+          },
+          {
+            "path": "src/app/api/credits/history/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "dynamic",
+              "GET"
+            ]
+          },
+          {
+            "path": "src/app/api/debug-download/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "GET"
+            ]
+          },
+          {
+            "path": "src/app/api/generate-prompt/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/likes/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/play/route.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "POST"
+            ]
+          },
+          {
+            "path": "src/app/api/playlists/[id]/route.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "PUT",
+              "DELETE"
+            ]
+          },
+          {
+            "path": "src/app/api/playlists/route.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "GET",
+              "POST"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 5,
+      "files": [
+        {
+          "path": "src/app/(public)/cover/page.tsx",
+          "language": "typescript",
+          "sizeLines": 21,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/studio/generate/page.tsx",
+          "language": "typescript",
+          "sizeLines": 21,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(public)/studio/page.tsx",
+          "language": "typescript",
+          "sizeLines": 21,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/studio/CoverClient.tsx",
+          "language": "typescript",
+          "sizeLines": 548,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/studio/GenerateClient.tsx",
+          "language": "typescript",
+          "sizeLines": 1170,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/studio/GenreModal.tsx",
+          "language": "typescript",
+          "sizeLines": 103,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/studio/MasteringClient.tsx",
+          "language": "typescript",
+          "sizeLines": 787,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/components/studio/StudioClient.tsx",
+          "language": "typescript",
+          "sizeLines": 3709,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/audioUtils.ts",
+          "language": "typescript",
+          "sizeLines": 159,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/genres.ts",
+          "language": "typescript",
+          "sizeLines": 336,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/app/(public)/cover/page.tsx": [
+          "src/components/studio/CoverClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/studio/generate/page.tsx": [
+          "src/components/studio/GenerateClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/app/(public)/studio/page.tsx": [
+          "src/components/studio/StudioClient.tsx",
+          "src/lib/supabase/server.ts"
+        ],
+        "src/components/studio/CoverClient.tsx": [
+          "src/lib/supabase/client.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/studio/GenerateClient.tsx": [
+          "src/lib/constants.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/components/studio/GenreModal.tsx": [
+          "src/lib/constants/genres.ts"
+        ],
+        "src/components/studio/MasteringClient.tsx": [
+          "src/lib/audioUtils.ts"
+        ],
+        "src/components/studio/StudioClient.tsx": [
+          "src/components/studio/CoverClient.tsx",
+          "src/components/studio/GenerateClient.tsx",
+          "src/components/studio/GenreModal.tsx",
+          "src/components/studio/MasteringClient.tsx",
+          "src/lib/constants.ts",
+          "src/lib/constants/genres.ts",
+          "src/lib/supabase/client.ts",
+          "src/lib/utils.ts",
+          "src/stores/playerStore.ts"
+        ],
+        "src/lib/audioUtils.ts": [],
+        "src/lib/constants/genres.ts": []
+      },
+      "neighborMap": {
+        "src/app/(public)/cover/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/studio/generate/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/app/(public)/studio/page.tsx": [
+          {
+            "path": "src/lib/supabase/server.ts",
+            "batchIndex": 4,
+            "symbols": [
+              "createClient"
+            ]
+          }
+        ],
+        "src/components/studio/CoverClient.tsx": [
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/studio/GenerateClient.tsx": [
+          {
+            "path": "src/lib/constants.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "GENRES"
+            ]
+          },
+          {
+            "path": "src/lib/utils.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "parsePlaylistDescription",
+              "serializePlaylistDescription"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ],
+        "src/components/studio/StudioClient.tsx": [
+          {
+            "path": "src/lib/constants.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "GENRES"
+            ]
+          },
+          {
+            "path": "src/lib/supabase/client.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createClient"
+            ]
+          },
+          {
+            "path": "src/lib/utils.ts",
+            "batchIndex": 1,
+            "symbols": [
+              "parsePlaylistDescription",
+              "serializePlaylistDescription"
+            ]
+          },
+          {
+            "path": "src/stores/playerStore.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "usePlayerStore"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 6,
+      "files": [
+        {
+          "path": "all_missing_en.json",
+          "language": "json",
+          "sizeLines": 267,
+          "fileCategory": "config"
+        },
+        {
+          "path": "ja_translations.json",
+          "language": "json",
+          "sizeLines": 223,
+          "fileCategory": "config"
+        },
+        {
+          "path": "ja_translations_v2.json",
+          "language": "json",
+          "sizeLines": 268,
+          "fileCategory": "config"
+        },
+        {
+          "path": "ko_strings.txt",
+          "language": "txt",
+          "sizeLines": 847,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "missing_en.json",
+          "language": "json",
+          "sizeLines": 222,
+          "fileCategory": "config"
+        },
+        {
+          "path": "missing_translations.json",
+          "language": "json",
+          "sizeLines": 225,
+          "fileCategory": "config"
+        },
+        {
+          "path": "package.json",
+          "language": "json",
+          "sizeLines": 32,
+          "fileCategory": "config"
+        },
+        {
+          "path": "supabase_schema.sql",
+          "language": "sql",
+          "sizeLines": 199,
+          "fileCategory": "data"
+        },
+        {
+          "path": "ternary_strings.json",
+          "language": "json",
+          "sizeLines": 1173,
+          "fileCategory": "config"
+        },
+        {
+          "path": "tsconfig.json",
+          "language": "json",
+          "sizeLines": 34,
+          "fileCategory": "config"
+        },
+        {
+          "path": "vercel.json",
+          "language": "json",
+          "sizeLines": 4,
+          "fileCategory": "config"
+        },
+        {
+          "path": "vercel_logs.txt",
+          "language": "txt",
+          "sizeLines": 0,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "all_missing_en.json": [],
+        "ja_translations.json": [],
+        "ja_translations_v2.json": [],
+        "ko_strings.txt": [],
+        "missing_en.json": [],
+        "missing_translations.json": [],
+        "package.json": [],
+        "supabase_schema.sql": [],
+        "ternary_strings.json": [],
+        "tsconfig.json": [],
+        "vercel.json": [],
+        "vercel_logs.txt": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 7,
+      "files": [
+        {
+          "path": "docs/00_PROJECT_BRIEF.md",
+          "language": "markdown",
+          "sizeLines": 157,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/01_SUPABASE_SETUP.sql",
+          "language": "sql",
+          "sizeLines": 387,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/02_PERSISTENT_PLAYER.md",
+          "language": "markdown",
+          "sizeLines": 546,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/03_SCHEMA_UPDATE.sql",
+          "language": "sql",
+          "sizeLines": 87,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/04_SCHEMA_FIX_GUIDES.sql",
+          "language": "sql",
+          "sizeLines": 43,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/05_SCHEMA_PUBLISH.sql",
+          "language": "sql",
+          "sizeLines": 16,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/06_SCHEMA_PROFILE_EDIT.sql",
+          "language": "sql",
+          "sizeLines": 23,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/07_PROFILE_UPLOAD_SETUP.sql",
+          "language": "sql",
+          "sizeLines": 46,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/08_SCHEMA_SONG_HISTORY_FIX.sql",
+          "language": "sql",
+          "sizeLines": 25,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/09_SCHEMA_PLAYLISTS.sql",
+          "language": "sql",
+          "sizeLines": 40,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/10_SCHEMA_PLAYLIST_DESC.sql",
+          "language": "sql",
+          "sizeLines": 13,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/11_SCHEMA_ADMIN_UNPUBLISH.sql",
+          "language": "sql",
+          "sizeLines": 54,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/12_SCHEMA_PLAYLIST_GENRE.sql",
+          "language": "sql",
+          "sizeLines": 13,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/13_SCHEMA_EXPOSURE_ORDER.sql",
+          "language": "sql",
+          "sizeLines": 5,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/14_SCHEMA_SONG_HISTORY_LIKED.sql",
+          "language": "sql",
+          "sizeLines": 15,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/15_SCHEMA_SONG_VIDEO_URL.sql",
+          "language": "sql",
+          "sizeLines": 5,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/15_SCHEMA_STATUS_COLUMN_FIX.sql",
+          "language": "sql",
+          "sizeLines": 10,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql",
+          "language": "sql",
+          "sizeLines": 17,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/17_CLEANUP_OLD_SONGS.sql",
+          "language": "sql",
+          "sizeLines": 8,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/18_SCHEMA_PROFILE_EXTENSIONS.sql",
+          "language": "sql",
+          "sizeLines": 79,
+          "fileCategory": "data"
+        }
+      ],
+      "batchImportData": {
+        "docs/00_PROJECT_BRIEF.md": [],
+        "docs/01_SUPABASE_SETUP.sql": [],
+        "docs/02_PERSISTENT_PLAYER.md": [],
+        "docs/03_SCHEMA_UPDATE.sql": [],
+        "docs/04_SCHEMA_FIX_GUIDES.sql": [],
+        "docs/05_SCHEMA_PUBLISH.sql": [],
+        "docs/06_SCHEMA_PROFILE_EDIT.sql": [],
+        "docs/07_PROFILE_UPLOAD_SETUP.sql": [],
+        "docs/08_SCHEMA_SONG_HISTORY_FIX.sql": [],
+        "docs/09_SCHEMA_PLAYLISTS.sql": [],
+        "docs/10_SCHEMA_PLAYLIST_DESC.sql": [],
+        "docs/11_SCHEMA_ADMIN_UNPUBLISH.sql": [],
+        "docs/12_SCHEMA_PLAYLIST_GENRE.sql": [],
+        "docs/13_SCHEMA_EXPOSURE_ORDER.sql": [],
+        "docs/14_SCHEMA_SONG_HISTORY_LIKED.sql": [],
+        "docs/15_SCHEMA_SONG_VIDEO_URL.sql": [],
+        "docs/15_SCHEMA_STATUS_COLUMN_FIX.sql": [],
+        "docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql": [],
+        "docs/17_CLEANUP_OLD_SONGS.sql": [],
+        "docs/18_SCHEMA_PROFILE_EXTENSIONS.sql": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 8,
+      "files": [
+        {
+          "path": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+          "language": "sql",
+          "sizeLines": 312,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/20_SCHEMA_ADD_CREDITS.sql",
+          "language": "sql",
+          "sizeLines": 18,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+          "language": "sql",
+          "sizeLines": 10,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+          "language": "sql",
+          "sizeLines": 47,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/22_SCHEMA_MULTI_MODEL.sql",
+          "language": "sql",
+          "sizeLines": 15,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+          "language": "sql",
+          "sizeLines": 33,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+          "language": "sql",
+          "sizeLines": 5,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+          "language": "sql",
+          "sizeLines": 75,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/25_FIX_STORAGE_RLS_INLINE.sql",
+          "language": "sql",
+          "sizeLines": 38,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/CONSOLIDATED_DATABASE_FIX.sql",
+          "language": "sql",
+          "sizeLines": 105,
+          "fileCategory": "data"
+        },
+        {
+          "path": "docs/SUPABASE_GOOGLE_SETUP.md",
+          "language": "markdown",
+          "sizeLines": 79,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql": [],
+        "docs/20_SCHEMA_ADD_CREDITS.sql": [],
+        "docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql": [],
+        "docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql": [],
+        "docs/22_SCHEMA_MULTI_MODEL.sql": [],
+        "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql": [],
+        "docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql": [],
+        "docs/24_FIX_IS_ADMIN_FUNCTION.sql": [],
+        "docs/25_FIX_STORAGE_RLS_INLINE.sql": [],
+        "docs/CONSOLIDATED_DATABASE_FIX.sql": [],
+        "docs/SUPABASE_GOOGLE_SETUP.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 9,
+      "files": [
+        {
+          "path": ".understand-anything/.understandignore",
+          "language": "unknown",
+          "sizeLines": 58,
+          "fileCategory": "code"
+        },
+        {
+          "path": ".understand-anything/config.json",
+          "language": "json",
+          "sizeLines": 0,
+          "fileCategory": "config"
+        },
+        {
+          "path": "eslint.config.mjs",
+          "language": "javascript",
+          "sizeLines": 18,
+          "fileCategory": "code"
+        },
+        {
+          "path": "next-env.d.ts",
+          "language": "typescript",
+          "sizeLines": 6,
+          "fileCategory": "code"
+        },
+        {
+          "path": "next.config.ts",
+          "language": "typescript",
+          "sizeLines": 8,
+          "fileCategory": "code"
+        },
+        {
+          "path": "postcss.config.mjs",
+          "language": "javascript",
+          "sizeLines": 7,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/check_tables.js",
+          "language": "javascript",
+          "sizeLines": 27,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/dev-stable.mjs",
+          "language": "javascript",
+          "sizeLines": 54,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/find_db_impl.js",
+          "language": "javascript",
+          "sizeLines": 33,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/serve-dist.mjs",
+          "language": "javascript",
+          "sizeLines": 105,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/(admin)/admin/music/artists/page.tsx",
+          "language": "typescript",
+          "sizeLines": 226,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/download/route.ts",
+          "language": "typescript",
+          "sizeLines": 73,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/api/suno/cover/status/route.ts",
+          "language": "typescript",
+          "sizeLines": 41,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/app/globals.css",
+          "language": "css",
+          "sizeLines": 520,
+          "fileCategory": "markup"
+        },
+        {
+          "path": "src/app/layout.tsx",
+          "language": "typescript",
+          "sizeLines": 33,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/supabase/middleware.ts",
+          "language": "typescript",
+          "sizeLines": 38,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/types/node-id3.d.ts",
+          "language": "typescript",
+          "sizeLines": 19,
+          "fileCategory": "code"
+        },
+        {
+          "path": "supabase/schema.sql",
+          "language": "sql",
+          "sizeLines": 106,
+          "fileCategory": "data"
+        },
+        {
+          "path": "tsconfig.tsbuildinfo",
+          "language": "tsbuildinfo",
+          "sizeLines": 0,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        ".understand-anything/.understandignore": [],
+        ".understand-anything/config.json": [],
+        "eslint.config.mjs": [],
+        "next-env.d.ts": [],
+        "next.config.ts": [],
+        "postcss.config.mjs": [],
+        "scripts/check_tables.js": [],
+        "scripts/dev-stable.mjs": [],
+        "scripts/find_db_impl.js": [],
+        "scripts/serve-dist.mjs": [],
+        "src/app/(admin)/admin/music/artists/page.tsx": [],
+        "src/app/api/download/route.ts": [],
+        "src/app/api/suno/cover/status/route.ts": [],
+        "src/app/globals.css": [],
+        "src/app/layout.tsx": [
+          "src/app/globals.css"
+        ],
+        "src/lib/supabase/middleware.ts": [],
+        "src/types/node-id3.d.ts": [],
+        "supabase/schema.sql": [],
+        "tsconfig.tsbuildinfo": []
+      },
+      "neighborMap": {}
+    }
+  ]
+}

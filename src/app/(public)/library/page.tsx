@@ -11,34 +11,51 @@ export default async function LibraryPage() {
   let likedTracks: Track[] = []
 
   if (user) {
-    // 1. Fetch completed songs from song_history where liked is true
-    const { data: realSongs } = await supabase
-      .from('song_history')
-      .select('*')
-      .eq('status', 'completed')
-      .eq('liked', true)
-      .order('created_at', { ascending: false })
-
-    // 2. Fetch only the user profiles associated with the songs
-    const userIds = Array.from(new Set(realSongs?.map((song: any) => song.user_id).filter(Boolean) || []))
-    let profilesData: any[] = []
-    if (userIds.length > 0) {
-      const { data } = await supabase
-        .from('profiles')
+    // 1. Fetch the current user's liked songs only:
+    //    (a) own song_history rows marked liked, plus
+    //    (b) songs the user liked via the likes table.
+    const [{ data: ownLiked }, { data: likeRows }] = await Promise.all([
+      supabase
+        .from('song_history')
         .select('*')
-        .in('id', userIds)
-      profilesData = data || []
+        .eq('status', 'completed')
+        .eq('liked', true)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false }),
+      supabase.from('likes').select('track_id').eq('user_id', user.id)
+    ])
+
+    const likedIds = (likeRows || []).map((l: any) => l.track_id).filter(Boolean)
+    const ownIds = new Set((ownLiked || []).map((s: any) => s.id))
+    const externalIds = likedIds.filter((id: string) => !ownIds.has(id))
+
+    let externalLiked: any[] = []
+    if (externalIds.length > 0) {
+      const { data } = await supabase
+        .from('song_history')
+        .select('*')
+        .eq('status', 'completed')
+        .in('id', externalIds)
+      externalLiked = data || []
     }
 
-    const playlistIds = Array.from(new Set(realSongs?.map((song: any) => song.playlist_id).filter(Boolean) || []))
-    let playlistsData: any[] = []
-    if (playlistIds.length > 0) {
-      const { data } = await supabase
-        .from('user_playlists')
-        .select('*')
-        .in('id', playlistIds)
-      playlistsData = data || []
-    }
+    const realSongs = [...(ownLiked || []), ...externalLiked]
+
+    // 2. Fetch associated profiles and playlists in parallel
+    const userIds = Array.from(new Set(realSongs.map((song: any) => song.user_id).filter(Boolean)))
+    const playlistIds = Array.from(new Set(realSongs.map((song: any) => song.playlist_id).filter(Boolean)))
+
+    const [profilesRes, playlistsRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from('profiles').select('*').in('id', userIds)
+        : Promise.resolve({ data: [] as any[] }),
+      playlistIds.length > 0
+        ? supabase.from('user_playlists').select('*').in('id', playlistIds)
+        : Promise.resolve({ data: [] as any[] })
+    ])
+
+    const profilesData: any[] = profilesRes.data || []
+    const playlistsData: any[] = playlistsRes.data || []
 
     likedTracks = (realSongs || []).map((song: any) => {
       const formGenre = song.form?.genre || song.genre || 'Pop'

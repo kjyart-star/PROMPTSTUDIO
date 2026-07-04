@@ -598,7 +598,7 @@ export function ChartClient({
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-on-surface-variant/60">
+                  <td colSpan={6} className="py-12 text-center text-on-surface-variant/60">
                     <p className="font-medium text-sm text-on-surface-variant">{uiLanguage === 'KO' ? '집계된 차트 데이터가 없습니다.' : uiLanguage === 'JA' ? 'チャートデータがありません。' : 'No chart data available.'}</p>
                     {isAdmin ? (
                       <p className="text-xs text-zinc-650 mt-1">{uiLanguage === 'KO' ? '상단의 \'차트 집계 갱신\' 버튼을 눌러 실시간으로 차트를 만들어보세요.' : uiLanguage === 'JA' ? 'クリック ' : 'Click "Refresh Chart" above to generate chart in real-time.'}</p>

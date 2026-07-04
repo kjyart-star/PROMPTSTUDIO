@@ -1,0 +1,27 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {"path": "docs/00_PROJECT_BRIEF.md", "language": "markdown", "sizeLines": 157, "fileCategory": "docs"},
+    {"path": "docs/02_PERSISTENT_PLAYER.md", "language": "markdown", "sizeLines": 546, "fileCategory": "docs"},
+    {"path": "supabase/schema.sql", "language": "sql", "sizeLines": 106, "fileCategory": "code"},
+    {"path": "docs/01_SUPABASE_SETUP.sql", "language": "sql", "sizeLines": 387, "fileCategory": "code"},
+    {"path": "docs/03_SCHEMA_UPDATE.sql", "language": "sql", "sizeLines": 87, "fileCategory": "code"},
+    {"path": "docs/04_SCHEMA_FIX_GUIDES.sql", "language": "sql", "sizeLines": 43, "fileCategory": "code"},
+    {"path": "docs/05_SCHEMA_PUBLISH.sql", "language": "sql", "sizeLines": 16, "fileCategory": "code"},
+    {"path": "docs/06_SCHEMA_PROFILE_EDIT.sql", "language": "sql", "sizeLines": 23, "fileCategory": "code"},
+    {"path": "docs/07_PROFILE_UPLOAD_SETUP.sql", "language": "sql", "sizeLines": 46, "fileCategory": "code"},
+    {"path": "docs/08_SCHEMA_SONG_HISTORY_FIX.sql", "language": "sql", "sizeLines": 25, "fileCategory": "code"},
+    {"path": "docs/09_SCHEMA_PLAYLISTS.sql", "language": "sql", "sizeLines": 40, "fileCategory": "code"},
+    {"path": "docs/10_SCHEMA_PLAYLIST_DESC.sql", "language": "sql", "sizeLines": 13, "fileCategory": "code"},
+    {"path": "docs/11_SCHEMA_ADMIN_UNPUBLISH.sql", "language": "sql", "sizeLines": 54, "fileCategory": "code"},
+    {"path": "docs/12_SCHEMA_PLAYLIST_GENRE.sql", "language": "sql", "sizeLines": 13, "fileCategory": "code"},
+    {"path": "docs/13_SCHEMA_EXPOSURE_ORDER.sql", "language": "sql", "sizeLines": 5, "fileCategory": "code"},
+    {"path": "docs/14_SCHEMA_SONG_HISTORY_LIKED.sql", "language": "sql", "sizeLines": 15, "fileCategory": "code"},
+    {"path": "docs/15_SCHEMA_SONG_VIDEO_URL.sql", "language": "sql", "sizeLines": 5, "fileCategory": "code"},
+    {"path": "docs/15_SCHEMA_STATUS_COLUMN_FIX.sql", "language": "sql", "sizeLines": 10, "fileCategory": "code"},
+    {"path": "docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql", "language": "sql", "sizeLines": 17, "fileCategory": "code"},
+    {"path": "docs/17_CLEANUP_OLD_SONGS.sql", "language": "sql", "sizeLines": 8, "fileCategory": "code"},
+    {"path": "docs/18_SCHEMA_PROFILE_EXTENSIONS.sql", "language": "sql", "sizeLines": 79, "fileCategory": "code"}
+  ],
+  "batchImportData": {}
+}

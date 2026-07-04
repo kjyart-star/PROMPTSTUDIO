@@ -1,0 +1,317 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/layout.tsx",
+      "summary": "Next.js App Router의 루트 layout으로, Geist 폰트를 주입하고 전역 CSS를 불러오며 모든 페이지를 감싸는 html/body 구조를 정의한다.",
+      "tags": ["entry-point", "layout", "app-router", "font-loading"],
+      "complexity": "simple",
+      "languageNotes": "Server Component 루트 레이아웃에서 next/font/google의 Geist, Geist_Mono를 CSS 변수로 등록한다."
+    },
+    {
+      "id": "file:src/app/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "filePath": "src/app/globals.css",
+      "summary": "Tailwind 기반 전역 스타일시트로, 색상 토큰·폰트 변수·다크 테마·기본 엘리먼트 스타일 등 앱 전반의 디자인 시스템 기초를 정의한다.",
+      "tags": ["styling", "tailwind", "theme", "global-css"],
+      "complexity": "complex",
+      "languageNotes": "Tailwind v4 + @tailwindcss/postcss 파이프라인에서 처리되는 520줄 규모의 전역 CSS."
+    },
+    {
+      "id": "file:src/lib/supabase/middleware.ts",
+      "type": "file",
+      "name": "middleware.ts",
+      "filePath": "src/lib/supabase/middleware.ts",
+      "summary": "@supabase/ssr 기반 세션 미들웨어 헬퍼로, 요청 쿠키를 동기화하며 createServerClient를 만들고 현재 로그인 사용자를 조회해 응답·user·supabase 클라이언트를 반환한다.",
+      "tags": ["middleware", "supabase", "authentication", "session"],
+      "complexity": "simple",
+      "languageNotes": "Next.js Edge/Server 미들웨어에서 쿠키 getAll/setAll 패턴으로 SSR 세션을 유지한다."
+    },
+    {
+      "id": "function:src/lib/supabase/middleware.ts:updateSession",
+      "type": "function",
+      "name": "updateSession",
+      "filePath": "src/lib/supabase/middleware.ts",
+      "lineRange": [4, 38],
+      "summary": "NextRequest를 받아 Supabase SSR 클라이언트를 생성하고 쿠키를 갱신한 뒤 인증된 user를 포함한 응답 객체를 반환하는 세션 갱신 함수.",
+      "tags": ["middleware", "supabase", "session", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/artists/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/artists/page.tsx",
+      "summary": "관리자 영역의 아티스트·회원 관리 클라이언트 페이지로, 회원 목록을 조회·검색하고 관리자 API를 통해 계정 정지/해제를 처리한다.",
+      "tags": ["component", "admin", "client-component", "user-management"],
+      "complexity": "moderate",
+      "languageNotes": "'use client' React 함수형 컴포넌트로 useState/useEffect와 fetch 기반 admin API 호출을 사용한다."
+    },
+    {
+      "id": "function:src/app/(admin)/admin/music/artists/page.tsx:ArtistsPage",
+      "type": "function",
+      "name": "ArtistsPage",
+      "filePath": "src/app/(admin)/admin/music/artists/page.tsx",
+      "lineRange": [18, 226],
+      "summary": "회원 목록 로딩, 검색 필터링, 계정 정지/해제 토글 상태를 관리하며 관리 테이블 UI를 렌더링하는 관리자 페이지 컴포넌트.",
+      "tags": ["component", "admin", "user-management", "event-handler"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/download/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/download/route.ts",
+      "summary": "오디오 파일을 원격 URL에서 받아 node-id3로 앨범 아트(APIC) ID3 태그를 임베드한 뒤 attachment로 내려주는 다운로드 API 라우트.",
+      "tags": ["api-handler", "route-handler", "download", "id3"],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router GET route handler로 Buffer와 Content-Disposition 헤더를 사용한 파일 스트리밍."
+    },
+    {
+      "id": "function:src/app/api/download/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/download/route.ts",
+      "lineRange": [4, 73],
+      "summary": "url/image/filename 쿼리를 받아 오디오를 fetch하고 선택적으로 앨범 아트를 ID3 태그로 삽입한 MP3 버퍼를 응답으로 반환하는 핸들러.",
+      "tags": ["api-handler", "download", "id3", "serialization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/suno/cover/status/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/suno/cover/status/route.ts",
+      "summary": "Apipass 외부 API에 taskId로 커버 생성 작업 상태를 폴링해 completed/failed/processing 상태로 정규화해 반환하는 API 라우트.",
+      "tags": ["api-handler", "route-handler", "polling", "external-api"],
+      "complexity": "simple",
+      "languageNotes": "Next.js GET route handler로 Bearer 인증 헤더와 외부 jobs/recordInfo 엔드포인트를 사용한다."
+    },
+    {
+      "id": "function:src/app/api/suno/cover/status/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/suno/cover/status/route.ts",
+      "lineRange": [5, 41],
+      "summary": "taskId 쿼리로 Apipass API의 작업 상태를 조회하고 state 값을 completed/failed/processing 응답으로 매핑하는 상태 폴링 핸들러.",
+      "tags": ["api-handler", "polling", "external-api", "status"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/types/node-id3.d.ts",
+      "type": "file",
+      "name": "node-id3.d.ts",
+      "filePath": "src/types/node-id3.d.ts",
+      "summary": "node-id3 모듈에 대한 TypeScript 타입 선언으로, Tags 인터페이스와 write/create 함수 시그니처를 정의해 download 라우트의 ID3 태그 작성에 타입 안정성을 제공한다.",
+      "tags": ["type-definition", "declaration", "id3", "ambient-module"],
+      "complexity": "simple",
+      "languageNotes": "declare module 형태의 ambient 타입 선언 파일(.d.ts)."
+    },
+    {
+      "id": "config:next.config.ts",
+      "type": "config",
+      "name": "next.config.ts",
+      "filePath": "next.config.ts",
+      "summary": "Next.js 프로젝트 설정 파일로, 로컬·LAN 개발 오리진(allowedDevOrigins)을 허용하도록 구성한다.",
+      "tags": ["configuration", "nextjs", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:eslint.config.mjs",
+      "type": "config",
+      "name": "eslint.config.mjs",
+      "filePath": "eslint.config.mjs",
+      "summary": "ESLint flat config로 Next.js core-web-vitals와 TypeScript 규칙을 결합하고 빌드 산출물 디렉터리를 무시 대상으로 지정한다.",
+      "tags": ["configuration", "eslint", "linting", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:postcss.config.mjs",
+      "type": "config",
+      "name": "postcss.config.mjs",
+      "filePath": "postcss.config.mjs",
+      "summary": "PostCSS 설정 파일로 @tailwindcss/postcss 플러그인을 등록해 Tailwind CSS 처리를 활성화한다.",
+      "tags": ["configuration", "postcss", "tailwind", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/dev-stable.mjs",
+      "type": "file",
+      "name": "dev-stable.mjs",
+      "filePath": "scripts/dev-stable.mjs",
+      "summary": "Vite 개발 서버를 자식 프로세스로 띄우고 종료 시 자동 재시작하며 macOS에서 브라우저를 한 번 여는 안정형 개발 실행 스크립트.",
+      "tags": ["script", "dev-server", "process-management", "tooling"],
+      "complexity": "simple",
+      "languageNotes": "node:child_process spawn으로 vite를 감싸 SIGINT/SIGTERM 처리와 재시작 루프를 구현한 ESM 스크립트."
+    },
+    {
+      "id": "function:scripts/dev-stable.mjs:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/dev-stable.mjs",
+      "lineRange": [18, 43],
+      "summary": "vite 프로세스를 spawn하고 spawn/exit 이벤트를 등록해 비정상 종료 시 0.8초 후 자동 재시작하는 실행 함수.",
+      "tags": ["script", "process-management", "event-handler"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/serve-dist.mjs",
+      "type": "file",
+      "name": "serve-dist.mjs",
+      "filePath": "scripts/serve-dist.mjs",
+      "summary": "dist 디렉터리를 정적 파일로 서빙하는 경량 HTTP 서버 스크립트로, MIME 매핑·경로 안전화·SPA index.html 폴백을 제공한다.",
+      "tags": ["script", "static-server", "http-server", "tooling"],
+      "complexity": "moderate",
+      "languageNotes": "node:http로 작성한 SPA 정적 서버이며 safeJoin으로 path traversal을 방어한다."
+    },
+    {
+      "id": "function:scripts/serve-dist.mjs:safeJoin",
+      "type": "function",
+      "name": "safeJoin",
+      "filePath": "scripts/serve-dist.mjs",
+      "lineRange": [39, 46],
+      "summary": "요청 경로를 정규화하고 상위 디렉터리·절대 경로 접두사를 제거해 base 디렉터리 밖 접근을 막는 path traversal 방어 헬퍼.",
+      "tags": ["utility", "security", "path-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/check_tables.js",
+      "type": "file",
+      "name": "check_tables.js",
+      "filePath": "scripts/check_tables.js",
+      "summary": "Supabase REST API에 직접 fetch 요청을 보내 tracks·albums 테이블 데이터를 조회·출력하는 일회성 점검 스크립트.",
+      "tags": ["script", "supabase", "database", "diagnostic"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/find_db_impl.js",
+      "type": "file",
+      "name": "find_db_impl.js",
+      "filePath": "scripts/find_db_impl.js",
+      "summary": "Supabase MCP 서버 dist 디렉터리를 재귀 순회하며 executeSql 구현 위치를 찾아 주변 코드 컨텍스트를 출력하는 소스 탐색 스크립트.",
+      "tags": ["script", "diagnostic", "code-search", "tooling"],
+      "complexity": "simple",
+      "languageNotes": "CommonJS(require) 기반 동기 fs 재귀 탐색 스크립트."
+    },
+    {
+      "id": "function:scripts/find_db_impl.js:searchInFile",
+      "type": "function",
+      "name": "searchInFile",
+      "filePath": "scripts/find_db_impl.js",
+      "lineRange": [6, 31],
+      "summary": "주어진 경로가 디렉터리면 재귀 순회하고 .js/.cjs 파일이면 executeSql 호출/정의 위치를 찾아 주변 컨텍스트를 출력하는 탐색 함수.",
+      "tags": ["utility", "code-search", "recursion"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "file:src/app/globals.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/supabase/middleware.ts",
+      "target": "function:src/lib/supabase/middleware.ts:updateSession",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/supabase/middleware.ts",
+      "target": "function:src/lib/supabase/middleware.ts:updateSession",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(admin)/admin/music/artists/page.tsx",
+      "target": "function:src/app/(admin)/admin/music/artists/page.tsx:ArtistsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(admin)/admin/music/artists/page.tsx",
+      "target": "function:src/app/(admin)/admin/music/artists/page.tsx:ArtistsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/download/route.ts",
+      "target": "function:src/app/api/download/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/download/route.ts",
+      "target": "function:src/app/api/download/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/download/route.ts",
+      "target": "file:src/types/node-id3.d.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/app/api/suno/cover/status/route.ts",
+      "target": "function:src/app/api/suno/cover/status/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/suno/cover/status/route.ts",
+      "target": "function:src/app/api/suno/cover/status/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/dev-stable.mjs",
+      "target": "function:scripts/dev-stable.mjs:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/serve-dist.mjs",
+      "target": "function:scripts/serve-dist.mjs:safeJoin",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/find_db_impl.js",
+      "target": "function:scripts/find_db_impl.js:searchInFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "config:next.config.ts",
+      "target": "file:src/app/layout.tsx",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:postcss.config.mjs",
+      "target": "file:src/app/globals.css",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

@@ -1,0 +1,901 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/(admin)/admin/music/albums/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/albums/page.tsx",
+      "summary": "관리자 영역의 앨범 관리 페이지로, 앨범 목록 조회·생성·편집 UI를 제공하는 App Router 페이지다.",
+      "tags": [
+        "api-handler",
+        "admin",
+        "component",
+        "music",
+        "app-router"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Next.js App Router의 라우트 그룹 (admin)을 사용한 관리자 전용 페이지."
+    },
+    {
+      "id": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/albums/[slug]/page.tsx",
+      "summary": "공개 앨범 상세 페이지로, slug 기반 동적 라우트에서 Supabase 서버 클라이언트로 앨범·트랙 데이터를 조회해 AlbumClient에 전달하는 Server Component다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "music",
+        "data-model",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "동적 세그먼트 [slug]와 revalidate를 사용한 ISR 기반 Server Component."
+    },
+    {
+      "id": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/artists/[slug]/page.tsx",
+      "summary": "공개 아티스트 상세 페이지로, slug로 아티스트·앨범·트랙을 서버에서 조회하여 ArtistClient에 초기 데이터로 전달한다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "music",
+        "data-model",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "동적 라우트 + Supabase server 클라이언트 + revalidate 기반 ISR."
+    },
+    {
+      "id": "file:src/app/(public)/charts/artists/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/charts/artists/page.tsx",
+      "summary": "아티스트 차트 공개 페이지로, 기간별 인기 아티스트 데이터를 서버에서 조회해 ArtistChartClient를 렌더링한다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "chart",
+        "music"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "dynamic·fetchCache 옵션으로 캐싱 동작을 제어하는 Server Component."
+    },
+    {
+      "id": "file:src/app/(public)/charts/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/charts/page.tsx",
+      "summary": "트랙 차트 공개 페이지로, 기간(periodType/periodDate)별 차트 항목과 사용자 좋아요를 서버에서 조회해 ChartClient에 전달한다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "chart",
+        "music",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "searchParams 기반 기간 선택과 revalidate ISR을 결합한 Server Component."
+    },
+    {
+      "id": "file:src/app/(public)/library/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/library/page.tsx",
+      "summary": "사용자 라이브러리 공개 페이지로, 로그인 사용자의 좋아요 트랙을 서버에서 조회해 LibraryClient에 초기 데이터로 전달한다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "music",
+        "entry-point"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/(public)/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/page.tsx",
+      "summary": "서비스 메인 홈 페이지로, 추천·최신·인기 트랙과 앨범·아티스트 데이터를 서버에서 병렬 조회해 HomeClient에 전달하는 진입 Server Component다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "entry-point",
+        "music",
+        "home"
+      ],
+      "complexity": "complex",
+      "languageNotes": "dynamic·fetchCache·revalidate를 함께 사용하며 다수의 Supabase 쿼리를 병렬 수행하는 진입점."
+    },
+    {
+      "id": "file:src/app/(public)/search/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/search/page.tsx",
+      "summary": "통합 검색 공개 페이지로, 검색어에 대해 트랙·아티스트·앨범을 서버에서 조회해 SearchClient에 초기 결과로 전달한다.",
+      "tags": [
+        "app-router",
+        "server-component",
+        "search",
+        "music",
+        "entry-point"
+      ],
+      "complexity": "complex",
+      "languageNotes": "searchParams 검색어를 받아 다중 엔티티를 조회하는 Server Component."
+    },
+    {
+      "id": "file:src/app/api/playlists/[id]/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/playlists/[id]/route.ts",
+      "summary": "플레이리스트 단건 API 라우트로, 특정 플레이리스트의 수정(PUT)과 삭제(DELETE)를 처리하는 Route Handler다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist",
+        "data-model"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "App Router의 Route Handler로 HTTP 메서드별 핸들러를 named export."
+    },
+    {
+      "id": "file:src/app/api/playlists/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/playlists/route.ts",
+      "summary": "플레이리스트 컬렉션 API 라우트로, 목록 조회(GET)와 생성(POST)을 처리하는 Route Handler다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist",
+        "data-model"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "GET/POST를 named export하는 App Router Route Handler."
+    },
+    {
+      "id": "file:src/components/album/AlbumClient.tsx",
+      "type": "file",
+      "name": "AlbumClient.tsx",
+      "filePath": "src/components/album/AlbumClient.tsx",
+      "summary": "앨범 상세 클라이언트 컴포넌트로, 트랙 재생·좋아요·플레이리스트 추가 등 앨범 페이지의 인터랙션을 담당하며 playerStore와 연동된다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "player",
+        "interaction"
+      ],
+      "complexity": "complex",
+      "languageNotes": "'use client' 컴포넌트로 Zustand playerStore와 Supabase client를 사용."
+    },
+    {
+      "id": "file:src/components/artist/ArtistClient.tsx",
+      "type": "file",
+      "name": "ArtistClient.tsx",
+      "filePath": "src/components/artist/ArtistClient.tsx",
+      "summary": "아티스트 상세 클라이언트 컴포넌트로, 아티스트의 앨범·트랙 목록 표시, 재생, 좋아요, 플레이리스트 관리 등 대규모 인터랙션 로직을 담는다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "player",
+        "interaction"
+      ],
+      "complexity": "complex",
+      "languageNotes": "1200줄 이상의 대형 클라이언트 컴포넌트로 playerStore와 다수 하위 컴포넌트를 조합."
+    },
+    {
+      "id": "function:src/app/api/playlists/[id]/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/playlists/[id]/route.ts",
+      "lineRange": [
+        5,
+        90
+      ],
+      "summary": "플레이리스트 수정 핸들러로, 요청 본문을 받아 인증·소유권 검증 후 Supabase에서 해당 플레이리스트를 갱신한다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/playlists/[id]/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/playlists/[id]/route.ts",
+      "lineRange": [
+        92,
+        126
+      ],
+      "summary": "플레이리스트 삭제 핸들러로, 인증과 소유권 확인 후 지정된 플레이리스트를 제거한다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/playlists/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/playlists/route.ts",
+      "lineRange": [
+        5,
+        95
+      ],
+      "summary": "플레이리스트 목록 조회 핸들러로, 사용자 기준 플레이리스트를 Supabase에서 가져와 직렬화된 형태로 반환한다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist",
+        "serialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/playlists/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/playlists/route.ts",
+      "lineRange": [
+        97,
+        148
+      ],
+      "summary": "플레이리스트 생성 핸들러로, 요청 데이터를 검증해 새 플레이리스트를 생성하고 결과를 반환한다.",
+      "tags": [
+        "api-handler",
+        "route-handler",
+        "playlist",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/album/AlbumClient.tsx:AlbumClient",
+      "type": "function",
+      "name": "AlbumClient",
+      "filePath": "src/components/album/AlbumClient.tsx",
+      "lineRange": [
+        30,
+        474
+      ],
+      "summary": "앨범 상세 클라이언트 컴포넌트의 본체로, 트랙 재생·좋아요·플레이리스트 추가 상태와 인터랙션을 관리한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "player"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/artist/ArtistClient.tsx:ArtistClient",
+      "type": "function",
+      "name": "ArtistClient",
+      "filePath": "src/components/artist/ArtistClient.tsx",
+      "lineRange": [
+        33,
+        1261
+      ],
+      "summary": "아티스트 상세 화면 전체를 구성하는 컴포넌트로, 앨범·트랙 목록, 재생, 좋아요, 플레이리스트 관리 로직을 통합한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "player",
+        "interaction"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(admin)/admin/music/albums/page.tsx:AlbumsPage",
+      "type": "function",
+      "name": "AlbumsPage",
+      "filePath": "src/app/(admin)/admin/music/albums/page.tsx",
+      "lineRange": [
+        22,
+        240
+      ],
+      "summary": "관리자 앨범 관리 페이지 컴포넌트로, 앨범 목록과 생성·편집 폼을 렌더링한다.",
+      "tags": [
+        "api-handler",
+        "admin",
+        "component",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/albums/[slug]/page.tsx:PublicAlbumDetailPage",
+      "type": "function",
+      "name": "PublicAlbumDetailPage",
+      "filePath": "src/app/(public)/albums/[slug]/page.tsx",
+      "lineRange": [
+        16,
+        201
+      ],
+      "summary": "공개 앨범 상세 Server Component로, slug 기반 앨범·트랙 데이터를 조회해 AlbumClient에 전달한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/artists/[slug]/page.tsx:PublicArtistDetailPage",
+      "type": "function",
+      "name": "PublicArtistDetailPage",
+      "filePath": "src/app/(public)/artists/[slug]/page.tsx",
+      "lineRange": [
+        14,
+        261
+      ],
+      "summary": "공개 아티스트 상세 Server Component로, 아티스트·앨범·트랙을 조회해 ArtistClient에 전달한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/charts/artists/page.tsx:PublicArtistChartPage",
+      "type": "function",
+      "name": "PublicArtistChartPage",
+      "filePath": "src/app/(public)/charts/artists/page.tsx",
+      "lineRange": [
+        9,
+        77
+      ],
+      "summary": "아티스트 차트 Server Component로, 기간별 인기 아티스트를 조회해 ArtistChartClient를 렌더링한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "chart"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/(public)/charts/page.tsx:PublicChartPage",
+      "type": "function",
+      "name": "PublicChartPage",
+      "filePath": "src/app/(public)/charts/page.tsx",
+      "lineRange": [
+        13,
+        237
+      ],
+      "summary": "트랙 차트 Server Component로, 기간별 차트 항목과 좋아요를 조회해 ChartClient에 전달한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "chart"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/library/page.tsx:LibraryPage",
+      "type": "function",
+      "name": "LibraryPage",
+      "filePath": "src/app/(public)/library/page.tsx",
+      "lineRange": [
+        7,
+        110
+      ],
+      "summary": "라이브러리 Server Component로, 사용자 좋아요 트랙을 조회해 LibraryClient에 전달한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/page.tsx:PublicHomePage",
+      "type": "function",
+      "name": "PublicHomePage",
+      "filePath": "src/app/(public)/page.tsx",
+      "lineRange": [
+        10,
+        350
+      ],
+      "summary": "메인 홈 Server Component로, 추천·최신·인기 데이터를 병렬 조회해 HomeClient에 전달하는 진입점이다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "entry-point",
+        "home"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/(public)/search/page.tsx:PublicSearchPage",
+      "type": "function",
+      "name": "PublicSearchPage",
+      "filePath": "src/app/(public)/search/page.tsx",
+      "lineRange": [
+        14,
+        226
+      ],
+      "summary": "검색 Server Component로, 검색어에 대한 트랙·아티스트·앨범 결과를 조회해 SearchClient에 전달한다.",
+      "tags": [
+        "server-component",
+        "app-router",
+        "search"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "function:src/app/api/playlists/[id]/route.ts:PUT",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "function:src/app/api/playlists/[id]/route.ts:DELETE",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "function:src/app/api/playlists/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "function:src/app/api/playlists/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "function:src/components/album/AlbumClient.tsx:AlbumClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "function:src/components/artist/ArtistClient.tsx:ArtistClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(admin)/admin/music/albums/page.tsx",
+      "target": "function:src/app/(admin)/admin/music/albums/page.tsx:AlbumsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "target": "function:src/app/(public)/albums/[slug]/page.tsx:PublicAlbumDetailPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "target": "function:src/app/(public)/artists/[slug]/page.tsx:PublicArtistDetailPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/charts/artists/page.tsx",
+      "target": "function:src/app/(public)/charts/artists/page.tsx:PublicArtistChartPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/charts/page.tsx",
+      "target": "function:src/app/(public)/charts/page.tsx:PublicChartPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/library/page.tsx",
+      "target": "function:src/app/(public)/library/page.tsx:LibraryPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "function:src/app/(public)/page.tsx:PublicHomePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "function:src/app/(public)/search/page.tsx:PublicSearchPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "function:src/app/api/playlists/[id]/route.ts:PUT",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "function:src/app/api/playlists/[id]/route.ts:DELETE",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "function:src/app/api/playlists/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "function:src/app/api/playlists/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "function:src/components/album/AlbumClient.tsx:AlbumClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "function:src/components/artist/ArtistClient.tsx:ArtistClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(admin)/admin/music/albums/page.tsx",
+      "target": "function:src/app/(admin)/admin/music/albums/page.tsx:AlbumsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "target": "function:src/app/(public)/albums/[slug]/page.tsx:PublicAlbumDetailPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "target": "function:src/app/(public)/artists/[slug]/page.tsx:PublicArtistDetailPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/charts/artists/page.tsx",
+      "target": "function:src/app/(public)/charts/artists/page.tsx:PublicArtistChartPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/charts/page.tsx",
+      "target": "function:src/app/(public)/charts/page.tsx:PublicChartPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/library/page.tsx",
+      "target": "function:src/app/(public)/library/page.tsx:LibraryPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "function:src/app/(public)/page.tsx:PublicHomePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "function:src/app/(public)/search/page.tsx:PublicSearchPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(admin)/admin/music/albums/page.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "target": "file:src/components/album/AlbumClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/albums/[slug]/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "target": "file:src/components/artist/ArtistClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/artists/[slug]/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/charts/artists/page.tsx",
+      "target": "file:src/components/chart/ArtistChartClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/charts/artists/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/charts/artists/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/charts/page.tsx",
+      "target": "file:src/components/chart/ChartClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/charts/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/library/page.tsx",
+      "target": "file:src/components/library/LibraryClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/library/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/library/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "file:src/components/home/HomeClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "file:src/components/search/SearchClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/search/page.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/playlists/[id]/route.ts",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/playlists/route.ts",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "file:src/components/common/TrackDropdown.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/album/AlbumClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/components/common/AlbumCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/components/common/TrackDropdown.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/artist/ArtistClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "issues": [],
+  "warnings": [
+    "orphan: config:all_missing_en.json",
+    "orphan: config:ja_translations.json",
+    "orphan: config:ja_translations_v2.json",
+    "orphan: document:ko_strings.txt",
+    "orphan: config:missing_en.json",
+    "orphan: config:missing_translations.json",
+    "orphan: table:supabase_schema.sql:song_history",
+    "orphan: table:supabase_schema.sql:profiles",
+    "orphan: table:supabase_schema.sql:system_guides",
+    "orphan: table:supabase_schema.sql:user_guides",
+    "orphan: table:supabase_schema.sql:announcements",
+    "orphan: table:supabase_schema.sql:system_settings",
+    "orphan: table:supabase_schema.sql:playlists",
+    "orphan: config:ternary_strings.json",
+    "orphan: document:vercel_logs.txt",
+    "orphan: schema:docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+    "orphan: schema:docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+    "orphan: config:eslint.config.mjs",
+    "orphan: file:scripts/check_tables.js"
+  ],
+  "stats": {
+    "totalNodes": 281,
+    "totalEdges": 473,
+    "totalLayers": 6,
+    "tourSteps": 11,
+    "nodeTypes": {
+      "file": 101,
+      "function": 105,
+      "config": 12,
+      "document": 5,
+      "table": 29,
+      "schema": 29
+    },
+    "edgeTypes": {
+      "contains": 105,
+      "exports": 87,
+      "imports": 168,
+      "calls": 53,
+      "related": 6,
+      "depends_on": 2,
+      "migrates": 47,
+      "documents": 3,
+      "configures": 2
+    }
+  }
+}

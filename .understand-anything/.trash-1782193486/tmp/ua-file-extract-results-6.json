@@ -1,0 +1,4223 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 12,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "all_missing_en.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 268,
+      "nonEmptyLines": 268,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 0
+      }
+    },
+    {
+      "path": "ja_translations.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 223,
+      "nonEmptyLines": 223,
+      "sections": [
+        {
+          "heading": "Channel name is required.",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "New channel created.",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "Are you sure you want to delete this channel?",
+          "level": 1,
+          "line": 4
+        },
+        {
+          "heading": "Channel deleted.",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "Error deleting channel.",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "Failed to change channel",
+          "level": 1,
+          "line": 7
+        },
+        {
+          "heading": "Song assigned to channel.",
+          "level": 1,
+          "line": 8
+        },
+        {
+          "heading": "Channel connection removed.",
+          "level": 1,
+          "line": 9
+        },
+        {
+          "heading": "Library (Private)",
+          "level": 1,
+          "line": 10
+        },
+        {
+          "heading": "Channel Management",
+          "level": 1,
+          "line": 11
+        },
+        {
+          "heading": "My Channel (Published)",
+          "level": 1,
+          "line": 12
+        },
+        {
+          "heading": "My Albums",
+          "level": 1,
+          "line": 13
+        },
+        {
+          "heading": "Create New Album",
+          "level": 1,
+          "line": 14
+        },
+        {
+          "heading": "Search songs...",
+          "level": 1,
+          "line": 15
+        },
+        {
+          "heading": "Upload Audio File",
+          "level": 1,
+          "line": 16
+        },
+        {
+          "heading": "Channel / Folder",
+          "level": 1,
+          "line": 17
+        },
+        {
+          "heading": "Additional Channels",
+          "level": 1,
+          "line": 18
+        },
+        {
+          "heading": "Create and manage additional artist personas.",
+          "level": 1,
+          "line": 19
+        },
+        {
+          "heading": "Add Channel",
+          "level": 1,
+          "line": 20
+        },
+        {
+          "heading": "Unnamed",
+          "level": 1,
+          "line": 21
+        },
+        {
+          "heading": "Default",
+          "level": 1,
+          "line": 22
+        },
+        {
+          "heading": "Delete Channel",
+          "level": 1,
+          "line": 23
+        },
+        {
+          "heading": "Create New Channel",
+          "level": 1,
+          "line": 24
+        },
+        {
+          "heading": "Background image",
+          "level": 1,
+          "line": 25
+        },
+        {
+          "heading": "Upload a photo",
+          "level": 1,
+          "line": 26
+        },
+        {
+          "heading": "Profile picture",
+          "level": 1,
+          "line": 27
+        },
+        {
+          "heading": "Display Name",
+          "level": 1,
+          "line": 28
+        },
+        {
+          "heading": "My New Artist",
+          "level": 1,
+          "line": 29
+        },
+        {
+          "heading": "Add a bio",
+          "level": 1,
+          "line": 30
+        },
+        {
+          "heading": "Tell us about this channel...",
+          "level": 1,
+          "line": 31
+        },
+        {
+          "heading": "Handle*",
+          "level": 1,
+          "line": 32
+        },
+        {
+          "heading": "Genres Override",
+          "level": 1,
+          "line": 33
+        },
+        {
+          "heading": "Add up to 5 genres to describe your music style. If this is empty, the genres will be inferred from your most popular songs",
+          "level": 1,
+          "line": 34
+        },
+        {
+          "heading": "Type a genre...",
+          "level": 1,
+          "line": 35
+        },
+        {
+          "heading": "Add",
+          "level": 1,
+          "line": 36
+        },
+        {
+          "heading": "Advanced Statistics Override",
+          "level": 1,
+          "line": 37
+        },
+        {
+          "heading": "Management",
+          "level": 1,
+          "line": 38
+        },
+        {
+          "heading": "Artist Channel",
+          "level": 1,
+          "line": 39
+        },
+        {
+          "heading": "Audio File (Required)",
+          "level": 1,
+          "line": 40
+        },
+        {
+          "heading": "Choose File",
+          "level": 1,
+          "line": 41
+        },
+        {
+          "heading": "No file chosen",
+          "level": 1,
+          "line": 42
+        },
+        {
+          "heading": "Title (Required)",
+          "level": 1,
+          "line": 43
+        },
+        {
+          "heading": "Enter song title",
+          "level": 1,
+          "line": 44
+        },
+        {
+          "heading": "Publish to Channel (Optional)",
+          "level": 1,
+          "line": 45
+        },
+        {
+          "heading": "None (Main Channel Only)",
+          "level": 1,
+          "line": 46
+        },
+        {
+          "heading": "Genre (Required)",
+          "level": 1,
+          "line": 47
+        },
+        {
+          "heading": "Select Genre",
+          "level": 1,
+          "line": 48
+        },
+        {
+          "heading": "Cover Image (Optional)",
+          "level": 1,
+          "line": 49
+        },
+        {
+          "heading": "Select Image",
+          "level": 1,
+          "line": 50
+        },
+        {
+          "heading": "Remove",
+          "level": 1,
+          "line": 51
+        },
+        {
+          "heading": "Prompt (Optional)",
+          "level": 1,
+          "line": 52
+        },
+        {
+          "heading": "Lyrics / Description (Optional)",
+          "level": 1,
+          "line": 53
+        },
+        {
+          "heading": "Enter lyrics or song details",
+          "level": 1,
+          "line": 54
+        },
+        {
+          "heading": "Notes (Optional)",
+          "level": 1,
+          "line": 55
+        },
+        {
+          "heading": "Lyricist (Opt)",
+          "level": 1,
+          "line": 56
+        },
+        {
+          "heading": "Composer (Opt)",
+          "level": 1,
+          "line": 57
+        },
+        {
+          "heading": "Arranger (Opt)",
+          "level": 1,
+          "line": 58
+        },
+        {
+          "heading": "Publish Song (Public)",
+          "level": 1,
+          "line": 59
+        },
+        {
+          "heading": "Make this track visible on your public profile.",
+          "level": 1,
+          "line": 60
+        },
+        {
+          "heading": "Uploading...",
+          "level": 1,
+          "line": 61
+        },
+        {
+          "heading": "Upload Complete",
+          "level": 1,
+          "line": 62
+        },
+        {
+          "heading": "You can generate up to 6 tracks concurrently.",
+          "level": 1,
+          "line": 63
+        },
+        {
+          "heading": "Insufficient credits. (Requires 10 credits)",
+          "level": 1,
+          "line": 64
+        },
+        {
+          "heading": "Song Generation (-10)",
+          "level": 1,
+          "line": 65
+        },
+        {
+          "heading": "Noisy, Heavy Metal, Screaming...",
+          "level": 1,
+          "line": 66
+        },
+        {
+          "heading": "* Click to load options/lyrics",
+          "level": 1,
+          "line": 67
+        },
+        {
+          "heading": "Download",
+          "level": 1,
+          "line": 68
+        },
+        {
+          "heading": "Generate audio based on\\nthe input options on the left.",
+          "level": 1,
+          "line": 69
+        },
+        {
+          "heading": "Start Suno Music Generation (10 Credits)",
+          "level": 1,
+          "line": 70
+        },
+        {
+          "heading": "Publish Track",
+          "level": 1,
+          "line": 71
+        },
+        {
+          "heading": "Registered guideline on server",
+          "level": 1,
+          "line": 72
+        },
+        {
+          "heading": "Failed to register guide (Network error)",
+          "level": 1,
+          "line": 73
+        },
+        {
+          "heading": "Saved to local guidelines",
+          "level": 1,
+          "line": 74
+        },
+        {
+          "heading": "Default guidelines cannot be deleted.",
+          "level": 1,
+          "line": 75
+        },
+        {
+          "heading": "Deleted guideline from server",
+          "level": 1,
+          "line": 76
+        },
+        {
+          "heading": "Failed to delete guide (Network error)",
+          "level": 1,
+          "line": 77
+        },
+        {
+          "heading": "Failed to generate prompt",
+          "level": 1,
+          "line": 78
+        },
+        {
+          "heading": "Saved to server history",
+          "level": 1,
+          "line": 79
+        },
+        {
+          "heading": "Server save failed (Network error)",
+          "level": 1,
+          "line": 80
+        },
+        {
+          "heading": "Deleted server history item",
+          "level": 1,
+          "line": 81
+        },
+        {
+          "heading": "Server delete failed (Network error)",
+          "level": 1,
+          "line": 82
+        },
+        {
+          "heading": "Music Prompt",
+          "level": 1,
+          "line": 83
+        },
+        {
+          "heading": "Library",
+          "level": 1,
+          "line": 84
+        },
+        {
+          "heading": "AI Cover Studio",
+          "level": 1,
+          "line": 85
+        },
+        {
+          "heading": "Music Studio",
+          "level": 1,
+          "line": 86
+        },
+        {
+          "heading": "Mastering",
+          "level": 1,
+          "line": 87
+        },
+        {
+          "heading": "Genre 1",
+          "level": 1,
+          "line": 88
+        },
+        {
+          "heading": "Genre 2",
+          "level": 1,
+          "line": 89
+        },
+        {
+          "heading": "None",
+          "level": 1,
+          "line": 90
+        },
+        {
+          "heading": "Genre Ratio",
+          "level": 1,
+          "line": 91
+        },
+        {
+          "heading": "STYLE DESCRIPTION",
+          "level": 1,
+          "line": 92
+        },
+        {
+          "heading": "e.g., Korean city pop, synth pop, nostalgic, rainy, warm, cinematic",
+          "level": 1,
+          "line": 93
+        },
+        {
+          "heading": "Song Structure",
+          "level": 1,
+          "line": 94
+        },
+        {
+          "heading": "Lyric Density",
+          "level": 1,
+          "line": 95
+        },
+        {
+          "heading": "Voice Tone",
+          "level": 1,
+          "line": 96
+        },
+        {
+          "heading": "Vocal Age",
+          "level": 1,
+          "line": 97
+        },
+        {
+          "heading": "Vocal Gender/Group",
+          "level": 1,
+          "line": 98
+        },
+        {
+          "heading": "Language 1",
+          "level": 1,
+          "line": 99
+        },
+        {
+          "heading": "Language 2",
+          "level": 1,
+          "line": 100
+        },
+        {
+          "heading": "Language Ratio",
+          "level": 1,
+          "line": 101
+        },
+        {
+          "heading": "Sample Output",
+          "level": 1,
+          "line": 102
+        },
+        {
+          "heading": "Structure & BPM Plan",
+          "level": 1,
+          "line": 103
+        },
+        {
+          "heading": "Copy Plan",
+          "level": 1,
+          "line": 104
+        },
+        {
+          "heading": "Duration and BPM plan will be displayed here.",
+          "level": 1,
+          "line": 105
+        },
+        {
+          "heading": "Select Genre 1",
+          "level": 1,
+          "line": 106
+        },
+        {
+          "heading": "Select Genre 2",
+          "level": 1,
+          "line": 107
+        },
+        {
+          "heading": "Search title, style description...",
+          "level": 1,
+          "line": 108
+        },
+        {
+          "heading": "All",
+          "level": 1,
+          "line": 109
+        },
+        {
+          "heading": "Liked Songs",
+          "level": 1,
+          "line": 110
+        },
+        {
+          "heading": "No saved songs or prompts found.",
+          "level": 1,
+          "line": 111
+        },
+        {
+          "heading": "번호",
+          "level": 1,
+          "line": 112
+        },
+        {
+          "heading": "작성일",
+          "level": 1,
+          "line": 113
+        },
+        {
+          "heading": "제목",
+          "level": 1,
+          "line": 114
+        },
+        {
+          "heading": "언어",
+          "level": 1,
+          "line": 115
+        },
+        {
+          "heading": "Duration",
+          "level": 1,
+          "line": 116
+        },
+        {
+          "heading": "Public",
+          "level": 1,
+          "line": 117
+        },
+        {
+          "heading": "관리",
+          "level": 1,
+          "line": 118
+        },
+        {
+          "heading": "Generating",
+          "level": 1,
+          "line": 119
+        },
+        {
+          "heading": "Private",
+          "level": 1,
+          "line": 120
+        },
+        {
+          "heading": "Assign to Channel",
+          "level": 1,
+          "line": 121
+        },
+        {
+          "heading": "Main Profile (No Channel)",
+          "level": 1,
+          "line": 122
+        },
+        {
+          "heading": "Add to Playlist",
+          "level": 1,
+          "line": 123
+        },
+        {
+          "heading": "No playlists",
+          "level": 1,
+          "line": 124
+        },
+        {
+          "heading": "Copied",
+          "level": 1,
+          "line": 125
+        },
+        {
+          "heading": "Copy",
+          "level": 1,
+          "line": 126
+        },
+        {
+          "heading": "Confirm Delete",
+          "level": 1,
+          "line": 127
+        },
+        {
+          "heading": "Are you sure you want to delete this? This action cannot be undone.",
+          "level": 1,
+          "line": 128
+        },
+        {
+          "heading": "Publish Music",
+          "level": 1,
+          "line": 129
+        },
+        {
+          "heading": "Publish",
+          "level": 1,
+          "line": 130
+        },
+        {
+          "heading": "You can upload up to 20 tracks at a time.",
+          "level": 1,
+          "line": 131
+        },
+        {
+          "heading": "Ultra-fast offline rendering powered by Web Audio API. Professional mastering tool featuring tube saturation and stereo wideners.",
+          "level": 1,
+          "line": 132
+        },
+        {
+          "heading": "Drag & Drop files here",
+          "level": 1,
+          "line": 133
+        },
+        {
+          "heading": "Batch upload up to 20 tracks (WAV, MP3)",
+          "level": 1,
+          "line": 134
+        },
+        {
+          "heading": "Batch Queue",
+          "level": 1,
+          "line": 135
+        },
+        {
+          "heading": "Queue is empty.",
+          "level": 1,
+          "line": 136
+        },
+        {
+          "heading": "Rendering offline...",
+          "level": 1,
+          "line": 137
+        },
+        {
+          "heading": "Play Original (A/B Test)",
+          "level": 1,
+          "line": 138
+        },
+        {
+          "heading": "Original",
+          "level": 1,
+          "line": 139
+        },
+        {
+          "heading": "Play Mastered (A/B Test)",
+          "level": 1,
+          "line": 140
+        },
+        {
+          "heading": "Master",
+          "level": 1,
+          "line": 141
+        },
+        {
+          "heading": "Download WAV",
+          "level": 1,
+          "line": 142
+        },
+        {
+          "heading": "Genre Presets",
+          "level": 1,
+          "line": 143
+        },
+        {
+          "heading": "Balanced",
+          "level": 1,
+          "line": 144
+        },
+        {
+          "heading": "Loud",
+          "level": 1,
+          "line": 145
+        },
+        {
+          "heading": "Pop/K-Pop",
+          "level": 1,
+          "line": 146
+        },
+        {
+          "heading": "Hip Hop/EDM",
+          "level": 1,
+          "line": 147
+        },
+        {
+          "heading": "Rock/Metal",
+          "level": 1,
+          "line": 148
+        },
+        {
+          "heading": "R&B/Soul",
+          "level": 1,
+          "line": 149
+        },
+        {
+          "heading": "Acoustic",
+          "level": 1,
+          "line": 150
+        },
+        {
+          "heading": "Cinematic/OST",
+          "level": 1,
+          "line": 151
+        },
+        {
+          "heading": "Vocal Boost",
+          "level": 1,
+          "line": 152
+        },
+        {
+          "heading": "Bass Boost",
+          "level": 1,
+          "line": 153
+        },
+        {
+          "heading": "Lo-Fi",
+          "level": 1,
+          "line": 154
+        },
+        {
+          "heading": "Analog",
+          "level": 1,
+          "line": 155
+        },
+        {
+          "heading": "Extreme",
+          "level": 1,
+          "line": 156
+        },
+        {
+          "heading": "Reset Options",
+          "level": 1,
+          "line": 157
+        },
+        {
+          "heading": "Download All",
+          "level": 1,
+          "line": 158
+        },
+        {
+          "heading": "Mastering...",
+          "level": 1,
+          "line": 159
+        },
+        {
+          "heading": "Start Mastering",
+          "level": 1,
+          "line": 160
+        },
+        {
+          "heading": "Tonal Balance",
+          "level": 1,
+          "line": 161
+        },
+        {
+          "heading": "Clarity",
+          "level": 1,
+          "line": 162
+        },
+        {
+          "heading": "Warmth",
+          "level": 1,
+          "line": 163
+        },
+        {
+          "heading": "Saturation & Width",
+          "level": 1,
+          "line": 164
+        },
+        {
+          "heading": "Tube Warmth",
+          "level": 1,
+          "line": 165
+        },
+        {
+          "heading": "Analog tube harmonic amplification (warm texture)",
+          "level": 1,
+          "line": 166
+        },
+        {
+          "heading": "Stereo Expansion",
+          "level": 1,
+          "line": 167
+        },
+        {
+          "heading": "Maximize spatial sense with stereo width expansion",
+          "level": 1,
+          "line": 168
+        },
+        {
+          "heading": "Dynamics",
+          "level": 1,
+          "line": 169
+        },
+        {
+          "heading": "Loudness",
+          "level": 1,
+          "line": 170
+        },
+        {
+          "heading": "Loudness Target",
+          "level": 1,
+          "line": 171
+        },
+        {
+          "heading": "Streaming Default (-14 LUFS)",
+          "level": 1,
+          "line": 172
+        },
+        {
+          "heading": "Modern Loud (-10 LUFS)",
+          "level": 1,
+          "line": 173
+        },
+        {
+          "heading": "Extreme Booster",
+          "level": 1,
+          "line": 174
+        },
+        {
+          "heading": "Aggressive compression and gain boost",
+          "level": 1,
+          "line": 175
+        },
+        {
+          "heading": "True Peak Guard",
+          "level": 1,
+          "line": 176
+        },
+        {
+          "heading": "Limiter applied to prevent output clipping",
+          "level": 1,
+          "line": 177
+        },
+        {
+          "heading": "Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.",
+          "level": 1,
+          "line": 178
+        },
+        {
+          "heading": "Subscription successfully cancelled.",
+          "level": 1,
+          "line": 179
+        },
+        {
+          "heading": "Profile settings saved successfully.",
+          "level": 1,
+          "line": 180
+        },
+        {
+          "heading": "Failed to save profile",
+          "level": 1,
+          "line": 181
+        },
+        {
+          "heading": "Settings & Management",
+          "level": 1,
+          "line": 182
+        },
+        {
+          "heading": "Manage account information, credit usage, and preferences.",
+          "level": 1,
+          "line": 183
+        },
+        {
+          "heading": "Credit Management",
+          "level": 1,
+          "line": 184
+        },
+        {
+          "heading": "Profile Management",
+          "level": 1,
+          "line": 185
+        },
+        {
+          "heading": "Preferences",
+          "level": 1,
+          "line": 186
+        },
+        {
+          "heading": "Check plan details and manage credit top-ups.",
+          "level": 1,
+          "line": 187
+        },
+        {
+          "heading": "Basic Plan",
+          "level": 1,
+          "line": 188
+        },
+        {
+          "heading": "Pro Plan",
+          "level": 1,
+          "line": 189
+        },
+        {
+          "heading": "Premier Plan",
+          "level": 1,
+          "line": 190
+        },
+        {
+          "heading": "Billed Annually",
+          "level": 1,
+          "line": 191
+        },
+        {
+          "heading": "Billed Monthly",
+          "level": 1,
+          "line": 192
+        },
+        {
+          "heading": "Cancel Subscription",
+          "level": 1,
+          "line": 193
+        },
+        {
+          "heading": "Manage Plans & Recharge",
+          "level": 1,
+          "line": 194
+        },
+        {
+          "heading": "Available Credits",
+          "level": 1,
+          "line": 195
+        },
+        {
+          "heading": "Subscribe to get access to advanced models, commercial rights, and up to 10,000 monthly credits.",
+          "level": 1,
+          "line": 196
+        },
+        {
+          "heading": "Recent Transactions",
+          "level": 1,
+          "line": 197
+        },
+        {
+          "heading": "Date",
+          "level": 1,
+          "line": 198
+        },
+        {
+          "heading": "Description",
+          "level": 1,
+          "line": 199
+        },
+        {
+          "heading": "Amount",
+          "level": 1,
+          "line": 200
+        },
+        {
+          "heading": "Status",
+          "level": 1,
+          "line": 201
+        },
+        {
+          "heading": "Completed",
+          "level": 1,
+          "line": 202
+        },
+        {
+          "heading": "Edit display info visible on your artist channel.",
+          "level": 1,
+          "line": 203
+        },
+        {
+          "heading": "Banner Image",
+          "level": 1,
+          "line": 204
+        },
+        {
+          "heading": "Profile Picture",
+          "level": 1,
+          "line": 205
+        },
+        {
+          "heading": "Handle",
+          "level": 1,
+          "line": 206
+        },
+        {
+          "heading": "Bio",
+          "level": 1,
+          "line": 207
+        },
+        {
+          "heading": "Save Changes",
+          "level": 1,
+          "line": 208
+        },
+        {
+          "heading": "Configure language and play preferences.",
+          "level": 1,
+          "line": 209
+        },
+        {
+          "heading": "Display Language",
+          "level": 1,
+          "line": 210
+        },
+        {
+          "heading": "bg-surface-container hover:bg-surface-container-high text-on-surface-variant",
+          "level": 1,
+          "line": 211
+        },
+        {
+          "heading": "Streaming Quality",
+          "level": 1,
+          "line": 212
+        },
+        {
+          "heading": "High (320kbps)",
+          "level": 1,
+          "line": 213
+        },
+        {
+          "heading": "Standard (128kbps)",
+          "level": 1,
+          "line": 214
+        },
+        {
+          "heading": "Autoplay Next Track",
+          "level": 1,
+          "line": 215
+        },
+        {
+          "heading": "Automatically play the next song when current finishes.",
+          "level": 1,
+          "line": 216
+        },
+        {
+          "heading": "Danger Zone",
+          "level": 1,
+          "line": 217
+        },
+        {
+          "heading": "Delete Account",
+          "level": 1,
+          "line": 218
+        },
+        {
+          "heading": "Permanently delete your account and all data.",
+          "level": 1,
+          "line": 219
+        },
+        {
+          "heading": "Delete",
+          "level": 1,
+          "line": 220
+        },
+        {
+          "heading": "Are you sure you want to delete your account? All data will be permanently erased.",
+          "level": 1,
+          "line": 221
+        },
+        {
+          "heading": "Confirm",
+          "level": 1,
+          "line": 222
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 221
+      }
+    },
+    {
+      "path": "ja_translations_v2.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 268,
+      "nonEmptyLines": 268,
+      "sections": [
+        {
+          "heading": "일반음질 (128kbps)",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "꺼짐",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.",
+          "level": 1,
+          "line": 4
+        },
+        {
+          "heading": "Subscription successfully cancelled.",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "Profile settings saved successfully.",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "Failed to save profile",
+          "level": 1,
+          "line": 7
+        },
+        {
+          "heading": "Settings & Management",
+          "level": 1,
+          "line": 8
+        },
+        {
+          "heading": "Manage account information, credit usage, and preferences.",
+          "level": 1,
+          "line": 9
+        },
+        {
+          "heading": "Credit Management",
+          "level": 1,
+          "line": 10
+        },
+        {
+          "heading": "Profile Management",
+          "level": 1,
+          "line": 11
+        },
+        {
+          "heading": "Preferences",
+          "level": 1,
+          "line": 12
+        },
+        {
+          "heading": "Check plan details and manage credit top-ups.",
+          "level": 1,
+          "line": 13
+        },
+        {
+          "heading": "Basic Plan",
+          "level": 1,
+          "line": 14
+        },
+        {
+          "heading": "Pro Plan",
+          "level": 1,
+          "line": 15
+        },
+        {
+          "heading": "Premier Plan",
+          "level": 1,
+          "line": 16
+        },
+        {
+          "heading": "Billed Annually",
+          "level": 1,
+          "line": 17
+        },
+        {
+          "heading": "Billed Monthly",
+          "level": 1,
+          "line": 18
+        },
+        {
+          "heading": "Cancel Subscription",
+          "level": 1,
+          "line": 19
+        },
+        {
+          "heading": "Manage Plans & Recharge",
+          "level": 1,
+          "line": 20
+        },
+        {
+          "heading": "Available Credits",
+          "level": 1,
+          "line": 21
+        },
+        {
+          "heading": "Next renewal & credit refill date: ${planRenewalDate}",
+          "level": 1,
+          "line": 22
+        },
+        {
+          "heading": "Subscribe to get access to advanced models, commercial rights, and up to 10,000 monthly credits.",
+          "level": 1,
+          "line": 23
+        },
+        {
+          "heading": "Recent Transactions",
+          "level": 1,
+          "line": 24
+        },
+        {
+          "heading": "Date",
+          "level": 1,
+          "line": 25
+        },
+        {
+          "heading": "Description",
+          "level": 1,
+          "line": 26
+        },
+        {
+          "heading": "Amount",
+          "level": 1,
+          "line": 27
+        },
+        {
+          "heading": "Status",
+          "level": 1,
+          "line": 28
+        },
+        {
+          "heading": "Completed",
+          "level": 1,
+          "line": 29
+        },
+        {
+          "heading": "Edit display info visible on your artist channel.",
+          "level": 1,
+          "line": 30
+        },
+        {
+          "heading": "Banner Image",
+          "level": 1,
+          "line": 31
+        },
+        {
+          "heading": "Profile Picture",
+          "level": 1,
+          "line": 32
+        },
+        {
+          "heading": "Display Name",
+          "level": 1,
+          "line": 33
+        },
+        {
+          "heading": "Handle",
+          "level": 1,
+          "line": 34
+        },
+        {
+          "heading": "Bio",
+          "level": 1,
+          "line": 35
+        },
+        {
+          "heading": "Save Changes",
+          "level": 1,
+          "line": 36
+        },
+        {
+          "heading": "Configure language and play preferences.",
+          "level": 1,
+          "line": 37
+        },
+        {
+          "heading": "Display Language",
+          "level": 1,
+          "line": 38
+        },
+        {
+          "heading": "bg-surface-container hover:bg-surface-container-high text-on-surface-variant",
+          "level": 1,
+          "line": 39
+        },
+        {
+          "heading": "Streaming Quality",
+          "level": 1,
+          "line": 40
+        },
+        {
+          "heading": "High (320kbps)",
+          "level": 1,
+          "line": 41
+        },
+        {
+          "heading": "Standard (128kbps)",
+          "level": 1,
+          "line": 42
+        },
+        {
+          "heading": "Autoplay Next Track",
+          "level": 1,
+          "line": 43
+        },
+        {
+          "heading": "Automatically play the next song when current finishes.",
+          "level": 1,
+          "line": 44
+        },
+        {
+          "heading": "Danger Zone",
+          "level": 1,
+          "line": 45
+        },
+        {
+          "heading": "Delete Account",
+          "level": 1,
+          "line": 46
+        },
+        {
+          "heading": "Permanently delete your account and all data.",
+          "level": 1,
+          "line": 47
+        },
+        {
+          "heading": "Delete",
+          "level": 1,
+          "line": 48
+        },
+        {
+          "heading": "Are you sure you want to delete your account? All data will be permanently erased.",
+          "level": 1,
+          "line": 49
+        },
+        {
+          "heading": "Cancel",
+          "level": 1,
+          "line": 50
+        },
+        {
+          "heading": "Confirm",
+          "level": 1,
+          "line": 51
+        },
+        {
+          "heading": "Explore countless AI-generated tracks and the prompts and lyrics used to create them.",
+          "level": 1,
+          "line": 52
+        },
+        {
+          "heading": "View Chart Rankings",
+          "level": 1,
+          "line": 53
+        },
+        {
+          "heading": "Trending Tracks",
+          "level": 1,
+          "line": 54
+        },
+        {
+          "heading": "See all charts",
+          "level": 1,
+          "line": 55
+        },
+        {
+          "heading": "Trending AI Artists",
+          "level": 1,
+          "line": 56
+        },
+        {
+          "heading": "See all artists",
+          "level": 1,
+          "line": 57
+        },
+        {
+          "heading": "Popular Albums",
+          "level": 1,
+          "line": 58
+        },
+        {
+          "heading": "See all",
+          "level": 1,
+          "line": 59
+        },
+        {
+          "heading": "Recommended Tracks",
+          "level": 1,
+          "line": 60
+        },
+        {
+          "heading": "Latest Albums",
+          "level": 1,
+          "line": 61
+        },
+        {
+          "heading": "ALBUM",
+          "level": 1,
+          "line": 62
+        },
+        {
+          "heading": "Latest Tracks",
+          "level": 1,
+          "line": 63
+        },
+        {
+          "heading": "TOP Categories",
+          "level": 1,
+          "line": 64
+        },
+        {
+          "heading": "Music Generation Interface",
+          "level": 1,
+          "line": 65
+        },
+        {
+          "heading": "Input Settings",
+          "level": 1,
+          "line": 66
+        },
+        {
+          "heading": "Select AI Engine",
+          "level": 1,
+          "line": 67
+        },
+        {
+          "heading": "Coming",
+          "level": 1,
+          "line": 68
+        },
+        {
+          "heading": "Model Version",
+          "level": 1,
+          "line": 69
+        },
+        {
+          "heading": "Suno model version. V5 is the latest default.",
+          "level": 1,
+          "line": 70
+        },
+        {
+          "heading": "Custom Mode",
+          "level": 1,
+          "line": 71
+        },
+        {
+          "heading": "Enable custom mode to enter style and title manually.",
+          "level": 1,
+          "line": 72
+        },
+        {
+          "heading": "Instrumental Only",
+          "level": 1,
+          "line": 73
+        },
+        {
+          "heading": "Generate instrumental music without vocals.",
+          "level": 1,
+          "line": 74
+        },
+        {
+          "heading": "Prompt / Lyrics",
+          "level": 1,
+          "line": 75
+        },
+        {
+          "heading": "Lyrics or description of the music you want to generate. Required when Custom Mode is off.",
+          "level": 1,
+          "line": 76
+        },
+        {
+          "heading": "Style",
+          "level": 1,
+          "line": 77
+        },
+        {
+          "heading": "Music style and genre. Required when Custom Mode is on.",
+          "level": 1,
+          "line": 78
+        },
+        {
+          "heading": "Title",
+          "level": 1,
+          "line": 79
+        },
+        {
+          "heading": "Title of the music. Required when Custom Mode is on.",
+          "level": 1,
+          "line": 80
+        },
+        {
+          "heading": "Vocal Gender",
+          "level": 1,
+          "line": 81
+        },
+        {
+          "heading": "Male",
+          "level": 1,
+          "line": 82
+        },
+        {
+          "heading": "Female",
+          "level": 1,
+          "line": 83
+        },
+        {
+          "heading": "Select the gender of the vocal to generate.",
+          "level": 1,
+          "line": 84
+        },
+        {
+          "heading": "Negative Tags",
+          "level": 1,
+          "line": 85
+        },
+        {
+          "heading": "Genres, styles, and elements to exclude.",
+          "level": 1,
+          "line": 86
+        },
+        {
+          "heading": "Style Weight",
+          "level": 1,
+          "line": 87
+        },
+        {
+          "heading": "Weight for style instructions. Higher values strictly follow the prompt style.",
+          "level": 1,
+          "line": 88
+        },
+        {
+          "heading": "Weirdness",
+          "level": 1,
+          "line": 89
+        },
+        {
+          "heading": "Status & Completed Tracks",
+          "level": 1,
+          "line": 90
+        },
+        {
+          "heading": "Active Generations (${activeTasks.length * 2} tracks generating)",
+          "level": 1,
+          "line": 91
+        },
+        {
+          "heading": "Failed",
+          "level": 1,
+          "line": 92
+        },
+        {
+          "heading": "Queued...",
+          "level": 1,
+          "line": 93
+        },
+        {
+          "heading": "Synthesizing voice & instruments...",
+          "level": 1,
+          "line": 94
+        },
+        {
+          "heading": "Sending request to Suno...",
+          "level": 1,
+          "line": 95
+        },
+        {
+          "heading": "🎵 Completed Songs (Recent ${topCompletedSongs.length})",
+          "level": 1,
+          "line": 96
+        },
+        {
+          "heading": "Make Private",
+          "level": 1,
+          "line": 97
+        },
+        {
+          "heading": "Make Public",
+          "level": 1,
+          "line": 98
+        },
+        {
+          "heading": "Playlist",
+          "level": 1,
+          "line": 99
+        },
+        {
+          "heading": "Select Playlist",
+          "level": 1,
+          "line": 100
+        },
+        {
+          "heading": "Remove from Playlist",
+          "level": 1,
+          "line": 101
+        },
+        {
+          "heading": "Albums",
+          "level": 1,
+          "line": 102
+        },
+        {
+          "heading": "Playlists",
+          "level": 1,
+          "line": 103
+        },
+        {
+          "heading": "Like",
+          "level": 1,
+          "line": 104
+        },
+        {
+          "heading": "Are you sure you want to publish ",
+          "level": 1,
+          "line": 105
+        },
+        {
+          "heading": "Close",
+          "level": 1,
+          "line": 106
+        },
+        {
+          "heading": "Search genres",
+          "level": 1,
+          "line": 107
+        },
+        {
+          "heading": "No results found.",
+          "level": 1,
+          "line": 108
+        },
+        {
+          "heading": "Failed to register guide: ${err.error}",
+          "level": 1,
+          "line": 109
+        },
+        {
+          "heading": "Failed to delete guide: ${err.error}",
+          "level": 1,
+          "line": 110
+        },
+        {
+          "heading": "Insufficient credits. (Requires ${modelCost} credits)",
+          "level": 1,
+          "line": 111
+        },
+        {
+          "heading": "Lyrics & Prompt Generation (-${modelCost})",
+          "level": 1,
+          "line": 112
+        },
+        {
+          "heading": "Server save failed: ${err.error}",
+          "level": 1,
+          "line": 113
+        },
+        {
+          "heading": "Server delete failed: ${err.error}",
+          "level": 1,
+          "line": 114
+        },
+        {
+          "heading": "Music Prompt",
+          "level": 1,
+          "line": 115
+        },
+        {
+          "heading": "Library",
+          "level": 1,
+          "line": 116
+        },
+        {
+          "heading": "AI Cover Studio",
+          "level": 1,
+          "line": 117
+        },
+        {
+          "heading": "Music Studio",
+          "level": 1,
+          "line": 118
+        },
+        {
+          "heading": "Mastering",
+          "level": 1,
+          "line": 119
+        },
+        {
+          "heading": "STYLE DESCRIPTION",
+          "level": 1,
+          "line": 120
+        },
+        {
+          "heading": "GENERATE PROMPT & LYRICS (${modelCost} Credits)",
+          "level": 1,
+          "line": 121
+        },
+        {
+          "heading": "스타일 설명 (STYLE DESCRIPTION)",
+          "level": 1,
+          "line": 122
+        },
+        {
+          "heading": "좋아요",
+          "level": 1,
+          "line": 123
+        },
+        {
+          "heading": "Public (${item.genre || ",
+          "level": 1,
+          "line": 124
+        },
+        {
+          "heading": "Page ${currentPage} of ${totalPages}",
+          "level": 1,
+          "line": 125
+        },
+        {
+          "heading": "Prev",
+          "level": 1,
+          "line": 126
+        },
+        {
+          "heading": "Next",
+          "level": 1,
+          "line": 127
+        },
+        {
+          "heading": "Genre Category (Required)",
+          "level": 1,
+          "line": 128
+        },
+        {
+          "heading": "Cover generation complete!",
+          "level": 1,
+          "line": 129
+        },
+        {
+          "heading": "Generation failed",
+          "level": 1,
+          "line": 130
+        },
+        {
+          "heading": "Uploading audio...",
+          "level": 1,
+          "line": 131
+        },
+        {
+          "heading": "Upload complete",
+          "level": 1,
+          "line": 132
+        },
+        {
+          "heading": "Upload failed",
+          "level": 1,
+          "line": 133
+        },
+        {
+          "heading": "Please upload a source audio file first.",
+          "level": 1,
+          "line": 134
+        },
+        {
+          "heading": "Sent cover generation request to Apipass.",
+          "level": 1,
+          "line": 135
+        },
+        {
+          "heading": "AI Cover Generation (-10)",
+          "level": 1,
+          "line": 136
+        },
+        {
+          "heading": "Request failed",
+          "level": 1,
+          "line": 137
+        },
+        {
+          "heading": "Error occurred",
+          "level": 1,
+          "line": 138
+        },
+        {
+          "heading": "Source Audio",
+          "level": 1,
+          "line": 139
+        },
+        {
+          "heading": "Pause",
+          "level": 1,
+          "line": 140
+        },
+        {
+          "heading": "Preview",
+          "level": 1,
+          "line": 141
+        },
+        {
+          "heading": "Click to Upload",
+          "level": 1,
+          "line": 142
+        },
+        {
+          "heading": "etc. (Max 50MB)",
+          "level": 1,
+          "line": 143
+        },
+        {
+          "heading": "Target Style Prompt",
+          "level": 1,
+          "line": 144
+        },
+        {
+          "heading": "Enter genre or mood (e.g., Soft jazz with piano and saxophone)",
+          "level": 1,
+          "line": 145
+        },
+        {
+          "heading": "Audio Weight",
+          "level": 1,
+          "line": 146
+        },
+        {
+          "heading": "Generate Cover Music (10 Credits)",
+          "level": 1,
+          "line": 147
+        },
+        {
+          "heading": "Covers generated!",
+          "level": 1,
+          "line": 148
+        },
+        {
+          "heading": "Play",
+          "level": 1,
+          "line": 149
+        },
+        {
+          "heading": "View Library",
+          "level": 1,
+          "line": 150
+        },
+        {
+          "heading": "Generating covers...",
+          "level": 1,
+          "line": 151
+        },
+        {
+          "heading": "May take 1-2 minutes.",
+          "level": 1,
+          "line": 152
+        },
+        {
+          "heading": "Home",
+          "level": 1,
+          "line": 153
+        },
+        {
+          "heading": "Category",
+          "level": 1,
+          "line": 154
+        },
+        {
+          "heading": "Live Charts",
+          "level": 1,
+          "line": 155
+        },
+        {
+          "heading": "My Channel",
+          "level": 1,
+          "line": 156
+        },
+        {
+          "heading": "Channel & Audio Management",
+          "level": 1,
+          "line": 157
+        },
+        {
+          "heading": "Studio",
+          "level": 1,
+          "line": 158
+        },
+        {
+          "heading": "Administrator",
+          "level": 1,
+          "line": 159
+        },
+        {
+          "heading": "What do you want to listen to?",
+          "level": 1,
+          "line": 160
+        },
+        {
+          "heading": "text-on-surface-variant hover:text-on-surface",
+          "level": 1,
+          "line": 161
+        },
+        {
+          "heading": "Buy Credits",
+          "level": 1,
+          "line": 162
+        },
+        {
+          "heading": "Recharge Credits",
+          "level": 1,
+          "line": 163
+        },
+        {
+          "heading": "Log Out",
+          "level": 1,
+          "line": 164
+        },
+        {
+          "heading": "View Details",
+          "level": 1,
+          "line": 165
+        },
+        {
+          "heading": "Announcements",
+          "level": 1,
+          "line": 166
+        },
+        {
+          "heading": "No announcements.",
+          "level": 1,
+          "line": 167
+        },
+        {
+          "heading": "en-US",
+          "level": 1,
+          "line": 168
+        },
+        {
+          "heading": "text-[#A1A1AA] hover:text-white",
+          "level": 1,
+          "line": 169
+        },
+        {
+          "heading": "BEATZ Ranking Chart",
+          "level": 1,
+          "line": 170
+        },
+        {
+          "heading": "Last updated:",
+          "level": 1,
+          "line": 171
+        },
+        {
+          "heading": "Track Chart",
+          "level": 1,
+          "line": 172
+        },
+        {
+          "heading": "Artist Chart",
+          "level": 1,
+          "line": 173
+        },
+        {
+          "heading": "Rank",
+          "level": 1,
+          "line": 174
+        },
+        {
+          "heading": "Artist Info",
+          "level": 1,
+          "line": 175
+        },
+        {
+          "heading": "Followers",
+          "level": 1,
+          "line": 176
+        },
+        {
+          "heading": "Follow",
+          "level": 1,
+          "line": 177
+        },
+        {
+          "heading": "Following",
+          "level": 1,
+          "line": 178
+        },
+        {
+          "heading": "No chart data available.",
+          "level": 1,
+          "line": 179
+        },
+        {
+          "heading": "Requires scheduler batch.",
+          "level": 1,
+          "line": 180
+        },
+        {
+          "heading": "Genre",
+          "level": 1,
+          "line": 181
+        },
+        {
+          "heading": "Play from Top 1",
+          "level": 1,
+          "line": 182
+        },
+        {
+          "heading": "Search title, album, artist...",
+          "level": 1,
+          "line": 183
+        },
+        {
+          "heading": "Refresh Chart",
+          "level": 1,
+          "line": 184
+        },
+        {
+          "heading": "Track",
+          "level": 1,
+          "line": 185
+        },
+        {
+          "heading": "Plays",
+          "level": 1,
+          "line": 186
+        },
+        {
+          "heading": "Likes",
+          "level": 1,
+          "line": 187
+        },
+        {
+          "heading": "Time",
+          "level": 1,
+          "line": 188
+        },
+        {
+          "heading": "Click ",
+          "level": 1,
+          "line": 189
+        },
+        {
+          "heading": "Requires scheduler batch or admin chart generation.",
+          "level": 1,
+          "line": 190
+        },
+        {
+          "heading": "Playlist created.",
+          "level": 1,
+          "line": 191
+        },
+        {
+          "heading": "Playlist details updated.",
+          "level": 1,
+          "line": 192
+        },
+        {
+          "heading": "Error saving playlist.",
+          "level": 1,
+          "line": 193
+        },
+        {
+          "heading": "Delete Playlist",
+          "level": 1,
+          "line": 194
+        },
+        {
+          "heading": "Are you sure you want to delete this playlist? The playlist will be deleted, but the tracks inside it will not be deleted and will be preserved.",
+          "level": 1,
+          "line": 195
+        },
+        {
+          "heading": "Playlist deleted.",
+          "level": 1,
+          "line": 196
+        },
+        {
+          "heading": "Image must be under 2MB.",
+          "level": 1,
+          "line": 197
+        },
+        {
+          "heading": "Cover image uploaded.",
+          "level": 1,
+          "line": 198
+        },
+        {
+          "heading": "Publish Playlist",
+          "level": 1,
+          "line": 199
+        },
+        {
+          "heading": "Do you want to publish ",
+          "level": 1,
+          "line": 200
+        },
+        {
+          "heading": "Publish",
+          "level": 1,
+          "line": 201
+        },
+        {
+          "heading": "You must select a genre category.",
+          "level": 1,
+          "line": 202
+        },
+        {
+          "heading": "Playlist published.",
+          "level": 1,
+          "line": 203
+        },
+        {
+          "heading": "Do you want to make ",
+          "level": 1,
+          "line": 204
+        },
+        {
+          "heading": "Playlist set to private.",
+          "level": 1,
+          "line": 205
+        },
+        {
+          "heading": "Liked Songs",
+          "level": 1,
+          "line": 206
+        },
+        {
+          "heading": "Your liked tracks",
+          "level": 1,
+          "line": 207
+        },
+        {
+          "heading": "Created by you • ${likedTracks.length || DUMMY_PLAYLIST.length} songs",
+          "level": 1,
+          "line": 208
+        },
+        {
+          "heading": "Library folder • ${pTracks.length} songs",
+          "level": 1,
+          "line": 209
+        },
+        {
+          "heading": "2 days ago",
+          "level": 1,
+          "line": 210
+        },
+        {
+          "heading": "Yesterday",
+          "level": 1,
+          "line": 211
+        },
+        {
+          "heading": "5 days ago",
+          "level": 1,
+          "line": 212
+        },
+        {
+          "heading": "Recently added",
+          "level": 1,
+          "line": 213
+        },
+        {
+          "heading": "Library Playlists",
+          "level": 1,
+          "line": 214
+        },
+        {
+          "heading": "Create New Playlist",
+          "level": 1,
+          "line": 215
+        },
+        {
+          "heading": "Published",
+          "level": 1,
+          "line": 216
+        },
+        {
+          "heading": "Private",
+          "level": 1,
+          "line": 217
+        },
+        {
+          "heading": "순위",
+          "level": 1,
+          "line": 218
+        },
+        {
+          "heading": "Edit",
+          "level": 1,
+          "line": 219
+        },
+        {
+          "heading": "songs",
+          "level": 1,
+          "line": 220
+        },
+        {
+          "heading": "Back",
+          "level": 1,
+          "line": 221
+        },
+        {
+          "heading": "Library Folder",
+          "level": 1,
+          "line": 222
+        },
+        {
+          "heading": "This playlist is empty.",
+          "level": 1,
+          "line": 223
+        },
+        {
+          "heading": "Remove from Library",
+          "level": 1,
+          "line": 224
+        },
+        {
+          "heading": "Add/Move to Playlist",
+          "level": 1,
+          "line": 225
+        },
+        {
+          "heading": "No playlists available",
+          "level": 1,
+          "line": 226
+        },
+        {
+          "heading": "Edit Playlist Info",
+          "level": 1,
+          "line": 227
+        },
+        {
+          "heading": "Playlist Title",
+          "level": 1,
+          "line": 228
+        },
+        {
+          "heading": "Playlist Description",
+          "level": 1,
+          "line": 229
+        },
+        {
+          "heading": "Select Genre Category",
+          "level": 1,
+          "line": 230
+        },
+        {
+          "heading": "Exposure Order Setting",
+          "level": 1,
+          "line": 231
+        },
+        {
+          "heading": "Default (Latest)",
+          "level": 1,
+          "line": 232
+        },
+        {
+          "heading": " Rank (Prioritized)",
+          "level": 1,
+          "line": 233
+        },
+        {
+          "heading": "Playlist Publishing (Public)",
+          "level": 1,
+          "line": 234
+        },
+        {
+          "heading": "Publish this playlist on my channel.",
+          "level": 1,
+          "line": 235
+        },
+        {
+          "heading": "Upload Playlist Cover",
+          "level": 1,
+          "line": 236
+        },
+        {
+          "heading": "Suggested Preset Covers",
+          "level": 1,
+          "line": 237
+        },
+        {
+          "heading": "Currently, only the UI layout is implemented. API integration is required!",
+          "level": 1,
+          "line": 238
+        },
+        {
+          "heading": "Save",
+          "level": 1,
+          "line": 239
+        },
+        {
+          "heading": "Select Genre",
+          "level": 1,
+          "line": 240
+        },
+        {
+          "heading": "Current Plan",
+          "level": 1,
+          "line": 241
+        },
+        {
+          "heading": "Free Plan",
+          "level": 1,
+          "line": 242
+        },
+        {
+          "heading": "Credits",
+          "level": 1,
+          "line": 243
+        },
+        {
+          "heading": "Current Plan (2,500 Credits)",
+          "level": 1,
+          "line": 244
+        },
+        {
+          "heading": "Subscribe (+2,500 Credits)",
+          "level": 1,
+          "line": 245
+        },
+        {
+          "heading": "Current Plan (10,000 Credits)",
+          "level": 1,
+          "line": 246
+        },
+        {
+          "heading": "Subscribe (+10,000 Credits)",
+          "level": 1,
+          "line": 247
+        },
+        {
+          "heading": "Recharge (6,800 Credits)",
+          "level": 1,
+          "line": 248
+        },
+        {
+          "heading": "Recharge (14,300 Credits)",
+          "level": 1,
+          "line": 249
+        },
+        {
+          "heading": "Recharge 500 Credits",
+          "level": 1,
+          "line": 250
+        },
+        {
+          "heading": "Recharge 1,000 Credits",
+          "level": 1,
+          "line": 251
+        },
+        {
+          "heading": "Recharge 2,000 Credits",
+          "level": 1,
+          "line": 252
+        },
+        {
+          "heading": "Browse all",
+          "level": 1,
+          "line": 253
+        },
+        {
+          "heading": "Search Results for",
+          "level": 1,
+          "line": 254
+        },
+        {
+          "heading": "Songs",
+          "level": 1,
+          "line": 255
+        },
+        {
+          "heading": "Artists",
+          "level": 1,
+          "line": 256
+        },
+        {
+          "heading": "Credit Top-up (+${amount})",
+          "level": 1,
+          "line": 257
+        },
+        {
+          "heading": "${amount} credits successfully charged!",
+          "level": 1,
+          "line": 258
+        },
+        {
+          "heading": "Single",
+          "level": 1,
+          "line": 259
+        },
+        {
+          "heading": "My Albums",
+          "level": 1,
+          "line": 260
+        },
+        {
+          "heading": "Create New Album",
+          "level": 1,
+          "line": 261
+        },
+        {
+          "heading": "No.",
+          "level": 1,
+          "line": 262
+        },
+        {
+          "heading": "Track Info",
+          "level": 1,
+          "line": 263
+        },
+        {
+          "heading": "Channel / Folder",
+          "level": 1,
+          "line": 264
+        },
+        {
+          "heading": "Date Added",
+          "level": 1,
+          "line": 265
+        },
+        {
+          "heading": "Channel Mgt",
+          "level": 1,
+          "line": 266
+        },
+        {
+          "heading": "Edit Channel",
+          "level": 1,
+          "line": 267
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 266
+      }
+    },
+    {
+      "path": "ko_strings.txt",
+      "language": "txt",
+      "fileCategory": "docs",
+      "totalLines": 847,
+      "nonEmptyLines": 847,
+      "metrics": {}
+    },
+    {
+      "path": "missing_en.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 223,
+      "nonEmptyLines": 223,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 0
+      }
+    },
+    {
+      "path": "missing_translations.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 225,
+      "nonEmptyLines": 225,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 0
+      }
+    },
+    {
+      "path": "package.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 32,
+      "nonEmptyLines": 32,
+      "sections": [
+        {
+          "heading": "name",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "version",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "private",
+          "level": 1,
+          "line": 4
+        },
+        {
+          "heading": "scripts",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "dependencies",
+          "level": 1,
+          "line": 11
+        },
+        {
+          "heading": "devDependencies",
+          "level": 1,
+          "line": 22
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 6
+      }
+    },
+    {
+      "path": "supabase_schema.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 199,
+      "nonEmptyLines": 164,
+      "definitions": [
+        {
+          "name": "song_history",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "prompt",
+            "lyrics",
+            "notes",
+            "form",
+            "created_at"
+          ],
+          "startLine": 2,
+          "endLine": 11
+        },
+        {
+          "name": "profiles",
+          "kind": "table",
+          "fields": [
+            "id",
+            "email",
+            "is_admin",
+            "active_guide_ids",
+            "created_at"
+          ],
+          "startLine": 28,
+          "endLine": 34
+        },
+        {
+          "name": "system_guides",
+          "kind": "table",
+          "fields": [
+            "id",
+            "title",
+            "body",
+            "created_at"
+          ],
+          "startLine": 67,
+          "endLine": 72
+        },
+        {
+          "name": "user_guides",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "body",
+            "created_at"
+          ],
+          "startLine": 90,
+          "endLine": 96
+        },
+        {
+          "name": "announcements",
+          "kind": "table",
+          "fields": [
+            "id",
+            "title",
+            "content",
+            "created_at"
+          ],
+          "startLine": 117,
+          "endLine": 122
+        },
+        {
+          "name": "system_settings",
+          "kind": "table",
+          "fields": [
+            "value",
+            "created_at"
+          ],
+          "startLine": 140,
+          "endLine": 144
+        },
+        {
+          "name": "playlists",
+          "kind": "table",
+          "fields": [
+            "id",
+            "user_id",
+            "title",
+            "description",
+            "cover_url",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 173,
+          "endLine": 181
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 7
+      }
+    },
+    {
+      "path": "ternary_strings.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 1174,
+      "nonEmptyLines": 1174,
+      "sections": [
+        {
+          "heading": "채널명을 입력해주세요.",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "새 채널이 생성되었습니다.",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "정말로 이 채널을 삭제하시겠습니까?",
+          "level": 1,
+          "line": 10
+        },
+        {
+          "heading": "채널이 삭제되었습니다.",
+          "level": 1,
+          "line": 14
+        },
+        {
+          "heading": "채널 삭제 중 오류가 발생했습니다.",
+          "level": 1,
+          "line": 18
+        },
+        {
+          "heading": "채널 연결 변경 실패",
+          "level": 1,
+          "line": 22
+        },
+        {
+          "heading": "음원이 채널에 연결되었습니다.",
+          "level": 1,
+          "line": 26
+        },
+        {
+          "heading": "채널 연결이 해제되었습니다.",
+          "level": 1,
+          "line": 30
+        },
+        {
+          "heading": "내 음원 관리",
+          "level": 1,
+          "line": 34
+        },
+        {
+          "heading": "채널 관리",
+          "level": 1,
+          "line": 38
+        },
+        {
+          "heading": "내 채널 (퍼블리싱됨)",
+          "level": 1,
+          "line": 42
+        },
+        {
+          "heading": "내 앨범",
+          "level": 1,
+          "line": 46
+        },
+        {
+          "heading": "새 앨범 만들기",
+          "level": 1,
+          "line": 50
+        },
+        {
+          "heading": "음원 목록",
+          "level": 1,
+          "line": 54
+        },
+        {
+          "heading": "음원 검색...",
+          "level": 1,
+          "line": 58
+        },
+        {
+          "heading": "음원 파일 업로드",
+          "level": 1,
+          "line": 62
+        },
+        {
+          "heading": "채널 / 소속 폴더",
+          "level": 1,
+          "line": 66
+        },
+        {
+          "heading": "추가 채널 관리",
+          "level": 1,
+          "line": 70
+        },
+        {
+          "heading": "새로운 아티스트 페르소나(채널)를 추가하고 관리합니다.",
+          "level": 1,
+          "line": 74
+        },
+        {
+          "heading": "채널 추가",
+          "level": 1,
+          "line": 78
+        },
+        {
+          "heading": "이름 없음",
+          "level": 1,
+          "line": 82
+        },
+        {
+          "heading": "기본 채널",
+          "level": 1,
+          "line": 86
+        },
+        {
+          "heading": "채널 삭제",
+          "level": 1,
+          "line": 90
+        },
+        {
+          "heading": "새 채널 추가",
+          "level": 1,
+          "line": 94
+        },
+        {
+          "heading": "배너 이미지 (Background image)",
+          "level": 1,
+          "line": 98
+        },
+        {
+          "heading": "이미지 업로드",
+          "level": 1,
+          "line": 102
+        },
+        {
+          "heading": "프로필 사진 (Profile picture)",
+          "level": 1,
+          "line": 106
+        },
+        {
+          "heading": "채널명 (Display Name)",
+          "level": 1,
+          "line": 110
+        },
+        {
+          "heading": "새 아티스트 이름",
+          "level": 1,
+          "line": 114
+        },
+        {
+          "heading": "소개글 (Bio)",
+          "level": 1,
+          "line": 118
+        },
+        {
+          "heading": "채널에 대해 소개해주세요...",
+          "level": 1,
+          "line": 122
+        },
+        {
+          "heading": "핸들 네임 (고유 URL)*",
+          "level": 1,
+          "line": 126
+        },
+        {
+          "heading": "장르 설정 (Genres Override)",
+          "level": 1,
+          "line": 130
+        },
+        {
+          "heading": "최대 5개의 음악 장르를 추가할 수 있습니다. 비워둘 경우 가장 인기 있는 곡의 장르가 표시됩니다.",
+          "level": 1,
+          "line": 134
+        },
+        {
+          "heading": "장르 입력...",
+          "level": 1,
+          "line": 138
+        },
+        {
+          "heading": "추가",
+          "level": 1,
+          "line": 142
+        },
+        {
+          "heading": "고급 통계 설정 (Advanced Statistics)",
+          "level": 1,
+          "line": 146
+        },
+        {
+          "heading": "취소",
+          "level": 1,
+          "line": 150
+        },
+        {
+          "heading": "생성하기",
+          "level": 1,
+          "line": 154
+        },
+        {
+          "heading": "관리 대시보드",
+          "level": 1,
+          "line": 158
+        },
+        {
+          "heading": "아티스트 채널",
+          "level": 1,
+          "line": 162
+        },
+        {
+          "heading": "앨범",
+          "level": 1,
+          "line": 166
+        },
+        {
+          "heading": "플레이리스트",
+          "level": 1,
+          "line": 170
+        },
+        {
+          "heading": "오디오 파일 (필수)",
+          "level": 1,
+          "line": 174
+        },
+        {
+          "heading": "파일 선택",
+          "level": 1,
+          "line": 178
+        },
+        {
+          "heading": "선택된 파일 없음",
+          "level": 1,
+          "line": 182
+        },
+        {
+          "heading": "곡 제목 (필수)",
+          "level": 1,
+          "line": 186
+        },
+        {
+          "heading": "제목을 입력하세요",
+          "level": 1,
+          "line": 190
+        },
+        {
+          "heading": "채널 등록 (선택)",
+          "level": 1,
+          "line": 194
+        },
+        {
+          "heading": "선택 안 함 (메인 채널에만 등록)",
+          "level": 1,
+          "line": 198
+        },
+        {
+          "heading": "장르 카테고리 (필수)",
+          "level": 1,
+          "line": 202
+        },
+        {
+          "heading": "장르 카테고리 선택",
+          "level": 1,
+          "line": 206
+        },
+        {
+          "heading": "커버 이미지 (선택)",
+          "level": 1,
+          "line": 210
+        },
+        {
+          "heading": "이미지 선택",
+          "level": 1,
+          "line": 214
+        },
+        {
+          "heading": "삭제",
+          "level": 1,
+          "line": 218
+        },
+        {
+          "heading": "프롬프트 (선택)",
+          "level": 1,
+          "line": 222
+        },
+        {
+          "heading": "가사 / 설명 (선택)",
+          "level": 1,
+          "line": 226
+        },
+        {
+          "heading": "가사 또는 음원 정보를 입력하세요",
+          "level": 1,
+          "line": 230
+        },
+        {
+          "heading": "제작 노트 (선택)",
+          "level": 1,
+          "line": 234
+        },
+        {
+          "heading": "작사 (선택)",
+          "level": 1,
+          "line": 238
+        },
+        {
+          "heading": "작곡 (선택)",
+          "level": 1,
+          "line": 242
+        },
+        {
+          "heading": "편곡 (선택)",
+          "level": 1,
+          "line": 246
+        },
+        {
+          "heading": "음원 퍼블리싱 (공개 여부)",
+          "level": 1,
+          "line": 250
+        },
+        {
+          "heading": "내 채널(공개 프로필)에 이 음원을 즉시 공개합니다.",
+          "level": 1,
+          "line": 254
+        },
+        {
+          "heading": "업로드 중...",
+          "level": 1,
+          "line": 258
+        },
+        {
+          "heading": "업로드 완료",
+          "level": 1,
+          "line": 262
+        },
+        {
+          "heading": "최대 6개까지 동시에 음악을 생성할 수 있습니다.",
+          "level": 1,
+          "line": 266
+        },
+        {
+          "heading": "크레딧이 부족합니다. (필요: 10 크레딧)",
+          "level": 1,
+          "line": 270
+        },
+        {
+          "heading": "음악 생성 (-10)",
+          "level": 1,
+          "line": 274
+        },
+        {
+          "heading": "음악 생성 인터페이스",
+          "level": 1,
+          "line": 278
+        },
+        {
+          "heading": "입력 설정 (Input)",
+          "level": 1,
+          "line": 282
+        },
+        {
+          "heading": "AI 엔진 선택 (AI Engine)",
+          "level": 1,
+          "line": 286
+        },
+        {
+          "heading": "예정",
+          "level": 1,
+          "line": 290
+        },
+        {
+          "heading": "모델 버전 (Model Version)",
+          "level": 1,
+          "line": 294
+        },
+        {
+          "heading": "Suno 모델 버전입니다. V5가 최신 기본값입니다.",
+          "level": 1,
+          "line": 298
+        },
+        {
+          "heading": "커스텀 모드 (Custom Mode)",
+          "level": 1,
+          "line": 302
+        },
+        {
+          "heading": "커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.",
+          "level": 1,
+          "line": 306
+        },
+        {
+          "heading": "연주곡만 생성 (Inst Only)",
+          "level": 1,
+          "line": 310
+        },
+        {
+          "heading": "보컬 없이 악기 연주만 있는 음악을 생성합니다.",
+          "level": 1,
+          "line": 314
+        },
+        {
+          "heading": "프롬프트 / 가사 (Prompt)",
+          "level": 1,
+          "line": 318
+        },
+        {
+          "heading": "생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.",
+          "level": 1,
+          "line": 322
+        },
+        {
+          "heading": "스타일 (Style)",
+          "level": 1,
+          "line": 326
+        },
+        {
+          "heading": "음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.",
+          "level": 1,
+          "line": 330
+        },
+        {
+          "heading": "곡 제목 (Title)",
+          "level": 1,
+          "line": 334
+        },
+        {
+          "heading": "음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.",
+          "level": 1,
+          "line": 338
+        },
+        {
+          "heading": "보컬 성별 (Vocal Gender)",
+          "level": 1,
+          "line": 342
+        },
+        {
+          "heading": "남성 보컬",
+          "level": 1,
+          "line": 346
+        },
+        {
+          "heading": "여성 보컬",
+          "level": 1,
+          "line": 350
+        },
+        {
+          "heading": "생성할 보컬의 성별을 선택합니다.",
+          "level": 1,
+          "line": 354
+        },
+        {
+          "heading": "제외할 태그 (Negative Tags)",
+          "level": 1,
+          "line": 358
+        },
+        {
+          "heading": "시끄러운, 헤비메탈, 스크리밍...",
+          "level": 1,
+          "line": 362
+        },
+        {
+          "heading": "생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.",
+          "level": 1,
+          "line": 366
+        },
+        {
+          "heading": "스타일 강도 (Style Weight)",
+          "level": 1,
+          "line": 370
+        },
+        {
+          "heading": "스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.",
+          "level": 1,
+          "line": 374
+        },
+        {
+          "heading": "독창성 (Weirdness)",
+          "level": 1,
+          "line": 378
+        },
+        {
+          "heading": "진행 상태 및 완료된 곡",
+          "level": 1,
+          "line": 382
+        },
+        {
+          "heading": "완료",
+          "level": 1,
+          "line": 386
+        },
+        {
+          "heading": "실패",
+          "level": 1,
+          "line": 390
+        },
+        {
+          "heading": "대기 중...",
+          "level": 1,
+          "line": 394
+        },
+        {
+          "heading": "보컬 및 악기 합성 중...",
+          "level": 1,
+          "line": 398
+        },
+        {
+          "heading": "Suno 서버에 요청 전송 중...",
+          "level": 1,
+          "line": 402
+        },
+        {
+          "heading": "* 클릭 시 옵션/가사 불러오기",
+          "level": 1,
+          "line": 406
+        },
+        {
+          "heading": "비공개로 설정",
+          "level": 1,
+          "line": 410
+        },
+        {
+          "heading": "공개로 설정",
+          "level": 1,
+          "line": 414
+        },
+        {
+          "heading": "플레이리스트 지정",
+          "level": 1,
+          "line": 418
+        },
+        {
+          "heading": "플레이리스트 선택",
+          "level": 1,
+          "line": 422
+        },
+        {
+          "heading": "플레이리스트 해제",
+          "level": 1,
+          "line": 426
+        },
+        {
+          "heading": "나만의 플레이리스트",
+          "level": 1,
+          "line": 430
+        },
+        {
+          "heading": "좋아요",
+          "level": 1,
+          "line": 434
+        },
+        {
+          "heading": "다운로드",
+          "level": 1,
+          "line": 438
+        },
+        {
+          "heading": "좌측의 입력 정보를 바탕으로\\n실제 오디오 생성을 시작합니다.",
+          "level": 1,
+          "line": 442
+        },
+        {
+          "heading": "Suno 음악 생성 시작하기 (10 크레딧)",
+          "level": 1,
+          "line": 446
+        },
+        {
+          "heading": "음원 퍼블리싱 (공개)",
+          "level": 1,
+          "line": 450
+        },
+        {
+          "heading": "지침서를 서버에 등록했습니다",
+          "level": 1,
+          "line": 454
+        },
+        {
+          "heading": "지침서 등록 실패 (네트워크 오류)",
+          "level": 1,
+          "line": 458
+        },
+        {
+          "heading": "로컬 지침서에 저장했습니다",
+          "level": 1,
+          "line": 462
+        },
+        {
+          "heading": "기본 제공 지침서는 삭제할 수 없습니다.",
+          "level": 1,
+          "line": 466
+        },
+        {
+          "heading": "지침서를 서버에서 삭제했습니다",
+          "level": 1,
+          "line": 470
+        },
+        {
+          "heading": "지침서 삭제 실패 (네트워크 오류)",
+          "level": 1,
+          "line": 474
+        },
+        {
+          "heading": "프롬프트 생성 실패",
+          "level": 1,
+          "line": 478
+        },
+        {
+          "heading": "서버 히스토리에 저장했습니다",
+          "level": 1,
+          "line": 482
+        },
+        {
+          "heading": "서버 저장 실패 (네트워크 오류)",
+          "level": 1,
+          "line": 486
+        },
+        {
+          "heading": "서버 히스토리 항목을 삭제했습니다",
+          "level": 1,
+          "line": 490
+        },
+        {
+          "heading": "서버 삭제 실패 (네트워크 오류)",
+          "level": 1,
+          "line": 494
+        },
+        {
+          "heading": "음악 프롬프트",
+          "level": 1,
+          "line": 498
+        },
+        {
+          "heading": "보관함",
+          "level": 1,
+          "line": 502
+        },
+        {
+          "heading": "AI 커버 스튜디오",
+          "level": 1,
+          "line": 506
+        },
+        {
+          "heading": "음악 생성",
+          "level": 1,
+          "line": 510
+        },
+        {
+          "heading": "마스터링",
+          "level": 1,
+          "line": 514
+        },
+        {
+          "heading": "장르 1",
+          "level": 1,
+          "line": 518
+        },
+        {
+          "heading": "장르 선택",
+          "level": 1,
+          "line": 522
+        },
+        {
+          "heading": "장르 2",
+          "level": 1,
+          "line": 526
+        },
+        {
+          "heading": "없음",
+          "level": 1,
+          "line": 530
+        },
+        {
+          "heading": "장르 비중",
+          "level": 1,
+          "line": 534
+        },
+        {
+          "heading": "스타일 설명 (STYLE DESCRIPTION)",
+          "level": 1,
+          "line": 538
+        },
+        {
+          "heading": "예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic",
+          "level": 1,
+          "line": 542
+        },
+        {
+          "heading": "곡 전개 구조 (Song Structure)",
+          "level": 1,
+          "line": 546
+        },
+        {
+          "heading": "가사 분량",
+          "level": 1,
+          "line": 550
+        },
+        {
+          "heading": "보이스 톤",
+          "level": 1,
+          "line": 554
+        },
+        {
+          "heading": "보컬 나이",
+          "level": 1,
+          "line": 558
+        },
+        {
+          "heading": "보컬 젠더/구성",
+          "level": 1,
+          "line": 562
+        },
+        {
+          "heading": "언어 1",
+          "level": 1,
+          "line": 566
+        },
+        {
+          "heading": "언어 2",
+          "level": 1,
+          "line": 570
+        },
+        {
+          "heading": "언어 비중",
+          "level": 1,
+          "line": 574
+        },
+        {
+          "heading": "샘플 생성",
+          "level": 1,
+          "line": 578
+        },
+        {
+          "heading": "곡 구조 설계 (마디수/BPM)",
+          "level": 1,
+          "line": 582
+        },
+        {
+          "heading": "설계 복사",
+          "level": 1,
+          "line": 586
+        },
+        {
+          "heading": "생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다.",
+          "level": 1,
+          "line": 590
+        },
+        {
+          "heading": "장르 1 선택",
+          "level": 1,
+          "line": 594
+        },
+        {
+          "heading": "장르 2 선택",
+          "level": 1,
+          "line": 598
+        },
+        {
+          "heading": "제목, 스타일 설명 검색...",
+          "level": 1,
+          "line": 602
+        },
+        {
+          "heading": "전체",
+          "level": 1,
+          "line": 606
+        },
+        {
+          "heading": "좋아요 표시한 음악",
+          "level": 1,
+          "line": 610
+        },
+        {
+          "heading": "보관된 음원이나 프롬프트가 없습니다.",
+          "level": 1,
+          "line": 614
+        },
+        {
+          "heading": "번호",
+          "level": 1,
+          "line": 618
+        },
+        {
+          "heading": "작성일",
+          "level": 1,
+          "line": 622
+        },
+        {
+          "heading": "제목",
+          "level": 1,
+          "line": 626
+        },
+        {
+          "heading": "언어",
+          "level": 1,
+          "line": 630
+        },
+        {
+          "heading": "재생 시간",
+          "level": 1,
+          "line": 634
+        },
+        {
+          "heading": "공개 여부",
+          "level": 1,
+          "line": 638
+        },
+        {
+          "heading": "관리",
+          "level": 1,
+          "line": 642
+        },
+        {
+          "heading": "생성 중",
+          "level": 1,
+          "line": 646
+        },
+        {
+          "heading": "비공개",
+          "level": 1,
+          "line": 650
+        },
+        {
+          "heading": "채널 연결",
+          "level": 1,
+          "line": 654
+        },
+        {
+          "heading": "메인 프로필 (채널 없음)",
+          "level": 1,
+          "line": 658
+        },
+        {
+          "heading": "플레이리스트에 추가",
+          "level": 1,
+          "line": 662
+        },
+        {
+          "heading": "생성된 플레이리스트 없음",
+          "level": 1,
+          "line": 666
+        },
+        {
+          "heading": "이전",
+          "level": 1,
+          "line": 670
+        },
+        {
+          "heading": "다음",
+          "level": 1,
+          "line": 674
+        },
+        {
+          "heading": "복사 완료",
+          "level": 1,
+          "line": 678
+        },
+        {
+          "heading": "복사",
+          "level": 1,
+          "line": 682
+        },
+        {
+          "heading": "삭제 확인",
+          "level": 1,
+          "line": 686
+        },
+        {
+          "heading": "정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+          "level": 1,
+          "line": 690
+        },
+        {
+          "heading": "음원 퍼블리싱",
+          "level": 1,
+          "line": 694
+        },
+        {
+          "heading": "퍼블리싱",
+          "level": 1,
+          "line": 698
+        },
+        {
+          "heading": "최대 20곡까지만 업로드 가능합니다.",
+          "level": 1,
+          "line": 702
+        },
+        {
+          "heading": "Web Audio API 기반 초고속 오프라인 렌더링. 진공관 새츄레이션과 스테레오 와이드너가 탑재된 프로페셔널 스튜디오 마스터링 툴입니다.",
+          "level": 1,
+          "line": 706
+        },
+        {
+          "heading": "파일을 드래그하여 드롭하세요",
+          "level": 1,
+          "line": 710
+        },
+        {
+          "heading": "최대 20곡 일괄 업로드 (WAV, MP3)",
+          "level": 1,
+          "line": 714
+        },
+        {
+          "heading": "배치 큐 (Batch Queue)",
+          "level": 1,
+          "line": 718
+        },
+        {
+          "heading": "대기열이 비어 있습니다.",
+          "level": 1,
+          "line": 722
+        },
+        {
+          "heading": "오프라인 렌더링 중...",
+          "level": 1,
+          "line": 726
+        },
+        {
+          "heading": "원본 듣기 (A/B 테스트)",
+          "level": 1,
+          "line": 730
+        },
+        {
+          "heading": "원본",
+          "level": 1,
+          "line": 734
+        },
+        {
+          "heading": "마스터 본 듣기 (A/B 테스트)",
+          "level": 1,
+          "line": 738
+        },
+        {
+          "heading": "마스터",
+          "level": 1,
+          "line": 742
+        },
+        {
+          "heading": "WAV 다운로드",
+          "level": 1,
+          "line": 746
+        },
+        {
+          "heading": "장르 프리셋",
+          "level": 1,
+          "line": 750
+        },
+        {
+          "heading": "기본(균형)",
+          "level": 1,
+          "line": 754
+        },
+        {
+          "heading": "균형(볼륨업)",
+          "level": 1,
+          "line": 758
+        },
+        {
+          "heading": "팝/K-Pop",
+          "level": 1,
+          "line": 762
+        },
+        {
+          "heading": "힙합/EDM",
+          "level": 1,
+          "line": 766
+        },
+        {
+          "heading": "록/메탈",
+          "level": 1,
+          "line": 770
+        },
+        {
+          "heading": "R&B/소울",
+          "level": 1,
+          "line": 774
+        },
+        {
+          "heading": "어쿠스틱",
+          "level": 1,
+          "line": 778
+        },
+        {
+          "heading": "시네마틱/OST",
+          "level": 1,
+          "line": 782
+        },
+        {
+          "heading": "보컬 강조",
+          "level": 1,
+          "line": 786
+        },
+        {
+          "heading": "저음 강화",
+          "level": 1,
+          "line": 790
+        },
+        {
+          "heading": "로파이",
+          "level": 1,
+          "line": 794
+        },
+        {
+          "heading": "아날로그",
+          "level": 1,
+          "line": 798
+        },
+        {
+          "heading": "익스트림",
+          "level": 1,
+          "line": 802
+        },
+        {
+          "heading": "설정 초기화",
+          "level": 1,
+          "line": 806
+        },
+        {
+          "heading": "전체 다운로드",
+          "level": 1,
+          "line": 810
+        },
+        {
+          "heading": "마스터링 중...",
+          "level": 1,
+          "line": 814
+        },
+        {
+          "heading": "마스터링 시작",
+          "level": 1,
+          "line": 818
+        },
+        {
+          "heading": "톤 밸런스",
+          "level": 1,
+          "line": 822
+        },
+        {
+          "heading": "선명도",
+          "level": 1,
+          "line": 826
+        },
+        {
+          "heading": "저역",
+          "level": 1,
+          "line": 830
+        },
+        {
+          "heading": "새츄레이션 & 공간감",
+          "level": 1,
+          "line": 834
+        },
+        {
+          "heading": "진공관 따뜻함",
+          "level": 1,
+          "line": 838
+        },
+        {
+          "heading": "아날로그 진공관 배음 증폭 (따뜻하고 묵직한 질감)",
+          "level": 1,
+          "line": 842
+        },
+        {
+          "heading": "스테레오 확장",
+          "level": 1,
+          "line": 846
+        },
+        {
+          "heading": "좌우 위상 확장으로 공간감 극대화",
+          "level": 1,
+          "line": 850
+        },
+        {
+          "heading": "다이내믹스",
+          "level": 1,
+          "line": 854
+        },
+        {
+          "heading": "음압",
+          "level": 1,
+          "line": 858
+        },
+        {
+          "heading": "목표 음압 (Loudness Target)",
+          "level": 1,
+          "line": 862
+        },
+        {
+          "heading": "스트리밍 기본 (-14 LUFS)",
+          "level": 1,
+          "line": 866
+        },
+        {
+          "heading": "모던 라우드 (-10 LUFS)",
+          "level": 1,
+          "line": 870
+        },
+        {
+          "heading": "익스트림 부스터 (Extreme)",
+          "level": 1,
+          "line": 874
+        },
+        {
+          "heading": "공격적인 압축 및 게인 부스트 (음압 극대화)",
+          "level": 1,
+          "line": 878
+        },
+        {
+          "heading": "트루 피크 가드 (True Peak)",
+          "level": 1,
+          "line": 882
+        },
+        {
+          "heading": "출력 전단 클리핑 방지 리미터 적용",
+          "level": 1,
+          "line": 886
+        },
+        {
+          "heading": "BEATZ 랭킹차트",
+          "level": 1,
+          "line": 890
+        },
+        {
+          "heading": "마지막 업데이트 기준일:",
+          "level": 1,
+          "line": 894
+        },
+        {
+          "heading": "장르",
+          "level": 1,
+          "line": 898
+        },
+        {
+          "heading": "음원 차트",
+          "level": 1,
+          "line": 902
+        },
+        {
+          "heading": "아티스트 차트",
+          "level": 1,
+          "line": 906
+        },
+        {
+          "heading": "1위부터 재생",
+          "level": 1,
+          "line": 910
+        },
+        {
+          "heading": "제목, 앨범, 아티스트 검색...",
+          "level": 1,
+          "line": 914
+        },
+        {
+          "heading": "차트 집계 갱신",
+          "level": 1,
+          "line": 918
+        },
+        {
+          "heading": "순위",
+          "level": 1,
+          "line": 922
+        },
+        {
+          "heading": "곡 정보",
+          "level": 1,
+          "line": 926
+        },
+        {
+          "heading": "재생수",
+          "level": 1,
+          "line": 930
+        },
+        {
+          "heading": "시간",
+          "level": 1,
+          "line": 934
+        },
+        {
+          "heading": "집계된 차트 데이터가 없습니다.",
+          "level": 1,
+          "line": 938
+        },
+        {
+          "heading": "상단의 \\'차트 집계 갱신\\' 버튼을 눌러 실시간으로 차트를 만들어보세요.",
+          "level": 1,
+          "line": 942
+        },
+        {
+          "heading": "관련 스케줄러 배치 또는 어드민의 집계 갱신 처리가 필요합니다.",
+          "level": 1,
+          "line": 946
+        },
+        {
+          "heading": "정말 구독을 취소하시겠습니까? 이번 달 결제 주기까지만 혜택이 유지됩니다.",
+          "level": 1,
+          "line": 950
+        },
+        {
+          "heading": "구독이 성공적으로 취소되었습니다.",
+          "level": 1,
+          "line": 954
+        },
+        {
+          "heading": "프로필 설정이 저장되었습니다.",
+          "level": 1,
+          "line": 958
+        },
+        {
+          "heading": "프로필 저장 실패",
+          "level": 1,
+          "line": 962
+        },
+        {
+          "heading": "설정 및 관리",
+          "level": 1,
+          "line": 966
+        },
+        {
+          "heading": "계정 정보, 크레딧 사용 내역 및 환경설정을 관리합니다.",
+          "level": 1,
+          "line": 970
+        },
+        {
+          "heading": "크레딧 관리",
+          "level": 1,
+          "line": 974
+        },
+        {
+          "heading": "프로필 관리",
+          "level": 1,
+          "line": 978
+        },
+        {
+          "heading": "환경설정",
+          "level": 1,
+          "line": 982
+        },
+        {
+          "heading": "요금제 확인 및 크레딧 충전을 관리할 수 있습니다.",
+          "level": 1,
+          "line": 986
+        },
+        {
+          "heading": "무료 요금제",
+          "level": 1,
+          "line": 990
+        },
+        {
+          "heading": "프로 플랜",
+          "level": 1,
+          "line": 994
+        },
+        {
+          "heading": "프리미어 플랜",
+          "level": 1,
+          "line": 998
+        },
+        {
+          "heading": "연간 결제",
+          "level": 1,
+          "line": 1002
+        },
+        {
+          "heading": "월간 결제",
+          "level": 1,
+          "line": 1006
+        },
+        {
+          "heading": "구독 취소",
+          "level": 1,
+          "line": 1010
+        },
+        {
+          "heading": "요금제 관리 및 충전",
+          "level": 1,
+          "line": 1014
+        },
+        {
+          "heading": "사용 가능한 크레딧",
+          "level": 1,
+          "line": 1018
+        },
+        {
+          "heading": "구독 시 고성능 모델 액세스, 상업적 권한 획득 및 최대 10,000 크레딧을 매달 받을 수 있습니다.",
+          "level": 1,
+          "line": 1022
+        },
+        {
+          "heading": "최근 거래 내역",
+          "level": 1,
+          "line": 1026
+        },
+        {
+          "heading": "거래 일시",
+          "level": 1,
+          "line": 1030
+        },
+        {
+          "heading": "상세 내용",
+          "level": 1,
+          "line": 1034
+        },
+        {
+          "heading": "금액",
+          "level": 1,
+          "line": 1038
+        },
+        {
+          "heading": "상태",
+          "level": 1,
+          "line": 1042
+        },
+        {
+          "heading": "완료됨",
+          "level": 1,
+          "line": 1046
+        },
+        {
+          "heading": "내 아티스트 채널에 표시될 프로필 정보를 편집합니다.",
+          "level": 1,
+          "line": 1050
+        },
+        {
+          "heading": "배너 이미지",
+          "level": 1,
+          "line": 1054
+        },
+        {
+          "heading": "프로필 사진",
+          "level": 1,
+          "line": 1058
+        },
+        {
+          "heading": "닉네임 (표시 이름)",
+          "level": 1,
+          "line": 1062
+        },
+        {
+          "heading": "핸들 네임",
+          "level": 1,
+          "line": 1066
+        },
+        {
+          "heading": "소개글",
+          "level": 1,
+          "line": 1070
+        },
+        {
+          "heading": "프로필 저장",
+          "level": 1,
+          "line": 1074
+        },
+        {
+          "heading": "다양한 재생 옵션 및 기본 언어를 설정할 수 있습니다.",
+          "level": 1,
+          "line": 1078
+        },
+        {
+          "heading": "기본 언어",
+          "level": 1,
+          "line": 1082
+        },
+        {
+          "heading": "bg-primary text-black",
+          "level": 1,
+          "line": 1086
+        },
+        {
+          "heading": "스트리밍 음질",
+          "level": 1,
+          "line": 1090
+        },
+        {
+          "heading": "고음질 (320kbps)",
+          "level": 1,
+          "line": 1094
+        },
+        {
+          "heading": "일반음질 (128kbps)",
+          "level": 1,
+          "line": 1098
+        },
+        {
+          "heading": "다음 곡 자동 재생",
+          "level": 1,
+          "line": 1102
+        },
+        {
+          "heading": "곡이 끝나면 다음 곡을 자동으로 재생합니다.",
+          "level": 1,
+          "line": 1106
+        },
+        {
+          "heading": "위험 구역 (Danger Zone)",
+          "level": 1,
+          "line": 1110
+        },
+        {
+          "heading": "계정 탈퇴",
+          "level": 1,
+          "line": 1114
+        },
+        {
+          "heading": "모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.",
+          "level": 1,
+          "line": 1118
+        },
+        {
+          "heading": "탈퇴하기",
+          "level": 1,
+          "line": 1122
+        },
+        {
+          "heading": "계정 삭제",
+          "level": 1,
+          "line": 1126
+        },
+        {
+          "heading": "정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.",
+          "level": 1,
+          "line": 1130
+        },
+        {
+          "heading": "확인",
+          "level": 1,
+          "line": 1134
+        },
+        {
+          "heading": "모두 둘러보기",
+          "level": 1,
+          "line": 1138
+        },
+        {
+          "heading": "인기 앨범 (Popular Albums)",
+          "level": 1,
+          "line": 1142
+        },
+        {
+          "heading": "최신 앨범 (Latest Albums)",
+          "level": 1,
+          "line": 1146
+        },
+        {
+          "heading": "추천 음원 (Recommended Tracks)",
+          "level": 1,
+          "line": 1150
+        },
+        {
+          "heading": "최신 음원 (Latest Tracks)",
+          "level": 1,
+          "line": 1154
+        },
+        {
+          "heading": "검색 결과:",
+          "level": 1,
+          "line": 1158
+        },
+        {
+          "heading": "음원 (Songs)",
+          "level": 1,
+          "line": 1162
+        },
+        {
+          "heading": "아티스트 (Artists)",
+          "level": 1,
+          "line": 1166
+        },
+        {
+          "heading": "앨범 (Albums)",
+          "level": 1,
+          "line": 1170
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 293
+      }
+    },
+    {
+      "path": "tsconfig.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 34,
+      "nonEmptyLines": 34,
+      "sections": [
+        {
+          "heading": "compilerOptions",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "include",
+          "level": 1,
+          "line": 25
+        },
+        {
+          "heading": "exclude",
+          "level": 1,
+          "line": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 3
+      }
+    },
+    {
+      "path": "vercel.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 4,
+      "nonEmptyLines": 4,
+      "sections": [
+        {
+          "heading": "framework",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "regions",
+          "level": 1,
+          "line": 3
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 2
+      }
+    },
+    {
+      "path": "vercel_logs.txt",
+      "language": "txt",
+      "fileCategory": "docs",
+      "totalLines": 1,
+      "nonEmptyLines": 0,
+      "metrics": {}
+    }
+  ]
+}

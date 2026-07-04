@@ -1,0 +1,303 @@
+{
+  "nodes": [
+    {
+      "id": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "type": "schema",
+      "name": "19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "summary": "음악 플랫폼의 핵심 데이터베이스 스키마를 초기화하는 Supabase 셋업 스크립트로, artists·albums·tracks·play_events·likes·chart_snapshots 6개 테이블과 인덱스, is_admin() 및 updated_at 트리거 함수를 생성한다.",
+      "tags": ["database", "schema-definition", "migration", "supabase", "rls"],
+      "complexity": "complex",
+      "languageNotes": "pgcrypto 확장(gen_random_uuid), CHECK 제약, jsonb/text[] 컬럼, SECURITY DEFINER 함수 및 RLS 정책을 함께 정의하는 전형적인 Supabase 초기화 스크립트."
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:artists",
+      "type": "table",
+      "name": "artists",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [21, 33],
+      "summary": "AI 생성 여부와 소유자(owner_user_id)를 갖는 아티스트 마스터 테이블로, slug 유니크 키와 jsonb links 필드를 보유한다.",
+      "tags": ["database", "data-model", "artists"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:albums",
+      "type": "table",
+      "name": "albums",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [38, 57],
+      "summary": "아티스트에 속한 앨범 테이블로 release_type/status CHECK 제약, 장르·무드 배열, 재생·좋아요 집계 컬럼을 포함한다.",
+      "tags": ["database", "data-model", "albums"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:tracks",
+      "type": "table",
+      "name": "tracks",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [64, 85],
+      "summary": "앨범에 속한 개별 트랙 테이블로 오디오 파일 URL, 가사, 스타일 프롬프트, BPM, waveform_data 등 음원 메타데이터와 재생·좋아요 카운터를 저장한다.",
+      "tags": ["database", "data-model", "tracks", "audio"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:play_events",
+      "type": "table",
+      "name": "play_events",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [91, 99],
+      "summary": "트랙 재생 이벤트를 기록하는 분석 테이블로 재생 시각·재생 길이·ip_hash·country_code를 저장하여 통계와 차트 산출의 원천이 된다.",
+      "tags": ["database", "data-model", "analytics", "play-events"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:likes",
+      "type": "table",
+      "name": "likes",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [105, 110],
+      "summary": "사용자-트랙 좋아요를 (user_id, track_id) 복합 기본키로 관리하는 조인 테이블이다.",
+      "tags": ["database", "data-model", "likes"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:chart_snapshots",
+      "type": "table",
+      "name": "chart_snapshots",
+      "filePath": "docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "lineRange": [115, 124],
+      "summary": "일간·주간·월간 차트 순위 스냅샷을 저장하는 테이블로 순위, 재생수, 순위 변동을 기간별로 보관한다.",
+      "tags": ["database", "data-model", "chart", "ranking"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/20_SCHEMA_ADD_CREDITS.sql",
+      "type": "schema",
+      "name": "20_SCHEMA_ADD_CREDITS.sql",
+      "filePath": "docs/20_SCHEMA_ADD_CREDITS.sql",
+      "summary": "profiles 테이블에 기본값 120의 credits 컬럼을 추가하고, 동시 갱신 시 경합을 피하기 위한 update_user_credits() 안전 증감 함수를 정의하는 마이그레이션이다.",
+      "tags": ["database", "migration", "credits", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+      "type": "schema",
+      "name": "21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+      "filePath": "docs/21_SCHEMA_REALTIME_ANNOUNCEMENTS.sql",
+      "summary": "announcements 테이블을 supabase_realtime publication에 추가하여 JS 클라이언트가 postgres_changes 실시간 이벤트를 수신할 수 있게 하는 스크립트이다.",
+      "tags": ["database", "migration", "realtime", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+      "type": "schema",
+      "name": "22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+      "filePath": "docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+      "summary": "artists 테이블에 tags, plays, likes, followers, following 등 통계 및 태그 오버라이드 컬럼을 추가하는 스키마 확장 마이그레이션이다.",
+      "tags": ["database", "migration", "artists", "schema-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/22_SCHEMA_MULTI_MODEL.sql",
+      "type": "schema",
+      "name": "22_SCHEMA_MULTI_MODEL.sql",
+      "filePath": "docs/22_SCHEMA_MULTI_MODEL.sql",
+      "summary": "Suno·Udio·Google 등 다중 AI 음악 모델을 지원하기 위해 song_history와 tracks 테이블에 model_provider·model_version 컬럼을 추가하고 PostgREST 스키마 캐시를 새로고침한다.",
+      "tags": ["database", "migration", "multi-model", "ai-music"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "type": "schema",
+      "name": "23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "filePath": "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "summary": "크레딧 증감·사용·관리자 충전 이력을 추적하는 credit_transactions 테이블과 인덱스를 만들고, 크레딧 갱신과 거래 기록을 원자적으로 처리하는 record_credit_transaction() RPC 함수를 정의한다.",
+      "tags": ["database", "migration", "credits", "transactions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql:credit_transactions",
+      "type": "table",
+      "name": "credit_transactions",
+      "filePath": "docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "lineRange": [4, 11],
+      "summary": "사용자별 크레딧 변동 내역(금액, 유형, 시각)을 기록하는 거래 원장 테이블이다.",
+      "tags": ["database", "data-model", "credits", "transactions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+      "type": "schema",
+      "name": "23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+      "filePath": "docs/23_SCHEMA_SONG_HISTORY_CHANNEL.sql",
+      "summary": "song_history 테이블에 사용자가 업로드 시 지정한 채널을 저장하는 channel_id 컬럼을 추가하는 마이그레이션이다.",
+      "tags": ["database", "migration", "song-history", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+      "type": "schema",
+      "name": "24_FIX_IS_ADMIN_FUNCTION.sql",
+      "filePath": "docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+      "summary": "is_admin() 함수를 profiles 테이블 기준으로 재정의하고, tracks·avatars 버킷의 Storage RLS 정책과 song_history 테이블의 RLS/INSERT 정책을 갱신하는 보안 패치 스크립트이다.",
+      "tags": ["database", "migration", "rls", "security", "supabase"],
+      "complexity": "moderate",
+      "languageNotes": "storage.objects에 대한 버킷별 RLS 정책과 SECURITY DEFINER is_admin() 함수를 결합한 Supabase 권한 패치 패턴."
+    },
+    {
+      "id": "schema:docs/25_FIX_STORAGE_RLS_INLINE.sql",
+      "type": "schema",
+      "name": "25_FIX_STORAGE_RLS_INLINE.sql",
+      "filePath": "docs/25_FIX_STORAGE_RLS_INLINE.sql",
+      "summary": "tracks 버킷의 INSERT·SELECT Storage RLS 정책을 함수 호출 없이 인라인 조건으로 재정의하고 개발용 예외를 추가하여 업로드 권한 문제를 해결하는 패치이다.",
+      "tags": ["database", "migration", "rls", "storage", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "type": "schema",
+      "name": "CONSOLIDATED_DATABASE_FIX.sql",
+      "filePath": "docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "summary": "profiles 컬럼 보완, user_playlists·user_guides 테이블 생성과 RLS 설정, song_history 컬럼 확장 및 Storage 버킷 권한을 한 번에 적용하는 통합 데이터베이스 수정 스크립트이다.",
+      "tags": ["database", "migration", "rls", "consolidated", "supabase"],
+      "complexity": "moderate",
+      "languageNotes": "여러 개별 마이그레이션을 하나로 묶고 IF NOT EXISTS·DROP POLICY/CREATE POLICY로 멱등성을 보장하는 통합 패치 패턴."
+    },
+    {
+      "id": "table:docs/CONSOLIDATED_DATABASE_FIX.sql:user_playlists",
+      "type": "table",
+      "name": "user_playlists",
+      "filePath": "docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "lineRange": [12, 20],
+      "summary": "사용자가 만든 앨범/플레이리스트를 저장하는 테이블로 제목, 커버, 공개 여부(is_published)와 소유자 기반 RLS 정책을 갖는다.",
+      "tags": ["database", "data-model", "playlist"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/CONSOLIDATED_DATABASE_FIX.sql:user_guides",
+      "type": "table",
+      "name": "user_guides",
+      "filePath": "docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "lineRange": [37, 43],
+      "summary": "사용자별 가이드 문서를 저장하는 테이블로 제목·본문과 소유자 기반 읽기/쓰기 RLS 정책을 갖는다.",
+      "tags": ["database", "data-model", "guides"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/SUPABASE_GOOGLE_SETUP.md",
+      "type": "document",
+      "name": "SUPABASE_GOOGLE_SETUP.md",
+      "filePath": "docs/SUPABASE_GOOGLE_SETUP.md",
+      "summary": "Supabase 프로젝트 값 확인, 앱 환경변수 설정, DB 테이블 생성, Google OAuth 연동, 앱 확인까지 8개 섹션으로 구글 로그인 설정 절차를 안내하는 가이드 문서이다.",
+      "tags": ["documentation", "setup-guide", "oauth", "supabase", "authentication"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:artists",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:albums",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:tracks",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:play_events",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:likes",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:chart_snapshots",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "target": "table:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql:credit_transactions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "target": "table:docs/CONSOLIDATED_DATABASE_FIX.sql:user_playlists",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/CONSOLIDATED_DATABASE_FIX.sql",
+      "target": "table:docs/CONSOLIDATED_DATABASE_FIX.sql:user_guides",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/22_SCHEMA_ARTISTS_EXTENSIONS.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:artists",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:docs/22_SCHEMA_MULTI_MODEL.sql",
+      "target": "table:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql:tracks",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "document:docs/SUPABASE_GOOGLE_SETUP.md",
+      "target": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "schema:docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+      "target": "schema:docs/19_DATABASE_SETUP_AND_GUIDES_FIX.sql",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "schema:docs/25_FIX_STORAGE_RLS_INLINE.sql",
+      "target": "schema:docs/24_FIX_IS_ADMIN_FUNCTION.sql",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "schema:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql",
+      "target": "schema:docs/20_SCHEMA_ADD_CREDITS.sql",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

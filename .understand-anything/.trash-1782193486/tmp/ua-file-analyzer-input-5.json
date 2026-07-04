@@ -1,0 +1,107 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {
+      "path": "src/app/(public)/cover/page.tsx",
+      "language": "typescript",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/(public)/studio/generate/page.tsx",
+      "language": "typescript",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/app/(public)/studio/page.tsx",
+      "language": "typescript",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/studio/CoverClient.tsx",
+      "language": "typescript",
+      "sizeLines": 548,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/studio/GenerateClient.tsx",
+      "language": "typescript",
+      "sizeLines": 1170,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/studio/GenreModal.tsx",
+      "language": "typescript",
+      "sizeLines": 103,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/studio/MasteringClient.tsx",
+      "language": "typescript",
+      "sizeLines": 787,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/components/studio/StudioClient.tsx",
+      "language": "typescript",
+      "sizeLines": 3709,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/audioUtils.ts",
+      "language": "typescript",
+      "sizeLines": 159,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/constants/genres.ts",
+      "language": "typescript",
+      "sizeLines": 336,
+      "fileCategory": "code"
+    }
+  ],
+  "batchImportData": {
+    "src/app/(public)/cover/page.tsx": [
+      "src/components/studio/CoverClient.tsx",
+      "src/lib/supabase/server.ts"
+    ],
+    "src/app/(public)/studio/generate/page.tsx": [
+      "src/components/studio/GenerateClient.tsx",
+      "src/lib/supabase/server.ts"
+    ],
+    "src/app/(public)/studio/page.tsx": [
+      "src/components/studio/StudioClient.tsx",
+      "src/lib/supabase/server.ts"
+    ],
+    "src/components/studio/CoverClient.tsx": [
+      "src/lib/supabase/client.ts",
+      "src/stores/playerStore.ts"
+    ],
+    "src/components/studio/GenerateClient.tsx": [
+      "src/lib/constants.ts",
+      "src/lib/utils.ts",
+      "src/stores/playerStore.ts"
+    ],
+    "src/components/studio/GenreModal.tsx": [
+      "src/lib/constants/genres.ts"
+    ],
+    "src/components/studio/MasteringClient.tsx": [
+      "src/lib/audioUtils.ts"
+    ],
+    "src/components/studio/StudioClient.tsx": [
+      "src/components/studio/CoverClient.tsx",
+      "src/components/studio/GenerateClient.tsx",
+      "src/components/studio/GenreModal.tsx",
+      "src/components/studio/MasteringClient.tsx",
+      "src/lib/constants.ts",
+      "src/lib/constants/genres.ts",
+      "src/lib/supabase/client.ts",
+      "src/lib/utils.ts",
+      "src/stores/playerStore.ts"
+    ],
+    "src/lib/audioUtils.ts": [],
+    "src/lib/constants/genres.ts": []
+  }
+}

@@ -1,0 +1,5352 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "non-git-repo",
+  "generatedAt": "2026-06-23T05:44:35.177Z",
+  "files": {
+    "eslint.config.mjs": {
+      "filePath": "eslint.config.mjs",
+      "contentHash": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "eslint/config",
+          "specifiers": [
+            "defineConfig",
+            "globalIgnores"
+          ]
+        },
+        {
+          "source": "eslint-config-next/core-web-vitals",
+          "specifiers": [
+            "nextVitals"
+          ]
+        },
+        {
+          "source": "eslint-config-next/typescript",
+          "specifiers": [
+            "nextTs"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 19,
+      "hasStructuralAnalysis": true
+    },
+    "next-env.d.ts": {
+      "filePath": "next-env.d.ts",
+      "contentHash": "7ad303e40d4fddf44f156129e397511953a71481c5cfd86b1862649aaaf240cc",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "./.next/dev/types/routes.d.ts",
+          "specifiers": []
+        }
+      ],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "next.config.ts": {
+      "filePath": "next.config.ts",
+      "contentHash": "2faa6dda1b20b3056854193b9ef5565e7314b19824f2a5bf1522426f8b6323a8",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next",
+          "specifiers": [
+            "NextConfig"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "postcss.config.mjs": {
+      "filePath": "postcss.config.mjs",
+      "contentHash": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/check_tables.js": {
+      "filePath": "scripts/check_tables.js",
+      "contentHash": "bf3a947523f59efac0f117512a5caf066cbcf4d33b919ff5384d94ca1191518b",
+      "functions": [
+        {
+          "name": "check",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/dev-stable.mjs": {
+      "filePath": "scripts/dev-stable.mjs",
+      "contentHash": "c4eb095de5a45387fed88a1ef8d2318e9497e51772ad58745358876160a8d8ae",
+      "functions": [
+        {
+          "name": "run",
+          "params": [],
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawn"
+          ]
+        },
+        {
+          "source": "node:url",
+          "specifiers": [
+            "fileURLToPath"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "dirname",
+            "resolve"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 55,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/find_db_impl.js": {
+      "filePath": "scripts/find_db_impl.js",
+      "contentHash": "265a8c26b025633d4a03b307bddef6dd99315ef82a51932a0b06ce2b3bf9d08b",
+      "functions": [
+        {
+          "name": "searchInFile",
+          "params": [
+            "filePath"
+          ],
+          "exported": false,
+          "lineCount": 26
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/serve-dist.mjs": {
+      "filePath": "scripts/serve-dist.mjs",
+      "contentHash": "a99f568d39a2e841d369de490017e37883d0a5b10ed7716c40c3d37314033deb",
+      "functions": [
+        {
+          "name": "getArg",
+          "params": [
+            "name"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "hasFlag",
+          "params": [
+            "name"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "safeJoin",
+          "params": [
+            "base",
+            "target"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "fileExists",
+          "params": [
+            "path"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "serveFile",
+          "params": [
+            "res",
+            "path",
+            "contentType"
+          ],
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:http",
+          "specifiers": [
+            "http"
+          ]
+        },
+        {
+          "source": "node:fs",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "node:fs",
+          "specifiers": [
+            "createReadStream"
+          ]
+        },
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawn"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "extname",
+            "join",
+            "normalize",
+            "resolve"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 106,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/albums/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/albums/page.tsx",
+      "contentHash": "8cc0b27e7be4a3881dc321d14efc56e45b1c32e71caff69f5938eab7048a2fe7",
+      "functions": [
+        {
+          "name": "AlbumsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 219
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Library",
+            "EyeOff",
+            "Eye",
+            "Loader2",
+            "User",
+            "Calendar",
+            "Tag",
+            "ShieldAlert",
+            "Search"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "AlbumsPage"
+      ],
+      "totalLines": 241,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/artists/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/artists/page.tsx",
+      "contentHash": "fb289df81a956d73273536425e0538145854b2b41077fb2cc7d82d5711761502",
+      "functions": [
+        {
+          "name": "ArtistsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 209
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Loader2",
+            "Shield",
+            "UserX",
+            "UserCheck",
+            "ShieldAlert",
+            "Search"
+          ]
+        }
+      ],
+      "exports": [
+        "ArtistsPage"
+      ],
+      "totalLines": 227,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/credits/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/credits/page.tsx",
+      "contentHash": "3511295b5c663022b0030fd76b55dc2b2dbe4864e8958e4075f0abad6947bd41",
+      "functions": [
+        {
+          "name": "AdminCreditsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 230
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Users",
+            "CreditCard",
+            "Plus",
+            "Minus",
+            "Loader2",
+            "AlertCircle",
+            "Search"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "AdminCreditsPage"
+      ],
+      "totalLines": 247,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/guides/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/guides/page.tsx",
+      "contentHash": "e904036c9df16b41b4120d1ff8f6b082ad67833ad912807a51a6599e432ba9e3",
+      "functions": [
+        {
+          "name": "getStoragePathFromUrl",
+          "params": [
+            "url"
+          ],
+          "returnType": "string | null",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "AdminGuidesPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 518
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useRef"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "FileText",
+            "Plus",
+            "Edit2",
+            "Trash2",
+            "Loader2",
+            "AlertCircle",
+            "Save",
+            "X",
+            "Upload",
+            "Download"
+          ]
+        },
+        {
+          "source": "next/script",
+          "specifiers": [
+            "Script"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "AdminGuidesPage"
+      ],
+      "totalLines": 545,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/layout.tsx": {
+      "filePath": "src/app/(admin)/admin/music/layout.tsx",
+      "contentHash": "c4fd0426d797e26989ab33c9255e301255a384c57b8a12c9e8e908a785174f66",
+      "functions": [
+        {
+          "name": "AdminLayout",
+          "params": [
+            "{\n  children,\n}"
+          ],
+          "exported": true,
+          "lineCount": 119
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/player/PersistentPlayer",
+          "specifiers": [
+            "PersistentPlayer"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "LayoutDashboard",
+            "Users",
+            "Library",
+            "Music",
+            "Home",
+            "LogOut",
+            "FileText",
+            "Megaphone",
+            "CreditCard"
+          ]
+        },
+        {
+          "source": "@/components/admin/AdminAuthGuard",
+          "specifiers": [
+            "AdminAuthGuard"
+          ]
+        }
+      ],
+      "exports": [
+        "AdminLayout"
+      ],
+      "totalLines": 127,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/notices/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/notices/page.tsx",
+      "contentHash": "a246f703c13cf9f9318a5fa95d5a1211a9b004c1e9b0c7a60e7d335de791c4e4",
+      "functions": [
+        {
+          "name": "AdminNoticesPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 309
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Megaphone",
+            "Plus",
+            "Edit2",
+            "Trash2",
+            "Loader2",
+            "AlertCircle",
+            "Save",
+            "X"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "AdminNoticesPage"
+      ],
+      "totalLines": 323,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/page.tsx",
+      "contentHash": "ed6ef9b1ae48e0543fff046d3cd465d53b420ec1f8ed128898766d6b8216c720",
+      "functions": [
+        {
+          "name": "AdminDashboardPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 182
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Users",
+            "Library",
+            "Music",
+            "Play",
+            "ArrowUpRight"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "AdminDashboardPage"
+      ],
+      "totalLines": 189,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/tracks/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/tracks/page.tsx",
+      "contentHash": "d825a8c844f3d13968ac97b6f1ccb80352e64799b25e6659b6484ad8801f0ac3",
+      "functions": [
+        {
+          "name": "TracksPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 379
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Music",
+            "EyeOff",
+            "Eye",
+            "Loader2",
+            "Play",
+            "Pause",
+            "FileText",
+            "User",
+            "Calendar",
+            "ShieldAlert",
+            "X",
+            "Search"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        }
+      ],
+      "exports": [
+        "TracksPage"
+      ],
+      "totalLines": 404,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(admin)/admin/music/ugc/page.tsx": {
+      "filePath": "src/app/(admin)/admin/music/ugc/page.tsx",
+      "contentHash": "3e1ee742917d7a7d3a7cf34d67d16172d301662079f5d57e28638abecf7d1ad3",
+      "functions": [
+        {
+          "name": "UgcManagementPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 21
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        },
+        {
+          "source": "@/components/admin/UgcManagementClient",
+          "specifiers": [
+            "UgcManagementClient"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "UgcManagementPage"
+      ],
+      "totalLines": 28,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/albums/[slug]/page.tsx": {
+      "filePath": "src/app/(public)/albums/[slug]/page.tsx",
+      "contentHash": "a24ef7b01fceaff76d8cbc99af3f6f193f25e85f12a72acfab568adc4dff7baf",
+      "functions": [
+        {
+          "name": "PublicAlbumDetailPage",
+          "params": [
+            "{ params, searchParams }"
+          ],
+          "exported": true,
+          "lineCount": 186
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/album/AlbumClient",
+          "specifiers": [
+            "AlbumClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Album",
+            "Track"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "notFound"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "PublicAlbumDetailPage"
+      ],
+      "totalLines": 202,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/artists/[slug]/page.tsx": {
+      "filePath": "src/app/(public)/artists/[slug]/page.tsx",
+      "contentHash": "1a26bff27bfe4fa71bfac3900cedeee1f53824d5b415a51232aabe8f3f194754",
+      "functions": [
+        {
+          "name": "PublicArtistDetailPage",
+          "params": [
+            "{ params }"
+          ],
+          "exported": true,
+          "lineCount": 248
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/artist/ArtistClient",
+          "specifiers": [
+            "ArtistClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Artist",
+            "Album",
+            "Track"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "notFound",
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "PublicArtistDetailPage"
+      ],
+      "totalLines": 262,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/charts/artists/page.tsx": {
+      "filePath": "src/app/(public)/charts/artists/page.tsx",
+      "contentHash": "768705b62af883331f1d136afc97ff95bf2903ef742d0388fb3b9ca302a38181",
+      "functions": [
+        {
+          "name": "PublicArtistChartPage",
+          "params": [
+            "{\n  searchParams\n}"
+          ],
+          "exported": true,
+          "lineCount": 69
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/chart/ArtistChartClient",
+          "specifiers": [
+            "ArtistChartClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Artist"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "dynamic",
+        "fetchCache",
+        "PublicArtistChartPage"
+      ],
+      "totalLines": 78,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/charts/page.tsx": {
+      "filePath": "src/app/(public)/charts/page.tsx",
+      "contentHash": "a2f453079809920b0e5d031d18a24bbbd69f33c5f1dd1f1b86c50974a0c6c75a",
+      "functions": [
+        {
+          "name": "PublicChartPage",
+          "params": [
+            "{ searchParams }"
+          ],
+          "exported": true,
+          "lineCount": 225
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/chart/ChartClient",
+          "specifiers": [
+            "ChartClient"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "PublicChartPage"
+      ],
+      "totalLines": 238,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/cover/page.tsx": {
+      "filePath": "src/app/(public)/cover/page.tsx",
+      "contentHash": "5533a3a34aa9ae8909902bc6d4d772b1c67e6b67d7801b51fe4b524d04f21627",
+      "functions": [
+        {
+          "name": "CoverPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/studio/CoverClient",
+          "specifiers": [
+            "CoverClient"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "CoverPage"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/layout.tsx": {
+      "filePath": "src/app/(public)/layout.tsx",
+      "contentHash": "c9f9175d67aea38f9fcdff224534b90817fc4a11aef387a9c02af7fdae0e5c7d",
+      "functions": [
+        {
+          "name": "PublicLayout",
+          "params": [
+            "{\n  children,\n}"
+          ],
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/layout/PublicLayoutClient",
+          "specifiers": [
+            "PublicLayoutClient"
+          ]
+        }
+      ],
+      "exports": [
+        "PublicLayout"
+      ],
+      "totalLines": 45,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/library/page.tsx": {
+      "filePath": "src/app/(public)/library/page.tsx",
+      "contentHash": "0df5edbc16a429ce023a67013cb1599714f69f5441506f64a39d294b218298ae",
+      "functions": [
+        {
+          "name": "LibraryPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 104
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/library/LibraryClient",
+          "specifiers": [
+            "LibraryClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "LibraryPage"
+      ],
+      "totalLines": 111,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/page.tsx": {
+      "filePath": "src/app/(public)/page.tsx",
+      "contentHash": "fcdc1aba5f89be1775e1d10a5e50678a5e5ad54e740f6474621302d4c711772b",
+      "functions": [
+        {
+          "name": "PublicHomePage",
+          "params": [],
+          "exported": true,
+          "lineCount": 341
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/home/HomeClient",
+          "specifiers": [
+            "HomeClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track",
+            "Album",
+            "Artist"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "dynamic",
+        "fetchCache",
+        "PublicHomePage"
+      ],
+      "totalLines": 352,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/pricing/page.tsx": {
+      "filePath": "src/app/(public)/pricing/page.tsx",
+      "contentHash": "91535d01e26369ac5aa60482787e3e9770a25796e22a6ee3b8875e6415b804b3",
+      "functions": [
+        {
+          "name": "PricingPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/subscription/PricingClient",
+          "specifiers": [
+            "PricingClient"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "PricingPage"
+      ],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/profile/page.tsx": {
+      "filePath": "src/app/(public)/profile/page.tsx",
+      "contentHash": "3316d9b5b9a8cb8f8323c8fab4be8f154bd9726276677edb5103826401cc349d",
+      "functions": [
+        {
+          "name": "ProfilePage",
+          "params": [],
+          "exported": true,
+          "lineCount": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/profile/ProfileClient",
+          "specifiers": [
+            "ProfileClient"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "ProfilePage"
+      ],
+      "totalLines": 35,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/search/page.tsx": {
+      "filePath": "src/app/(public)/search/page.tsx",
+      "contentHash": "656bb8bddc55876e3abd6fedda7149a830875b98546102ae90471da7d7cdff7f",
+      "functions": [
+        {
+          "name": "PublicSearchPage",
+          "params": [
+            "{ searchParams }"
+          ],
+          "exported": true,
+          "lineCount": 213
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/search/SearchClient",
+          "specifiers": [
+            "SearchClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track",
+            "Album"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "PublicSearchPage"
+      ],
+      "totalLines": 227,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/settings/page.tsx": {
+      "filePath": "src/app/(public)/settings/page.tsx",
+      "contentHash": "5dd1f15b0503b0bffa689d85653426231456a55a9947507a9a72b04987ae5028",
+      "functions": [
+        {
+          "name": "SettingsPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/settings/SettingsClient",
+          "specifiers": [
+            "SettingsClient"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "SettingsPage"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/studio/generate/page.tsx": {
+      "filePath": "src/app/(public)/studio/generate/page.tsx",
+      "contentHash": "6b5b0523313dfe5a6101a1d5bf7be9840053be5eba81b3c37089df79e0409470",
+      "functions": [
+        {
+          "name": "GeneratePage",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/studio/GenerateClient",
+          "specifiers": [
+            "GenerateClient"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "GeneratePage"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/(public)/studio/page.tsx": {
+      "filePath": "src/app/(public)/studio/page.tsx",
+      "contentHash": "143c52c8323eb495c9f8cb923cf1b33661c3d8c8e45723c79ea18cf02d63998a",
+      "functions": [
+        {
+          "name": "StudioPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "Suspense"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "redirect"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/components/studio/StudioClient",
+          "specifiers": [
+            "StudioClient"
+          ]
+        }
+      ],
+      "exports": [
+        "revalidate",
+        "StudioPage"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/admin/users/ban/route.ts": {
+      "filePath": "src/app/api/admin/users/ban/route.ts",
+      "contentHash": "9fc9cf16ada9a81bacfbcb0168d3575473e2b5c6d0c96e515a4c4f79ad869a5b",
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "params": [
+            "supabase",
+            "userId"
+          ],
+          "returnType": "Promise<boolean>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 55
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "PUT"
+      ],
+      "totalLines": 75,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/admin/users/route.ts": {
+      "filePath": "src/app/api/admin/users/route.ts",
+      "contentHash": "0e28dab48f9f1ad34bb690162bdc74b5961b4e44619bebf92b4f23dc9da75f9f",
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "params": [
+            "supabase",
+            "userId"
+          ],
+          "returnType": "Promise<boolean>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 31
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 60
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@supabase/supabase-js",
+          "specifiers": [
+            "createSupabaseClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST"
+      ],
+      "totalLines": 114,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/announcements/route.ts": {
+      "filePath": "src/app/api/announcements/route.ts",
+      "contentHash": "1f366098c852b754d59f532819660ffb19ecbddcc858e6ec4ce9cc6a609581a1",
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "params": [
+            "supabase",
+            "userId"
+          ],
+          "returnType": "Promise<boolean>",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "DELETE",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 24
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "totalLines": 109,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/auth/callback/route.ts": {
+      "filePath": "src/app/api/auth/callback/route.ts",
+      "contentHash": "1666c2088bf5360fafaafa7d7e1ad2c01b631eb084155f6833f5fe73952c437a",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 21
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/auth/login/route.ts": {
+      "filePath": "src/app/api/auth/login/route.ts",
+      "contentHash": "3c53a189030edb7356d876f07915bca9d3e91c9361ca6ab2f9041c9bf09e99f0",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 30
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/auth/signout/route.ts": {
+      "filePath": "src/app/api/auth/signout/route.ts",
+      "contentHash": "4d5bcc59d6a792145e590513eec7c687695c285567e9d39f6eef9f9e888c19d4",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/channels/[id]/route.ts": {
+      "filePath": "src/app/api/channels/[id]/route.ts",
+      "contentHash": "6b3ebbc7289562bf160afdda8b284263e5fb189fd2f14802025cbb25a67eff7f",
+      "functions": [
+        {
+          "name": "DELETE",
+          "params": [
+            "request",
+            "{ params }"
+          ],
+          "exported": true,
+          "lineCount": 47
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse",
+            "NextRequest"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "dynamic",
+        "DELETE"
+      ],
+      "totalLines": 53,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/channels/route.ts": {
+      "filePath": "src/app/api/channels/route.ts",
+      "contentHash": "436d16ec28b13eac95ec037b1097d0fc8d2219254ed5236cb68a8406fb1f6d1f",
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "params": [
+            "supabase",
+            "userId"
+          ],
+          "returnType": "Promise<boolean>",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 58
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 54
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "dynamic",
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "totalLines": 156,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/charts/cron/route.ts": {
+      "filePath": "src/app/api/charts/cron/route.ts",
+      "contentHash": "9d7ccfaafad4abfd7fa22f7cbabc0e9dd1f7c223acc3a786c1dd5a0c62e2a216",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 52
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/charts/aggregate",
+          "specifiers": [
+            "aggregateCharts"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 57,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/credits/history/route.ts": {
+      "filePath": "src/app/api/credits/history/route.ts",
+      "contentHash": "7c9c876e60f992d3f549d9fad689d70c04d8be694d22cc001eb1373b4eafc0e0",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 28
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "dynamic",
+        "GET"
+      ],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/debug-download/route.ts": {
+      "filePath": "src/app/api/debug-download/route.ts",
+      "contentHash": "ac9429c883d14fdd2832b4d5d63976c377df7a789b190a6bd8b9f042ec94dd56",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 104
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "node-id3",
+          "specifiers": [
+            "NodeID3"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 109,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/download/route.ts": {
+      "filePath": "src/app/api/download/route.ts",
+      "contentHash": "e46140b7942503612880452a00fd23ac6c19df5d5029b79b7fafe7f88d44c36e",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 70
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextRequest",
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "node-id3",
+          "specifiers": [
+            "NodeID3"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 74,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/generate-prompt/route.ts": {
+      "filePath": "src/app/api/generate-prompt/route.ts",
+      "contentHash": "2a69f77b84eb835051bdb121bbe9e0d4b387f6f61e75f42eab611fe26d58913d",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 62
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 66,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/likes/route.ts": {
+      "filePath": "src/app/api/likes/route.ts",
+      "contentHash": "9d1b2bb9017a44c2caadfd27f2e02c120a0a95dc21336d7d3609576c6fadcb45",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 108
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 112,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/music/generate/route.ts": {
+      "filePath": "src/app/api/music/generate/route.ts",
+      "contentHash": "73587ccc4817f8980621840ff46d992b4f20e4b98b0be1692ce4e0d6929b97d6",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/app/api/suno/generate/route",
+          "specifiers": [
+            "sunoGenerate"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/play/route.ts": {
+      "filePath": "src/app/api/play/route.ts",
+      "contentHash": "f96756281613dc83e63ee3f8705a70273dce2984ddc7992be6c9e591fb9abb14",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "req"
+          ],
+          "exported": true,
+          "lineCount": 75
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "crypto",
+          "specifiers": [
+            "crypto"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 80,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/playlists/[id]/route.ts": {
+      "filePath": "src/app/api/playlists/[id]/route.ts",
+      "contentHash": "1a3dd8d82a34817657f80d61cf991737d6a78508b5c871a72a82888a6a2ba834",
+      "functions": [
+        {
+          "name": "PUT",
+          "params": [
+            "request",
+            "{ params }"
+          ],
+          "exported": true,
+          "lineCount": 86
+        },
+        {
+          "name": "DELETE",
+          "params": [
+            "request",
+            "{ params }"
+          ],
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription",
+            "serializePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "PUT",
+        "DELETE"
+      ],
+      "totalLines": 127,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/playlists/route.ts": {
+      "filePath": "src/app/api/playlists/route.ts",
+      "contentHash": "369f97f26ab301b2f9846533e4a5c48b2eadd90b30eaca3e2a532a6ba19608d2",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 91
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 52
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription",
+            "serializePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST"
+      ],
+      "totalLines": 149,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/playlists/save-track/route.ts": {
+      "filePath": "src/app/api/playlists/save-track/route.ts",
+      "contentHash": "ae2521911df2b3525202f4a07702e95e0dc8ad7e872ea761cd73d521c14596dc",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "req"
+          ],
+          "exported": true,
+          "lineCount": 62
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 66,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/profile/active-guides/route.ts": {
+      "filePath": "src/app/api/profile/active-guides/route.ts",
+      "contentHash": "34bad850762b6119e33899579d12f938a7b2b66187a2b7cf39aed86d99c38b01",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "PUT"
+      ],
+      "totalLines": 72,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/profile/route.ts": {
+      "filePath": "src/app/api/profile/route.ts",
+      "contentHash": "d4ef81e45a95c3b38bdd22d70ee7022934b436d9b95194c61f5c7ea63c948308",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 37
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 53
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "dynamic",
+        "GET",
+        "PUT"
+      ],
+      "totalLines": 97,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/seed-samples/route.ts": {
+      "filePath": "src/app/api/seed-samples/route.ts",
+      "contentHash": "a92852fada61d7d5936f9d3cb59f58758b43f867fcd361e02a72d858e2262b15",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 28
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 75,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/song-history/[id]/route.ts": {
+      "filePath": "src/app/api/song-history/[id]/route.ts",
+      "contentHash": "0b241d4cceb8200b804cd5a3d17f9c7d98290692bce124ca176b4a2d98cad895",
+      "functions": [
+        {
+          "name": "PUT",
+          "params": [
+            "request",
+            "{ params }"
+          ],
+          "exported": true,
+          "lineCount": 73
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "PUT"
+      ],
+      "totalLines": 77,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/song-history/route.ts": {
+      "filePath": "src/app/api/song-history/route.ts",
+      "contentHash": "9da24a718c4681ad56f9311c695206ed60df80e3ea113189b9e1224bf07d5048",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 80
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 99
+        },
+        {
+          "name": "DELETE",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 33
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "node-id3",
+          "specifiers": [
+            "NodeID3"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "totalLines": 222,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/suno/cover/generate/route.ts": {
+      "filePath": "src/app/api/suno/cover/generate/route.ts",
+      "contentHash": "fe5b68c81ae580829a220bc1792b2a57326ad4d7da3c4a78a368e833308979ec",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 79
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 85,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/suno/cover/status/route.ts": {
+      "filePath": "src/app/api/suno/cover/status/route.ts",
+      "contentHash": "6b5b38ee5ac7ec30f3e1dbfb20a622250b53650c92bd74e613652eb58e386211",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 37
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 42,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/suno/generate/route.ts": {
+      "filePath": "src/app/api/suno/generate/route.ts",
+      "contentHash": "426a4f92151ba788dd37a77f86390279d09fd166bb80301e6305e76344478d2a",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 111
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 117,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/suno/publish/route.ts": {
+      "filePath": "src/app/api/suno/publish/route.ts",
+      "contentHash": "1ab85fea71992e2eefcce2b2e4e2b1cccf4fb0b54d529fb2ae06cef577eb801d",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/suno/status/route.ts": {
+      "filePath": "src/app/api/suno/status/route.ts",
+      "contentHash": "5aa7185fd5b5fac9bbe7da080a0acb8fed7b035c3d5c1cd5eae4c4de8b28ff85",
+      "functions": [
+        {
+          "name": "uploadToStorage",
+          "params": [
+            "supabase",
+            "url",
+            "bucketName",
+            "filePath"
+          ],
+          "returnType": "Promise<string>",
+          "exported": false,
+          "lineCount": 34
+        },
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 154
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 195,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/system-guides/route.ts": {
+      "filePath": "src/app/api/system-guides/route.ts",
+      "contentHash": "86cff3b20df522b3f6eb2c9e6f1f0cb24cdb4bf5240989f1318870966d459c05",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "checkAdmin",
+          "params": [
+            "supabase",
+            "userId"
+          ],
+          "returnType": "Promise<boolean>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "getStoragePathFromUrl",
+          "params": [
+            "url"
+          ],
+          "returnType": "string | null",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 43
+        },
+        {
+          "name": "PUT",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 44
+        },
+        {
+          "name": "DELETE",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 56
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "totalLines": 200,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/temp-cleanup/route.ts": {
+      "filePath": "src/app/api/temp-cleanup/route.ts",
+      "contentHash": "0529e0bc7ede1f6336d8b521e7d1c53cd56cd8f68c016aa1bab666d698247b68",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 48
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET"
+      ],
+      "totalLines": 52,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/upload/route.ts": {
+      "filePath": "src/app/api/upload/route.ts",
+      "contentHash": "a0a9e788a9e6a61817c52060411bcf81b3a2afe8818fbecd594995d62d03cd0e",
+      "functions": [
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 53
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "POST"
+      ],
+      "totalLines": 57,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/api/user-guides/route.ts": {
+      "filePath": "src/app/api/user-guides/route.ts",
+      "contentHash": "be1fa0bbc4c4c00ea604abb65f2a038d5fbf51b8c5ca51ba805efd31b5557cfb",
+      "functions": [
+        {
+          "name": "GET",
+          "params": [],
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "POST",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 37
+        },
+        {
+          "name": "DELETE",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 33
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "totalLines": 105,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/layout.tsx": {
+      "filePath": "src/app/layout.tsx",
+      "contentHash": "bb3060eb587ce0327e5d8ba3c9837fb44bb99faf05811dbb03135526ed7dfa04",
+      "functions": [
+        {
+          "name": "RootLayout",
+          "params": [
+            "{\n  children,\n}"
+          ],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "next",
+          "specifiers": [
+            "Metadata"
+          ]
+        },
+        {
+          "source": "next/font/google",
+          "specifiers": [
+            "Geist",
+            "Geist_Mono"
+          ]
+        },
+        {
+          "source": "./globals.css",
+          "specifiers": []
+        }
+      ],
+      "exports": [
+        "metadata",
+        "RootLayout"
+      ],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "src/app/login/page.tsx": {
+      "filePath": "src/app/login/page.tsx",
+      "contentHash": "6539ddda54acdef18d74649026c8916ec2f8fbd003c152c8cb0d5c13f4130a42",
+      "functions": [
+        {
+          "name": "LoginContent",
+          "params": [],
+          "exported": false,
+          "lineCount": 257
+        },
+        {
+          "name": "LoginPage",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "Suspense"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "AlertCircle",
+            "CheckCircle2",
+            "Sparkles",
+            "ArrowRight"
+          ]
+        },
+        {
+          "source": "next/image",
+          "specifiers": [
+            "Image"
+          ]
+        }
+      ],
+      "exports": [
+        "LoginPage"
+      ],
+      "totalLines": 274,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/admin/AdminAuthGuard.tsx": {
+      "filePath": "src/components/admin/AdminAuthGuard.tsx",
+      "contentHash": "5af5d150d05731b9783a22fdd7058e543cb8c0c9f62189a844a8f7074490f70e",
+      "functions": [
+        {
+          "name": "AdminAuthGuard",
+          "params": [
+            "{ children }"
+          ],
+          "exported": true,
+          "lineCount": 122
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React",
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ShieldAlert",
+            "Loader2",
+            "Key"
+          ]
+        }
+      ],
+      "exports": [
+        "AdminAuthGuard"
+      ],
+      "totalLines": 128,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/admin/UgcManagementClient.tsx": {
+      "filePath": "src/components/admin/UgcManagementClient.tsx",
+      "contentHash": "bcc1426aaa464615555898c38a156579cfca3b4ec3ba66711f959d5c478e7683",
+      "functions": [
+        {
+          "name": "UgcManagementClient",
+          "params": [],
+          "exported": true,
+          "lineCount": 571
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Music",
+            "Library",
+            "EyeOff",
+            "Search",
+            "Loader2",
+            "Play",
+            "Pause",
+            "AlertCircle",
+            "Shield",
+            "UserX",
+            "UserCheck",
+            "X",
+            "Upload"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "UgcManagementClient"
+      ],
+      "totalLines": 580,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/album/AlbumClient.tsx": {
+      "filePath": "src/components/album/AlbumClient.tsx",
+      "contentHash": "bd5a5acea97873d55b3781b7131d49e770a47b89475a979580f21dd9e95b0c45",
+      "functions": [
+        {
+          "name": "formatCount",
+          "params": [
+            "count"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "AlbumClient",
+          "params": [
+            "{\n  album,\n  initialTracks,\n  initialUserLikes\n}"
+          ],
+          "exported": true,
+          "lineCount": 445
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Album",
+            "Track"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Clock",
+            "Library",
+            "FileText",
+            "MoreHorizontal"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter"
+          ]
+        },
+        {
+          "source": "@/components/common/TrackDropdown",
+          "specifiers": [
+            "TrackDropdown"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "AlbumClient"
+      ],
+      "totalLines": 475,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/artist/ArtistClient.tsx": {
+      "filePath": "src/components/artist/ArtistClient.tsx",
+      "contentHash": "1ff93ee500709a8318dd7d2e8a1ea5d1be31dcdd6c7a32762a3a663c0fe48de7",
+      "functions": [
+        {
+          "name": "ArtistClient",
+          "params": [
+            "{\n  artist,\n  albums,\n  initialTracks,\n  initialUserLikes,\n  playlists = [],\n  currentUserId\n}"
+          ],
+          "exported": true,
+          "lineCount": 1229
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Artist",
+            "Album",
+            "Track"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Users",
+            "Library",
+            "Music",
+            "Check",
+            "MoreHorizontal",
+            "User",
+            "Lock",
+            "Globe",
+            "Pencil",
+            "X",
+            "Info",
+            "Upload",
+            "Download",
+            "ChevronRight"
+          ]
+        },
+        {
+          "source": "@/components/common/TrackDropdown",
+          "specifiers": [
+            "TrackDropdown"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/components/common/AlbumCard",
+          "specifiers": [
+            "AlbumCard"
+          ]
+        }
+      ],
+      "exports": [
+        "ArtistClient"
+      ],
+      "totalLines": 1262,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/chart/ArtistChartClient.tsx": {
+      "filePath": "src/components/chart/ArtistChartClient.tsx",
+      "contentHash": "30a9c2a27e07ac7f51920ed4c31c76caab85bc6de1da77e3ca9107fa8530e395",
+      "functions": [
+        {
+          "name": "formatCount",
+          "params": [
+            "count"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "ArtistChartClient",
+          "params": [
+            "{\n  initialArtists,\n  currentUserId,\n  periodType\n}"
+          ],
+          "exported": true,
+          "lineCount": 274
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Artist"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Trophy",
+            "ArrowLeft",
+            "Users",
+            "Plus",
+            "Check"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "ArtistChartClient"
+      ],
+      "totalLines": 301,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/chart/ChartClient.tsx": {
+      "filePath": "src/components/chart/ChartClient.tsx",
+      "contentHash": "c380cdc64b0cb561cc95afa61cbc59d03110b60deb3d8f91c09e87492b2f1529",
+      "functions": [
+        {
+          "name": "formatCount",
+          "params": [
+            "count"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "ChartClient",
+          "params": [
+            "{\n  initialChartItems,\n  periodType,\n  periodDate,\n  initialUserLikes,\n  isAdmin\n}"
+          ],
+          "exported": true,
+          "lineCount": 613
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track",
+            "Album",
+            "Artist"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Trophy",
+            "ArrowUp",
+            "ArrowDown",
+            "Minus",
+            "RefreshCw",
+            "Music",
+            "Search"
+          ]
+        },
+        {
+          "source": "@/components/common/TrackDropdown",
+          "specifiers": [
+            "TrackDropdown"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/components/player/AudioDuration",
+          "specifiers": [
+            "AudioDuration"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        }
+      ],
+      "exports": [
+        "ChartClient"
+      ],
+      "totalLines": 661,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/common/AlbumCard.tsx": {
+      "filePath": "src/components/common/AlbumCard.tsx",
+      "contentHash": "637fff985d918b2a3965e6afe5f5da81351f01efdf654eb708ee7f668c32dc29",
+      "functions": [
+        {
+          "name": "formatCount",
+          "params": [
+            "count"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "AlbumCard",
+          "params": [
+            "{ album, variant = 'grid', rank }"
+          ],
+          "exported": true,
+          "lineCount": 225
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Album"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Heart",
+            "Library",
+            "Music",
+            "Play"
+          ]
+        }
+      ],
+      "exports": [
+        "AlbumCard"
+      ],
+      "totalLines": 250,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/common/ConfirmDialog.tsx": {
+      "filePath": "src/components/common/ConfirmDialog.tsx",
+      "contentHash": "62c31b2ca6e4befb5a62ff23afea18cd02271865f26d1618f1475abbfae03f99",
+      "functions": [
+        {
+          "name": "ConfirmDialog",
+          "params": [
+            "{\n  isOpen,\n  title,\n  message,\n  confirmText = '확인',\n  cancelText = '취소',\n  onConfirm,\n  onCancel\n}"
+          ],
+          "exported": true,
+          "lineCount": 58
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfirmDialog"
+      ],
+      "totalLines": 74,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/common/ShareDialog.tsx": {
+      "filePath": "src/components/common/ShareDialog.tsx",
+      "contentHash": "1f1df9e095e24d09bb57a53d0c3793f84673daf2e4a556a59c28ad06400e7c25",
+      "functions": [
+        {
+          "name": "ShareDialog",
+          "params": [
+            "{\n  isOpen,\n  title,\n  url,\n  uiLanguage,\n  onClose\n}"
+          ],
+          "exported": true,
+          "lineCount": 95
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Copy",
+            "Check",
+            "Share2",
+            "X"
+          ]
+        }
+      ],
+      "exports": [
+        "ShareDialog"
+      ],
+      "totalLines": 110,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/common/TrackDropdown.tsx": {
+      "filePath": "src/components/common/TrackDropdown.tsx",
+      "contentHash": "97b10141fe0b77d5a18c214d904952f689d88e106ef2ccd9105d7b8f64d7b8ba",
+      "functions": [
+        {
+          "name": "TrackDropdown",
+          "params": [
+            "{\n  track,\n  myPlaylists,\n  userLikes,\n  uiLanguage,\n  onLikeToggle,\n  onSaveToPlaylist,\n  onShowCredits\n}"
+          ],
+          "exported": true,
+          "lineCount": 288
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "MoreHorizontal",
+            "Plus",
+            "Search",
+            "Check",
+            "Heart",
+            "ListMusic",
+            "Share2",
+            "Disc3",
+            "Info"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter"
+          ]
+        },
+        {
+          "source": "@/components/common/ConfirmDialog",
+          "specifiers": [
+            "ConfirmDialog"
+          ]
+        },
+        {
+          "source": "@/components/common/ShareDialog",
+          "specifiers": [
+            "ShareDialog"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        }
+      ],
+      "exports": [
+        "TrackDropdown"
+      ],
+      "totalLines": 310,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/home/HomeClient.tsx": {
+      "filePath": "src/components/home/HomeClient.tsx",
+      "contentHash": "8cb80e73b106d2cbf3e2d7ccca63203ac6bb105b34b6f608e9b9980a7d9efb9d",
+      "functions": [
+        {
+          "name": "formatCount",
+          "params": [
+            "count"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "generateDummyTracks",
+          "params": [
+            "baseTracks",
+            "count"
+          ],
+          "returnType": "Track[]",
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "Carousel",
+          "params": [
+            "{ items, renderItem, containerClassName }"
+          ],
+          "exported": false,
+          "lineCount": 82
+        },
+        {
+          "name": "HomeClient",
+          "params": [
+            "{\n  initialTracks,\n  initialAlbums,\n  initialPopularAlbums = [],\n  initialArtists,\n  initialUserLikes,\n  initialRecommendedTracks = [],\n  initialLatestTracks = []\n}"
+          ],
+          "exported": true,
+          "lineCount": 839
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track",
+            "Album",
+            "Artist"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Library",
+            "Users",
+            "Disc",
+            "ChevronRight",
+            "ChevronLeft",
+            "Music",
+            "TrendingUp",
+            "MoreVertical",
+            "X",
+            "MessageSquare",
+            "ListPlus"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/components/common/TrackDropdown",
+          "specifiers": [
+            "TrackDropdown"
+          ]
+        },
+        {
+          "source": "@/components/player/AudioDuration",
+          "specifiers": [
+            "AudioDuration"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/components/common/AlbumCard",
+          "specifiers": [
+            "AlbumCard"
+          ]
+        }
+      ],
+      "exports": [
+        "HomeClient"
+      ],
+      "totalLines": 1468,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/Header.tsx": {
+      "filePath": "src/components/layout/Header.tsx",
+      "contentHash": "0de042b42f98a4efe509f603d61bd3778a749813d54d1737ec1d814e75b308e5",
+      "functions": [
+        {
+          "name": "Header",
+          "params": [
+            "{ user, isAdmin, initialAnnouncements }"
+          ],
+          "exported": true,
+          "lineCount": 345
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "usePathname"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Bell",
+            "Shield",
+            "LogOut",
+            "Trash2",
+            "Globe",
+            "Settings",
+            "ChevronDown",
+            "Check"
+          ]
+        }
+      ],
+      "exports": [
+        "Header"
+      ],
+      "totalLines": 360,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/layout/PublicLayoutClient.tsx": {
+      "filePath": "src/components/layout/PublicLayoutClient.tsx",
+      "contentHash": "9e7b11a2bb7d1110bea5803cc19ebc5720e48b238c488b70e8efc45c5022cb64",
+      "functions": [
+        {
+          "name": "PublicLayoutClient",
+          "params": [
+            "{\n  children,\n  user,\n  isAdmin = false,\n  serverAvatarUrl = null,\n  initialAnnouncements = []\n}"
+          ],
+          "exported": true,
+          "lineCount": 711
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "usePathname"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Home",
+            "Sparkles",
+            "Library",
+            "Trophy",
+            "Bell",
+            "Shield",
+            "LogOut",
+            "Trash2",
+            "Globe",
+            "ChevronDown",
+            "Check",
+            "ChevronLeft",
+            "ChevronRight",
+            "User",
+            "Search",
+            "Settings",
+            "Heart",
+            "ListMusic",
+            "CreditCard",
+            "Music",
+            "Coins",
+            "Disc"
+          ]
+        },
+        {
+          "source": "@/components/player/PersistentPlayer",
+          "specifiers": [
+            "PersistentPlayer"
+          ]
+        },
+        {
+          "source": "@/components/player/NowPlayingPanel",
+          "specifiers": [
+            "NowPlayingPanel"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        }
+      ],
+      "exports": [
+        "PublicLayoutClient"
+      ],
+      "totalLines": 735,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/library/LibraryClient.tsx": {
+      "filePath": "src/components/library/LibraryClient.tsx",
+      "contentHash": "743c48b7d1e8224c9a8acadf1dfb108b32b64dd68ee2b75f7affb4a0811e2cf2",
+      "functions": [
+        {
+          "name": "LibraryClient",
+          "params": [
+            "{\n  initialLikedTracks,\n  isLoggedIn\n}"
+          ],
+          "exported": true,
+          "lineCount": 1632
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Music",
+            "Disc",
+            "ListMusic",
+            "ArrowLeft",
+            "MoreHorizontal",
+            "Clock",
+            "Check",
+            "X",
+            "Globe",
+            "Lock",
+            "Upload",
+            "Plus",
+            "Edit2",
+            "Trash2",
+            "Download",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription",
+            "serializePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/lib/constants",
+          "specifiers": [
+            "GENRES"
+          ]
+        },
+        {
+          "source": "@/components/common/AlbumCard",
+          "specifiers": [
+            "AlbumCard"
+          ]
+        }
+      ],
+      "exports": [
+        "LibraryClient"
+      ],
+      "totalLines": 1928,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/player/AudioDuration.tsx": {
+      "filePath": "src/components/player/AudioDuration.tsx",
+      "contentHash": "a06eaed955abbf9765a0d52667bc0b102761b7ad5ecadd8173c1ba0704b12841",
+      "functions": [
+        {
+          "name": "AudioDuration",
+          "params": [
+            "{ url, defaultSec, fallback = '-', className = '' }"
+          ],
+          "exported": true,
+          "lineCount": 38
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        }
+      ],
+      "exports": [
+        "AudioDuration"
+      ],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/player/MiniPlayerPip.tsx": {
+      "filePath": "src/components/player/MiniPlayerPip.tsx",
+      "contentHash": "40c31b0dcc7518ce4ab77d1654fd9aef868920b4e082cda7ea71e3624b2810fa",
+      "functions": [
+        {
+          "name": "useRafLoop",
+          "params": [
+            "cb"
+          ],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "useTransitionSound",
+          "params": [],
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "sineOut",
+          "params": [
+            "x"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "sineIn",
+          "params": [
+            "x"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "sineInOut",
+          "params": [
+            "x"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "lerp",
+          "params": [
+            "a",
+            "b",
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "partAColumnY",
+          "params": [
+            "time",
+            "col"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "partBCircle",
+          "params": [
+            "time",
+            "col",
+            "row"
+          ],
+          "returnType": "[number, number]",
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "ScalesMixer",
+          "params": [
+            "{\n  isPlaying,\n  getFrequencyData,\n}"
+          ],
+          "exported": false,
+          "lineCount": 103
+        },
+        {
+          "name": "Disc",
+          "params": [
+            "{\n  layers,\n  isPlaying,\n  isZoomed,\n  trackKey,\n  direction,\n  onZoomToggle,\n  defaultCover,\n}"
+          ],
+          "exported": false,
+          "lineCount": 93
+        },
+        {
+          "name": "TrackInfo",
+          "params": [
+            "{ layers }"
+          ],
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "fmt",
+          "params": [
+            "s"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "ProgressBar",
+          "params": [
+            "{\n  currentTime,\n  duration,\n  onSeek,\n}"
+          ],
+          "exported": false,
+          "lineCount": 33
+        },
+        {
+          "name": "MiniPlayerPip",
+          "params": [
+            "{ isOpen, onClose }"
+          ],
+          "exported": true,
+          "lineCount": 572
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useRef",
+            "useCallback",
+            "useId"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "SkipBack",
+            "SkipForward",
+            "Shuffle",
+            "Repeat",
+            "Volume2",
+            "VolumeX",
+            "Heart",
+            "Disc3",
+            "FileText",
+            "ListMusic"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "MiniPlayerPip"
+      ],
+      "totalLines": 997,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/player/NowPlayingPanel.tsx": {
+      "filePath": "src/components/player/NowPlayingPanel.tsx",
+      "contentHash": "66260dff389dd2b890de84adf7104ae2aaeedf93b38c221e9321978b0ee54996",
+      "functions": [
+        {
+          "name": "NowPlayingPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 895
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "X",
+            "Heart",
+            "ListMusic",
+            "Music",
+            "Info",
+            "Share2",
+            "MoreHorizontal",
+            "Plus",
+            "Search",
+            "Check",
+            "Disc3"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription",
+            "serializePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/components/common/ConfirmDialog",
+          "specifiers": [
+            "ConfirmDialog"
+          ]
+        }
+      ],
+      "exports": [
+        "NowPlayingPanel"
+      ],
+      "totalLines": 907,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/player/PersistentPlayer.tsx": {
+      "filePath": "src/components/player/PersistentPlayer.tsx",
+      "contentHash": "85d91d62ddc600b0446c6d029b08e61a3b6df2bafb9a60571910067469e13dff",
+      "functions": [
+        {
+          "name": "PersistentPlayer",
+          "params": [],
+          "exported": true,
+          "lineCount": 603
+        },
+        {
+          "name": "formatTime",
+          "params": [
+            "sec"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "SkipBack",
+            "SkipForward",
+            "Volume2",
+            "VolumeX",
+            "Shuffle",
+            "Repeat",
+            "Mic",
+            "ListMusic",
+            "PictureInPicture2",
+            "Heart"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "./MiniPlayerPip",
+          "specifiers": [
+            "MiniPlayerPip"
+          ]
+        }
+      ],
+      "exports": [
+        "PersistentPlayer"
+      ],
+      "totalLines": 623,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/profile/ProfileClient.tsx": {
+      "filePath": "src/components/profile/ProfileClient.tsx",
+      "contentHash": "b15c01825b4ea99a789a3825e435e1dbb52c027e09570f54243abf031e1569b2",
+      "functions": [
+        {
+          "name": "FolderTreeNode",
+          "params": [
+            "{ node, selectedPlaylist, setSelectedPlaylist, expandedFolders, handleToggleFolder, depth = 0, handleCreateSubfolder, handleRenameFolder, deletePlaylist, handleMoveTrack, showToast, folderTrackCounts, selectedSong, setSelectedSong }"
+          ],
+          "exported": false,
+          "lineCount": 140
+        },
+        {
+          "name": "ProfileClient",
+          "params": [
+            "{ user, isAdmin = false, initialProfile }"
+          ],
+          "exported": true,
+          "lineCount": 5062
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useMemo",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "User",
+            "Users",
+            "Globe",
+            "Lock",
+            "Play",
+            "Pause",
+            "Edit2",
+            "X",
+            "Check",
+            "Upload",
+            "Folder",
+            "Plus",
+            "ArrowLeft",
+            "Trash2",
+            "Info",
+            "Pencil",
+            "Clock",
+            "Heart",
+            "MoreHorizontal",
+            "ChevronRight",
+            "Settings",
+            "CreditCard",
+            "Sliders",
+            "Music",
+            "ListMusic",
+            "Download",
+            "Search",
+            "Loader2"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription",
+            "serializePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/constants",
+          "specifiers": [
+            "GENRES"
+          ]
+        }
+      ],
+      "exports": [
+        "ProfileClient"
+      ],
+      "totalLines": 5442,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/search/SearchClient.tsx": {
+      "filePath": "src/components/search/SearchClient.tsx",
+      "contentHash": "1b2a7ae9ec15fe3867483a2e7e36fe58caf21761e29068f542412f0b5290a036",
+      "functions": [
+        {
+          "name": "SearchClient",
+          "params": [
+            "{\n  initialTracks,\n  initialArtists,\n  initialAlbums,\n  initialUserLikes\n}"
+          ],
+          "exported": true,
+          "lineCount": 412
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useMemo"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track",
+            "Album",
+            "Artist"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Play",
+            "Pause",
+            "Heart",
+            "Users",
+            "Library",
+            "Music",
+            "Search",
+            "TrendingUp",
+            "Sparkles",
+            "Compass"
+          ]
+        },
+        {
+          "source": "@/components/common/TrackDropdown",
+          "specifiers": [
+            "TrackDropdown"
+          ]
+        },
+        {
+          "source": "@/components/common/AlbumCard",
+          "specifiers": [
+            "AlbumCard"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/lib/constants",
+          "specifiers": [
+            "GENRES"
+          ]
+        }
+      ],
+      "exports": [
+        "SearchClient"
+      ],
+      "totalLines": 437,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/settings/SettingsClient.tsx": {
+      "filePath": "src/components/settings/SettingsClient.tsx",
+      "contentHash": "8e82dc547edc9eb9e6442ac630f1defca4f267d807a4c01acd4907b00d09cef3",
+      "functions": [
+        {
+          "name": "SettingsClient",
+          "params": [
+            "{ user }"
+          ],
+          "exported": true,
+          "lineCount": 786
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "react-dom",
+          "specifiers": [
+            "createPortal"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter",
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "User",
+            "Users",
+            "Check",
+            "Upload",
+            "ArrowLeft",
+            "Clock",
+            "Settings",
+            "CreditCard",
+            "Sliders",
+            "Pencil",
+            "Plus",
+            "Globe",
+            "Info",
+            "X",
+            "Trash2"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "SettingsClient"
+      ],
+      "totalLines": 799,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/studio/CoverClient.tsx": {
+      "filePath": "src/components/studio/CoverClient.tsx",
+      "contentHash": "317d91a4f5490e1da7fd1f3f46a80fb4adf35154f26f1d095154e7bd2ea3e6f3",
+      "functions": [
+        {
+          "name": "CoverClient",
+          "params": [
+            "{ user }"
+          ],
+          "exported": true,
+          "lineCount": 536
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Music",
+            "Disc",
+            "Upload",
+            "Play",
+            "Pause",
+            "User"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        }
+      ],
+      "exports": [
+        "CoverClient"
+      ],
+      "totalLines": 549,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/studio/GenerateClient.tsx": {
+      "filePath": "src/components/studio/GenerateClient.tsx",
+      "contentHash": "3f31d980afecc291287eedaa4f445a1b61c19b716cb4cd3c1653c29e421a1e2f",
+      "functions": [
+        {
+          "name": "AudioDuration",
+          "params": [
+            "{ url, className = '' }"
+          ],
+          "exported": true,
+          "lineCount": 39
+        },
+        {
+          "name": "GenerateClient",
+          "params": [
+            "{ \n  user, \n  historyId,\n  initialPrompt = '',\n  initialStyle = '',\n  initialTitle = '',\n  initialNegativePrompt = ''\n}"
+          ],
+          "exported": true,
+          "lineCount": 1110
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useSearchParams",
+            "useRouter"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Music",
+            "Check",
+            "ArrowRight",
+            "Disc",
+            "User",
+            "Play",
+            "Pause",
+            "Heart",
+            "Globe",
+            "FolderPlus",
+            "Download"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/lib/constants",
+          "specifiers": [
+            "GENRES"
+          ]
+        }
+      ],
+      "exports": [
+        "AudioDuration",
+        "GenerateClient"
+      ],
+      "totalLines": 1171,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/studio/GenreModal.tsx": {
+      "filePath": "src/components/studio/GenreModal.tsx",
+      "contentHash": "8643c0d195bf05d394949c73001a51b5767e898646713589a7a863bc5e76706b",
+      "functions": [
+        {
+          "name": "GenreModal",
+          "params": [
+            "{ isOpen, onClose, onSelect, title, selectedGenre, uiLanguage = 'KO' }"
+          ],
+          "exported": true,
+          "lineCount": 88
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useMemo"
+          ]
+        },
+        {
+          "source": "@/lib/constants/genres",
+          "specifiers": [
+            "GENRE_CATEGORIES",
+            "GENRE_TRANSLATIONS",
+            "GENRE_TRANSLATIONS_JA"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "X",
+            "Search"
+          ]
+        }
+      ],
+      "exports": [
+        "GenreModal"
+      ],
+      "totalLines": 104,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/studio/MasteringClient.tsx": {
+      "filePath": "src/components/studio/MasteringClient.tsx",
+      "contentHash": "3be12fd101f90199cf76a68428a670521c2878a5337b1a899350be3f488f1e85",
+      "functions": [
+        {
+          "name": "MasteringClient",
+          "params": [],
+          "exported": true,
+          "lineCount": 769
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React",
+            "useState",
+            "useRef",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Upload",
+            "Play",
+            "Pause",
+            "Download",
+            "Trash2",
+            "Sliders",
+            "Settings2",
+            "FileAudio",
+            "RotateCcw",
+            "X",
+            "Activity",
+            "Maximize2",
+            "Gauge",
+            "Check",
+            "RefreshCw",
+            "ListFilter"
+          ]
+        },
+        {
+          "source": "@/lib/audioUtils",
+          "specifiers": [
+            "audioBufferToWav",
+            "estimateTruePeak",
+            "makeDistortionCurve",
+            "makeSoftClipCurve"
+          ]
+        }
+      ],
+      "exports": [
+        "MasteringClient"
+      ],
+      "totalLines": 788,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/studio/StudioClient.tsx": {
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "contentHash": "d64849c4132a4bb66add65959ae2ad1334265d42b1778cb6d8ec4eb52394bc0e",
+      "functions": [
+        {
+          "name": "AudioDuration",
+          "params": [
+            "{ url, className = '' }"
+          ],
+          "exported": false,
+          "lineCount": 39
+        },
+        {
+          "name": "getModelCreditCost",
+          "params": [
+            "model"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "getOptions",
+          "params": [
+            "lang"
+          ],
+          "exported": false,
+          "lineCount": 72
+        },
+        {
+          "name": "readJson",
+          "params": [
+            "key",
+            "fallback"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "writeJson",
+          "params": [
+            "key",
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "cleanStylePrompt",
+          "params": [
+            "prompt"
+          ],
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "makeFallback",
+          "params": [
+            "form",
+            "guideText"
+          ],
+          "exported": false,
+          "lineCount": 71
+        },
+        {
+          "name": "parseGeneratedText",
+          "params": [
+            "text"
+          ],
+          "exported": false,
+          "lineCount": 30
+        },
+        {
+          "name": "composeGeneratedText",
+          "params": [
+            "resultParts"
+          ],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "buildInstructionPrompt",
+          "params": [
+            "form",
+            "guideText"
+          ],
+          "exported": false,
+          "lineCount": 153
+        },
+        {
+          "name": "StudioClient",
+          "params": [
+            "{ user }"
+          ],
+          "exported": true,
+          "lineCount": 1526
+        },
+        {
+          "name": "LibraryView",
+          "params": [
+            "{\n  history,\n  t,\n  uiLanguage,\n  openHistoryItem,\n  deleteHistoryItem,\n  searchTerm,\n  setSearchTerm,\n  currentPage,\n  setCurrentPage,\n  selectedItem,\n  setSelectedItem,\n  setCurrentTab,\n  playlists,\n  onRefreshHistory,\n  user,\n  profile\n}"
+          ],
+          "exported": false,
+          "lineCount": 1351
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState",
+            "useRef"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useSearchParams"
+          ]
+        },
+        {
+          "source": "next/link",
+          "specifiers": [
+            "Link"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "ChevronDown",
+            "FileText",
+            "Music",
+            "Sparkles",
+            "Wand2",
+            "X",
+            "Settings",
+            "ArrowRight",
+            "Play",
+            "Pause",
+            "FolderPlus",
+            "Check",
+            "Type",
+            "Mic",
+            "Info",
+            "ImageIcon",
+            "Volume2",
+            "Globe",
+            "Clock",
+            "Download",
+            "MoreVertical",
+            "Disc",
+            "Loader2",
+            "Heart",
+            "Trash2",
+            "LogIn",
+            "LogOut",
+            "Upload",
+            "Plus",
+            "Bell",
+            "Shield",
+            "RefreshCw",
+            "Layers",
+            "Copy",
+            "Users",
+            "Library"
+          ]
+        },
+        {
+          "source": "@/lib/supabase/client",
+          "specifiers": [
+            "createClient"
+          ]
+        },
+        {
+          "source": "@/stores/playerStore",
+          "specifiers": [
+            "usePlayerStore"
+          ]
+        },
+        {
+          "source": "@/lib/utils",
+          "specifiers": [
+            "parsePlaylistDescription"
+          ]
+        },
+        {
+          "source": "@/lib/constants",
+          "specifiers": [
+            "GENRES"
+          ]
+        },
+        {
+          "source": "@/lib/constants/genres",
+          "specifiers": [
+            "GENRE_TRANSLATIONS"
+          ]
+        },
+        {
+          "source": "./CoverClient",
+          "specifiers": [
+            "CoverClient"
+          ]
+        },
+        {
+          "source": "./GenerateClient",
+          "specifiers": [
+            "GenerateClient"
+          ]
+        },
+        {
+          "source": "./MasteringClient",
+          "specifiers": [
+            "MasteringClient"
+          ]
+        },
+        {
+          "source": "./GenreModal",
+          "specifiers": [
+            "GenreModal"
+          ]
+        }
+      ],
+      "exports": [
+        "StudioClient"
+      ],
+      "totalLines": 3710,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/subscription/PricingClient.tsx": {
+      "filePath": "src/components/subscription/PricingClient.tsx",
+      "contentHash": "1a039e5d5a2d2626d44de41a5a9df2e760506fe6c4e16759af79ca1d3cdd2f06",
+      "functions": [
+        {
+          "name": "PricingClient",
+          "params": [
+            "{ user }"
+          ],
+          "exported": true,
+          "lineCount": 516
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "next/navigation",
+          "specifiers": [
+            "useRouter"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Check",
+            "ArrowLeft",
+            "Plus"
+          ]
+        }
+      ],
+      "exports": [
+        "PricingClient"
+      ],
+      "totalLines": 527,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/audioUtils.ts": {
+      "filePath": "src/lib/audioUtils.ts",
+      "contentHash": "ad74c137d0afde5fb4859e25de40ae2108ba74e75d2b9e81b65dadbfe28bdbf4",
+      "functions": [
+        {
+          "name": "audioBufferToWav",
+          "params": [
+            "buffer"
+          ],
+          "returnType": "Blob",
+          "exported": true,
+          "lineCount": 49
+        },
+        {
+          "name": "interleave",
+          "params": [
+            "inputL",
+            "inputR"
+          ],
+          "returnType": "Float32Array",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "writeString",
+          "params": [
+            "view",
+            "offset",
+            "string"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "floatTo16BitPCM",
+          "params": [
+            "view",
+            "offset",
+            "input"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "estimateTruePeak",
+          "params": [
+            "buffer"
+          ],
+          "returnType": "number",
+          "exported": true,
+          "lineCount": 31
+        },
+        {
+          "name": "sincInterpolateFast",
+          "params": [
+            "data",
+            "position",
+            "taps"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "sincFast",
+          "params": [
+            "value"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "makeDistortionCurve",
+          "params": [
+            "amount"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "makeSoftClipCurve",
+          "params": [
+            "amount"
+          ],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "audioBufferToWav",
+        "estimateTruePeak",
+        "makeDistortionCurve",
+        "makeSoftClipCurve"
+      ],
+      "totalLines": 160,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/charts/aggregate.ts": {
+      "filePath": "src/lib/charts/aggregate.ts",
+      "contentHash": "2bdd2f6647435e7bfe53fc3460bdab100c67b56817a677652cd63593903b2fa1",
+      "functions": [
+        {
+          "name": "aggregateCharts",
+          "params": [
+            "periodType",
+            "date"
+          ],
+          "exported": true,
+          "lineCount": 140
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@/lib/supabase/server",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "aggregateCharts"
+      ],
+      "totalLines": 143,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/constants.ts": {
+      "filePath": "src/lib/constants.ts",
+      "contentHash": "1ed34e7553bda0197c5544bb889e621ea0cbb18ca2d351ae08ef3b5f5d798733",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "GENRES"
+      ],
+      "totalLines": 46,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/constants/genres.ts": {
+      "filePath": "src/lib/constants/genres.ts",
+      "contentHash": "2cfa1c4d32e9876cfc743d7f34f89cf1e19f087c5ef6376b4332d1bd5c40857e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "GENRE_CATEGORIES",
+        "GENRE_TRANSLATIONS",
+        "GENRE_TRANSLATIONS_JA"
+      ],
+      "totalLines": 337,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/supabase/client.ts": {
+      "filePath": "src/lib/supabase/client.ts",
+      "contentHash": "6c0f12f8a9d9936d394b017a61171b2c905ad02a8c590913966c4e93214820c5",
+      "functions": [
+        {
+          "name": "createClient",
+          "params": [],
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@supabase/ssr",
+          "specifiers": [
+            "createBrowserClient"
+          ]
+        }
+      ],
+      "exports": [
+        "createClient"
+      ],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/supabase/middleware.ts": {
+      "filePath": "src/lib/supabase/middleware.ts",
+      "contentHash": "480befa6ce819f7927ea05cab74f002c5feda11573287e7e25243ea3d464b8d3",
+      "functions": [
+        {
+          "name": "updateSession",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@supabase/ssr",
+          "specifiers": [
+            "createServerClient"
+          ]
+        },
+        {
+          "source": "next/server",
+          "specifiers": [
+            "NextResponse",
+            "NextRequest"
+          ]
+        }
+      ],
+      "exports": [
+        "updateSession"
+      ],
+      "totalLines": 39,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/supabase/server.ts": {
+      "filePath": "src/lib/supabase/server.ts",
+      "contentHash": "52f53ef10845d52c00b614617e2918e1c114eb1a66f2b2e99f23d7f1fce1565c",
+      "functions": [
+        {
+          "name": "createClient",
+          "params": [],
+          "exported": true,
+          "lineCount": 26
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@supabase/ssr",
+          "specifiers": [
+            "createServerClient"
+          ]
+        },
+        {
+          "source": "next/headers",
+          "specifiers": [
+            "cookies"
+          ]
+        }
+      ],
+      "exports": [
+        "createClient"
+      ],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/utils.ts": {
+      "filePath": "src/lib/utils.ts",
+      "contentHash": "f8225474194b859d9726a92d9e10b2b5fc4c7ae4b4a6b3a407e47d69bb2ae316",
+      "functions": [
+        {
+          "name": "parsePlaylistDescription",
+          "params": [
+            "description"
+          ],
+          "returnType": "PlaylistDescriptionInfo",
+          "exported": true,
+          "lineCount": 47
+        },
+        {
+          "name": "serializePlaylistDescription",
+          "params": [
+            "type",
+            "text",
+            "parentId",
+            "channelId"
+          ],
+          "returnType": "string",
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "parsePlaylistDescription",
+        "serializePlaylistDescription"
+      ],
+      "totalLines": 72,
+      "hasStructuralAnalysis": true
+    },
+    "src/stores/playerStore.ts": {
+      "filePath": "src/stores/playerStore.ts",
+      "contentHash": "05a450f0bd9985a1589764790f3e3fbf45c28254b6d580b54a5e7fbd79902325",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "zustand",
+          "specifiers": [
+            "create"
+          ]
+        },
+        {
+          "source": "@/types/music",
+          "specifiers": [
+            "Track"
+          ]
+        }
+      ],
+      "exports": [
+        "usePlayerStore"
+      ],
+      "totalLines": 188,
+      "hasStructuralAnalysis": true
+    },
+    "src/types/music.ts": {
+      "filePath": "src/types/music.ts",
+      "contentHash": "39dcb916ea2879c1a84ac4f9ef7efc8c56b94d4e3de584f85b0455ec84746e7e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 68,
+      "hasStructuralAnalysis": true
+    },
+    "src/types/node-id3.d.ts": {
+      "filePath": "src/types/node-id3.d.ts",
+      "contentHash": "bcc506468d02d08efc4c725fa3e1d02e790591b2399354c09017775ad3aa1e9a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    }
+  }
+}

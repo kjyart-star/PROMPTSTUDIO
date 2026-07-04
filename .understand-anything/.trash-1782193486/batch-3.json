@@ -1,0 +1,434 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/(admin)/admin/music/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/page.tsx",
+      "summary": "관리자 대시보드 서버 컴포넌트로, Supabase에서 사용자 수·플레이리스트·재생 횟수 등 통계와 최근 앨범 목록을 집계하여 표시한다.",
+      "tags": ["api-handler", "data-model", "service", "admin"],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router 서버 컴포넌트로 다수의 Supabase 쿼리를 병렬 집계한다."
+    },
+    {
+      "id": "function:src/app/(admin)/admin/music/page.tsx:AdminDashboardPage",
+      "type": "function",
+      "name": "AdminDashboardPage",
+      "filePath": "src/app/(admin)/admin/music/page.tsx",
+      "lineRange": [7, 188],
+      "summary": "프로필·플레이리스트·곡 통계를 조회하고 최근 앨범을 작성자 정보와 매핑하여 대시보드 UI를 렌더링하는 비동기 서버 컴포넌트.",
+      "tags": ["data-model", "component", "admin", "aggregation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/(public)/pricing/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/pricing/page.tsx",
+      "summary": "요금제 페이지의 서버 진입점으로, 로그인 사용자 정보를 조회한 뒤 PricingClient 컴포넌트에 전달한다.",
+      "tags": ["entry-point", "component", "subscription"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/(public)/settings/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/settings/page.tsx",
+      "summary": "설정 페이지의 서버 진입점으로, 미인증 사용자를 리다이렉트하고 SettingsClient를 렌더링한다.",
+      "tags": ["entry-point", "component", "auth-guard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/admin/users/ban/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/admin/users/ban/route.ts",
+      "summary": "관리자가 사용자를 차단/해제하는 PUT API 라우트로, 차단 시 해당 사용자의 곡과 플레이리스트 게시를 일괄 비공개 처리한다.",
+      "tags": ["api-handler", "admin", "validation", "moderation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/admin/users/ban/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/admin/users/ban/route.ts",
+      "lineRange": [20, 74],
+      "summary": "관리자 권한을 검증한 뒤 대상 사용자의 차단 상태를 갱신하고, 차단 시 게시된 콘텐츠를 비공개로 전환하는 핸들러.",
+      "tags": ["api-handler", "admin", "moderation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/admin/users/ban/route.ts:checkAdmin",
+      "type": "function",
+      "name": "checkAdmin",
+      "filePath": "src/app/api/admin/users/ban/route.ts",
+      "lineRange": [5, 17],
+      "summary": "profiles 테이블에서 is_admin 플래그를 조회하여 사용자의 관리자 권한 여부를 반환하는 헬퍼.",
+      "tags": ["utility", "validation", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/admin/users/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/admin/users/route.ts",
+      "summary": "관리자 사용자 관리 API로, GET으로 전체 사용자 목록을 조회하고 POST로 service-role 클라이언트를 통해 사용자 크레딧을 조정한다.",
+      "tags": ["api-handler", "admin", "data-model"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/admin/users/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/admin/users/route.ts",
+      "lineRange": [21, 51],
+      "summary": "관리자 권한을 검증하고 profiles 테이블에서 전체 사용자 목록을 정렬하여 반환하는 핸들러.",
+      "tags": ["api-handler", "admin", "data-model"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/admin/users/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/admin/users/route.ts",
+      "lineRange": [54, 113],
+      "summary": "service-role Supabase 클라이언트를 생성해 대상 사용자의 크레딧을 가감하고 갱신 결과를 반환하는 핸들러.",
+      "tags": ["api-handler", "admin", "credits"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/announcements/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/announcements/route.ts",
+      "summary": "공지사항 CRUD API로, GET 공개 조회와 관리자 전용 POST/PUT/DELETE를 통해 announcements 테이블을 관리한다.",
+      "tags": ["api-handler", "admin", "data-model", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/announcements/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/announcements/route.ts",
+      "lineRange": [30, 55],
+      "summary": "관리자 권한 검증 후 새 공지사항을 announcements 테이블에 삽입하는 핸들러.",
+      "tags": ["api-handler", "admin", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/announcements/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/announcements/route.ts",
+      "lineRange": [57, 83],
+      "summary": "관리자 권한 검증 후 기존 공지사항의 제목과 내용을 수정하는 핸들러.",
+      "tags": ["api-handler", "admin", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/announcements/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/announcements/route.ts",
+      "lineRange": [85, 108],
+      "summary": "관리자 권한 검증 후 쿼리 파라미터로 지정된 공지사항을 삭제하는 핸들러.",
+      "tags": ["api-handler", "admin", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/auth/callback/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/auth/callback/route.ts",
+      "summary": "OAuth 인증 콜백 라우트로, 인가 코드를 세션으로 교환하고 적절한 호스트로 리다이렉트한다.",
+      "tags": ["api-handler", "auth", "oauth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/auth/login/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/auth/login/route.ts",
+      "summary": "이메일/비밀번호 로그인 API로, Supabase signInWithPassword를 호출해 인증을 처리한다.",
+      "tags": ["api-handler", "auth", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/auth/signout/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/auth/signout/route.ts",
+      "summary": "로그아웃 API로, Supabase 세션을 종료한 뒤 사용자를 리다이렉트한다.",
+      "tags": ["api-handler", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/channels/[id]/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/channels/[id]/route.ts",
+      "summary": "채널(아티스트) 삭제 API로, 소유자 검증 후 해당 artists 레코드를 삭제하는 DELETE 핸들러를 제공한다.",
+      "tags": ["api-handler", "data-model", "ownership", "channel"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/channels/[id]/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/channels/[id]/route.ts",
+      "lineRange": [6, 52],
+      "summary": "인증 및 소유권을 검증한 뒤 동적 라우트 파라미터로 지정된 아티스트 채널을 삭제하는 핸들러.",
+      "tags": ["api-handler", "ownership", "channel"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/channels/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/channels/route.ts",
+      "summary": "채널(아티스트) 관리 API로, GET 목록 조회, POST 생성, PUT 수정을 통해 사용자 소유 artists 레코드를 관리한다.",
+      "tags": ["api-handler", "data-model", "ownership", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/channels/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/channels/route.ts",
+      "lineRange": [16, 40],
+      "summary": "인증된 사용자가 소유한 아티스트 채널 목록을 생성일 기준으로 조회하여 반환하는 핸들러.",
+      "tags": ["api-handler", "ownership", "channel"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/channels/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/channels/route.ts",
+      "lineRange": [42, 99],
+      "summary": "슬러그를 정규화하고 입력을 검증한 뒤 새 아티스트 채널을 artists 테이블에 생성하는 핸들러.",
+      "tags": ["api-handler", "validation", "channel"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/channels/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/channels/route.ts",
+      "lineRange": [101, 154],
+      "summary": "소유권을 검증한 뒤 슬러그 정규화와 함께 기존 아티스트 채널 정보를 수정하는 핸들러.",
+      "tags": ["api-handler", "ownership", "channel"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/charts/cron/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/charts/cron/route.ts",
+      "summary": "차트 집계 크론 API로, 관리자 또는 CRON_SECRET 인증 후 지정 날짜의 차트를 aggregateCharts로 산출한다.",
+      "tags": ["api-handler", "cron", "data-pipeline", "charts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/charts/cron/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/charts/cron/route.ts",
+      "lineRange": [5, 56],
+      "summary": "날짜 유효성과 관리자/시크릿 인증을 검증한 뒤 aggregateCharts를 호출해 차트 데이터를 집계하는 핸들러.",
+      "tags": ["api-handler", "cron", "charts", "aggregation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/credits/history/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/credits/history/route.ts",
+      "summary": "크레딧 거래 내역 API로, 인증된 사용자의 credit_transactions 레코드를 최근순으로 조회하여 반환한다.",
+      "tags": ["api-handler", "credits", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/debug-download/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/debug-download/route.ts",
+      "summary": "디버그용 다운로드 API로, 사용자 곡의 오디오 파일을 다운로드해 ID3 태그 내 임베드 이미지를 추출·저장하는 GET 핸들러.",
+      "tags": ["api-handler", "debug", "storage", "serialization"],
+      "complexity": "moderate",
+      "languageNotes": "node-id3로 MP3 ID3 태그에서 임베드 아트워크를 추출해 Supabase Storage로 업로드한다."
+    },
+    {
+      "id": "function:src/app/api/debug-download/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/debug-download/route.ts",
+      "lineRange": [5, 108],
+      "summary": "사용자 곡 파일을 스토리지에서 내려받아 ID3 임베드 이미지를 avatars 버킷에 업로드하고 곡의 image_url을 갱신하는 핸들러.",
+      "tags": ["api-handler", "storage", "serialization", "debug"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/api/generate-prompt/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/generate-prompt/route.ts",
+      "summary": "AI 프롬프트 생성 API로, 차단 여부 검증 후 OpenAI API를 호출해 음악 생성용 프롬프트를 만든다.",
+      "tags": ["api-handler", "ai-integration", "validation"],
+      "complexity": "moderate",
+      "languageNotes": "외부 OpenAI Chat Completions 엔드포인트를 fetch로 직접 호출한다."
+    },
+    {
+      "id": "function:src/app/api/generate-prompt/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/generate-prompt/route.ts",
+      "lineRange": [4, 65],
+      "summary": "인증과 차단 상태를 확인한 뒤 OpenAI API에 요청을 보내 생성된 프롬프트 텍스트를 반환하는 핸들러.",
+      "tags": ["api-handler", "ai-integration", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/likes/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/likes/route.ts",
+      "summary": "좋아요 토글 API로, song_history와 likes 테이블을 갱신하고 tracks의 like_count를 동기화한다.",
+      "tags": ["api-handler", "data-model", "engagement"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/likes/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/likes/route.ts",
+      "lineRange": [4, 111],
+      "summary": "트랙의 좋아요 상태를 토글하고 likes 레코드를 삽입/삭제하며 연관된 like_count를 갱신하는 핸들러.",
+      "tags": ["api-handler", "engagement", "data-model"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/api/music/generate/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/music/generate/route.ts",
+      "summary": "음악 생성 요청을 suno/generate 라우트의 POST 핸들러로 위임하는 얇은 프록시 API.",
+      "tags": ["api-handler", "proxy", "music-generation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/play/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/play/route.ts",
+      "summary": "재생 이벤트 기록 API로, IP 해시 기반으로 play_events를 기록하고 song_history와 tracks의 재생 횟수를 증가시킨다.",
+      "tags": ["api-handler", "analytics", "data-model"],
+      "complexity": "moderate",
+      "languageNotes": "crypto SHA-256으로 IP를 익명화해 play_events에 저장한다."
+    },
+    {
+      "id": "function:src/app/api/play/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/play/route.ts",
+      "lineRange": [5, 79],
+      "summary": "익명화된 IP로 재생 이벤트를 기록하고 곡 및 트랙의 play_count를 증가시키는 핸들러.",
+      "tags": ["api-handler", "analytics", "data-model"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/app/(admin)/admin/music/page.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/page.tsx", "target": "function:src/app/(admin)/admin/music/page.tsx:AdminDashboardPage", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/(admin)/admin/music/page.tsx", "target": "function:src/app/(admin)/admin/music/page.tsx:AdminDashboardPage", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/(admin)/admin/music/page.tsx:AdminDashboardPage", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/(public)/pricing/page.tsx", "target": "file:src/components/subscription/PricingClient.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/pricing/page.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/app/(public)/settings/page.tsx", "target": "file:src/components/settings/SettingsClient.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/settings/page.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/app/api/admin/users/ban/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/admin/users/ban/route.ts", "target": "function:src/app/api/admin/users/ban/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/admin/users/ban/route.ts", "target": "function:src/app/api/admin/users/ban/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/admin/users/ban/route.ts", "target": "function:src/app/api/admin/users/ban/route.ts:checkAdmin", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "function:src/app/api/admin/users/ban/route.ts:PUT", "target": "function:src/app/api/admin/users/ban/route.ts:checkAdmin", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/admin/users/ban/route.ts:PUT", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/admin/users/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/admin/users/route.ts", "target": "function:src/app/api/admin/users/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/admin/users/route.ts", "target": "function:src/app/api/admin/users/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/admin/users/route.ts", "target": "function:src/app/api/admin/users/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/admin/users/route.ts", "target": "function:src/app/api/admin/users/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/admin/users/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/admin/users/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/announcements/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:DELETE", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/announcements/route.ts", "target": "function:src/app/api/announcements/route.ts:DELETE", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/announcements/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/auth/callback/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/auth/callback/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/auth/login/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/auth/login/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/auth/signout/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/auth/signout/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/channels/[id]/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/channels/[id]/route.ts", "target": "function:src/app/api/channels/[id]/route.ts:DELETE", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/channels/[id]/route.ts", "target": "function:src/app/api/channels/[id]/route.ts:DELETE", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/channels/[id]/route.ts:DELETE", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/channels/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/channels/route.ts", "target": "function:src/app/api/channels/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/channels/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/charts/cron/route.ts", "target": "file:src/lib/charts/aggregate.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/charts/cron/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/charts/cron/route.ts", "target": "function:src/app/api/charts/cron/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/charts/cron/route.ts", "target": "function:src/app/api/charts/cron/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/charts/cron/route.ts:GET", "target": "function:src/lib/charts/aggregate.ts:aggregateCharts", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/charts/cron/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/credits/history/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/credits/history/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/debug-download/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/debug-download/route.ts", "target": "function:src/app/api/debug-download/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/debug-download/route.ts", "target": "function:src/app/api/debug-download/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/debug-download/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/generate-prompt/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/generate-prompt/route.ts", "target": "function:src/app/api/generate-prompt/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/generate-prompt/route.ts", "target": "function:src/app/api/generate-prompt/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/generate-prompt/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/likes/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/likes/route.ts", "target": "function:src/app/api/likes/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/likes/route.ts", "target": "function:src/app/api/likes/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/likes/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/music/generate/route.ts", "target": "file:src/app/api/suno/generate/route.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/music/generate/route.ts", "target": "function:src/app/api/music/generate/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/music/generate/route.ts", "target": "function:src/app/api/music/generate/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/music/generate/route.ts:POST", "target": "function:src/app/api/suno/generate/route.ts:POST", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/play/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/api/play/route.ts", "target": "function:src/app/api/play/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/play/route.ts", "target": "function:src/app/api/play/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/play/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8}
+  ]
+}

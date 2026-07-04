@@ -1,0 +1,828 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/components/chart/ArtistChartClient.tsx",
+      "type": "file",
+      "name": "ArtistChartClient.tsx",
+      "filePath": "src/components/chart/ArtistChartClient.tsx",
+      "summary": "아티스트 차트 클라이언트 컴포넌트로, 순위가 매겨진 인기 아티스트 목록을 렌더링하고 팔로우 등 인터랙션을 처리한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "chart",
+        "music"
+      ],
+      "complexity": "complex",
+      "languageNotes": "formatCount 헬퍼와 함께 차트 순위 UI를 렌더링하는 'use client' 컴포넌트."
+    },
+    {
+      "id": "file:src/components/chart/ChartClient.tsx",
+      "type": "file",
+      "name": "ChartClient.tsx",
+      "filePath": "src/components/chart/ChartClient.tsx",
+      "summary": "트랙 차트 클라이언트 컴포넌트로, 기간별 차트 항목을 순위와 함께 표시하고 재생·좋아요·관리자 기능을 제공한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "chart",
+        "music",
+        "player"
+      ],
+      "complexity": "complex",
+      "languageNotes": "AudioDuration·TrackDropdown을 조합하고 playerStore로 재생을 제어하는 대형 컴포넌트."
+    },
+    {
+      "id": "file:src/components/common/AlbumCard.tsx",
+      "type": "file",
+      "name": "AlbumCard.tsx",
+      "filePath": "src/components/common/AlbumCard.tsx",
+      "summary": "재사용 가능한 앨범 카드 컴포넌트로, 그리드·순위 등 variant에 따라 앨범 썸네일과 메타 정보를 표시한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "ui",
+        "reusable"
+      ],
+      "complexity": "complex",
+      "languageNotes": "variant prop으로 표시 형태를 분기하고 formatCount로 수치를 포맷하는 공용 카드."
+    },
+    {
+      "id": "file:src/components/common/ShareDialog.tsx",
+      "type": "file",
+      "name": "ShareDialog.tsx",
+      "filePath": "src/components/common/ShareDialog.tsx",
+      "summary": "공유 다이얼로그 컴포넌트로, 제목·URL을 받아 링크 복사 및 소셜 공유 UI를 다국어로 제공한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "ui",
+        "dialog",
+        "share"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "uiLanguage prop으로 다국어를 지원하는 모달 다이얼로그."
+    },
+    {
+      "id": "file:src/components/common/TrackDropdown.tsx",
+      "type": "file",
+      "name": "TrackDropdown.tsx",
+      "filePath": "src/components/common/TrackDropdown.tsx",
+      "summary": "트랙 컨텍스트 드롭다운 컴포넌트로, 좋아요·플레이리스트 저장·공유·크레딧 보기 등 트랙별 액션 메뉴를 제공한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "music",
+        "dropdown",
+        "interaction"
+      ],
+      "complexity": "complex",
+      "languageNotes": "ConfirmDialog·ShareDialog와 playerStore를 조합한 액션 메뉴 컴포넌트."
+    },
+    {
+      "id": "file:src/components/home/HomeClient.tsx",
+      "type": "file",
+      "name": "HomeClient.tsx",
+      "filePath": "src/components/home/HomeClient.tsx",
+      "summary": "메인 홈 클라이언트 컴포넌트로, 캐러셀 기반 추천·최신·인기 섹션과 트랙 재생 인터랙션을 통합 제공하는 대형 컴포넌트다.",
+      "tags": [
+        "component",
+        "client-component",
+        "home",
+        "music",
+        "player"
+      ],
+      "complexity": "complex",
+      "languageNotes": "내부 Carousel 컴포넌트와 다수 헬퍼를 포함하며 playerStore로 재생을 제어하는 1400줄 규모 컴포넌트."
+    },
+    {
+      "id": "file:src/components/library/LibraryClient.tsx",
+      "type": "file",
+      "name": "LibraryClient.tsx",
+      "filePath": "src/components/library/LibraryClient.tsx",
+      "summary": "라이브러리 클라이언트 컴포넌트로, 좋아요한 트랙·플레이리스트 관리, 재생, 정렬 등 사용자 라이브러리 전반의 인터랙션을 담당한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "library",
+        "music",
+        "player"
+      ],
+      "complexity": "complex",
+      "languageNotes": "1900줄 규모의 최대 컴포넌트로 constants·playerStore·Supabase client를 폭넓게 활용."
+    },
+    {
+      "id": "file:src/components/player/AudioDuration.tsx",
+      "type": "file",
+      "name": "AudioDuration.tsx",
+      "filePath": "src/components/player/AudioDuration.tsx",
+      "summary": "오디오 길이 표시 컴포넌트로, 오디오 URL의 재생 시간을 비동기로 로드해 포맷된 시간을 렌더링한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "player",
+        "utility",
+        "audio"
+      ],
+      "complexity": "simple",
+      "languageNotes": "오디오 메타데이터를 로드해 duration을 표시하는 소형 'use client' 컴포넌트."
+    },
+    {
+      "id": "file:src/components/search/SearchClient.tsx",
+      "type": "file",
+      "name": "SearchClient.tsx",
+      "filePath": "src/components/search/SearchClient.tsx",
+      "summary": "검색 결과 클라이언트 컴포넌트로, 트랙·아티스트·앨범 검색 결과를 탭별로 표시하고 재생·좋아요 인터랙션을 처리한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "search",
+        "music",
+        "player"
+      ],
+      "complexity": "complex",
+      "languageNotes": "AlbumCard·TrackDropdown을 조합하고 playerStore로 재생을 제어하는 검색 결과 UI."
+    },
+    {
+      "id": "file:src/lib/constants.ts",
+      "type": "file",
+      "name": "constants.ts",
+      "filePath": "src/lib/constants.ts",
+      "summary": "앱 전역 상수 모듈로, 음악 장르(GENRES) 목록 등 여러 컴포넌트에서 공유되는 상수를 정의한다.",
+      "tags": [
+        "utility",
+        "constants",
+        "music",
+        "shared"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "filePath": "src/lib/utils.ts",
+      "summary": "공용 유틸리티 모듈로, 플레이리스트 설명 문자열의 직렬화·역직렬화 헬퍼를 제공해 API와 컴포넌트 전반에서 사용된다.",
+      "tags": [
+        "utility",
+        "serialization",
+        "playlist",
+        "shared"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "구조화된 플레이리스트 메타데이터를 문자열로 인코딩/디코딩하는 헬퍼 모음."
+    },
+    {
+      "id": "file:src/types/music.ts",
+      "type": "file",
+      "name": "music.ts",
+      "filePath": "src/types/music.ts",
+      "summary": "음악 도메인 타입 정의 모듈로, 트랙·앨범·아티스트 등 핵심 데이터 모델의 TypeScript 타입을 선언한다.",
+      "tags": [
+        "type-definition",
+        "data-model",
+        "music",
+        "shared"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "프로젝트 전반에서 import되는 음악 도메인 타입 선언 파일."
+    },
+    {
+      "id": "function:src/components/chart/ArtistChartClient.tsx:ArtistChartClient",
+      "type": "function",
+      "name": "ArtistChartClient",
+      "filePath": "src/components/chart/ArtistChartClient.tsx",
+      "lineRange": [
+        27,
+        300
+      ],
+      "summary": "아티스트 차트 본체 컴포넌트로, 순위가 매겨진 인기 아티스트 목록과 팔로우 등 인터랙션을 렌더링한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "chart",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/chart/ChartClient.tsx:ChartClient",
+      "type": "function",
+      "name": "ChartClient",
+      "filePath": "src/components/chart/ChartClient.tsx",
+      "lineRange": [
+        48,
+        660
+      ],
+      "summary": "트랙 차트 본체 컴포넌트로, 기간별 차트 항목을 순위·재생·좋아요와 함께 표시하고 관리자 기능을 제공한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "chart",
+        "music",
+        "player"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/common/AlbumCard.tsx:AlbumCard",
+      "type": "function",
+      "name": "AlbumCard",
+      "filePath": "src/components/common/AlbumCard.tsx",
+      "lineRange": [
+        25,
+        249
+      ],
+      "summary": "앨범 카드 본체 컴포넌트로, variant에 따라 그리드/순위 형태의 앨범 카드 UI를 렌더링한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "ui",
+        "reusable"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/common/ShareDialog.tsx:ShareDialog",
+      "type": "function",
+      "name": "ShareDialog",
+      "filePath": "src/components/common/ShareDialog.tsx",
+      "lineRange": [
+        15,
+        109
+      ],
+      "summary": "공유 다이얼로그 본체 컴포넌트로, 링크 복사와 소셜 공유 버튼을 다국어로 제공한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "dialog",
+        "share"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/common/TrackDropdown.tsx:TrackDropdown",
+      "type": "function",
+      "name": "TrackDropdown",
+      "filePath": "src/components/common/TrackDropdown.tsx",
+      "lineRange": [
+        22,
+        309
+      ],
+      "summary": "트랙 액션 드롭다운 본체 컴포넌트로, 좋아요·플레이리스트 저장·공유·크레딧 등 트랙별 메뉴를 렌더링한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "dropdown",
+        "music"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/home/HomeClient.tsx:Carousel",
+      "type": "function",
+      "name": "Carousel",
+      "filePath": "src/components/home/HomeClient.tsx",
+      "lineRange": [
+        546,
+        627
+      ],
+      "summary": "홈 화면 내부 캐러셀 컴포넌트로, 아이템 목록을 가로 스크롤 형태로 렌더링하는 제너릭 렌더러다.",
+      "tags": [
+        "component",
+        "client-component",
+        "ui",
+        "carousel"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/home/HomeClient.tsx:HomeClient",
+      "type": "function",
+      "name": "HomeClient",
+      "filePath": "src/components/home/HomeClient.tsx",
+      "lineRange": [
+        629,
+        1467
+      ],
+      "summary": "홈 화면 본체 컴포넌트로, 추천·최신·인기 섹션과 트랙 재생 인터랙션을 통합 제어한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "home",
+        "music",
+        "player"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/home/HomeClient.tsx:generateDummyTracks",
+      "type": "function",
+      "name": "generateDummyTracks",
+      "filePath": "src/components/home/HomeClient.tsx",
+      "lineRange": [
+        524,
+        538
+      ],
+      "summary": "기본 트랙 배열을 복제해 지정 개수만큼 더미 트랙을 생성하는 헬퍼 함수다.",
+      "tags": [
+        "utility",
+        "helper",
+        "music"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/library/LibraryClient.tsx:LibraryClient",
+      "type": "function",
+      "name": "LibraryClient",
+      "filePath": "src/components/library/LibraryClient.tsx",
+      "lineRange": [
+        296,
+        1927
+      ],
+      "summary": "라이브러리 화면 본체 컴포넌트로, 좋아요 트랙·플레이리스트 관리, 정렬, 재생 등 사용자 라이브러리 전반을 제어한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "library",
+        "music",
+        "player"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/player/AudioDuration.tsx:AudioDuration",
+      "type": "function",
+      "name": "AudioDuration",
+      "filePath": "src/components/player/AudioDuration.tsx",
+      "lineRange": [
+        12,
+        49
+      ],
+      "summary": "오디오 URL의 재생 시간을 비동기로 로드해 포맷된 길이를 표시하는 컴포넌트다.",
+      "tags": [
+        "component",
+        "client-component",
+        "player",
+        "audio"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/search/SearchClient.tsx:SearchClient",
+      "type": "function",
+      "name": "SearchClient",
+      "filePath": "src/components/search/SearchClient.tsx",
+      "lineRange": [
+        25,
+        436
+      ],
+      "summary": "검색 결과 본체 컴포넌트로, 트랙·아티스트·앨범 결과를 탭별로 표시하고 재생·좋아요를 처리한다.",
+      "tags": [
+        "component",
+        "client-component",
+        "search",
+        "music",
+        "player"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/lib/utils.ts:parsePlaylistDescription",
+      "type": "function",
+      "name": "parsePlaylistDescription",
+      "filePath": "src/lib/utils.ts",
+      "lineRange": [
+        8,
+        54
+      ],
+      "summary": "플레이리스트 설명 문자열을 파싱해 type·text·parentId·channelId 등 구조화된 메타데이터로 역직렬화한다.",
+      "tags": [
+        "utility",
+        "serialization",
+        "playlist",
+        "parsing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts:serializePlaylistDescription",
+      "type": "function",
+      "name": "serializePlaylistDescription",
+      "filePath": "src/lib/utils.ts",
+      "lineRange": [
+        56,
+        71
+      ],
+      "summary": "플레이리스트 메타데이터 필드를 단일 설명 문자열로 직렬화하는 헬퍼 함수다.",
+      "tags": [
+        "utility",
+        "serialization",
+        "playlist"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/components/chart/ArtistChartClient.tsx",
+      "target": "function:src/components/chart/ArtistChartClient.tsx:ArtistChartClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "function:src/components/chart/ChartClient.tsx:ChartClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/common/AlbumCard.tsx",
+      "target": "function:src/components/common/AlbumCard.tsx:AlbumCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/common/ShareDialog.tsx",
+      "target": "function:src/components/common/ShareDialog.tsx:ShareDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "function:src/components/common/TrackDropdown.tsx:TrackDropdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "function:src/components/home/HomeClient.tsx:Carousel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "function:src/components/home/HomeClient.tsx:HomeClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "function:src/components/home/HomeClient.tsx:generateDummyTracks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "function:src/components/library/LibraryClient.tsx:LibraryClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/player/AudioDuration.tsx",
+      "target": "function:src/components/player/AudioDuration.tsx:AudioDuration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "function:src/components/search/SearchClient.tsx:SearchClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/utils.ts",
+      "target": "function:src/lib/utils.ts:parsePlaylistDescription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/utils.ts",
+      "target": "function:src/lib/utils.ts:serializePlaylistDescription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/chart/ArtistChartClient.tsx",
+      "target": "function:src/components/chart/ArtistChartClient.tsx:ArtistChartClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "function:src/components/chart/ChartClient.tsx:ChartClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/common/AlbumCard.tsx",
+      "target": "function:src/components/common/AlbumCard.tsx:AlbumCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/common/ShareDialog.tsx",
+      "target": "function:src/components/common/ShareDialog.tsx:ShareDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "function:src/components/common/TrackDropdown.tsx:TrackDropdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "function:src/components/home/HomeClient.tsx:HomeClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "function:src/components/library/LibraryClient.tsx:LibraryClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/player/AudioDuration.tsx",
+      "target": "function:src/components/player/AudioDuration.tsx:AudioDuration",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "function:src/components/search/SearchClient.tsx:SearchClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/utils.ts",
+      "target": "function:src/lib/utils.ts:parsePlaylistDescription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/utils.ts",
+      "target": "function:src/lib/utils.ts:serializePlaylistDescription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/chart/ArtistChartClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ArtistChartClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/components/common/TrackDropdown.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/components/player/AudioDuration.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/chart/ChartClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/common/AlbumCard.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "file:src/components/common/ConfirmDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "file:src/components/common/ShareDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/common/TrackDropdown.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/components/common/AlbumCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/components/common/TrackDropdown.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/components/player/AudioDuration.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/HomeClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/components/common/AlbumCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/lib/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/library/LibraryClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/components/common/AlbumCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/components/common/TrackDropdown.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/lib/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/search/SearchClient.tsx",
+      "target": "file:src/types/music.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import NodeID3 from 'node-id3'
+import { createClient } from '@/lib/supabase/server'
+import { assertSafeUrl } from '@/lib/security/ssrf'
 
 export async function GET(request: NextRequest) {
+  // Require an authenticated session — this endpoint proxies server-side
+  // fetches, so it must never be callable anonymously.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { searchParams } = new URL(request.url)
   const fileUrl = searchParams.get('url')
   const imageUrl = searchParams.get('image')
@@ -16,9 +26,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 })
   }
 
+  // SSRF guard: reject non-http(s) and any URL resolving to an internal IP.
+  let safeFileUrl: URL
+  try {
+    safeFileUrl = await assertSafeUrl(fileUrl)
+  } catch {
+    return NextResponse.json({ error: 'Invalid or disallowed url' }, { status: 400 })
+  }
+
   try {
     // 1. Fetch Audio file
-    const audioRes = await fetch(fileUrl)
+    const audioRes = await fetch(safeFileUrl, { redirect: 'error' })
     if (!audioRes.ok) {
       throw new Error(`Failed to fetch audio file: ${audioRes.statusText}`)
     }
@@ -28,7 +46,8 @@ export async function GET(request: NextRequest) {
     // 2. Fetch Image file if provided
     if (imageUrl) {
       try {
-        const imageRes = await fetch(imageUrl)
+        const safeImageUrl = await assertSafeUrl(imageUrl)
+        const imageRes = await fetch(safeImageUrl, { redirect: 'error' })
         if (imageRes.ok) {
           const imageArrayBuffer = await imageRes.arrayBuffer()
           const imageBuffer = Buffer.from(imageArrayBuffer)
@@ -66,8 +85,8 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Download error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to download file' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
   }
 }

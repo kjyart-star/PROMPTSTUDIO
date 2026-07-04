@@ -1,0 +1,2801 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 18,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "src/app/(admin)/admin/music/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 188,
+      "nonEmptyLines": 167,
+      "functions": [
+        {
+          "name": "AdminDashboardPage",
+          "startLine": 7,
+          "endLine": 188,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "AdminDashboardPage",
+          "line": 7,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "createClient",
+          "lineNumber": 8
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('profiles')\n    .select",
+          "lineNumber": 11
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from",
+          "lineNumber": 11
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('user_playlists')\n    .select",
+          "lineNumber": 16
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from",
+          "lineNumber": 16
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('song_history')\n    .select",
+          "lineNumber": 21
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from",
+          "lineNumber": 21
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('song_history')\n    .select",
+          "lineNumber": 26
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from",
+          "lineNumber": 26
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "(songsForPlayCount || []).reduce",
+          "lineNumber": 30
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "Number",
+          "lineNumber": 31
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('user_playlists')\n    .select('*')\n    .order('created_at', { ascending: false })\n    .limit",
+          "lineNumber": 36
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('user_playlists')\n    .select('*')\n    .order",
+          "lineNumber": 36
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from('user_playlists')\n    .select",
+          "lineNumber": 36
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n    .from",
+          "lineNumber": 36
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "Array.from",
+          "lineNumber": 45
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "recentAlbumsRaw.map",
+          "lineNumber": 45
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n      .from('profiles')\n      .select('id, display_name')\n      .in",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n      .from('profiles')\n      .select",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "supabase\n      .from",
+          "lineNumber": 46
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "(profiles || []).map",
+          "lineNumber": 51
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "recentAlbumsRaw.map",
+          "lineNumber": 53
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "profileMap.get",
+          "lineNumber": 55
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "stats.map",
+          "lineNumber": 77
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "stat.value.toLocaleString",
+          "lineNumber": 81
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "recentAlbums.map",
+          "lineNumber": 105
+        },
+        {
+          "caller": "AdminDashboardPage",
+          "callee": "album.user_id.slice",
+          "lineNumber": 118
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/(public)/pricing/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 16,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "PricingPage",
+          "startLine": 7,
+          "endLine": 16,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "PricingPage",
+          "line": 7,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PricingPage",
+          "callee": "createClient",
+          "lineNumber": 8
+        },
+        {
+          "caller": "PricingPage",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 9
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/(public)/settings/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 21,
+      "nonEmptyLines": 17,
+      "functions": [
+        {
+          "name": "SettingsPage",
+          "startLine": 8,
+          "endLine": 21,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "revalidate",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "SettingsPage",
+          "line": 8,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SettingsPage",
+          "callee": "createClient",
+          "lineNumber": 9
+        },
+        {
+          "caller": "SettingsPage",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 10
+        },
+        {
+          "caller": "SettingsPage",
+          "callee": "redirect",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/users/ban/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 74,
+      "nonEmptyLines": 61,
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "startLine": 5,
+          "endLine": 17,
+          "params": [
+            "supabase",
+            "userId"
+          ]
+        },
+        {
+          "name": "PUT",
+          "startLine": 20,
+          "endLine": 74,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PUT",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq('id', userId)\n    .single",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from",
+          "lineNumber": 6
+        },
+        {
+          "caller": "PUT",
+          "callee": "createClient",
+          "lineNumber": 22
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 23
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "PUT",
+          "callee": "checkAdmin",
+          "lineNumber": 29
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 31
+        },
+        {
+          "caller": "PUT",
+          "callee": "request.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 38
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('profiles')\n      .update({ is_banned })\n      .eq",
+          "lineNumber": 42
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('profiles')\n      .update",
+          "lineNumber": 42
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from",
+          "lineNumber": 42
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 48
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "PUT",
+          "callee": "Promise.all",
+          "lineNumber": 54
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from('song_history')\n          .update({ is_published: false })\n          .eq",
+          "lineNumber": 55
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from('song_history')\n          .update",
+          "lineNumber": 55
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from",
+          "lineNumber": 55
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from('user_playlists')\n          .update({ is_published: false })\n          .eq",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from('user_playlists')\n          .update",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n          .from",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 65
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 66
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 69
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 72
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/admin/users/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 113,
+      "nonEmptyLines": 92,
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "startLine": 6,
+          "endLine": 18,
+          "params": [
+            "supabase",
+            "userId"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 21,
+          "endLine": 51,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 54,
+          "endLine": 113,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 21,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 54,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq('id', userId)\n    .single",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "checkAdmin",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('profiles')\n      .select('*')\n      .order",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('profiles')\n      .select",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 42
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 48
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 56
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "checkAdmin",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 68
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 72
+        },
+        {
+          "caller": "POST",
+          "callee": "createSupabaseClient",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .select('credits')\n      .eq('id', targetUserId)\n      .single",
+          "lineNumber": 82
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .select('credits')\n      .eq",
+          "lineNumber": 82
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .select",
+          "lineNumber": 82
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from",
+          "lineNumber": 82
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 89
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .update({ credits: newCredits })\n      .eq('id', targetUserId)\n      .select('id, email, display_name, credits')\n      .single",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .update({ credits: newCredits })\n      .eq('id', targetUserId)\n      .select",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .update({ credits: newCredits })\n      .eq",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from('profiles')\n      .update",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "adminSupabase\n      .from",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 104
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 105
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 108
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 110
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 111
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/announcements/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 108,
+      "nonEmptyLines": 90,
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "startLine": 5,
+          "endLine": 13,
+          "params": [
+            "supabase",
+            "userId"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 15,
+          "endLine": 28,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 30,
+          "endLine": 55,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "PUT",
+          "startLine": 57,
+          "endLine": 83,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "DELETE",
+          "startLine": 85,
+          "endLine": 108,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "PUT",
+          "line": 57,
+          "isDefault": false
+        },
+        {
+          "name": "DELETE",
+          "line": 85,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq('id', userId)\n    .single",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select",
+          "lineNumber": 6
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from",
+          "lineNumber": 6
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('announcements')\n      .select('*')\n      .order",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('announcements')\n      .select",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 32
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 33
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "POST",
+          "callee": "checkAdmin",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 41
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('announcements')\n      .insert({ title, content })\n      .select()\n      .single",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('announcements')\n      .insert({ title, content })\n      .select",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('announcements')\n      .insert",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "PUT",
+          "callee": "createClient",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 60
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 61
+        },
+        {
+          "caller": "PUT",
+          "callee": "checkAdmin",
+          "lineNumber": 63
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 64
+        },
+        {
+          "caller": "PUT",
+          "callee": "request.json",
+          "lineNumber": 66
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 68
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('announcements')\n      .update({ title, content })\n      .eq('id', id)\n      .select()\n      .single",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('announcements')\n      .update({ title, content })\n      .eq('id', id)\n      .select",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('announcements')\n      .update({ title, content })\n      .eq",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('announcements')\n      .update",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 78
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 79
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 81
+        },
+        {
+          "caller": "DELETE",
+          "callee": "createClient",
+          "lineNumber": 87
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 88
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 89
+        },
+        {
+          "caller": "DELETE",
+          "callee": "checkAdmin",
+          "lineNumber": 91
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 92
+        },
+        {
+          "caller": "DELETE",
+          "callee": "searchParams.get",
+          "lineNumber": 95
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 96
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('announcements')\n      .delete()\n      .eq",
+          "lineNumber": 98
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('announcements')\n      .delete",
+          "lineNumber": 98
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from",
+          "lineNumber": 98
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 103
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 104
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 106
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 4,
+        "functionCount": 5,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/auth/callback/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 20,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 4,
+          "endLine": 24,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 6
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "request.headers.get",
+          "lineNumber": 10
+        },
+        {
+          "caller": "GET",
+          "callee": "request.headers.get",
+          "lineNumber": 10
+        },
+        {
+          "caller": "GET",
+          "callee": "host?.includes",
+          "lineNumber": 11
+        },
+        {
+          "caller": "GET",
+          "callee": "host?.includes",
+          "lineNumber": 11
+        },
+        {
+          "caller": "GET",
+          "callee": "request.headers.get",
+          "lineNumber": 12
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.exchangeCodeForSession",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.redirect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.redirect",
+          "lineNumber": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/auth/login/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 33,
+      "nonEmptyLines": 28,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 4,
+          "endLine": 33,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 6
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 10
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 16
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.signInWithPassword",
+          "lineNumber": 17
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 23
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/auth/signout/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 16,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 4,
+          "endLine": 16,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 5
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.signOut",
+          "lineNumber": 6
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 10
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.redirect",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/channels/[id]/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 41,
+      "functions": [
+        {
+          "name": "DELETE",
+          "startLine": 6,
+          "endLine": 52,
+          "params": [
+            "request",
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "DELETE",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DELETE",
+          "callee": "createClient",
+          "lineNumber": 8
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 9
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 12
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 19
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('artists')\n      .select('owner_user_id')\n      .eq('id', id)\n      .single",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('artists')\n      .select('owner_user_id')\n      .eq",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('artists')\n      .select",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 30
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('artists')\n      .delete()\n      .eq",
+          "lineNumber": 37
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from('artists')\n      .delete",
+          "lineNumber": 37
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from",
+          "lineNumber": 37
+        },
+        {
+          "caller": "DELETE",
+          "callee": "console.error",
+          "lineNumber": 43
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 44
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 47
+        },
+        {
+          "caller": "DELETE",
+          "callee": "console.error",
+          "lineNumber": 49
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 50
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/channels/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 155,
+      "nonEmptyLines": 127,
+      "functions": [
+        {
+          "name": "checkAdmin",
+          "startLine": 6,
+          "endLine": 14,
+          "params": [
+            "supabase",
+            "userId"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 16,
+          "endLine": 40,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 42,
+          "endLine": 99,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "PUT",
+          "startLine": 101,
+          "endLine": 154,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 42,
+          "isDefault": false
+        },
+        {
+          "name": "PUT",
+          "line": 101,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq('id', userId)\n    .single",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select('is_admin')\n    .eq",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from('profiles')\n    .select",
+          "lineNumber": 7
+        },
+        {
+          "caller": "checkAdmin",
+          "callee": "supabase\n    .from",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 18
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('artists')\n      .select('*')\n      .eq('owner_user_id', user.id)\n      .order",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('artists')\n      .select('*')\n      .eq",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('artists')\n      .select",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 45
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "slug.toLowerCase().replace",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "slug.toLowerCase",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "Array.isArray",
+          "lineNumber": 74
+        },
+        {
+          "caller": "POST",
+          "callee": "parseInt",
+          "lineNumber": 75
+        },
+        {
+          "caller": "POST",
+          "callee": "parseInt",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "parseInt",
+          "lineNumber": 77
+        },
+        {
+          "caller": "POST",
+          "callee": "parseInt",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('artists')\n      .insert([newChannel])\n      .select()\n      .single",
+          "lineNumber": 83
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('artists')\n      .insert([newChannel])\n      .select",
+          "lineNumber": 83
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('artists')\n      .insert",
+          "lineNumber": 83
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 83
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 91
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 94
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 96
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 97
+        },
+        {
+          "caller": "PUT",
+          "callee": "createClient",
+          "lineNumber": 103
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 104
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 107
+        },
+        {
+          "caller": "PUT",
+          "callee": "request.json",
+          "lineNumber": 110
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 115
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .select('owner_user_id')\n      .eq('id', targetId)\n      .single",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .select('owner_user_id')\n      .eq",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .select",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 126
+        },
+        {
+          "caller": "PUT",
+          "callee": "slug.toLowerCase().replace",
+          "lineNumber": 131
+        },
+        {
+          "caller": "PUT",
+          "callee": "slug.toLowerCase",
+          "lineNumber": 131
+        },
+        {
+          "caller": "PUT",
+          "callee": "Array.isArray",
+          "lineNumber": 135
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .update(updateData)\n      .eq('id', targetId)\n      .select()\n      .single",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .update(updateData)\n      .eq('id', targetId)\n      .select",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .update(updateData)\n      .eq",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from('artists')\n      .update",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "supabase\n      .from",
+          "lineNumber": 137
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 145
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 146
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 149
+        },
+        {
+          "caller": "PUT",
+          "callee": "console.error",
+          "lineNumber": 151
+        },
+        {
+          "caller": "PUT",
+          "callee": "NextResponse.json",
+          "lineNumber": 152
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 4,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/charts/cron/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 46,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 5,
+          "endLine": 56,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 9
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 12
+        },
+        {
+          "caller": "GET",
+          "callee": "isNaN",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "targetDate.getTime",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n        .from('profiles')\n        .select('is_admin')\n        .eq('id', user.id)\n        .single",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n        .from('profiles')\n        .select('is_admin')\n        .eq",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n        .from('profiles')\n        .select",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n        .from",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "request.headers.get",
+          "lineNumber": 35
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 41
+        },
+        {
+          "caller": "GET",
+          "callee": "aggregateCharts",
+          "lineNumber": 44
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 46
+        },
+        {
+          "caller": "GET",
+          "callee": "targetDate.toISOString().split",
+          "lineNumber": 49
+        },
+        {
+          "caller": "GET",
+          "callee": "targetDate.toISOString",
+          "lineNumber": 49
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 53
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/credits/history/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 33,
+      "nonEmptyLines": 27,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 6,
+          "endLine": 33,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 6,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 9
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 12
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('credit_transactions')\n      .select('id, amount, type, description, created_at')\n      .eq('user_id', user.id)\n      .order('created_at', { ascending: false })\n      .limit",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('credit_transactions')\n      .select('id, amount, type, description, created_at')\n      .eq('user_id', user.id)\n      .order",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('credit_transactions')\n      .select('id, amount, type, description, created_at')\n      .eq",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('credit_transactions')\n      .select",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 31
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/debug-download/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 108,
+      "nonEmptyLines": 92,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 5,
+          "endLine": 108,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 7
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 8
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 10
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('song_history')\n      .select('*')\n      .eq('user_id', user.id)\n      .order",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('song_history')\n      .select('*')\n      .eq",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('song_history')\n      .select",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 14
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "songs.find",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "s.audio_url?.startsWith",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from('tracks')\n      .download",
+          "lineNumber": 34
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from",
+          "lineNumber": 34
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GET",
+          "callee": "Buffer.from",
+          "lineNumber": 48
+        },
+        {
+          "caller": "GET",
+          "callee": "fileData.arrayBuffer",
+          "lineNumber": 48
+        },
+        {
+          "caller": "GET",
+          "callee": "NodeID3.read",
+          "lineNumber": 49
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 52
+        },
+        {
+          "caller": "GET",
+          "callee": "Object.keys",
+          "lineNumber": 55
+        },
+        {
+          "caller": "GET",
+          "callee": "mimeType.split('/').pop",
+          "lineNumber": 62
+        },
+        {
+          "caller": "GET",
+          "callee": "mimeType.split",
+          "lineNumber": 62
+        },
+        {
+          "caller": "GET",
+          "callee": "crypto.randomUUID",
+          "lineNumber": 63
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from('avatars')\n      .upload",
+          "lineNumber": 65
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from",
+          "lineNumber": 65
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 72
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from('avatars')\n      .getPublicUrl",
+          "lineNumber": 78
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.storage\n      .from",
+          "lineNumber": 78
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('song_history')\n      .update({ image_url: finalImageUrl })\n      .eq",
+          "lineNumber": 85
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from('song_history')\n      .update",
+          "lineNumber": 85
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 85
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 91
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 97
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 106
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/generate-prompt/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 65,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 4,
+          "endLine": 65,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 6
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 7
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 10
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('profiles')\n      .select('is_banned')\n      .eq('id', user.id)\n      .single",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('profiles')\n      .select('is_banned')\n      .eq",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('profiles')\n      .select",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 21
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 24
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "POST",
+          "callee": "(process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '').trim",
+          "lineNumber": 31
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 33
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "POST",
+          "callee": "fetch",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "JSON.stringify",
+          "lineNumber": 43
+        },
+        {
+          "caller": "POST",
+          "callee": "response.json",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 55
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 56
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 62
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 63
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/likes/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 111,
+      "nonEmptyLines": 93,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 4,
+          "endLine": 111,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 6
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 8
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 11
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 12
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 15
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('song_history')\n      .select('*')\n      .eq('id', track_id)\n      .maybeSingle",
+          "lineNumber": 19
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('song_history')\n      .select('*')\n      .eq",
+          "lineNumber": 19
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from('song_history')\n      .select",
+          "lineNumber": 19
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 19
+        },
+        {
+          "caller": "POST",
+          "callee": "Number",
+          "lineNumber": 32
+        },
+        {
+          "caller": "POST",
+          "callee": "Math.max",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('song_history')\n        .update({\n          liked: nextLiked,\n          form: updatedForm\n        })\n        .eq",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('song_history')\n        .update",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('tracks')\n          .update({ like_count: currentLikeCount })\n          .eq",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('tracks')\n          .update",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('tracks')\n        .select('like_count')\n        .eq('id', track_id)\n        .maybeSingle",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('tracks')\n        .select('like_count')\n        .eq",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('tracks')\n        .select",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from",
+          "lineNumber": 66
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 73
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('likes')\n        .select('*')\n        .eq('track_id', track_id)\n        .eq('user_id', user.id)\n        .maybeSingle",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('likes')\n        .select('*')\n        .eq('track_id', track_id)\n        .eq",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('likes')\n        .select('*')\n        .eq",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('likes')\n        .select",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from('likes').delete().eq",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from('likes').delete",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "Math.max",
+          "lineNumber": 92
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from('likes').insert",
+          "lineNumber": 95
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from",
+          "lineNumber": 95
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('tracks')\n        .update({ like_count: currentLikeCount })\n        .eq",
+          "lineNumber": 100
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('tracks')\n        .update",
+          "lineNumber": 100
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from",
+          "lineNumber": 100
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 106
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 108
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 109
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/music/generate/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 17,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 4,
+          "endLine": 19,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "request.clone",
+          "lineNumber": 6
+        },
+        {
+          "caller": "POST",
+          "callee": "clonedReq.json",
+          "lineNumber": 7
+        },
+        {
+          "caller": "POST",
+          "callee": "sunoGenerate",
+          "lineNumber": 11
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 13
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 16
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/play/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 79,
+      "nonEmptyLines": 70,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 5,
+          "endLine": 79,
+          "params": [
+            "req"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "POST",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "req.json",
+          "lineNumber": 7
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 11
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 14
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 15
+        },
+        {
+          "caller": "POST",
+          "callee": "req.headers.get('x-forwarded-for')?.split",
+          "lineNumber": 17
+        },
+        {
+          "caller": "POST",
+          "callee": "req.headers.get",
+          "lineNumber": 17
+        },
+        {
+          "caller": "POST",
+          "callee": "crypto\n      .createHash('sha256')\n      .update(ip + (process.env.IP_SALT || 'suno-music-salt'))\n      .digest('hex')\n      .substring",
+          "lineNumber": 18
+        },
+        {
+          "caller": "POST",
+          "callee": "crypto\n      .createHash('sha256')\n      .update(ip + (process.env.IP_SALT || 'suno-music-salt'))\n      .digest",
+          "lineNumber": 18
+        },
+        {
+          "caller": "POST",
+          "callee": "crypto\n      .createHash('sha256')\n      .update",
+          "lineNumber": 18
+        },
+        {
+          "caller": "POST",
+          "callee": "crypto\n      .createHash",
+          "lineNumber": 18
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from('play_events').insert",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase.from",
+          "lineNumber": 26
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 33
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('song_history')\n        .select('*')\n        .eq('id', track_id)\n        .maybeSingle",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('song_history')\n        .select('*')\n        .eq",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from('song_history')\n        .select",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n        .from",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "Number",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('song_history')\n          .update({ form: updatedForm })\n          .eq",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('song_history')\n          .update",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('tracks')\n          .select('play_count')\n          .eq('id', track_id)\n          .maybeSingle",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('tracks')\n          .select('play_count')\n          .eq",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from('tracks')\n          .select",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n          .from",
+          "lineNumber": 57
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n            .from('tracks')\n            .update({ play_count: (track.play_count || 0) + 1 })\n            .eq",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n            .from('tracks')\n            .update",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n            .from",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "console.warn",
+          "lineNumber": 71
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 74
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 77
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

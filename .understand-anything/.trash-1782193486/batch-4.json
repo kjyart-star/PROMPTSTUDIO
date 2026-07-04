@@ -1,0 +1,585 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/api/playlists/save-track/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/playlists/save-track/route.ts",
+      "summary": "재생목록에 트랙을 저장하는 API 라우트로, 세션 인증 후 song_history 테이블에서 원본 트랙을 조회해 새 항목으로 복제 삽입한다.",
+      "tags": ["api-handler", "playlist", "supabase", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/playlists/save-track/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/playlists/save-track/route.ts",
+      "lineRange": [4, 65],
+      "summary": "트랙 ID를 받아 원본을 조회한 뒤 현재 사용자의 song_history에 복제 트랙을 삽입하는 POST 핸들러.",
+      "tags": ["api-handler", "playlist", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/profile/active-guides/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/profile/active-guides/route.ts",
+      "summary": "사용자 프로필의 활성 가이드 ID 목록을 조회(GET)하고 갱신(PUT)하는 API 라우트로 profiles 테이블에 upsert한다.",
+      "tags": ["api-handler", "profile", "supabase", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/profile/active-guides/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/profile/active-guides/route.ts",
+      "lineRange": [5, 30],
+      "summary": "인증된 사용자의 profiles 레코드에서 active_guide_ids 배열을 조회해 반환하는 GET 핸들러.",
+      "tags": ["api-handler", "profile", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/profile/active-guides/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/profile/active-guides/route.ts",
+      "lineRange": [33, 71],
+      "summary": "요청 본문의 활성 가이드 ID 배열을 검증한 뒤 profiles 테이블에 upsert하는 PUT 핸들러.",
+      "tags": ["api-handler", "profile", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/profile/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/profile/route.ts",
+      "summary": "현재 사용자 프로필을 조회(GET)하고 수정(PUT)하는 API 라우트로, 확장 컬럼 조회 실패 시 기본 컬럼으로 폴백한다.",
+      "tags": ["api-handler", "profile", "supabase", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/profile/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/profile/route.ts",
+      "lineRange": [6, 42],
+      "summary": "인증된 사용자의 전체 프로필 컬럼을 조회하고, 실패 시 핵심 컬럼만 재조회하는 폴백 로직을 가진 GET 핸들러.",
+      "tags": ["api-handler", "profile", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/profile/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/profile/route.ts",
+      "lineRange": [44, 96],
+      "summary": "요청 본문에서 허용된 필드만 추려 profiles 테이블을 갱신하는 PUT 핸들러.",
+      "tags": ["api-handler", "profile", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/seed-samples/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/seed-samples/route.ts",
+      "summary": "개발/온보딩용 샘플 곡 데이터를 현재 사용자의 song_history에 일괄 삽입하는 시드 API 라우트.",
+      "tags": ["api-handler", "seed", "supabase", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/seed-samples/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/seed-samples/route.ts",
+      "lineRange": [47, 74],
+      "summary": "사전 정의된 SAMPLE_SONGS를 현재 사용자 ID로 매핑해 song_history에 삽입하는 GET 핸들러.",
+      "tags": ["api-handler", "seed", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/song-history/[id]/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/song-history/[id]/route.ts",
+      "summary": "특정 곡 히스토리 항목을 수정하는 동적 라우트로, 소유자이거나 관리자인 경우에만 update를 허용한다.",
+      "tags": ["api-handler", "song-history", "authorization", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/song-history/[id]/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/song-history/[id]/route.ts",
+      "lineRange": [4, 76],
+      "summary": "경로 파라미터 id로 곡 소유권 및 관리자 권한을 확인한 뒤 허용 필드만 갱신하는 PUT 핸들러.",
+      "tags": ["api-handler", "song-history", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/song-history/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/song-history/route.ts",
+      "summary": "곡 히스토리를 목록 조회(GET)·생성(POST)·삭제(DELETE)하는 핵심 API 라우트로, 업로드 시 ID3 태그에서 커버 이미지를 추출해 스토리지에 저장한다.",
+      "tags": ["api-handler", "song-history", "supabase", "storage"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/song-history/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/song-history/route.ts",
+      "lineRange": [6, 85],
+      "summary": "사용자별 또는 관리자 전체 곡 목록을 정렬·조회하고 작성자 프로필 정보를 조인해 반환하는 GET 핸들러.",
+      "tags": ["api-handler", "song-history", "supabase"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/song-history/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/song-history/route.ts",
+      "lineRange": [88, 186],
+      "summary": "곡 메타데이터를 받아 ID3 태그에서 커버 이미지를 추출·업로드한 뒤 song_history에 새 항목을 삽입하는 POST 핸들러.",
+      "tags": ["api-handler", "song-history", "storage", "id3"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/song-history/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/song-history/route.ts",
+      "lineRange": [189, 221],
+      "summary": "쿼리 파라미터 id로 현재 사용자 소유의 곡 히스토리 항목을 삭제하는 DELETE 핸들러.",
+      "tags": ["api-handler", "song-history", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/suno/cover/generate/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/suno/cover/generate/route.ts",
+      "summary": "Suno 외부 API를 호출해 곡 커버 영상을 생성 요청하는 API 라우트로, 크레딧 차감 RPC를 함께 수행한다.",
+      "tags": ["api-handler", "suno", "external-api", "credits"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/suno/cover/generate/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/suno/cover/generate/route.ts",
+      "lineRange": [6, 84],
+      "summary": "사용자 크레딧·차단 여부를 확인하고 Suno 커버 생성 엔드포인트를 호출한 뒤 크레딧을 차감하는 POST 핸들러.",
+      "tags": ["api-handler", "suno", "external-api", "credits"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/suno/generate/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/suno/generate/route.ts",
+      "summary": "Suno 음악 생성 외부 API를 호출하는 핵심 라우트로, 크레딧 검증·차감과 함께 반환된 taskId를 song_history에 기록한다.",
+      "tags": ["api-handler", "suno", "external-api", "music-generation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/suno/generate/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/suno/generate/route.ts",
+      "lineRange": [6, 116],
+      "summary": "크레딧·차단 검증 후 모델 버전을 정규화해 Suno 생성 API를 호출하고, 크레딧 차감과 song_history 상태 업데이트를 수행하는 POST 핸들러.",
+      "tags": ["api-handler", "suno", "external-api", "credits"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/api/suno/publish/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/suno/publish/route.ts",
+      "summary": "곡 히스토리 항목의 is_published 플래그를 true로 설정해 공개 발행하는 API 라우트.",
+      "tags": ["api-handler", "suno", "publish", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/suno/publish/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/suno/publish/route.ts",
+      "lineRange": [4, 38],
+      "summary": "현재 사용자 소유의 song_history 항목을 발행 상태로 갱신하는 POST 핸들러.",
+      "tags": ["api-handler", "publish", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/suno/status/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/suno/status/route.ts",
+      "summary": "Suno 생성 작업 상태를 폴링하는 라우트로, 완료된 오디오·이미지를 외부에서 받아 Supabase 스토리지로 옮기고 song_history를 갱신/삽입한다.",
+      "tags": ["api-handler", "suno", "polling", "storage"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/suno/status/route.ts:uploadToStorage",
+      "type": "function",
+      "name": "uploadToStorage",
+      "filePath": "src/app/api/suno/status/route.ts",
+      "lineRange": [6, 39],
+      "summary": "외부 URL의 미디어를 fetch해 버퍼로 변환한 뒤 지정한 Supabase 스토리지 버킷에 업로드하고 공개 URL을 반환하는 헬퍼.",
+      "tags": ["utility", "storage", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/suno/status/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/suno/status/route.ts",
+      "lineRange": [41, 194],
+      "summary": "Suno taskId로 생성 상태를 조회하고, 완료 시 결과 미디어를 스토리지로 이전하며 song_history 레코드를 갱신 또는 추가 삽입하는 GET 핸들러.",
+      "tags": ["api-handler", "suno", "polling", "storage"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/api/system-guides/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "summary": "시스템 가이드 문서를 조회·생성·수정·삭제하는 관리자용 API 라우트로, 첨부 파일 스토리지 정리 로직을 포함한다.",
+      "tags": ["api-handler", "system-guides", "admin", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [5, 24],
+      "summary": "system_guides 테이블의 모든 가이드를 정렬해 반환하는 GET 핸들러.",
+      "tags": ["api-handler", "system-guides", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:checkAdmin",
+      "type": "function",
+      "name": "checkAdmin",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [27, 39],
+      "summary": "주어진 사용자 ID의 profiles.is_admin 플래그를 조회해 관리자 여부를 판정하는 헬퍼.",
+      "tags": ["utility", "authorization", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:getStoragePathFromUrl",
+      "type": "function",
+      "name": "getStoragePathFromUrl",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [42, 50],
+      "summary": "Supabase 공개 URL에서 스토리지 내부 경로를 파싱해 추출하는 헬퍼.",
+      "tags": ["utility", "storage", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [53, 95],
+      "summary": "관리자 권한을 검증한 뒤 새 시스템 가이드를 system_guides 테이블에 삽입하는 POST 핸들러.",
+      "tags": ["api-handler", "system-guides", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:PUT",
+      "type": "function",
+      "name": "PUT",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [98, 141],
+      "summary": "관리자 권한 확인 후 기존 시스템 가이드를 수정하는 PUT 핸들러.",
+      "tags": ["api-handler", "system-guides", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/system-guides/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/system-guides/route.ts",
+      "lineRange": [144, 199],
+      "summary": "관리자 권한 확인 후 가이드와 연결된 스토리지 첨부 파일을 정리하고 레코드를 삭제하는 DELETE 핸들러.",
+      "tags": ["api-handler", "system-guides", "admin", "storage"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/api/temp-cleanup/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/temp-cleanup/route.ts",
+      "summary": "임시 파일/레코드를 정리하는 유지보수용 API 라우트.",
+      "tags": ["api-handler", "cleanup", "maintenance", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/temp-cleanup/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/temp-cleanup/route.ts",
+      "lineRange": [4, 51],
+      "summary": "임시 데이터를 조회·삭제해 정리하는 GET 핸들러.",
+      "tags": ["api-handler", "cleanup", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/upload/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/upload/route.ts",
+      "summary": "멀티파트 폼 데이터로 받은 파일을 Supabase 스토리지에 업로드하고 공개 URL을 반환하는 API 라우트.",
+      "tags": ["api-handler", "upload", "storage", "route"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/upload/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/upload/route.ts",
+      "lineRange": [4, 56],
+      "summary": "요청 폼에서 파일을 추출해 스토리지 버킷에 업로드하고 공개 URL을 반환하는 POST 핸들러.",
+      "tags": ["api-handler", "upload", "storage"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/api/user-guides/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/user-guides/route.ts",
+      "summary": "사용자가 작성한 개인 가이드를 조회(GET)·생성(POST)·삭제(DELETE)하는 API 라우트.",
+      "tags": ["api-handler", "user-guides", "supabase", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/user-guides/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/user-guides/route.ts",
+      "lineRange": [5, 30],
+      "summary": "인증된 사용자의 개인 가이드 목록을 조회해 반환하는 GET 핸들러.",
+      "tags": ["api-handler", "user-guides", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/user-guides/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/user-guides/route.ts",
+      "lineRange": [33, 69],
+      "summary": "사용자의 새 개인 가이드를 생성하는 POST 핸들러.",
+      "tags": ["api-handler", "user-guides", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/api/user-guides/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/user-guides/route.ts",
+      "lineRange": [72, 104],
+      "summary": "현재 사용자 소유의 개인 가이드를 삭제하는 DELETE 핸들러.",
+      "tags": ["api-handler", "user-guides", "supabase"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/settings/SettingsClient.tsx",
+      "type": "file",
+      "name": "SettingsClient.tsx",
+      "filePath": "src/components/settings/SettingsClient.tsx",
+      "summary": "사용자 설정 화면 클라이언트 컴포넌트로, 프로필 편집·계정 설정 등 다양한 설정 항목을 관리하고 Supabase와 동기화한다.",
+      "tags": ["component", "settings", "client-component", "supabase"],
+      "complexity": "complex",
+      "languageNotes": "단일 거대 함수 컴포넌트(약 724 비공백 라인)로 다수의 useState/이펙트를 포함한 'use client' 컴포넌트."
+    },
+    {
+      "id": "function:src/components/settings/SettingsClient.tsx:SettingsClient",
+      "type": "function",
+      "name": "SettingsClient",
+      "filePath": "src/components/settings/SettingsClient.tsx",
+      "lineRange": [13, 798],
+      "summary": "설정 페이지 전체 UI와 상태를 관리하며 사용자 프로필·환경설정 변경을 처리하는 클라이언트 컴포넌트 함수.",
+      "tags": ["component", "settings", "client-component"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/subscription/PricingClient.tsx",
+      "type": "file",
+      "name": "PricingClient.tsx",
+      "filePath": "src/components/subscription/PricingClient.tsx",
+      "summary": "구독 요금제 화면 클라이언트 컴포넌트로, 플랜 목록과 가격 정보를 렌더링하고 구독 액션을 처리한다.",
+      "tags": ["component", "subscription", "pricing", "client-component"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/subscription/PricingClient.tsx:PricingClient",
+      "type": "function",
+      "name": "PricingClient",
+      "filePath": "src/components/subscription/PricingClient.tsx",
+      "lineRange": [11, 526],
+      "summary": "요금제 카드와 가격 비교 UI를 렌더링하고 사용자의 플랜 선택 상호작용을 처리하는 클라이언트 컴포넌트 함수.",
+      "tags": ["component", "subscription", "pricing"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/lib/charts/aggregate.ts",
+      "type": "file",
+      "name": "aggregate.ts",
+      "filePath": "src/lib/charts/aggregate.ts",
+      "summary": "재생·좋아요 등 지표를 집계해 음악 차트 순위를 산출하는 라이브러리로, 차트 cron 라우트에서 사용된다.",
+      "tags": ["utility", "charts", "aggregation", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/charts/aggregate.ts:aggregateCharts",
+      "type": "function",
+      "name": "aggregateCharts",
+      "filePath": "src/lib/charts/aggregate.ts",
+      "lineRange": [3, 142],
+      "summary": "Supabase 데이터를 기반으로 곡 지표를 집계하고 차트 순위를 계산해 반환하는 핵심 집계 함수.",
+      "tags": ["utility", "charts", "aggregation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/lib/supabase/server.ts",
+      "type": "file",
+      "name": "server.ts",
+      "filePath": "src/lib/supabase/server.ts",
+      "summary": "Next.js 서버 컴포넌트/라우트 환경에서 쿠키 기반 세션을 사용하는 Supabase 서버 클라이언트를 생성하는 팩토리로, 거의 모든 API 라우트의 공통 의존성이다.",
+      "tags": ["utility", "supabase", "factory", "server"],
+      "complexity": "simple",
+      "languageNotes": "Next.js cookies() 스토어를 createServerClient에 주입하는 SSR용 Supabase 클라이언트 팩토리."
+    },
+    {
+      "id": "function:src/lib/supabase/server.ts:createClient",
+      "type": "function",
+      "name": "createClient",
+      "filePath": "src/lib/supabase/server.ts",
+      "lineRange": [4, 29],
+      "summary": "Next.js 쿠키 스토어를 연결한 Supabase 서버 클라이언트 인스턴스를 생성해 반환하는 팩토리 함수.",
+      "tags": ["utility", "supabase", "factory"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/app/api/playlists/save-track/route.ts", "target": "function:src/app/api/playlists/save-track/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/playlists/save-track/route.ts", "target": "function:src/app/api/playlists/save-track/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/playlists/save-track/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/playlists/save-track/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/profile/active-guides/route.ts", "target": "function:src/app/api/profile/active-guides/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/profile/active-guides/route.ts", "target": "function:src/app/api/profile/active-guides/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/profile/active-guides/route.ts", "target": "function:src/app/api/profile/active-guides/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/profile/active-guides/route.ts", "target": "function:src/app/api/profile/active-guides/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/profile/active-guides/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/profile/active-guides/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/profile/active-guides/route.ts:PUT", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/profile/route.ts", "target": "function:src/app/api/profile/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/profile/route.ts", "target": "function:src/app/api/profile/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/profile/route.ts", "target": "function:src/app/api/profile/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/profile/route.ts", "target": "function:src/app/api/profile/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/profile/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/profile/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/profile/route.ts:PUT", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/seed-samples/route.ts", "target": "function:src/app/api/seed-samples/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/seed-samples/route.ts", "target": "function:src/app/api/seed-samples/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/seed-samples/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/seed-samples/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/song-history/[id]/route.ts", "target": "function:src/app/api/song-history/[id]/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/song-history/[id]/route.ts", "target": "function:src/app/api/song-history/[id]/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/song-history/[id]/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/song-history/[id]/route.ts:PUT", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:DELETE", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "function:src/app/api/song-history/route.ts:DELETE", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/song-history/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/song-history/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/song-history/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/song-history/route.ts:DELETE", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/suno/cover/generate/route.ts", "target": "function:src/app/api/suno/cover/generate/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/suno/cover/generate/route.ts", "target": "function:src/app/api/suno/cover/generate/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/suno/cover/generate/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/suno/cover/generate/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/suno/generate/route.ts", "target": "function:src/app/api/suno/generate/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/suno/generate/route.ts", "target": "function:src/app/api/suno/generate/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/suno/generate/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/suno/generate/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/suno/publish/route.ts", "target": "function:src/app/api/suno/publish/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/suno/publish/route.ts", "target": "function:src/app/api/suno/publish/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/suno/publish/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/suno/publish/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/suno/status/route.ts", "target": "function:src/app/api/suno/status/route.ts:uploadToStorage", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/suno/status/route.ts", "target": "function:src/app/api/suno/status/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/suno/status/route.ts", "target": "function:src/app/api/suno/status/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/suno/status/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/suno/status/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/suno/status/route.ts:GET", "target": "function:src/app/api/suno/status/route.ts:uploadToStorage", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:checkAdmin", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:getStoragePathFromUrl", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:PUT", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:DELETE", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:PUT", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "function:src/app/api/system-guides/route.ts:DELETE", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/system-guides/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/system-guides/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/system-guides/route.ts:POST", "target": "function:src/app/api/system-guides/route.ts:checkAdmin", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/system-guides/route.ts:PUT", "target": "function:src/app/api/system-guides/route.ts:checkAdmin", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/system-guides/route.ts:DELETE", "target": "function:src/app/api/system-guides/route.ts:checkAdmin", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/system-guides/route.ts:DELETE", "target": "function:src/app/api/system-guides/route.ts:getStoragePathFromUrl", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/temp-cleanup/route.ts", "target": "function:src/app/api/temp-cleanup/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/temp-cleanup/route.ts", "target": "function:src/app/api/temp-cleanup/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/temp-cleanup/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/temp-cleanup/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/upload/route.ts", "target": "function:src/app/api/upload/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/upload/route.ts", "target": "function:src/app/api/upload/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/upload/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/upload/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:DELETE", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "function:src/app/api/user-guides/route.ts:DELETE", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/app/api/user-guides/route.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "function:src/app/api/user-guides/route.ts:GET", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/user-guides/route.ts:POST", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/app/api/user-guides/route.ts:DELETE", "target": "function:src/lib/supabase/server.ts:createClient", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/components/settings/SettingsClient.tsx", "target": "function:src/components/settings/SettingsClient.tsx:SettingsClient", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/components/settings/SettingsClient.tsx", "target": "function:src/components/settings/SettingsClient.tsx:SettingsClient", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/components/settings/SettingsClient.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/components/subscription/PricingClient.tsx", "target": "function:src/components/subscription/PricingClient.tsx:PricingClient", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/components/subscription/PricingClient.tsx", "target": "function:src/components/subscription/PricingClient.tsx:PricingClient", "type": "exports", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/lib/charts/aggregate.ts", "target": "function:src/lib/charts/aggregate.ts:aggregateCharts", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/lib/charts/aggregate.ts", "target": "function:src/lib/charts/aggregate.ts:aggregateCharts", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/lib/charts/aggregate.ts", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/lib/supabase/server.ts", "target": "function:src/lib/supabase/server.ts:createClient", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/lib/supabase/server.ts", "target": "function:src/lib/supabase/server.ts:createClient", "type": "exports", "direction": "forward", "weight": 0.8}
+  ]
+}

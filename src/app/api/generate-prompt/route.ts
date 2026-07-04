@@ -24,9 +24,19 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { system, user: userPrompt, model } = body
 
-    if (!system || !userPrompt) {
+    if (!system || !userPrompt || typeof system !== 'string' || typeof userPrompt !== 'string') {
       return NextResponse.json({ error: 'System and user prompts are required' }, { status: 400 })
     }
+
+    // Cap input size to prevent abuse of the server's OpenAI billing.
+    const MAX_LEN = 8000
+    if (system.length > MAX_LEN || userPrompt.length > MAX_LEN) {
+      return NextResponse.json({ error: 'Prompt too long' }, { status: 400 })
+    }
+
+    // Only allow an explicit set of models; ignore arbitrary client-supplied ones.
+    const ALLOWED_MODELS = ['gpt-4o-mini', 'gpt-4o']
+    const selectedModel = ALLOWED_MODELS.includes(model) ? model : 'gpt-4o-mini'
 
     const apiKey = (process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '').trim()
     if (!apiKey) {
@@ -41,7 +51,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model || 'gpt-4o-mini',
+        model: selectedModel,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: userPrompt }

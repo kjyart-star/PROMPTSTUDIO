@@ -1,0 +1,126 @@
+[
+  {
+    "order": 1,
+    "title": "프로젝트 진입점과 설정",
+    "description": "이 프로젝트는 README가 없으므로 루트 layout과 npm 매니페스트에서 출발합니다. src/app/layout.tsx는 Next.js 16 App Router의 최상위 layout으로 Geist 폰트와 전역 CSS를 주입하며 모든 페이지를 감싸는 html/body 골격을 정의합니다. package.json은 React 19, @supabase/ssr, zustand, node-id3 등 핵심 의존성을 보여 주어 'Suno 스타일 AI 음악 플랫폼'이 어떤 기술 스택 위에 서 있는지 한눈에 알려 줍니다.",
+    "nodeIds": [
+      "file:src/app/layout.tsx",
+      "config:package.json",
+      "config:next.config.ts"
+    ],
+    "languageLesson": "App Router에서 layout.tsx는 해당 디렉터리 하위의 모든 라우트를 감싸는 공통 셸입니다. 루트 layout은 한 번만 정의되며 html/body 태그를 직접 렌더링하는 유일한 곳입니다."
+  },
+  {
+    "order": 2,
+    "title": "데이터베이스 스키마 기반",
+    "description": "코드를 읽기 전에 데이터 모델을 먼저 이해합니다. supabase/schema.sql은 song_history·profiles·subscriptions·playlists 테이블을 생성하고, 사용자가 본인 데이터만 접근하도록 RLS(Row Level Security) 정책을 설정합니다. 그중 song_history는 제목·프롬프트·가사·오디오/이미지 URL·Suno 작업 ID·발행 여부를 담는 이 앱의 핵심 음원 엔티티로, 이후 거의 모든 흐름이 이 테이블을 중심으로 돕니다.",
+    "nodeIds": [
+      "schema:supabase/schema.sql",
+      "table:supabase/schema.sql:song_history",
+      "table:supabase/schema.sql:profiles",
+      "table:docs/23_SCHEMA_CREDIT_TRANSACTIONS.sql:credit_transactions"
+    ],
+    "languageLesson": "RLS는 Supabase(Postgres)에서 행 단위 접근 제어를 강제하는 정책입니다. auth.uid() = user_id 같은 조건으로 '본인 데이터만' 읽고 쓰도록 DB 레벨에서 차단하므로, API 코드가 실수해도 데이터가 새지 않습니다."
+  },
+  {
+    "order": 3,
+    "title": "Supabase 클라이언트 — 인증의 양면",
+    "description": "fan-in 1·2위 모듈입니다. server.ts는 쿠키 기반 세션을 사용하는 서버 측 Supabase 클라이언트 팩토리로 거의 모든 API 라우트와 Server Component가 공유하고, client.ts는 브라우저 측 클라이언트 팩토리로 모든 클라이언트 컴포넌트가 사용합니다. middleware.ts는 요청 쿠키를 동기화하며 현재 로그인 사용자를 조회합니다. 이 3개 파일이 'Step 2의 RLS 정책'에 사용자 신원을 전달하는 통로이므로 가장 먼저 이해해야 할 공유 기반입니다.",
+    "nodeIds": [
+      "file:src/lib/supabase/server.ts",
+      "file:src/lib/supabase/client.ts",
+      "file:src/lib/supabase/middleware.ts"
+    ],
+    "languageLesson": "@supabase/ssr는 서버(쿠키)와 브라우저를 분리해 다룹니다. Server Component/Route Handler는 createServerClient를, 클라이언트 컴포넌트는 createBrowserClient를 써야 세션 쿠키가 올바르게 동기화됩니다."
+  },
+  {
+    "order": 4,
+    "title": "도메인 타입과 공유 상수",
+    "description": "music.ts는 트랙·앨범·아티스트 등 음악 도메인의 핵심 TypeScript 타입을 선언하는 모듈로, fan-in 상위에 위치해 거의 모든 컴포넌트가 같은 데이터 모델 어휘를 공유하게 합니다. constants.ts와 constants/genres.ts는 장르 목록과 한국어·일본어 번역 매핑을 제공해 장르 선택 UI 전반에서 참조됩니다. Step 2의 DB 테이블이 런타임 코드에서 어떤 타입으로 표현되는지 이 단계에서 연결됩니다.",
+    "nodeIds": [
+      "file:src/types/music.ts",
+      "file:src/lib/constants.ts",
+      "file:src/lib/constants/genres.ts",
+      "file:src/lib/utils.ts"
+    ],
+    "languageLesson": "music.ts는 런타임 코드 없이 interface/type만 export하는 순수 타입 정의 파일입니다. 컴파일 후 사라지지만 전 레이어의 데이터 계약(contract) 역할을 합니다."
+  },
+  {
+    "order": 5,
+    "title": "전역 재생 상태 — Zustand playerStore",
+    "description": "playerStore.ts는 fan-in 상위(17)의 Zustand store로, 현재 트랙·큐·재생/일시정지·진행·볼륨·셔플/반복 상태와 그 액션을 한곳에 모아 모든 플레이어 UI가 공유합니다. 어느 페이지에서 곡을 재생하든 이 단일 store가 진실의 원천이 되며, 이후 Step 10의 영구 플레이어와 Step 11의 곡 생성 후 자동 재생이 모두 이 store를 통해 동작합니다.",
+    "nodeIds": [
+      "file:src/stores/playerStore.ts"
+    ],
+    "languageLesson": "Zustand store는 create<State>()로 정의하는 전역 상태 컨테이너입니다. Redux의 보일러플레이트 없이 훅 하나(useStore)로 어디서든 상태를 구독·갱신할 수 있어, 여러 컴포넌트가 동일한 재생 상태를 공유하는 플레이어 UI에 적합합니다."
+  },
+  {
+    "order": 6,
+    "title": "공개 레이아웃과 영구 플레이어 셸",
+    "description": "(public)/layout.tsx는 서버에서 Supabase 세션을 조회한 뒤 PublicLayoutClient에 전달하는 Server Component이고, PublicLayoutClient는 헤더·NowPlayingPanel·PersistentPlayer를 조합하는 클라이언트 셸입니다. PersistentPlayer는 화면 하단에 고정되어 HTMLAudioElement 재생을 Step 5의 playerStore와 동기화합니다. 페이지가 바뀌어도 음악이 끊기지 않는 'SPA형 플레이어' 프레임이 여기서 완성됩니다.",
+    "nodeIds": [
+      "file:src/app/(public)/layout.tsx",
+      "file:src/components/layout/PublicLayoutClient.tsx",
+      "file:src/components/player/PersistentPlayer.tsx"
+    ],
+    "languageLesson": "App Router에서 Server Component(layout.tsx)는 서버에서 세션을 안전하게 읽어 props로 내려보내고, 'use client'가 붙은 클라이언트 컴포넌트가 상호작용(오디오 재생 등)을 담당합니다. 이 서버→클라이언트 경계 설계가 인증과 인터랙션을 분리합니다."
+  },
+  {
+    "order": 7,
+    "title": "공개 화면 — 홈·검색·라이브러리 페이지",
+    "description": "(public)/page.tsx는 추천 트랙·앨범·차트를 서버에서 종합 조회해 HomeClient에 전달하는 메인 진입 페이지이고, search/page.tsx와 library/page.tsx도 같은 패턴으로 데이터를 서버에서 받아 각 Client 컴포넌트를 렌더링합니다. Step 3의 서버 Supabase 클라이언트로 데이터를 가져오고, 결과를 받은 Client 컴포넌트들이 Step 5의 playerStore로 재생을 트리거하는 일관된 구조를 확인할 수 있습니다.",
+    "nodeIds": [
+      "file:src/app/(public)/page.tsx",
+      "file:src/components/home/HomeClient.tsx",
+      "file:src/app/(public)/search/page.tsx",
+      "file:src/app/(public)/library/page.tsx"
+    ]
+  },
+  {
+    "order": 8,
+    "title": "스튜디오 — 음악 생성 작업 공간",
+    "description": "studio/page.tsx와 studio/generate/page.tsx는 인증 가드를 거친 뒤 각각 StudioClient와 GenerateClient를 렌더링하는 Server Component입니다. StudioClient는 생성·커버·마스터링·장르 모달과 라이브러리 뷰를 묶고 LLM 프롬프트 빌드 로직을 제공하며, GenerateClient는 텍스트 프롬프트 기반 생성 요청·작업 폴링·히스토리 동기화를 담당하는 생성 워크플로의 클라이언트 측 본체입니다. Step 11의 종단 흐름이 시작되는 화면입니다.",
+    "nodeIds": [
+      "file:src/app/(public)/studio/page.tsx",
+      "file:src/app/(public)/studio/generate/page.tsx",
+      "file:src/components/studio/StudioClient.tsx",
+      "file:src/components/studio/GenerateClient.tsx"
+    ]
+  },
+  {
+    "order": 9,
+    "title": "Suno 생성 API — 크레딧·생성·폴링",
+    "description": "API 레이어의 심장부입니다. suno/generate/route.ts는 크레딧을 검증·차감한 뒤 Suno 외부 API를 호출하고 반환된 taskId를 song_history에 기록합니다. suno/status/route.ts는 작업 상태를 폴링하다 완료되면 외부 오디오·이미지를 Supabase 스토리지로 옮기고 song_history를 갱신합니다. credits/history와 song-history 라우트는 크레딧 내역과 곡 기록을 조회·관리해 Step 8 스튜디오 UI를 뒷받침합니다.",
+    "nodeIds": [
+      "file:src/app/api/suno/generate/route.ts",
+      "file:src/app/api/suno/status/route.ts",
+      "file:src/app/api/song-history/route.ts",
+      "file:src/app/api/credits/history/route.ts"
+    ],
+    "languageLesson": "Route Handler(route.ts)는 GET/POST 등 HTTP 메서드를 named export 함수로 구현하는 App Router의 서버 API입니다. 외부 Suno API는 즉시 완료되지 않으므로 generate가 taskId를 돌려주고 status를 주기적으로 호출(polling)해 완료를 감지하는 비동기 작업 패턴을 씁니다."
+  },
+  {
+    "order": 10,
+    "title": "관리자 콘솔과 모더레이션",
+    "description": "(admin)/admin/music/layout.tsx는 AdminAuthGuard로 접근을 보호하고 PersistentPlayer를 마운트하는 관리자 섹션 공용 레이아웃입니다. admin/music/page.tsx 대시보드는 사용자 수·플레이리스트·재생 횟수 통계를 집계하고, api/admin/users 라우트는 service-role 클라이언트로 크레딧을 조정합니다. 일반 사용자와 분리된 권한 경계가 어떻게 레이아웃·가드·전용 API로 구현되는지 보여 줍니다.",
+    "nodeIds": [
+      "file:src/app/(admin)/admin/music/layout.tsx",
+      "file:src/components/admin/AdminAuthGuard.tsx",
+      "file:src/app/(admin)/admin/music/page.tsx",
+      "file:src/app/api/admin/users/route.ts"
+    ],
+    "languageLesson": "service-role 클라이언트는 RLS를 우회하는 관리자 전용 Supabase 키를 사용합니다. 크레딧 가감처럼 타인의 데이터를 변경해야 하는 작업에만 서버에서 제한적으로 써야 하며, 절대 브라우저에 노출하면 안 됩니다."
+  },
+  {
+    "order": 11,
+    "title": "종단 흐름 — 곡 한 곡이 만들어지기까지",
+    "description": "지금까지의 조각을 하나의 사용자 시나리오로 잇습니다. 사용자가 Step 8의 GenerateClient에서 프롬프트를 입력하면 → suno/generate 라우트가 크레딧을 차감하고 Suno에 작업을 의뢰해 taskId를 song_history(Step 2)에 저장합니다 → GenerateClient가 suno/status를 폴링하고, 완료되면 status 라우트가 오디오를 Supabase 스토리지로 이관합니다 → 결과 곡이 Step 5의 playerStore에 실려 Step 6의 PersistentPlayer로 재생됩니다. 차트 cron 라우트는 누적된 재생·좋아요를 집계해 순위를 산출하며 데이터가 다시 공개 화면으로 순환합니다.",
+    "nodeIds": [
+      "file:src/components/studio/GenerateClient.tsx",
+      "file:src/app/api/suno/generate/route.ts",
+      "file:src/app/api/suno/status/route.ts",
+      "file:src/app/api/charts/cron/route.ts",
+      "file:src/lib/charts/aggregate.ts"
+    ]
+  }
+]

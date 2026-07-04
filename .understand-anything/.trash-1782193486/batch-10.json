@@ -1,0 +1,381 @@
+{
+  "nodes": [
+    {
+      "id": "document:docs/00_PROJECT_BRIEF.md",
+      "type": "document",
+      "name": "00_PROJECT_BRIEF.md",
+      "filePath": "docs/00_PROJECT_BRIEF.md",
+      "summary": "AI 음악 플랫폼(Suno/Udio 음원 퍼블리싱 + 차트)의 프로젝트 브리프로, 단계별 로드맵, 기술 스택(Next.js·Supabase·Zustand), 데이터 모델 개요, 폴더 구조, Phase 1 작업 우선순위를 정의한다.",
+      "tags": ["documentation", "entry-point", "overview", "architecture", "roadmap"],
+      "complexity": "moderate",
+      "languageNotes": "AI IDE(안티그라비티/Cursor)에 첫 컨텍스트로 주입하는 온보딩 성격의 마스터 브리프 문서."
+    },
+    {
+      "id": "document:docs/02_PERSISTENT_PLAYER.md",
+      "type": "document",
+      "name": "02_PERSISTENT_PLAYER.md",
+      "filePath": "docs/02_PERSISTENT_PLAYER.md",
+      "summary": "페이지 이동에도 음악이 끊기지 않는 전역 Persistent Player 구현 가이드로, Zustand playerStore, 단일 <audio> 태그 아키텍처, 타입 정의, 30초 재생 시 /api/play 호출 패턴을 코드와 함께 설명한다.",
+      "tags": ["documentation", "implementation-guide", "player", "zustand", "architecture"],
+      "complexity": "complex",
+      "languageNotes": "Task 7 단독 세션용 완성 코드 패키지로, TypeScript 타입과 React 클라이언트 컴포넌트 예제를 포함한다."
+    },
+
+    {
+      "id": "schema:supabase/schema.sql",
+      "type": "schema",
+      "name": "schema.sql",
+      "filePath": "supabase/schema.sql",
+      "summary": "사용자 음원 라이브러리의 기본 스키마로, song_history·profiles·subscriptions·playlists 테이블을 생성하고 본인 데이터만 접근하도록 RLS 정책을 설정한다.",
+      "tags": ["database", "schema-definition", "migration", "rls", "supabase"],
+      "complexity": "moderate",
+      "languageNotes": "모든 테이블이 auth.users를 참조하며 select auth.uid() 기반 RLS로 사용자별 격리를 보장한다."
+    },
+    {
+      "id": "table:supabase/schema.sql:song_history",
+      "type": "table",
+      "name": "song_history",
+      "summary": "사용자가 생성한 곡 기록 테이블로, 제목·프롬프트·가사·오디오/이미지 URL·Suno 작업 ID·퍼블리싱 여부 등을 저장하는 핵심 음원 엔티티이다.",
+      "tags": ["database", "data-model", "song", "core-entity"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/schema.sql:profiles",
+      "type": "table",
+      "name": "profiles",
+      "summary": "auth.users를 1:1로 확장하는 사용자 프로필 테이블로, 이메일·표시 이름·아바타 URL 등을 보관한다.",
+      "tags": ["database", "data-model", "profile", "user"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/schema.sql:subscriptions",
+      "type": "table",
+      "name": "subscriptions",
+      "summary": "Stripe 연동 구독 정보를 저장하는 테이블로, 고객/구독 ID·요금제·상태·결제 주기 종료일을 관리한다.",
+      "tags": ["database", "data-model", "subscription", "billing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/schema.sql:playlists",
+      "type": "table",
+      "name": "playlists",
+      "summary": "라이브러리 폴더용 플레이리스트 테이블로, 사용자별 제목·설명·커버 URL을 저장한다.",
+      "tags": ["database", "data-model", "playlist"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/01_SUPABASE_SETUP.sql",
+      "type": "schema",
+      "name": "01_SUPABASE_SETUP.sql",
+      "filePath": "docs/01_SUPABASE_SETUP.sql",
+      "summary": "AI 음악 플랫폼의 마스터 셋업 스크립트로, user_roles·artists·albums·tracks·play_events·likes·chart_snapshots 테이블, is_admin/트리거 함수, 전체 RLS 정책, Storage 버킷을 한 번에 구성한다.",
+      "tags": ["database", "schema-definition", "migration", "rls", "storage", "trigger"],
+      "complexity": "complex",
+      "languageNotes": "is_admin() security definer 헬퍼 함수와 updated_at·재생수 집계 트리거를 포함한 완결형 초기 셋업 SQL."
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:user_roles",
+      "type": "table",
+      "name": "user_roles",
+      "summary": "사용자 권한(user/artist/admin)을 관리하는 테이블로, RLS 정책의 is_admin() 판정 기준이 되는 역할 분리의 핵심이다.",
+      "tags": ["database", "data-model", "authorization", "rls"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:artists",
+      "type": "table",
+      "name": "artists",
+      "summary": "아티스트 엔티티 테이블로, slug·이름·바이오·아바타/배너 URL·소셜 링크·AI 생성 여부를 저장한다.",
+      "tags": ["database", "data-model", "artist"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:albums",
+      "type": "table",
+      "name": "albums",
+      "summary": "싱글/EP/LP를 통합 관리하는 앨범 테이블로, release_type·상태·장르·무드·재생/좋아요 누적 통계를 보관하며 artists를 참조한다.",
+      "tags": ["database", "data-model", "album", "core-entity"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:tracks",
+      "type": "table",
+      "name": "tracks",
+      "summary": "개별 트랙 테이블로, 파일 URL·길이·파형 데이터에 더해 가사·스타일 프롬프트·BPM·Key 등 AI 생성 메타데이터를 저장하는 플랫폼의 차별화 엔티티이다.",
+      "tags": ["database", "data-model", "track", "core-entity", "ai-metadata"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:play_events",
+      "type": "table",
+      "name": "play_events",
+      "summary": "재생 이벤트 원본 로그 테이블로, 차트 집계의 소스가 되며 30초 이상 재생만 카운트하고 IP는 해시로만 저장한다.",
+      "tags": ["database", "data-model", "analytics", "chart-source"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:likes",
+      "type": "table",
+      "name": "likes",
+      "summary": "사용자-트랙 좋아요 매핑 테이블로, (user_id, track_id) 복합 기본키를 사용하며 트랙/앨범 좋아요 카운트 트리거의 소스가 된다.",
+      "tags": ["database", "data-model", "likes", "engagement"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/01_SUPABASE_SETUP.sql:chart_snapshots",
+      "type": "table",
+      "name": "chart_snapshots",
+      "summary": "일/주/월 단위 차트 순위 스냅샷 테이블로, 순위·재생수·전 기간 대비 순위 변동을 캐시하여 차트 조회 성능을 확보한다.",
+      "tags": ["database", "data-model", "chart", "snapshot"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/03_SCHEMA_UPDATE.sql",
+      "type": "schema",
+      "name": "03_SCHEMA_UPDATE.sql",
+      "filePath": "docs/03_SCHEMA_UPDATE.sql",
+      "summary": "Phase 2~3 업데이트 스크립트로, 좋아요 카운트 자동 증감 트리거(update_like_counts)와 일/주/월 차트 배치 집계 함수(aggregate_charts)를 정의한다.",
+      "tags": ["database", "migration", "trigger", "chart", "aggregation"],
+      "complexity": "moderate",
+      "languageNotes": "aggregate_charts는 멱등성을 위해 기존 스냅샷을 삭제 후 재집계하며 전 기간 순위와 left join으로 변동을 계산한다."
+    },
+
+    {
+      "id": "schema:docs/04_SCHEMA_FIX_GUIDES.sql",
+      "type": "schema",
+      "name": "04_SCHEMA_FIX_GUIDES.sql",
+      "filePath": "docs/04_SCHEMA_FIX_GUIDES.sql",
+      "summary": "누락된 테이블 보정 스크립트로, profiles에 active_guide_ids 컬럼을 추가하고 사용자별 가이드 저장용 user_guides 테이블과 RLS 정책을 생성한다.",
+      "tags": ["database", "migration", "rls", "guides"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:docs/04_SCHEMA_FIX_GUIDES.sql:user_guides",
+      "type": "table",
+      "name": "user_guides",
+      "summary": "사용자가 작성한 가이드(제목·본문)를 저장하는 테이블로, 본인 데이터만 CRUD 가능하도록 RLS가 적용된다.",
+      "tags": ["database", "data-model", "guides", "rls"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/05_SCHEMA_PUBLISH.sql",
+      "type": "schema",
+      "name": "05_SCHEMA_PUBLISH.sql",
+      "filePath": "docs/05_SCHEMA_PUBLISH.sql",
+      "summary": "퍼블리싱 기능용 마이그레이션으로, song_history 테이블에 is_published boolean 컬럼이 없으면 안전하게 추가한다.",
+      "tags": ["database", "migration", "publishing", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/06_SCHEMA_PROFILE_EDIT.sql",
+      "type": "schema",
+      "name": "06_SCHEMA_PROFILE_EDIT.sql",
+      "filePath": "docs/06_SCHEMA_PROFILE_EDIT.sql",
+      "summary": "프로필 편집 기능용 마이그레이션으로, profiles 테이블에 display_name·avatar_url 컬럼을 조건부로 추가한다.",
+      "tags": ["database", "migration", "profile", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/07_PROFILE_UPLOAD_SETUP.sql",
+      "type": "schema",
+      "name": "07_PROFILE_UPLOAD_SETUP.sql",
+      "filePath": "docs/07_PROFILE_UPLOAD_SETUP.sql",
+      "summary": "아바타 업로드 셋업 스크립트로, profiles 컬럼 보정과 더불어 avatars Storage 버킷 생성 및 업로드/조회/수정/삭제 RLS 정책을 구성한다.",
+      "tags": ["database", "migration", "storage", "rls", "upload"],
+      "complexity": "moderate"
+    },
+
+    {
+      "id": "schema:docs/08_SCHEMA_SONG_HISTORY_FIX.sql",
+      "type": "schema",
+      "name": "08_SCHEMA_SONG_HISTORY_FIX.sql",
+      "filePath": "docs/08_SCHEMA_SONG_HISTORY_FIX.sql",
+      "summary": "song_history 보정 마이그레이션으로, audio_url·image_url·is_published 컬럼을 조건부 추가하고 PostgREST 스키마 캐시를 강제 새로고침한다.",
+      "tags": ["database", "migration", "song", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/09_SCHEMA_PLAYLISTS.sql",
+      "type": "schema",
+      "name": "09_SCHEMA_PLAYLISTS.sql",
+      "filePath": "docs/09_SCHEMA_PLAYLISTS.sql",
+      "summary": "앨범 개념의 user_playlists 테이블을 생성하고 RLS 정책을 설정하며, song_history에 playlist_id 외래키를 추가해 곡을 플레이리스트에 묶는다.",
+      "tags": ["database", "migration", "playlist", "rls"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists",
+      "type": "table",
+      "name": "user_playlists",
+      "summary": "사용자 앨범(플레이리스트) 테이블로, 제목·커버·퍼블리싱 여부를 저장하며 공개 앨범은 누구나 조회 가능하도록 RLS가 적용된다.",
+      "tags": ["database", "data-model", "playlist", "album", "core-entity"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/10_SCHEMA_PLAYLIST_DESC.sql",
+      "type": "schema",
+      "name": "10_SCHEMA_PLAYLIST_DESC.sql",
+      "filePath": "docs/10_SCHEMA_PLAYLIST_DESC.sql",
+      "summary": "user_playlists 테이블에 description 컬럼을 조건부로 추가하는 소규모 마이그레이션이다.",
+      "tags": ["database", "migration", "playlist", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/11_SCHEMA_ADMIN_UNPUBLISH.sql",
+      "type": "schema",
+      "name": "11_SCHEMA_ADMIN_UNPUBLISH.sql",
+      "filePath": "docs/11_SCHEMA_ADMIN_UNPUBLISH.sql",
+      "summary": "관리자 퍼블리싱 해제 기능을 위한 RLS 재설정 스크립트로, user_playlists와 song_history의 정책을 세분화하여 admin이 규정 위반 콘텐츠를 비공개 전환할 수 있게 한다.",
+      "tags": ["database", "migration", "rls", "admin", "security"],
+      "complexity": "moderate"
+    },
+
+    {
+      "id": "schema:docs/12_SCHEMA_PLAYLIST_GENRE.sql",
+      "type": "schema",
+      "name": "12_SCHEMA_PLAYLIST_GENRE.sql",
+      "filePath": "docs/12_SCHEMA_PLAYLIST_GENRE.sql",
+      "summary": "user_playlists와 song_history 양쪽에 genre 컬럼을 추가하여 앨범/단일 곡 카테고리를 지정할 수 있게 하는 마이그레이션이다.",
+      "tags": ["database", "migration", "genre", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/13_SCHEMA_EXPOSURE_ORDER.sql",
+      "type": "schema",
+      "name": "13_SCHEMA_EXPOSURE_ORDER.sql",
+      "filePath": "docs/13_SCHEMA_EXPOSURE_ORDER.sql",
+      "summary": "user_playlists와 song_history에 우선순위 노출용 exposure_order 정수 컬럼을 추가하는 마이그레이션이다.",
+      "tags": ["database", "migration", "ordering", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/14_SCHEMA_SONG_HISTORY_LIKED.sql",
+      "type": "schema",
+      "name": "14_SCHEMA_SONG_HISTORY_LIKED.sql",
+      "filePath": "docs/14_SCHEMA_SONG_HISTORY_LIKED.sql",
+      "summary": "song_history 테이블에 liked boolean 컬럼을 조건부로 추가하고 PostgREST 스키마 캐시를 새로고침하는 마이그레이션이다.",
+      "tags": ["database", "migration", "song", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/15_SCHEMA_SONG_VIDEO_URL.sql",
+      "type": "schema",
+      "name": "15_SCHEMA_SONG_VIDEO_URL.sql",
+      "filePath": "docs/15_SCHEMA_SONG_VIDEO_URL.sql",
+      "summary": "song_history 테이블에 video_url 컬럼을 추가하는 소규모 마이그레이션이다.",
+      "tags": ["database", "migration", "song", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/15_SCHEMA_STATUS_COLUMN_FIX.sql",
+      "type": "schema",
+      "name": "15_SCHEMA_STATUS_COLUMN_FIX.sql",
+      "filePath": "docs/15_SCHEMA_STATUS_COLUMN_FIX.sql",
+      "summary": "song_history 테이블에 status 컬럼(기본값 'completed')을 추가하고 스키마 캐시를 새로고침하는 마이그레이션이다.",
+      "tags": ["database", "migration", "song", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql",
+      "type": "schema",
+      "name": "16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql",
+      "filePath": "docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql",
+      "summary": "song_history 컬럼 누락 방지 통합 패치로, suno_task_id·status·audio_url·image_url·is_published·exposure_order·genre·liked 컬럼을 한 번에 안전하게 추가한다.",
+      "tags": ["database", "migration", "song", "consolidated", "idempotent"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/17_CLEANUP_OLD_SONGS.sql",
+      "type": "schema",
+      "name": "17_CLEANUP_OLD_SONGS.sql",
+      "filePath": "docs/17_CLEANUP_OLD_SONGS.sql",
+      "summary": "최근 15분 이내 생성 곡을 제외한 song_history의 모든 과거 테스트 기록을 일괄 삭제하는 정리용 데이터 스크립트이다.",
+      "tags": ["database", "cleanup", "data-maintenance", "song"],
+      "complexity": "simple"
+    },
+
+    {
+      "id": "schema:docs/18_SCHEMA_PROFILE_EXTENSIONS.sql",
+      "type": "schema",
+      "name": "18_SCHEMA_PROFILE_EXTENSIONS.sql",
+      "filePath": "docs/18_SCHEMA_PROFILE_EXTENSIONS.sql",
+      "summary": "프로필 확장 마이그레이션으로, profiles 테이블에 banner_url·bio·tags·followers·following·plays·likes·handle 컬럼을 조건부로 추가해 아티스트형 프로필을 지원한다.",
+      "tags": ["database", "migration", "profile", "social", "idempotent"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {"source": "schema:supabase/schema.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:supabase/schema.sql", "target": "table:supabase/schema.sql:profiles", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:supabase/schema.sql", "target": "table:supabase/schema.sql:subscriptions", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:supabase/schema.sql", "target": "table:supabase/schema.sql:playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:user_roles", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:artists", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:albums", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:tracks", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:play_events", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:likes", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/01_SUPABASE_SETUP.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:chart_snapshots", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/03_SCHEMA_UPDATE.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:likes", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/03_SCHEMA_UPDATE.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:tracks", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/03_SCHEMA_UPDATE.sql", "target": "table:docs/01_SUPABASE_SETUP.sql:chart_snapshots", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/04_SCHEMA_FIX_GUIDES.sql", "target": "table:docs/04_SCHEMA_FIX_GUIDES.sql:user_guides", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/04_SCHEMA_FIX_GUIDES.sql", "target": "table:supabase/schema.sql:profiles", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/05_SCHEMA_PUBLISH.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/06_SCHEMA_PROFILE_EDIT.sql", "target": "table:supabase/schema.sql:profiles", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/07_PROFILE_UPLOAD_SETUP.sql", "target": "table:supabase/schema.sql:profiles", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/07_PROFILE_UPLOAD_SETUP.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/08_SCHEMA_SONG_HISTORY_FIX.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/09_SCHEMA_PLAYLISTS.sql", "target": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/09_SCHEMA_PLAYLISTS.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/10_SCHEMA_PLAYLIST_DESC.sql", "target": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/11_SCHEMA_ADMIN_UNPUBLISH.sql", "target": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/11_SCHEMA_ADMIN_UNPUBLISH.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/12_SCHEMA_PLAYLIST_GENRE.sql", "target": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/12_SCHEMA_PLAYLIST_GENRE.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/13_SCHEMA_EXPOSURE_ORDER.sql", "target": "table:docs/09_SCHEMA_PLAYLISTS.sql:user_playlists", "type": "migrates", "direction": "forward", "weight": 0.7},
+    {"source": "schema:docs/13_SCHEMA_EXPOSURE_ORDER.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/14_SCHEMA_SONG_HISTORY_LIKED.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/15_SCHEMA_SONG_VIDEO_URL.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/15_SCHEMA_STATUS_COLUMN_FIX.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/16_SCHEMA_CONSOLIDATED_SONG_HISTORY_FIX.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/17_CLEANUP_OLD_SONGS.sql", "target": "table:supabase/schema.sql:song_history", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "schema:docs/18_SCHEMA_PROFILE_EXTENSIONS.sql", "target": "table:supabase/schema.sql:profiles", "type": "migrates", "direction": "forward", "weight": 0.7},
+
+    {"source": "document:docs/00_PROJECT_BRIEF.md", "target": "schema:docs/01_SUPABASE_SETUP.sql", "type": "documents", "direction": "forward", "weight": 0.5},
+    {"source": "document:docs/00_PROJECT_BRIEF.md", "target": "document:docs/02_PERSISTENT_PLAYER.md", "type": "related", "direction": "forward", "weight": 0.5},
+    {"source": "document:docs/02_PERSISTENT_PLAYER.md", "target": "table:docs/01_SUPABASE_SETUP.sql:play_events", "type": "documents", "direction": "forward", "weight": 0.5}
+  ]
+}

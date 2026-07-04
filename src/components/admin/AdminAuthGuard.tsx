@@ -20,25 +20,30 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
     setIsSubmitting(true)
 
-    // ID는 admin, PW는 kim727011@@ 검증
-    const isValidId = idInput === 'admin'
-    const isValidPw = pwInput === 'kim727011@@'
-
-    setTimeout(() => {
-      if (isValidId && isValidPw) {
+    // 자격 증명은 서버에서 검증 (비밀번호가 클라이언트 번들에 노출되지 않도록)
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: idInput, password: pwInput }),
+      })
+      if (res.ok) {
         sessionStorage.setItem('admin_authenticated', 'true')
         setIsAuthenticated(true)
       } else {
         setErrorMsg('아이디 또는 비밀번호가 올바르지 않습니다.')
         setPwInput('')
       }
+    } catch {
+      setErrorMsg('인증 요청에 실패했습니다. 다시 시도해 주세요.')
+    } finally {
       setIsSubmitting(false)
-    }, 400) // 미세한 딜레이를 주어 자연스러운 반응 속도 연출
+    }
   }
 
   // 인증 상태 로딩 중

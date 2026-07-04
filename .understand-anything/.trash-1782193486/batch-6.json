@@ -1,0 +1,193 @@
+{
+  "nodes": [
+    {
+      "id": "config:all_missing_en.json",
+      "type": "config",
+      "name": "all_missing_en.json",
+      "filePath": "all_missing_en.json",
+      "summary": "다국어(i18n) 영어 번역 작업용 데이터 파일로, 영어 번역이 누락된 전체 UI 문자열 키-값 모음을 담고 있다.",
+      "tags": ["configuration", "i18n", "localization", "translation"],
+      "complexity": "moderate",
+      "languageNotes": "번역 키-값 형태의 flat JSON 사전으로, 코드가 직접 import하지 않고 번역 워크플로우의 입력 자료로 쓰이는 보조 파일이다."
+    },
+    {
+      "id": "config:ja_translations.json",
+      "type": "config",
+      "name": "ja_translations.json",
+      "filePath": "ja_translations.json",
+      "summary": "UI 문자열의 일본어(ja) 번역 사전으로, 약 221개의 키-값 항목을 담은 다국어 지원용 데이터 파일이다.",
+      "tags": ["configuration", "i18n", "localization", "japanese", "translation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:ja_translations_v2.json",
+      "type": "config",
+      "name": "ja_translations_v2.json",
+      "filePath": "ja_translations_v2.json",
+      "summary": "일본어 번역 사전의 2차(개정) 버전으로, 약 266개 항목을 포함해 ja_translations.json을 확장·갱신한 다국어 데이터 파일이다.",
+      "tags": ["configuration", "i18n", "localization", "japanese", "translation"],
+      "complexity": "moderate",
+      "languageNotes": "동일 도메인의 v1 사전(ja_translations.json)을 보완하는 버전으로, 항목 수가 늘어난 갱신본이다."
+    },
+    {
+      "id": "document:ko_strings.txt",
+      "type": "document",
+      "name": "ko_strings.txt",
+      "filePath": "ko_strings.txt",
+      "summary": "프로젝트 전반에서 사용되는 한국어 UI 원문 문자열을 정리한 참조 문서로, 번역/현지화 작업의 기준 텍스트 목록 역할을 한다.",
+      "tags": ["documentation", "i18n", "localization", "korean", "reference"],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:missing_en.json",
+      "type": "config",
+      "name": "missing_en.json",
+      "filePath": "missing_en.json",
+      "summary": "영어 번역이 누락된 UI 문자열 키 목록을 담은 i18n 작업용 데이터 파일로, all_missing_en.json의 부분/이전 스냅샷에 해당한다.",
+      "tags": ["configuration", "i18n", "localization", "translation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:missing_translations.json",
+      "type": "config",
+      "name": "missing_translations.json",
+      "filePath": "missing_translations.json",
+      "summary": "여러 언어에 걸쳐 번역이 빠진 문자열을 모은 다국어 작업용 데이터 파일로, 현지화 보완 작업의 입력 자료다.",
+      "tags": ["configuration", "i18n", "localization", "translation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Next.js 16 + React 19 기반 프로젝트의 npm 매니페스트로, Supabase(@supabase/ssr, supabase-js), zustand, node-id3, pdfjs-dist 등 핵심 의존성과 dev/build/start/lint 스크립트를 정의한다.",
+      "tags": ["configuration", "build-system", "dependencies", "npm"],
+      "complexity": "simple",
+      "languageNotes": "Tailwind CSS 4, ESLint 9, TypeScript 5를 devDependencies로 사용하는 표준 Next.js App Router 스택 구성이다."
+    },
+    {
+      "id": "table:supabase_schema.sql:song_history",
+      "type": "table",
+      "name": "song_history",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [2, 11],
+      "summary": "사용자가 생성한 곡 이력을 저장하는 테이블로, 제목·프롬프트·가사·노트·형식과 user_id, 생성 시각을 보관한다.",
+      "tags": ["database", "schema-definition", "data-model", "music"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:profiles",
+      "type": "table",
+      "name": "profiles",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [28, 34],
+      "summary": "사용자 프로필 테이블로, 이메일·관리자 여부(is_admin)·활성 가이드 ID 목록(active_guide_ids)을 저장하며 인증 사용자와 연동된다.",
+      "tags": ["database", "schema-definition", "data-model", "user"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:system_guides",
+      "type": "table",
+      "name": "system_guides",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [67, 72],
+      "summary": "관리자가 등록하는 시스템 가이드(제목·본문)를 저장하는 테이블로, 전역 안내/도움말 콘텐츠를 보관한다.",
+      "tags": ["database", "schema-definition", "data-model", "content"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:user_guides",
+      "type": "table",
+      "name": "user_guides",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [90, 96],
+      "summary": "사용자별 개인 가이드(제목·본문)를 user_id와 함께 저장하는 테이블로, 사용자 정의 안내 콘텐츠를 관리한다.",
+      "tags": ["database", "schema-definition", "data-model", "content"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:announcements",
+      "type": "table",
+      "name": "announcements",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [117, 122],
+      "summary": "서비스 공지사항(제목·내용)을 저장하는 테이블로, 사용자에게 노출되는 알림/공지 콘텐츠를 보관한다.",
+      "tags": ["database", "schema-definition", "data-model", "content"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:system_settings",
+      "type": "table",
+      "name": "system_settings",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [140, 144],
+      "summary": "전역 시스템 설정을 key-value(value) 형태로 저장하는 테이블로, 런타임 구성값을 보관한다.",
+      "tags": ["database", "schema-definition", "configuration", "settings"],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase_schema.sql:playlists",
+      "type": "table",
+      "name": "playlists",
+      "filePath": "supabase_schema.sql",
+      "lineRange": [173, 181],
+      "summary": "사용자 플레이리스트 테이블로, 제목·설명·커버 이미지(cover_url)와 user_id, 생성/수정 시각을 저장한다.",
+      "tags": ["database", "schema-definition", "data-model", "playlist"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:ternary_strings.json",
+      "type": "config",
+      "name": "ternary_strings.json",
+      "filePath": "ternary_strings.json",
+      "summary": "코드 내 삼항(조건부) 표현식에서 추출된 UI 문자열 약 293개를 모은 i18n 추출 데이터로, 동적 문자열의 번역 후보를 정리한다.",
+      "tags": ["configuration", "i18n", "localization", "translation"],
+      "complexity": "complex",
+      "languageNotes": "조건부 렌더링에 쓰인 문자열을 별도로 추출해 둔 대용량 사전으로, 번역 누락 점검용 작업 산출물이다."
+    },
+    {
+      "id": "config:tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "tsconfig.json",
+      "summary": "Next.js App Router용 TypeScript 컴파일러 설정으로, strict 모드와 경로 별칭(@/*) 및 Next 플러그인을 구성한다.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:vercel.json",
+      "type": "config",
+      "name": "vercel.json",
+      "filePath": "vercel.json",
+      "summary": "Vercel 배포 설정 파일로, 프로젝트의 배포 동작을 정의하는 최소 구성을 담고 있다.",
+      "tags": ["configuration", "deployment", "vercel", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:vercel_logs.txt",
+      "type": "document",
+      "name": "vercel_logs.txt",
+      "filePath": "vercel_logs.txt",
+      "summary": "Vercel 배포 로그를 저장하기 위한 텍스트 파일로, 현재 내용이 비어 있는 빈 로그 파일이다.",
+      "tags": ["documentation", "logs", "deployment", "vercel"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:package.json",
+      "target": "config:tsconfig.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:vercel.json",
+      "target": "config:package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

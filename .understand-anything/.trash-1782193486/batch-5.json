@@ -1,0 +1,644 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/(public)/cover/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/cover/page.tsx",
+      "summary": "커버 생성 스튜디오의 서버 컴포넌트 페이지로, Supabase로 로그인 사용자를 확인한 뒤 미인증 시 리다이렉트하고 CoverClient를 렌더링한다.",
+      "tags": ["entry-point", "server-component", "auth-guard", "studio", "next-app-router"],
+      "complexity": "simple",
+      "languageNotes": "Next.js App Router의 async 서버 컴포넌트로 revalidate를 export하여 캐시 정책을 지정한다."
+    },
+    {
+      "id": "file:src/app/(public)/studio/generate/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/studio/generate/page.tsx",
+      "summary": "음악 생성 페이지의 서버 컴포넌트로, 로그인 여부를 확인한 뒤 미인증 시 리다이렉트하고 GenerateClient를 렌더링한다.",
+      "tags": ["entry-point", "server-component", "auth-guard", "studio", "next-app-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/(public)/studio/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/studio/page.tsx",
+      "summary": "스튜디오 메인 페이지의 서버 컴포넌트로, 인증 가드를 거친 뒤 통합 작업 공간인 StudioClient를 렌더링한다.",
+      "tags": ["entry-point", "server-component", "auth-guard", "studio", "next-app-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/studio/CoverClient.tsx",
+      "type": "file",
+      "name": "CoverClient.tsx",
+      "filePath": "src/components/studio/CoverClient.tsx",
+      "summary": "오디오 파일 업로드 기반 AI 커버 생성 클라이언트 컴포넌트로, Supabase Storage 업로드, 생성 API 호출, 폴링을 통한 상태 추적과 결과 재생을 담당한다.",
+      "tags": ["component", "studio", "cover-generation", "file-upload", "polling"],
+      "complexity": "complex",
+      "languageNotes": "setInterval 폴링으로 비동기 생성 작업 상태를 추적하고 localStorage로 크레딧/언어 상태를 동기화한다."
+    },
+    {
+      "id": "file:src/components/studio/GenerateClient.tsx",
+      "type": "file",
+      "name": "GenerateClient.tsx",
+      "filePath": "src/components/studio/GenerateClient.tsx",
+      "summary": "텍스트 프롬프트 기반 AI 음악 생성 클라이언트 컴포넌트로, 생성 요청·작업 폴링·히스토리 동기화·좋아요/공개/플레이리스트 관리 등 생성 워크플로 전반을 담당한다.",
+      "tags": ["component", "studio", "music-generation", "polling", "playlist-management"],
+      "complexity": "complex",
+      "languageNotes": "다수의 useEffect와 폴링 루프, 낙관적 진행률 시뮬레이션, URL 상태 동기화(history.replaceState)를 결합한 대형 클라이언트 컴포넌트."
+    },
+    {
+      "id": "file:src/components/studio/GenreModal.tsx",
+      "type": "file",
+      "name": "GenreModal.tsx",
+      "filePath": "src/components/studio/GenreModal.tsx",
+      "summary": "장르 카테고리 데이터를 기반으로 사용자가 음악 장르를 선택하는 모달 UI 컴포넌트.",
+      "tags": ["component", "modal", "studio", "genre-selector", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/studio/MasteringClient.tsx",
+      "type": "file",
+      "name": "MasteringClient.tsx",
+      "filePath": "src/components/studio/MasteringClient.tsx",
+      "summary": "Web Audio API 기반 오디오 마스터링 클라이언트 컴포넌트로, audioUtils의 WAV 변환·트루피크 측정·왜곡 커브 등을 사용해 업로드 오디오를 처리하고 결과를 내보낸다.",
+      "tags": ["component", "studio", "audio-mastering", "web-audio-api", "dsp"],
+      "complexity": "complex",
+      "languageNotes": "브라우저 AudioContext와 신호 처리 유틸을 결합한 클라이언트 측 DSP 파이프라인."
+    },
+    {
+      "id": "file:src/components/studio/StudioClient.tsx",
+      "type": "file",
+      "name": "StudioClient.tsx",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "summary": "스튜디오 전체 작업 공간을 통합하는 최상위 클라이언트 컴포넌트로, 생성·커버·마스터링·장르 모달과 라이브러리 뷰를 묶고 LLM 프롬프트 빌드·폴백 파싱 등 생성 보조 로직을 제공한다.",
+      "tags": ["component", "studio", "orchestrator", "prompt-builder", "music-generation"],
+      "complexity": "complex",
+      "languageNotes": "3700줄 규모의 거대 컴포넌트로 다수의 헬퍼 함수(프롬프트 빌드, 폴백 생성, JSON 파싱)와 내부 LibraryView를 포함한다."
+    },
+    {
+      "id": "file:src/lib/audioUtils.ts",
+      "type": "file",
+      "name": "audioUtils.ts",
+      "filePath": "src/lib/audioUtils.ts",
+      "summary": "오디오 마스터링용 저수준 유틸리티 모음으로, AudioBuffer의 WAV 인코딩, 싱크 보간 기반 트루피크 추정, 디스토션/소프트클립 커브 생성 함수를 제공한다.",
+      "tags": ["utility", "audio", "dsp", "wav-encoding", "true-peak"],
+      "complexity": "moderate",
+      "languageNotes": "DataView로 WAV 바이너리를 직접 직렬화하고 싱크 보간으로 오버샘플링 트루피크를 계산하는 순수 DSP 코드."
+    },
+    {
+      "id": "file:src/lib/constants/genres.ts",
+      "type": "file",
+      "name": "genres.ts",
+      "filePath": "src/lib/constants/genres.ts",
+      "summary": "음악 장르 카테고리 정의와 한국어·일본어 번역 매핑을 담은 상수 모듈로, 장르 선택 UI 전반에서 참조된다.",
+      "tags": ["data-model", "constants", "genre", "i18n", "type-definition"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/studio/CoverClient.tsx:CoverClient",
+      "type": "function",
+      "name": "CoverClient",
+      "filePath": "src/components/studio/CoverClient.tsx",
+      "lineRange": [13, 548],
+      "summary": "커버 생성 화면의 메인 컴포넌트 함수로, 파일 업로드(handleFileUpload), 생성 요청(handleGenerate), 작업 폴링, 소스/커버 오디오 재생 핸들러를 포함한다.",
+      "tags": ["component", "cover-generation", "file-upload", "polling"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/GenerateClient.tsx:GenerateClient",
+      "type": "function",
+      "name": "GenerateClient",
+      "filePath": "src/components/studio/GenerateClient.tsx",
+      "lineRange": [61, 1170],
+      "summary": "음악 생성 메인 컴포넌트 함수로, 생성 요청(handleGenerate)·히스토리 갱신(refreshHistoryList)·트랙 선택·좋아요/공개/플레이리스트 토글 등 생성 워크플로 로직을 모두 보유한다.",
+      "tags": ["component", "music-generation", "polling", "playlist-management"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/GenerateClient.tsx:AudioDuration",
+      "type": "function",
+      "name": "AudioDuration",
+      "filePath": "src/components/studio/GenerateClient.tsx",
+      "lineRange": [21, 59],
+      "summary": "오디오 URL의 메타데이터를 로드해 mm:ss 형식의 재생 길이를 표시하는 보조 컴포넌트 함수.",
+      "tags": ["component", "audio", "ui", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/studio/GenreModal.tsx:GenreModal",
+      "type": "function",
+      "name": "GenreModal",
+      "filePath": "src/components/studio/GenreModal.tsx",
+      "lineRange": [16, 103],
+      "summary": "장르 카테고리 목록을 렌더링하고 선택 결과를 콜백으로 전달하는 모달 컴포넌트 함수.",
+      "tags": ["component", "modal", "genre-selector", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/studio/MasteringClient.tsx:MasteringClient",
+      "type": "function",
+      "name": "MasteringClient",
+      "filePath": "src/components/studio/MasteringClient.tsx",
+      "lineRange": [19, 787],
+      "summary": "Web Audio API로 업로드 오디오를 마스터링 처리하고 audioUtils의 WAV 변환·트루피크·커브 함수를 사용해 결과를 생성/내보내는 메인 컴포넌트 함수.",
+      "tags": ["component", "audio-mastering", "web-audio-api", "dsp"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:StudioClient",
+      "type": "function",
+      "name": "StudioClient",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [811, 2336],
+      "summary": "스튜디오 작업 공간의 최상위 컴포넌트 함수로, 생성/커버/마스터링/장르 모달과 라이브러리 뷰를 통합하고 전반적인 상태와 상호작용을 조율한다.",
+      "tags": ["component", "orchestrator", "studio", "music-generation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:LibraryView",
+      "type": "function",
+      "name": "LibraryView",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [2357, 3707],
+      "summary": "스튜디오 내부 라이브러리 뷰 컴포넌트 함수로, 생성된 트랙과 히스토리를 목록으로 표시하고 관리 동작을 제공한다.",
+      "tags": ["component", "library", "studio", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:buildInstructionPrompt",
+      "type": "function",
+      "name": "buildInstructionPrompt",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [651, 803],
+      "summary": "LLM에 전달할 음악 생성 지시 프롬프트를 사용자 입력과 옵션을 바탕으로 조립하는 헬퍼 함수.",
+      "tags": ["prompt-builder", "llm", "utility", "music-generation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:makeFallback",
+      "type": "function",
+      "name": "makeFallback",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [526, 596],
+      "summary": "LLM 응답 실패 시 사용할 폴백 생성 결과(스타일/가사 등)를 구성하는 헬퍼 함수.",
+      "tags": ["utility", "fallback", "music-generation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:getOptions",
+      "type": "function",
+      "name": "getOptions",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [375, 446],
+      "summary": "생성 폼에 사용할 옵션 집합을 구성해 반환하는 헬퍼 함수.",
+      "tags": ["utility", "options", "studio"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/studio/StudioClient.tsx:parseGeneratedText",
+      "type": "function",
+      "name": "parseGeneratedText",
+      "filePath": "src/components/studio/StudioClient.tsx",
+      "lineRange": [608, 637],
+      "summary": "LLM이 생성한 텍스트를 파싱해 스타일·가사 등 구조화된 필드로 분리하는 헬퍼 함수.",
+      "tags": ["utility", "parsing", "llm", "music-generation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/audioUtils.ts:audioBufferToWav",
+      "type": "function",
+      "name": "audioBufferToWav",
+      "filePath": "src/lib/audioUtils.ts",
+      "lineRange": [1, 49],
+      "summary": "AudioBuffer를 16비트 PCM WAV 바이너리(ArrayBuffer)로 직렬화하는 함수로, 헤더 작성과 채널 인터리빙을 수행한다.",
+      "tags": ["utility", "audio", "wav-encoding", "serialization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/audioUtils.ts:estimateTruePeak",
+      "type": "function",
+      "name": "estimateTruePeak",
+      "filePath": "src/lib/audioUtils.ts",
+      "lineRange": [78, 108],
+      "summary": "싱크 보간 기반 오버샘플링으로 오디오 신호의 트루피크 레벨을 추정하는 DSP 함수.",
+      "tags": ["utility", "audio", "dsp", "true-peak"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/audioUtils.ts:makeDistortionCurve",
+      "type": "function",
+      "name": "makeDistortionCurve",
+      "filePath": "src/lib/audioUtils.ts",
+      "lineRange": [136, 148],
+      "summary": "WaveShaperNode에 사용할 디스토션 전달 곡선을 생성하는 함수.",
+      "tags": ["utility", "audio", "dsp"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/audioUtils.ts:makeSoftClipCurve",
+      "type": "function",
+      "name": "makeSoftClipCurve",
+      "filePath": "src/lib/audioUtils.ts",
+      "lineRange": [150, 159],
+      "summary": "소프트 클리핑용 전달 곡선을 생성하는 함수로, 피크를 부드럽게 제한한다.",
+      "tags": ["utility", "audio", "dsp"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/(public)/cover/page.tsx",
+      "target": "file:src/components/studio/CoverClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/cover/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/studio/generate/page.tsx",
+      "target": "file:src/components/studio/GenerateClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/studio/generate/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/studio/page.tsx",
+      "target": "file:src/components/studio/StudioClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/studio/page.tsx",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/CoverClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/CoverClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "file:src/lib/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/GenreModal.tsx",
+      "target": "file:src/lib/constants/genres.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/MasteringClient.tsx",
+      "target": "file:src/lib/audioUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/components/studio/CoverClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/components/studio/GenerateClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/components/studio/GenreModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/components/studio/MasteringClient.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/lib/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/lib/constants/genres.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "file:src/stores/playerStore.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/(public)/cover/page.tsx",
+      "target": "function:src/components/studio/CoverClient.tsx:CoverClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/studio/generate/page.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:GenerateClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/(public)/studio/page.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:StudioClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/CoverClient.tsx",
+      "target": "function:src/components/studio/CoverClient.tsx:CoverClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/CoverClient.tsx",
+      "target": "function:src/components/studio/CoverClient.tsx:CoverClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:GenerateClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:GenerateClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:AudioDuration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/GenerateClient.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:AudioDuration",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/GenreModal.tsx",
+      "target": "function:src/components/studio/GenreModal.tsx:GenreModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/GenreModal.tsx",
+      "target": "function:src/components/studio/GenreModal.tsx:GenreModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/MasteringClient.tsx",
+      "target": "function:src/components/studio/MasteringClient.tsx:MasteringClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/MasteringClient.tsx",
+      "target": "function:src/components/studio/MasteringClient.tsx:MasteringClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:StudioClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:StudioClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:LibraryView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:buildInstructionPrompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:makeFallback",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:getOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/StudioClient.tsx:parseGeneratedText",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:audioBufferToWav",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:audioBufferToWav",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:estimateTruePeak",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:estimateTruePeak",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:makeDistortionCurve",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:makeDistortionCurve",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:makeSoftClipCurve",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib/audioUtils.ts",
+      "target": "function:src/lib/audioUtils.ts:makeSoftClipCurve",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/CoverClient.tsx:CoverClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/GenerateClient.tsx:GenerateClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/GenreModal.tsx:GenreModal",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/StudioClient.tsx",
+      "target": "function:src/components/studio/MasteringClient.tsx:MasteringClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/MasteringClient.tsx",
+      "target": "function:src/lib/audioUtils.ts:audioBufferToWav",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/studio/MasteringClient.tsx",
+      "target": "function:src/lib/audioUtils.ts:estimateTruePeak",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

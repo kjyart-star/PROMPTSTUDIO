@@ -42,6 +42,13 @@ export function PublicLayoutClient({
   const [profile, setProfile] = useState<{ display_name?: string, avatar_url?: string } | null>(null)
 
   const authDropdownRef = useRef<HTMLDivElement>(null)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
 
   const [activeTab, setActiveTab] = useState('')
   const [userCredits, setUserCredits] = useState<number>(0)
@@ -447,7 +454,12 @@ export function PublicLayoutClient({
                   placeholder={uiLanguage === 'KO' ? '어떤 음악을 듣고 싶으신가요?' : uiLanguage === 'JA' ? '何を聴きたいですか？' : 'What do you want to listen to?'}
                   className="w-full bg-surface-container-high border-none rounded-full pl-10 pr-[16px] py-[4px] text-[16px] leading-[24px] text-on-surface focus:ring-2 ring-primary/20 transition-all placeholder:text-on-surface-variant/50 focus:outline-none"
                   onChange={(e) => {
-                    router.push(`/search?q=${encodeURIComponent(e.target.value)}`)
+                    // Debounce so we don't trigger a full server render per keystroke.
+                    const value = e.target.value
+                    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+                    searchDebounceRef.current = setTimeout(() => {
+                      router.push(`/search?q=${encodeURIComponent(value)}`)
+                    }, 300)
                   }}
                 />
               </div>

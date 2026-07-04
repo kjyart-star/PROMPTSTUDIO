@@ -80,22 +80,26 @@ export function PersistentPlayer() {
     }
     
     setIsLiked(false);
+    let isCurrent = true;
+    const trackId = currentTrack.id;
     const checkLikedStatus = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || !isCurrent) return;
 
       const { data, error } = await supabase
         .from('song_history')
         .select('liked')
-        .eq('id', currentTrack.id)
+        .eq('id', trackId)
         .maybeSingle();
 
-      if (!error && data) {
+      // Ignore a stale response if the track changed while this was in flight.
+      if (isCurrent && !error && data) {
         setIsLiked(!!data.liked);
       }
     };
     checkLikedStatus();
+    return () => { isCurrent = false; };
   }, [currentTrack?.id]);
 
   // Listen to likeStateChanged custom events from other components
@@ -225,8 +229,9 @@ export function PersistentPlayer() {
       if (activeEl) {
         const tagName = activeEl.tagName.toLowerCase();
         if (
-          tagName === 'input' || 
-          tagName === 'textarea' || 
+          tagName === 'input' ||
+          tagName === 'textarea' ||
+          tagName === 'select' ||
           activeEl.hasAttribute('contenteditable') ||
           activeEl.getAttribute('contenteditable') === 'true'
         ) {

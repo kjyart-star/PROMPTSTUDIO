@@ -1,0 +1,43 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {"path": "src/app/(admin)/admin/music/page.tsx", "language": "typescript", "sizeLines": 188, "fileCategory": "code"},
+    {"path": "src/app/(public)/pricing/page.tsx", "language": "typescript", "sizeLines": 16, "fileCategory": "code"},
+    {"path": "src/app/(public)/settings/page.tsx", "language": "typescript", "sizeLines": 21, "fileCategory": "code"},
+    {"path": "src/app/api/admin/users/ban/route.ts", "language": "typescript", "sizeLines": 74, "fileCategory": "code"},
+    {"path": "src/app/api/admin/users/route.ts", "language": "typescript", "sizeLines": 113, "fileCategory": "code"},
+    {"path": "src/app/api/announcements/route.ts", "language": "typescript", "sizeLines": 108, "fileCategory": "code"},
+    {"path": "src/app/api/auth/callback/route.ts", "language": "typescript", "sizeLines": 24, "fileCategory": "code"},
+    {"path": "src/app/api/auth/login/route.ts", "language": "typescript", "sizeLines": 33, "fileCategory": "code"},
+    {"path": "src/app/api/auth/signout/route.ts", "language": "typescript", "sizeLines": 16, "fileCategory": "code"},
+    {"path": "src/app/api/channels/[id]/route.ts", "language": "typescript", "sizeLines": 52, "fileCategory": "code"},
+    {"path": "src/app/api/channels/route.ts", "language": "typescript", "sizeLines": 155, "fileCategory": "code"},
+    {"path": "src/app/api/charts/cron/route.ts", "language": "typescript", "sizeLines": 56, "fileCategory": "code"},
+    {"path": "src/app/api/credits/history/route.ts", "language": "typescript", "sizeLines": 33, "fileCategory": "code"},
+    {"path": "src/app/api/debug-download/route.ts", "language": "typescript", "sizeLines": 108, "fileCategory": "code"},
+    {"path": "src/app/api/generate-prompt/route.ts", "language": "typescript", "sizeLines": 65, "fileCategory": "code"},
+    {"path": "src/app/api/likes/route.ts", "language": "typescript", "sizeLines": 111, "fileCategory": "code"},
+    {"path": "src/app/api/music/generate/route.ts", "language": "typescript", "sizeLines": 19, "fileCategory": "code"},
+    {"path": "src/app/api/play/route.ts", "language": "typescript", "sizeLines": 79, "fileCategory": "code"}
+  ],
+  "batchImportData": {
+    "src/app/(admin)/admin/music/page.tsx": ["src/lib/supabase/server.ts"],
+    "src/app/(public)/pricing/page.tsx": ["src/components/subscription/PricingClient.tsx", "src/lib/supabase/server.ts"],
+    "src/app/(public)/settings/page.tsx": ["src/components/settings/SettingsClient.tsx", "src/lib/supabase/server.ts"],
+    "src/app/api/admin/users/ban/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/admin/users/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/announcements/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/auth/callback/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/auth/login/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/auth/signout/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/channels/[id]/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/channels/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/charts/cron/route.ts": ["src/lib/charts/aggregate.ts", "src/lib/supabase/server.ts"],
+    "src/app/api/credits/history/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/debug-download/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/generate-prompt/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/likes/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/music/generate/route.ts": ["src/app/api/suno/generate/route.ts"],
+    "src/app/api/play/route.ts": ["src/lib/supabase/server.ts"]
+  }
+}

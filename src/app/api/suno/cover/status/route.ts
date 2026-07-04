@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 const API_KEY = process.env.APIPASS_API_KEY
 
 export async function GET(request: Request) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     if (!API_KEY) {
       return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
     }

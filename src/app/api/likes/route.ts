@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // 1. song_history에서 해당 곡 조회
     const { data: song, error: fetchErr } = await supabase
       .from('song_history')
-      .select('*')
+      .select('form, liked')
       .eq('id', track_id)
       .maybeSingle()
 

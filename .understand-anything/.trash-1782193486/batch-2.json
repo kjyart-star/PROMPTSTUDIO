@@ -1,0 +1,271 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/(admin)/admin/music/credits/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/credits/page.tsx",
+      "summary": "관리자 음악 콘솔의 크레딧 관리 페이지로, Supabase 클라이언트를 통해 사용자 크레딧 내역을 조회하고 조정하는 클라이언트 컴포넌트를 렌더링한다.",
+      "tags": ["admin", "page", "credits", "supabase"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/guides/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/guides/page.tsx",
+      "summary": "관리자 가이드(시스템 프롬프트/도움말) 관리 페이지로, Supabase 스토리지 경로 헬퍼와 함께 가이드 CRUD UI를 제공한다.",
+      "tags": ["admin", "page", "guides", "supabase", "storage"],
+      "complexity": "complex",
+      "languageNotes": "getStoragePathFromUrl 헬퍼로 Supabase Storage 공개 URL에서 객체 경로를 역추출한다."
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/(admin)/admin/music/layout.tsx",
+      "summary": "관리자 음악 섹션의 공용 레이아웃으로, AdminAuthGuard로 접근 권한을 보호하고 PersistentPlayer를 마운트하며 서버 측 Supabase 세션을 초기화한다.",
+      "tags": ["admin", "layout", "auth-guard", "server-component"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/notices/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/notices/page.tsx",
+      "summary": "관리자 공지사항 관리 페이지로, Supabase를 통해 공지 항목을 생성·수정·삭제하는 클라이언트 UI를 제공한다.",
+      "tags": ["admin", "page", "announcements", "supabase"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/tracks/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/tracks/page.tsx",
+      "summary": "관리자 트랙 관리 페이지로, 트랙 목록을 관리하고 playerStore를 통해 미리듣기 재생을 연동하는 클라이언트 컴포넌트다.",
+      "tags": ["admin", "page", "tracks", "player-integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/app/(admin)/admin/music/ugc/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(admin)/admin/music/ugc/page.tsx",
+      "summary": "사용자 생성 콘텐츠(UGC) 관리 진입 서버 페이지로, 서버에서 데이터를 준비해 UgcManagementClient에 전달한다.",
+      "tags": ["admin", "page", "ugc", "server-component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/(public)/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/(public)/layout.tsx",
+      "summary": "공개 영역의 루트 레이아웃으로, 서버에서 Supabase 사용자 세션을 조회한 뒤 PublicLayoutClient에 전달해 헤더·플레이어·네비게이션을 구성한다.",
+      "tags": ["layout", "public", "server-component", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/(public)/profile/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/(public)/profile/page.tsx",
+      "summary": "공개 프로필 진입 서버 페이지로, 서버에서 사용자 세션과 초기 프로필 데이터를 로드해 ProfileClient에 주입한다.",
+      "tags": ["page", "profile", "server-component", "supabase"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/login/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/login/page.tsx",
+      "summary": "로그인 페이지로, Supabase 인증을 통해 이메일/소셜 로그인 흐름을 처리하며 Suspense 경계 안에서 LoginContent를 렌더링한다.",
+      "tags": ["page", "auth", "login", "supabase"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/admin/AdminAuthGuard.tsx",
+      "type": "file",
+      "name": "AdminAuthGuard.tsx",
+      "filePath": "src/components/admin/AdminAuthGuard.tsx",
+      "summary": "관리자 권한을 검사해 비인가 사용자를 차단·리다이렉트하는 클라이언트 가드 컴포넌트로, 관리자 레이아웃의 자식을 보호한다.",
+      "tags": ["admin", "auth-guard", "middleware", "component"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/admin/UgcManagementClient.tsx",
+      "type": "file",
+      "name": "UgcManagementClient.tsx",
+      "filePath": "src/components/admin/UgcManagementClient.tsx",
+      "summary": "UGC 관리 화면의 클라이언트 컴포넌트로, 사용자 게시 트랙·플레이리스트를 검토·승인·삭제하고 playerStore로 미리듣기를 연동한다.",
+      "tags": ["admin", "ugc", "component", "player-integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/common/ConfirmDialog.tsx",
+      "type": "file",
+      "name": "ConfirmDialog.tsx",
+      "filePath": "src/components/common/ConfirmDialog.tsx",
+      "summary": "확인/취소 액션을 받는 재사용 가능한 모달 확인 대화상자 컴포넌트로, 삭제 등 위험 작업 전 사용자 확인을 받는다.",
+      "tags": ["component", "dialog", "ui", "reusable"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/layout/Header.tsx",
+      "type": "file",
+      "name": "Header.tsx",
+      "filePath": "src/components/layout/Header.tsx",
+      "summary": "전역 헤더 컴포넌트로, 사용자/관리자 상태에 따른 네비게이션, 공지 배너, 인증 메뉴를 렌더링하며 Supabase 클라이언트로 세션을 다룬다.",
+      "tags": ["component", "header", "navigation", "layout"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/layout/PublicLayoutClient.tsx",
+      "type": "file",
+      "name": "PublicLayoutClient.tsx",
+      "summary": "공개 레이아웃의 클라이언트 셸로, 헤더·NowPlayingPanel·PersistentPlayer를 조합하고 playerStore와 Supabase 세션을 연동해 전체 재생 UI 프레임을 구성한다.",
+      "filePath": "src/components/layout/PublicLayoutClient.tsx",
+      "tags": ["component", "layout", "player-integration", "shell"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/player/MiniPlayerPip.tsx",
+      "type": "file",
+      "name": "MiniPlayerPip.tsx",
+      "filePath": "src/components/player/MiniPlayerPip.tsx",
+      "summary": "Picture-in-Picture 미니 플레이어로, Web Audio 주파수 분석 기반 시각화(ScalesMixer, Disc), 진행바, 전환 효과음을 갖춘 떠 있는 재생 위젯이다.",
+      "tags": ["component", "player", "visualization", "web-audio", "pip"],
+      "complexity": "complex",
+      "languageNotes": "useRafLoop/useTransitionSound 등 커스텀 훅과 requestAnimationFrame 기반 오디오 비주얼라이저를 다수 포함한다."
+    },
+    {
+      "id": "file:src/components/player/NowPlayingPanel.tsx",
+      "type": "file",
+      "name": "NowPlayingPanel.tsx",
+      "filePath": "src/components/player/NowPlayingPanel.tsx",
+      "summary": "현재 재생 중 트랙의 상세 패널로, 가사·앨범아트·큐 관리·플레이리스트 저장 등을 제공하며 playerStore 상태와 깊게 연동된다.",
+      "tags": ["component", "player", "now-playing", "player-integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/player/PersistentPlayer.tsx",
+      "type": "file",
+      "name": "PersistentPlayer.tsx",
+      "filePath": "src/components/player/PersistentPlayer.tsx",
+      "summary": "화면 하단에 고정되는 영구 오디오 플레이어로, HTMLAudioElement 재생 제어와 진행/볼륨/큐를 playerStore와 동기화하고 MiniPlayerPip를 띄운다.",
+      "tags": ["component", "player", "audio", "player-integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/profile/ProfileClient.tsx",
+      "type": "file",
+      "name": "ProfileClient.tsx",
+      "filePath": "src/components/profile/ProfileClient.tsx",
+      "summary": "사용자 프로필 화면의 대형 클라이언트 컴포넌트로, 라이브러리·플레이리스트 폴더 트리, 좋아요한 트랙, 생성 이력, 설정 등 프로필 전반의 상호작용을 담당한다.",
+      "tags": ["component", "profile", "library", "player-integration"],
+      "complexity": "complex",
+      "languageNotes": "5400여 줄의 초대형 컴포넌트로, 재귀적 FolderTreeNode로 중첩 플레이리스트 폴더 트리를 렌더링한다."
+    },
+    {
+      "id": "file:src/lib/supabase/client.ts",
+      "type": "file",
+      "name": "client.ts",
+      "filePath": "src/lib/supabase/client.ts",
+      "summary": "브라우저 측 Supabase 클라이언트를 생성하는 팩토리로, 모든 클라이언트 컴포넌트가 인증·데이터 접근에 공통으로 사용한다.",
+      "tags": ["supabase", "factory", "client", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/stores/playerStore.ts",
+      "type": "file",
+      "name": "playerStore.ts",
+      "filePath": "src/stores/playerStore.ts",
+      "summary": "Zustand 기반 전역 재생 상태 스토어로, 현재 트랙·큐·재생/일시정지·진행·볼륨·셔플/반복 상태와 액션을 관리해 모든 플레이어 UI가 공유한다.",
+      "tags": ["store", "zustand", "state-management", "player"],
+      "complexity": "moderate",
+      "languageNotes": "create<PlayerState>()로 정의된 Zustand 스토어이며 오디오 분석기(getFrequencyData) 주입 지점을 포함한다."
+    },
+    {
+      "id": "function:src/app/(admin)/admin/music/guides/page.tsx:getStoragePathFromUrl",
+      "type": "function",
+      "name": "getStoragePathFromUrl",
+      "filePath": "src/app/(admin)/admin/music/guides/page.tsx",
+      "lineRange": [17, 25],
+      "summary": "Supabase Storage 공개 URL에서 버킷 내부 객체 경로를 추출하는 헬퍼로, 가이드 자산 삭제 시 사용된다.",
+      "tags": ["utility", "storage", "url-parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/player/MiniPlayerPip.tsx:ScalesMixer",
+      "type": "function",
+      "name": "ScalesMixer",
+      "filePath": "src/components/player/MiniPlayerPip.tsx",
+      "lineRange": [110, 212],
+      "summary": "주파수 데이터를 받아 캔버스에 막대/원형 스펙트럼 애니메이션을 그리는 오디오 비주얼라이저 서브컴포넌트다.",
+      "tags": ["visualization", "web-audio", "canvas", "component"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/player/MiniPlayerPip.tsx:Disc",
+      "type": "function",
+      "name": "Disc",
+      "filePath": "src/components/player/MiniPlayerPip.tsx",
+      "lineRange": [225, 317],
+      "summary": "앨범 커버를 회전 디스크 형태로 표현하고 확대·방향 전환 인터랙션을 처리하는 서브컴포넌트다.",
+      "tags": ["component", "player", "animation", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/components/profile/ProfileClient.tsx:FolderTreeNode",
+      "type": "function",
+      "name": "FolderTreeNode",
+      "filePath": "src/components/profile/ProfileClient.tsx",
+      "lineRange": [239, 378],
+      "summary": "중첩 플레이리스트 폴더를 재귀적으로 렌더링하는 트리 노드 컴포넌트로, 확장/이름변경/하위폴더 생성/트랙 이동 등을 처리한다.",
+      "tags": ["component", "tree", "recursive", "playlist"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/app/(admin)/admin/music/credits/page.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/guides/page.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/guides/page.tsx", "target": "function:src/app/(admin)/admin/music/guides/page.tsx:getStoragePathFromUrl", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/app/(admin)/admin/music/layout.tsx", "target": "file:src/components/admin/AdminAuthGuard.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/layout.tsx", "target": "file:src/components/player/PersistentPlayer.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/layout.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/notices/page.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/tracks/page.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/ugc/page.tsx", "target": "file:src/components/admin/UgcManagementClient.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(admin)/admin/music/ugc/page.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/layout.tsx", "target": "file:src/components/layout/PublicLayoutClient.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/layout.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/profile/page.tsx", "target": "file:src/components/profile/ProfileClient.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/(public)/profile/page.tsx", "target": "file:src/lib/supabase/server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/app/login/page.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/admin/UgcManagementClient.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/admin/UgcManagementClient.tsx", "target": "file:src/lib/utils.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/admin/UgcManagementClient.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/layout/Header.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/layout/PublicLayoutClient.tsx", "target": "file:src/components/player/NowPlayingPanel.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/layout/PublicLayoutClient.tsx", "target": "file:src/components/player/PersistentPlayer.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/layout/PublicLayoutClient.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/layout/PublicLayoutClient.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/MiniPlayerPip.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/MiniPlayerPip.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/MiniPlayerPip.tsx", "target": "function:src/components/player/MiniPlayerPip.tsx:ScalesMixer", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/components/player/MiniPlayerPip.tsx", "target": "function:src/components/player/MiniPlayerPip.tsx:Disc", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/components/player/NowPlayingPanel.tsx", "target": "file:src/components/common/ConfirmDialog.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/NowPlayingPanel.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/NowPlayingPanel.tsx", "target": "file:src/lib/utils.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/NowPlayingPanel.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/NowPlayingPanel.tsx", "target": "file:src/types/music.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/PersistentPlayer.tsx", "target": "file:src/components/player/MiniPlayerPip.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/PersistentPlayer.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/player/PersistentPlayer.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/profile/ProfileClient.tsx", "target": "file:src/lib/constants.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/profile/ProfileClient.tsx", "target": "file:src/lib/supabase/client.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/profile/ProfileClient.tsx", "target": "file:src/lib/utils.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/profile/ProfileClient.tsx", "target": "file:src/stores/playerStore.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/components/profile/ProfileClient.tsx", "target": "function:src/components/profile/ProfileClient.tsx:FolderTreeNode", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/stores/playerStore.ts", "target": "file:src/types/music.ts", "type": "imports", "direction": "forward", "weight": 0.7}
+  ]
+}

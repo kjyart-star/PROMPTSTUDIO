@@ -43,8 +43,13 @@ export async function GET(request: Request) {
     }
 
     // 정리 완료 후 스튜디오 보관함으로 리다이렉트
-    const redirectUrl = searchParams.get('redirect') || '/studio?tab=library'
-    return NextResponse.redirect(new URL(redirectUrl, request.url))
+    // Only allow same-origin relative paths to prevent open-redirect abuse.
+    const requested = searchParams.get('redirect') || '/studio?tab=library'
+    const safeRedirect =
+      requested.startsWith('/') && !requested.startsWith('//')
+        ? requested
+        : '/studio?tab=library'
+    return NextResponse.redirect(new URL(safeRedirect, request.url))
   } catch (err: any) {
     return new NextResponse('오류 발생: ' + err.message, { status: 500 })
   }

@@ -810,7 +810,9 @@ interface StudioClientProps {
 
 export function StudioClient({ user }: StudioClientProps) {
   const [uiLanguage, setUiLanguage] = useState('KO')
-  const t = TRANSLATIONS[uiLanguage as 'KO' | 'EN']
+  // TRANSLATIONS only defines KO/EN; fall back to EN for any other language
+  // (e.g. 'JA') so the page never crashes on an undefined translation table.
+  const t = TRANSLATIONS[uiLanguage as 'KO' | 'EN'] ?? TRANSLATIONS.EN
 
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
@@ -818,14 +820,14 @@ export function StudioClient({ user }: StudioClientProps) {
   const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering'>('studio')
 
   useEffect(() => {
-    if (tabParam === 'library') {
-      setCurrentTab('library')
-    } else if (tabParam === 'studio') {
-      setCurrentTab('studio')
-    } else if (tabParam === 'cover') {
-      setCurrentTab('cover')
-    } else if (tabParam === 'suno') {
-      setCurrentTab('suno')
+    if (
+      tabParam === 'library' ||
+      tabParam === 'studio' ||
+      tabParam === 'cover' ||
+      tabParam === 'suno' ||
+      tabParam === 'mastering'
+    ) {
+      setCurrentTab(tabParam)
     }
   }, [tabParam])
 

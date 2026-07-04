@@ -471,7 +471,7 @@ export function GenerateClient({
         instrumentalOnly: track.form.instrumentalOnly || false,
         prompt: track.lyrics || track.form.prompt || '',
         style: track.prompt || track.form.style || '',
-        title: track.title?.replace(/\\s\\(v\\d+\\)$/, '') || track.form.title || '',
+        title: track.title?.replace(/\s\(v\d+\)$/, '') || track.form.title || '',
         vocalGender: track.form.vocalGender || 'Female',
         negativeTags: track.form.negativePrompt || track.form.negativeTags || '',
         styleWeight: track.form.styleWeight !== undefined ? track.form.styleWeight : 0.5,

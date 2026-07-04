@@ -1,0 +1,43 @@
+{
+  "projectRoot": "/Users/jin/Documents/자동화 에이전트개발/프롬프트작성기/suno-prompt",
+  "batchFiles": [
+    {"path": "src/app/api/playlists/save-track/route.ts", "language": "typescript", "sizeLines": 65, "fileCategory": "code"},
+    {"path": "src/app/api/profile/active-guides/route.ts", "language": "typescript", "sizeLines": 71, "fileCategory": "code"},
+    {"path": "src/app/api/profile/route.ts", "language": "typescript", "sizeLines": 96, "fileCategory": "code"},
+    {"path": "src/app/api/seed-samples/route.ts", "language": "typescript", "sizeLines": 74, "fileCategory": "code"},
+    {"path": "src/app/api/song-history/[id]/route.ts", "language": "typescript", "sizeLines": 76, "fileCategory": "code"},
+    {"path": "src/app/api/song-history/route.ts", "language": "typescript", "sizeLines": 221, "fileCategory": "code"},
+    {"path": "src/app/api/suno/cover/generate/route.ts", "language": "typescript", "sizeLines": 84, "fileCategory": "code"},
+    {"path": "src/app/api/suno/generate/route.ts", "language": "typescript", "sizeLines": 116, "fileCategory": "code"},
+    {"path": "src/app/api/suno/publish/route.ts", "language": "typescript", "sizeLines": 38, "fileCategory": "code"},
+    {"path": "src/app/api/suno/status/route.ts", "language": "typescript", "sizeLines": 194, "fileCategory": "code"},
+    {"path": "src/app/api/system-guides/route.ts", "language": "typescript", "sizeLines": 199, "fileCategory": "code"},
+    {"path": "src/app/api/temp-cleanup/route.ts", "language": "typescript", "sizeLines": 51, "fileCategory": "code"},
+    {"path": "src/app/api/upload/route.ts", "language": "typescript", "sizeLines": 56, "fileCategory": "code"},
+    {"path": "src/app/api/user-guides/route.ts", "language": "typescript", "sizeLines": 104, "fileCategory": "code"},
+    {"path": "src/components/settings/SettingsClient.tsx", "language": "typescript", "sizeLines": 798, "fileCategory": "code"},
+    {"path": "src/components/subscription/PricingClient.tsx", "language": "typescript", "sizeLines": 526, "fileCategory": "code"},
+    {"path": "src/lib/charts/aggregate.ts", "language": "typescript", "sizeLines": 142, "fileCategory": "code"},
+    {"path": "src/lib/supabase/server.ts", "language": "typescript", "sizeLines": 29, "fileCategory": "code"}
+  ],
+  "batchImportData": {
+    "src/app/api/playlists/save-track/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/profile/active-guides/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/profile/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/seed-samples/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/song-history/[id]/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/song-history/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/suno/cover/generate/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/suno/generate/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/suno/publish/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/suno/status/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/system-guides/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/temp-cleanup/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/upload/route.ts": ["src/lib/supabase/server.ts"],
+    "src/app/api/user-guides/route.ts": ["src/lib/supabase/server.ts"],
+    "src/components/settings/SettingsClient.tsx": ["src/lib/supabase/client.ts"],
+    "src/components/subscription/PricingClient.tsx": [],
+    "src/lib/charts/aggregate.ts": ["src/lib/supabase/server.ts"],
+    "src/lib/supabase/server.ts": []
+  }
+}

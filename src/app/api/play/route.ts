@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     try {
       const { data: song } = await supabase
         .from('song_history')
-        .select('*')
+        .select('form')
         .eq('id', track_id)
         .maybeSingle()
 
