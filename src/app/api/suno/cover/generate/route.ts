@@ -79,12 +79,36 @@ export async function POST(request: Request) {
 
     if (response.ok && data.code === 200) {
        // 크레딧 10 차감 및 히스토리 기록
-       await supabase.rpc('record_credit_transaction', {
+       const { error: rpcError } = await supabase.rpc('record_credit_transaction', {
          p_user_id: user.id,
          p_amount: -10,
          p_type: 'use',
          p_description: '커버 생성 (-10)'
        })
+
+       if (rpcError) {
+         console.warn('record_credit_transaction RPC failed, falling back to direct credit update:', rpcError.message)
+         // Fallback: Direct credit update using service role client to bypass RLS safely
+         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+         if (serviceRoleKey && supabaseUrl) {
+           const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+           const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
+           const { data: pData } = await adminSupabase
+             .from('profiles')
+             .select('credits')
+             .eq('id', user.id)
+             .single()
+           if (pData) {
+             const currentCredits = pData.credits !== null && pData.credits !== undefined ? pData.credits : 120
+             const newCredits = Math.max(0, currentCredits - 10)
+             await adminSupabase
+               .from('profiles')
+               .update({ credits: newCredits })
+               .eq('id', user.id)
+           }
+         }
+       }
 
        // Typically we would save this to Supabase song_history here
        // but for simplicity, we just return the taskId to the client
