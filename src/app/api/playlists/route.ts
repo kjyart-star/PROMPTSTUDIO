@@ -58,10 +58,28 @@ export async function GET(request: Request) {
     // fetchAll이 true이면 profiles 테이블에서 사용자 목록을 추가로 가져와 인메모리에서 결합
     if (fetchAll && filteredData.length > 0) {
       const userIds = Array.from(new Set(filteredData.map(item => item.user_id)))
-      const { data: profiles, error: profilesErr } = await supabase
+      let profiles: any[] | null = null
+      let profilesErr: any = null
+
+      const res = await supabase
         .from('profiles')
         .select('id, display_name, is_banned')
         .in('id', userIds)
+
+      if (res.error && res.error.code === '42703') {
+        const fallback = await supabase
+          .from('profiles')
+          .select('id, display_name')
+          .in('id', userIds)
+        if (!fallback.error && fallback.data) {
+          profiles = fallback.data.map(p => ({ ...p, is_banned: false }))
+        } else {
+          profilesErr = fallback.error
+        }
+      } else {
+        profiles = res.data
+        profilesErr = res.error
+      }
       
       if (!profilesErr && profiles) {
         const profileMap = new Map(profiles.map((p: any) => [p.id, p]))

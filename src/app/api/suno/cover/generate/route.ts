@@ -17,11 +17,26 @@ export async function POST(request: Request) {
     }
 
     // 차단 사용자 및 크레딧 검증
-    const { data: profile } = await supabase
+    let profile: { is_banned?: boolean; credits?: number } | null = null
+    const { data: fetchProfile, error: profileErr } = await supabase
       .from('profiles')
       .select('is_banned, credits')
       .eq('id', user.id)
       .single()
+
+    if (profileErr && profileErr.code === '42703') {
+      // is_banned 컬럼이 없을 경우 credits만 조회하여 대체
+      const { data: fallbackProfile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single()
+      if (fallbackProfile) {
+        profile = { is_banned: false, credits: fallbackProfile.credits }
+      }
+    } else {
+      profile = fetchProfile
+    }
 
     if (profile?.is_banned) {
       return NextResponse.json({ error: 'Banned account. Please contact support.' }, { status: 403 })

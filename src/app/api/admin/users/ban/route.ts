@@ -46,7 +46,10 @@ export async function PUT(request: Request) {
 
     if (profileError) {
       console.error('Error updating user ban status:', profileError)
-      return NextResponse.json({ error: profileError.message }, { status: 500 })
+      const errorMsg = profileError.code === '42703'
+        ? '데이터베이스에 is_banned 컬럼이 존재하지 않아 정지 처리를 완료할 수 없습니다.'
+        : profileError.message;
+      return NextResponse.json({ error: errorMsg }, { status: 500 })
     }
 
     // 2. 사용자를 차단(is_banned = true)하는 경우, 이 사용자가 올린 모든 음원 및 앨범 퍼블리싱 해제(비공개) 처리

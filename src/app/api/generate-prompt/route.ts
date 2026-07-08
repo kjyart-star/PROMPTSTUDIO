@@ -11,11 +11,19 @@ export async function POST(request: Request) {
     }
 
     // 차단 사용자 검증
-    const { data: profile } = await supabase
+    let profile: { is_banned?: boolean } | null = null
+    const { data: fetchProfile, error: profileErr } = await supabase
       .from('profiles')
       .select('is_banned')
       .eq('id', user.id)
       .single()
+
+    if (profileErr && profileErr.code === '42703') {
+      // is_banned 컬럼이 없을 경우 정상(false)으로 간주
+      profile = { is_banned: false }
+    } else {
+      profile = fetchProfile
+    }
 
     if (profile?.is_banned) {
       return NextResponse.json({ error: 'Banned account. Please contact support.' }, { status: 403 })
