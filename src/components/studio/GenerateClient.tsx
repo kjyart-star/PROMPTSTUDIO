@@ -563,7 +563,7 @@ export function GenerateClient({
   }
 
   const completedSongs = historyList
-    .filter((item: any) => item.status === 'completed' && item.audio_url)
+    .filter((item: any) => item.status === 'completed' && item.audio_url && item.form?.source !== 'upload')
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
   const topCompletedSongs = completedSongs.slice(0, 30)
 

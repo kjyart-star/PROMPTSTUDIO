@@ -999,7 +999,7 @@ export function StudioClient({ user }: StudioClientProps) {
       const historyRes = await fetch('/api/song-history')
       if (historyRes.ok) {
         const rawData = await historyRes.json() || []
-        const completedData = rawData.filter((item: any) => item.audio_url || item.file_url)
+        const completedData = rawData.filter((item: any) => (item.audio_url || item.file_url) && item.form?.source !== 'upload')
         completedData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
         setHistory(completedData)
       }
