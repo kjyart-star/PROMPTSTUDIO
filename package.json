@@ -11,6 +11,8 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
+    "ffmpeg-static": "^5.3.0",
+    "lamejs": "^1.2.1",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "node-id3": "^0.2.9",

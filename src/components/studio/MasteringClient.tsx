@@ -637,16 +637,52 @@ export function MasteringClient() {
       const result = await processTrackAudio(tracks[i])
       setTracks(prev => prev.map(t => t.id === tracks[i].id ? result : t))
     }
-
     setIsProcessingBatch(false)
   }
 
+  const [exportFormat, setExportFormat] = useState<'wav' | 'mp3'>('mp3')
+  const [isConvertingMp3, setIsConvertingMp3] = useState<Record<string, boolean>>({})
+
+  const downloadTrack = async (track: Track, format: 'wav' | 'mp3') => {
+    if (!track.processedUrl && !track.processedBlob) return
+    const baseName = track.name.replace(/\.[^/.]+$/, '')
+
+    if (format === 'wav') {
+      const a = document.createElement('a')
+      a.href = track.processedUrl!
+      a.download = `BEATZ_Mastered_${baseName}.wav`
+      a.click()
+    } else {
+      setIsConvertingMp3(prev => ({ ...prev, [track.id]: true }))
+      try {
+        const res = await fetch('/api/convert-to-mp3', {
+          method: 'POST',
+          headers: { 'Content-Type': 'audio/wav' },
+          body: track.processedBlob,
+        })
+        if (!res.ok) throw new Error('MP3 conversion failed')
+        const mp3Blob = await res.blob()
+        const mp3Url = URL.createObjectURL(mp3Blob)
+        const a = document.createElement('a')
+        a.href = mp3Url
+        a.download = `BEATZ_Mastered_${baseName}.mp3`
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(mp3Url), 10000)
+      } catch (err) {
+        console.error(err)
+        alert('MP3 변환 실패. WAV 파일로 다운로드합니다.')
+        const a = document.createElement('a')
+        a.href = track.processedUrl!
+        a.download = `BEATZ_Mastered_${baseName}.wav`
+        a.click()
+      } finally {
+        setIsConvertingMp3(prev => ({ ...prev, [track.id]: false }))
+      }
+    }
+  }
+
   const downloadProcessedWav = (track: Track) => {
-    if (!track.processedUrl) return
-    const a = document.createElement('a')
-    a.href = track.processedUrl
-    a.download = `BEATZ_Mastered_${track.name.replace(/\.[^/.]+$/, '')}.wav`
-    a.click()
+    downloadTrack(track, exportFormat)
   }
 
   const formatTime = (seconds: number) => {
@@ -793,15 +829,31 @@ export function MasteringClient() {
                       <span className="text-xs font-bold truncate">{t.name}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {t.status === 'done' && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); downloadProcessedWav(t); }}
-                          className="p-1.5 rounded-lg bg-[#e3fe06] hover:bg-[#cbe304] text-black transition-colors"
-                          title="WAV 다운로드"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
+                        <>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); downloadTrack(t, 'mp3'); }}
+                            disabled={isConvertingMp3[t.id]}
+                            className="px-2 py-1 rounded-md bg-[#e3fe06] hover:bg-[#cbe304] text-black font-extrabold text-[10px] transition-all flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
+                            title="MP3 (320kbps) 다운로드"
+                          >
+                            {isConvertingMp3[t.id] ? (
+                              <RotateCcw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Download className="w-3 h-3" />
+                            )}
+                            <span>MP3</span>
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); downloadTrack(t, 'wav'); }}
+                            className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-extrabold text-[10px] transition-all flex items-center gap-1 border border-white/10 cursor-pointer"
+                            title="WAV (48kHz 무손실) 다운로드"
+                          >
+                            <Download className="w-3 h-3 text-[#e3fe06]" />
+                            <span>WAV</span>
+                          </button>
+                        </>
                       )}
                       <button 
                         onClick={(e) => { e.stopPropagation(); removeTrack(t.id); }}
@@ -943,24 +995,48 @@ export function MasteringClient() {
             </div>
           </div>
 
-          {/* Master Download Action */}
-          <button 
-            onClick={processAllBatch}
-            disabled={isProcessingBatch || tracks.length === 0}
-            className="w-full py-4 bg-[#e3fe06] hover:bg-[#cbe304] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(227,254,6,0.3)] hover:shadow-[0_0_30px_rgba(227,254,6,0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
-          >
-            {isProcessingBatch ? (
-              <>
-                <RotateCcw className="w-5 h-5 animate-spin" />
-                <span>오프라인 렌더링 중...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5" />
-                <span>마스터링 최종본 추출 ({tracks.length}개 곡 WAV)</span>
-              </>
-            )}
-          </button>
+          {/* Master Format Selector & Download Action */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between bg-black/60 p-2.5 rounded-2xl border border-white/10">
+              <span className="text-xs font-bold text-zinc-400 pl-2">💾 추출 포맷 선택</span>
+              <div className="flex items-center bg-zinc-900 rounded-xl p-1 border border-white/10">
+                <button 
+                  onClick={() => setExportFormat('mp3')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    exportFormat === 'mp3' ? 'bg-[#e3fe06] text-black shadow-md' : 'text-zinc-500 hover:text-white'
+                  }`}
+                >
+                  MP3 (320kbps) 🎵
+                </button>
+                <button 
+                  onClick={() => setExportFormat('wav')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    exportFormat === 'wav' ? 'bg-[#e3fe06] text-black shadow-md' : 'text-zinc-500 hover:text-white'
+                  }`}
+                >
+                  WAV (무손실 48kHz) 💿
+                </button>
+              </div>
+            </div>
+
+            <button 
+              onClick={processAllBatch}
+              disabled={isProcessingBatch || tracks.length === 0}
+              className="w-full py-4 bg-[#e3fe06] hover:bg-[#cbe304] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(227,254,6,0.3)] hover:shadow-[0_0_30px_rgba(227,254,6,0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
+            >
+              {isProcessingBatch ? (
+                <>
+                  <RotateCcw className="w-5 h-5 animate-spin" />
+                  <span>오프라인 렌더링 중...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  <span>마스터링 최종본 추출 ({tracks.length}개 곡 {exportFormat.toUpperCase()})</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
