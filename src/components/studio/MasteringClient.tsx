@@ -664,6 +664,8 @@ export function MasteringClient() {
       {/* Hidden Audio Element */}
       <audio 
         ref={playerRef} 
+        onPlay={() => { setIsPlaying(true); startLufsMetering(); }}
+        onPause={() => { setIsPlaying(false); stopLufsMetering(); }}
         onTimeUpdate={() => setPlaybackTime(playerRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(playerRef.current?.duration || 0)}
         onEnded={() => { setIsPlaying(false); stopLufsMetering(); }}
@@ -902,12 +904,15 @@ export function MasteringClient() {
                   <span className="absolute left-[100%] -translate-x-full text-red-500">0</span>
                 </div>
 
-                <div className="w-full h-4 bg-black rounded-lg relative overflow-hidden border border-white/10 p-0.5">
+                <div className="w-full h-4 bg-[#1a1a1a] rounded relative overflow-hidden border border-white/10 shadow-inner">
                   <div 
-                    className="h-full rounded transition-all duration-75 ease-out bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500"
-                    style={{ width: `${visualLufsPercent}%` }}
+                    className="h-full rounded-l transition-all duration-75 ease-out"
+                    style={{ 
+                      width: `${visualLufsPercent}%`,
+                      background: 'linear-gradient(90deg, #4caf50 0%, #4caf50 60%, #ffeb3b 68%, #ff9800 83%, #f44336 90%, #f44336 100%)' 
+                    }}
                   />
-                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-[#e3fe06] z-10 shadow-[0_0_8px_#e3fe06]" title="Target -14 LUFS" />
+                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-[#e3fe06] z-10 shadow-[0_0_8px_#e3fe06]" title="Target -14 LUFS / 0 LU" />
                 </div>
 
                 <div className="relative w-full h-3 text-[9px] text-zinc-500 font-mono select-none">
