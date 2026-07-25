@@ -10,8 +10,19 @@ export async function POST(request: Request) {
   let outputTmpPath = ''
 
   try {
-    const arrayBuffer = await request.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    let buffer: Buffer | null = null
+    const contentType = request.headers.get('content-type') || ''
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      const file = formData.get('file') as File | null
+      if (file) {
+        buffer = Buffer.from(await file.arrayBuffer())
+      }
+    } else {
+      const arrayBuffer = await request.arrayBuffer()
+      buffer = Buffer.from(arrayBuffer)
+    }
 
     if (!buffer || buffer.length === 0) {
       return NextResponse.json({ error: 'No audio data received' }, { status: 400 })
@@ -24,7 +35,10 @@ export async function POST(request: Request) {
 
     await fs.promises.writeFile(inputTmpPath, buffer)
 
-    const ffmpegExecutable = ffmpegPath || 'ffmpeg'
+    let ffmpegExecutable = 'ffmpeg'
+    if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+      ffmpegExecutable = ffmpegPath
+    }
 
     // Run ffmpeg to transcode WAV -> 320kbps MP3
     await new Promise<void>((resolve, reject) => {
@@ -56,7 +70,6 @@ export async function POST(request: Request) {
 
     const mp3Buffer = await fs.promises.readFile(outputTmpPath)
 
-    // Clean up temp files
     try {
       if (fs.existsSync(inputTmpPath)) await fs.promises.unlink(inputTmpPath)
       if (fs.existsSync(outputTmpPath)) await fs.promises.unlink(outputTmpPath)

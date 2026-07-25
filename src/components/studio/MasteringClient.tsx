@@ -633,34 +633,53 @@ export function MasteringClient() {
     setIsProcessingBatch(true)
     setTracks(prev => prev.map(t => ({ ...t, status: 'processing', progress: 10 })))
 
+    const results: Track[] = []
     for (let i = 0; i < tracks.length; i++) {
       const result = await processTrackAudio(tracks[i])
+      results.push(result)
       setTracks(prev => prev.map(t => t.id === tracks[i].id ? result : t))
     }
     setIsProcessingBatch(false)
+
+    for (const resTrack of results) {
+      if (resTrack.status === 'done') {
+        await downloadTrack(resTrack, exportFormat)
+      }
+    }
   }
 
   const [exportFormat, setExportFormat] = useState<'wav' | 'mp3'>('mp3')
   const [isConvertingMp3, setIsConvertingMp3] = useState<Record<string, boolean>>({})
 
   const downloadTrack = async (track: Track, format: 'wav' | 'mp3') => {
-    if (!track.processedUrl && !track.processedBlob) return
-    const baseName = track.name.replace(/\.[^/.]+$/, '')
+    let targetTrack = track
+    if (targetTrack.status !== 'done' || !targetTrack.processedBlob) {
+      targetTrack = await processTrackAudio(track)
+      setTracks(prev => prev.map(t => t.id === track.id ? targetTrack : t))
+    }
+
+    if (!targetTrack.processedBlob && !targetTrack.processedUrl) return
+    const baseName = targetTrack.name.replace(/\.[^/.]+$/, '')
 
     if (format === 'wav') {
       const a = document.createElement('a')
-      a.href = track.processedUrl!
+      a.href = targetTrack.processedUrl!
       a.download = `BEATZ_Mastered_${baseName}.wav`
       a.click()
     } else {
-      setIsConvertingMp3(prev => ({ ...prev, [track.id]: true }))
+      setIsConvertingMp3(prev => ({ ...prev, [targetTrack.id]: true }))
       try {
+        const formData = new FormData()
+        formData.append('file', targetTrack.processedBlob!, `${baseName}.wav`)
+
         const res = await fetch('/api/convert-to-mp3', {
           method: 'POST',
-          headers: { 'Content-Type': 'audio/wav' },
-          body: track.processedBlob,
+          body: formData,
         })
-        if (!res.ok) throw new Error('MP3 conversion failed')
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}))
+          throw new Error(errJson.error || 'MP3 conversion failed')
+        }
         const mp3Blob = await res.blob()
         const mp3Url = URL.createObjectURL(mp3Blob)
         const a = document.createElement('a')
@@ -669,14 +688,14 @@ export function MasteringClient() {
         a.click()
         setTimeout(() => URL.revokeObjectURL(mp3Url), 10000)
       } catch (err) {
-        console.error(err)
-        alert('MP3 변환 실패. WAV 파일로 다운로드합니다.')
+        console.error('MP3 conversion error:', err)
+        alert('MP3 변환 실패. WAV 무손실 파일로 대체 다운로드합니다.')
         const a = document.createElement('a')
-        a.href = track.processedUrl!
+        a.href = targetTrack.processedUrl!
         a.download = `BEATZ_Mastered_${baseName}.wav`
         a.click()
       } finally {
-        setIsConvertingMp3(prev => ({ ...prev, [track.id]: false }))
+        setIsConvertingMp3(prev => ({ ...prev, [targetTrack.id]: false }))
       }
     }
   }
