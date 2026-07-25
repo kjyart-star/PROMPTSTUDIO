@@ -348,7 +348,35 @@ export function MasteringClient() {
     setVisualLufsPercent(0)
   }
 
-  // File Queue Management
+  // File Queue Management & Drag-and-Drop Handlers
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(Array.from(e.dataTransfer.files))
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       addFiles(Array.from(e.target.files))
@@ -356,7 +384,11 @@ export function MasteringClient() {
   }
 
   const addFiles = (files: File[]) => {
-    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|flac|m4a)$/i.test(f.name))
+    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|flac|m4a|ogg|aac|wma)$/i.test(f.name))
+    if (audioFiles.length === 0 && files.length > 0) {
+      alert(uiLanguage === 'KO' ? '오디오 파일만 업로드 가능합니다 (.wav, .mp3 등).' : 'Please drop valid audio files.')
+      return
+    }
     if (tracks.length + audioFiles.length > 20) {
       alert(uiLanguage === 'KO' ? '최대 20곡까지만 업로드 가능합니다.' : 'Maximum 20 tracks allowed.')
       return
@@ -712,7 +744,15 @@ export function MasteringClient() {
             {/* Dropzone */}
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-white/15 hover:border-[#e3fe06] bg-black/40 hover:bg-black/60 rounded-2xl p-6 text-center cursor-pointer transition-all group relative overflow-hidden"
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all group relative overflow-hidden ${
+                isDragging 
+                  ? 'border-[#e3fe06] bg-[#e3fe06]/20 scale-[1.02] shadow-[0_0_20px_rgba(227,254,6,0.3)]' 
+                  : 'border-white/15 hover:border-[#e3fe06] bg-black/40 hover:bg-black/60'
+              }`}
             >
               <input 
                 type="file" 
