@@ -363,7 +363,7 @@ export function ChartClient({
         <div className="space-y-1">
           <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
             <Trophy className="w-6 h-6 text-primary shrink-0" />
-            {uiLanguage === 'KO' ? 'BEATZ 랭킹차트' : uiLanguage === 'JA' ? 'BEATZ ランキングチャート' : 'BEATZ Ranking Chart'}
+            {uiLanguage === 'KO' ? '쿠키뮤직 랭킹차트' : uiLanguage === 'JA' ? 'クッキーミュージック ランキングチャート' : 'CookieMusic Ranking Chart'}
           </h1>
           {periodDate && (
             <p className="text-[10px] text-on-surface-variant/80 font-mono">

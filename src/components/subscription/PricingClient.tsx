@@ -131,7 +131,7 @@ export function PricingClient({ user }: PricingClientProps) {
   ]
 
   const premierFeatures = [
-    'Beatz Studio 이용 안내',
+    '쿠키뮤직 스튜디오 이용 안내',
     '최고 수준의 개인 맞춤형 5 버전 모델에 액세스하세요.',
     '10,000 크레딧(최대 2,000곡), 매월 갱신',
     '새로 제작된 노래에 대한 상업적 이용 권한',
@@ -175,7 +175,7 @@ export function PricingClient({ user }: PricingClientProps) {
       {/* Hero Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
         <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3 bg-clip-text text-white">
-          Beatz 요금제를 관리하세요
+          쿠키뮤직 요금제를 관리하세요
         </h1>
         <p className="text-sm md:text-base text-zinc-400 font-medium">
           본인의 필요에 가장 적합한 요금제를 선택하세요.

@@ -47,7 +47,8 @@ export default async function AdminLayout({
           <aside className="w-64 bg-[#161d16] border-r border-[#242c24] shrink-0 hidden md:flex flex-col">
             <div className="h-16 flex items-center justify-center border-b border-[#242c24]">
               <Link href="/admin/music" className="select-none flex flex-col items-center">
-                <img src="/images/logo.png" alt="BEATZ ADMIN" className="h-8 object-contain" />
+                <span className="text-[19px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+                <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-white/45 mt-1">ADMIN</span>
               </Link>
             </div>
             
@@ -90,7 +91,8 @@ export default async function AdminLayout({
             <header className="h-16 border-b border-[#242c24] bg-[#0e150e]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
               <div className="md:hidden flex items-center gap-2">
                 <Link href="/admin/music" className="select-none flex items-center">
-                  <img src="/images/logo.png" alt="BEATZ ADMIN" className="h-6 object-contain" />
+                  <span className="text-[15px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+                  <span className="text-[9px] font-bold tracking-[0.24em] leading-none text-white/45 ml-2">ADMIN</span>
                 </Link>
               </div>
               

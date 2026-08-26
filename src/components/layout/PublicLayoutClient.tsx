@@ -239,13 +239,16 @@ export function PublicLayoutClient({
     <div className="min-h-screen bg-background text-on-background font-body-md selection:bg-primary selection:text-on-primary">
       
       {/* Shell: Side Navigation (Desktop Only) */}
-      <aside className={`hidden md:flex flex-col py-[24px] px-[16px] h-screen w-64 border-r border-outline-variant/10 fixed left-0 top-0 z-50 justify-between ${
+      {/* 아래 패딩은 고정 플레이어(h-24) 높이만큼 비운다 — 안 그러면 사이드바 맨 아래가 가린다 */}
+      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-screen w-64 border-r border-outline-variant/10 fixed left-0 top-0 z-50 justify-between ${
         activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
       }`}>
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
-            <Link href="/" className="select-none flex flex-col items-center">
-              <img src="/images/logo.png" alt="BEATZ AI MUSIC PLATFORM" className="h-9 object-contain" />
+            {/* 워드마크는 타이포로 둔다 — 쿠키뮤직 전용 로고 이미지가 아직 없다 */}
+            <Link href="/" className="select-none flex flex-col items-center gap-0.5">
+              <span className="text-[22px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+              <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-on-surface-variant">COOKIEMUSIC</span>
             </Link>
           </div>
 
@@ -409,7 +412,7 @@ export function PublicLayoutClient({
         </div>
 
         {/* Sidebar Footer (Admin Shortcut if logged in as admin) */}
-        <div>
+        <div className="flex flex-col gap-4">
           {isAdmin && (
             <Link
               href="/admin/music"
@@ -419,6 +422,19 @@ export function PublicLayoutClient({
               <span>{uiLanguage === 'KO' ? '어드민 관리자' : uiLanguage === 'JA' ? '管理者' : 'Administrator'}</span>
             </Link>
           )}
+
+          {/* 쿠키플레이 소속 표기 — 만드는 회사와 허브로 돌아가는 길 */}
+          <div className="flex flex-col gap-1 border-t border-outline-variant/10 pt-4">
+            <a
+              href="https://cookieplay.app"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-[11px] font-semibold text-on-surface-variant hover:text-on-surface transition-colors w-fit"
+            >
+              🍪 CookiePlay
+            </a>
+            <span className="text-[10px] text-on-surface-variant/60">© 2026 APPLESEED</span>
+          </div>
         </div>
       </aside>
 

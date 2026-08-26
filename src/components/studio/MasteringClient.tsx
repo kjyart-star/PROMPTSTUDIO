@@ -664,7 +664,7 @@ export function MasteringClient() {
     if (format === 'wav') {
       const a = document.createElement('a')
       a.href = targetTrack.processedUrl!
-      a.download = `BEATZ_Mastered_${baseName}.wav`
+      a.download = `CookieMusic_Mastered_${baseName}.wav`
       a.click()
     } else {
       setIsConvertingMp3(prev => ({ ...prev, [targetTrack.id]: true }))
@@ -684,7 +684,7 @@ export function MasteringClient() {
         const mp3Url = URL.createObjectURL(mp3Blob)
         const a = document.createElement('a')
         a.href = mp3Url
-        a.download = `BEATZ_Mastered_${baseName}.mp3`
+        a.download = `CookieMusic_Mastered_${baseName}.mp3`
         a.click()
         setTimeout(() => URL.revokeObjectURL(mp3Url), 10000)
       } catch (err) {
@@ -692,7 +692,7 @@ export function MasteringClient() {
         alert('MP3 변환 실패. WAV 무손실 파일로 대체 다운로드합니다.')
         const a = document.createElement('a')
         a.href = targetTrack.processedUrl!
-        a.download = `BEATZ_Mastered_${baseName}.wav`
+        a.download = `CookieMusic_Mastered_${baseName}.wav`
         a.click()
       } finally {
         setIsConvertingMp3(prev => ({ ...prev, [targetTrack.id]: false }))
@@ -740,7 +740,7 @@ export function MasteringClient() {
               {uiLanguage === 'KO' ? (
                 <>AI 음원 <span className="text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.4)]">마스터링 스튜디오</span></>
               ) : (
-                <>BEATZ AI <span className="text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.4)]">MASTERING STUDIO</span></>
+                <>COOKIEMUSIC <span className="text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.4)]">MASTERING STUDIO</span></>
               )}
             </h1>
             <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-xl">

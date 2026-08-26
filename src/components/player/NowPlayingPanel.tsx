@@ -681,8 +681,8 @@ export function NowPlayingPanel() {
 
               <p className="text-xs text-on-surface-variant leading-relaxed font-medium line-clamp-3">
                 {track.album?.artist?.bio || (lang === 'KO' ? 
-                  'BEATZ 플랫폼에서 생성된 선도적인 AI 아티스트입니다. 다양한 장르의 세련된 비트와 멜로디를 제공합니다.' :
-                  'A leading AI Artist generated on BEATZ, creating unique vibes across multiple genres.')}
+                  '쿠키뮤직에서 생성된 선도적인 AI 아티스트입니다. 다양한 장르의 세련된 비트와 멜로디를 제공합니다.' :
+                  'A leading AI Artist generated on CookieMusic, creating unique vibes across multiple genres.')}
               </p>
 
               <button 

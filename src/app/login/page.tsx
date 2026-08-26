@@ -81,7 +81,7 @@ function LoginContent() {
         <div className="absolute inset-0 z-0">
           <Image 
             src="/images/login-bg.png"
-            alt="BEATZ AI Music Studio Background"
+            alt="쿠키뮤직 로그인 화면 배경"
             fill
             className="object-cover object-center opacity-100"
             priority
@@ -96,7 +96,11 @@ function LoginContent() {
         
         <div className="relative z-10">
           <div className="mb-16">
-            <img src="/images/logo.png" alt="BEATZ" className="h-10 object-contain drop-shadow-md" />
+            {/* 전용 로고 이미지가 없어 워드마크는 타이포로 둔다 */}
+            <div className="flex flex-col gap-1 select-none">
+              <span className="text-[34px] font-black tracking-tight leading-none text-[#e3fe06] drop-shadow-md">쿠키뮤직</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] leading-none text-white/60">COOKIEMUSIC</span>
+            </div>
           </div>
           
           <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-6 tracking-tight drop-shadow-lg">
@@ -129,7 +133,7 @@ function LoginContent() {
 
             <div className="flex items-center gap-2 mb-5 relative z-10">
               <Sparkles className="text-[#e3fe06] w-5 h-5"/>
-              <span className="text-[#e3fe06] font-bold tracking-widest text-sm drop-shadow-md">BEATZ PRO FEATURES</span>
+              <span className="text-[#e3fe06] font-bold tracking-widest text-sm drop-shadow-md">쿠키뮤직으로 할 수 있는 것</span>
             </div>
             <ul className="space-y-4 relative z-10">
               <li className="flex gap-3 text-xs text-gray-300 items-center font-medium">
@@ -161,7 +165,7 @@ function LoginContent() {
         {/* Mobile Logo */}
         <div className="absolute top-0 right-0 p-6 flex lg:hidden">
           <div className="flex items-center">
-            <img src="/images/logo.png" alt="BEATZ" className="h-8 object-contain drop-shadow-md" />
+            <span className="text-[18px] font-black tracking-tight leading-none text-[#e3fe06] drop-shadow-md select-none">쿠키뮤직</span>
           </div>
         </div>
 
@@ -256,6 +260,19 @@ function LoginContent() {
               계속 진행 시 다음 내용에 동의하게 됩니다.<br/>
               <a href="#" className="underline hover:text-gray-300 transition-colors">이용약관</a> 및 <a href="#" className="underline hover:text-gray-300 transition-colors">개인정보처리방침</a>
             </p>
+          </div>
+
+          {/* 쿠키플레이 소속 표기 */}
+          <div className="mt-6 w-full flex flex-col items-center gap-1">
+            <a
+              href="https://cookieplay.app"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-[11px] font-semibold text-[#777] hover:text-[#e3fe06] transition-colors"
+            >
+              🍪 CookiePlay
+            </a>
+            <span className="text-[10px] text-[#555555]">© 2026 APPLESEED</span>
           </div>
         </div>
       </div>
