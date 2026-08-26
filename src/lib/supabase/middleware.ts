@@ -1,15 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { cookieDomainForHost } from './cookieDomain'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
+  const domain = cookieDomainForHost(
+    request.headers.get('x-forwarded-host') || request.headers.get('host')
+  )
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { domain },
       cookies: {
         getAll() {
           return request.cookies.getAll()

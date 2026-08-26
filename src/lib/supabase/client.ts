@@ -1,9 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { browserCookieDomain } from './cookieDomain'
 
 export function createClient() {
   const client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    // 세션을 부모 도메인 쿠키에 얹어 쿠키플레이와 나눠 쓴다. cookieplay.app 밖에서는
+    // undefined 라 지금까지처럼 호스트 전용 쿠키가 된다.
+    { cookieOptions: { domain: browserCookieDomain() } }
   )
 
   // Intercept storage.from('tracks').createSignedUrl to route through server-side proxy

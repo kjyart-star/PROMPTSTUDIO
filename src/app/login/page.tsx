@@ -3,36 +3,47 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { AlertCircle, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Sparkles, ArrowRight, MailCheck } from 'lucide-react'
 import Image from 'next/image'
+import { readRedirectParam } from '@/lib/auth/redirectTarget'
 
 function LoginContent() {
   const searchParams = useSearchParams()
-  const nextPath = searchParams.get('next') || '/'
-  
+  // 허브는 `redirect`, 앱 안의 가드는 `next` 를 쓴다. 허용 목록 밖이면 기본 동선으로 떨어진다.
+  const nextPath = readRedirectParam(searchParams)
+  // `?switch=1` 은 "세션이 있어도 폼을 보여달라" — 계정을 바꾸려는 사람의 길이다.
+  const forceForm = searchParams.get('switch') === '1'
+
+  const [mode, setMode] = useState<'login' | 'signup'>(
+    searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
   // 로그인 세션이 이미 존재하면 리다이렉트
   useEffect(() => {
+    if (forceForm) return
     const supabase = createClient()
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        router.push(nextPath)
+        // 목적지가 다른 오리진(쿠키플레이 허브)일 수 있어 router.push 로는 못 간다.
+        window.location.href = nextPath
       }
     }
     checkUser()
-  }, [router, nextPath])
+  }, [router, nextPath, forceForm])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setNotice(null)
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -54,6 +65,47 @@ function LoginContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setNotice(null)
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, next: nextPath }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || '가입에 실패했습니다.')
+      }
+
+      // 이메일 확인이 켜져 있어(mailer_autoconfirm: false) 대개 세션 없이 돌아온다.
+      // 그 사실을 말해 주지 않으면 사용자는 왜 못 들어가는지 모른다.
+      if (data.needsConfirmation) {
+        setNotice(`${email} 로 확인 메일을 보냈습니다. 메일의 링크를 눌러야 로그인할 수 있습니다.`)
+        setPassword('')
+      } else {
+        window.location.href = nextPath
+      }
+    } catch (err: any) {
+      setError(err.message || '가입에 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchMode = (next: 'login' | 'signup') => {
+    setMode(next)
+    setError(null)
+    setNotice(null)
   }
 
   const handleGoogleLogin = async () => {
@@ -80,7 +132,7 @@ function LoginContent() {
         {/* Background Image with Dark Overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
-            src="/images/login-bg.png"
+            src="/images/login-bg-cookie.webp"
             alt="쿠키뮤직 로그인 화면 배경"
             fill
             className="object-cover object-center opacity-100"
@@ -173,8 +225,14 @@ function LoginContent() {
         <div className="w-full max-w-[360px] flex flex-col justify-center items-center h-full">
           
           <div className="mb-10 text-center w-full">
-            <h2 className="text-2xl font-extrabold text-white mb-2">환영합니다</h2>
-            <p className="text-gray-400 text-xs font-medium">나만의 AI 스튜디오에 접속하세요</p>
+            <h2 className="text-2xl font-extrabold text-white mb-2">
+              {mode === 'signup' ? '쿠키뮤직 가입하기' : '환영합니다'}
+            </h2>
+            <p className="text-gray-400 text-xs font-medium">
+              {mode === 'signup'
+                ? '이메일만 있으면 바로 시작할 수 있습니다'
+                : '나만의 AI 스튜디오에 접속하세요'}
+            </p>
           </div>
 
           {/* Error Message */}
@@ -182,6 +240,14 @@ function LoginContent() {
             <div className="w-full p-3 mb-6 rounded-xl bg-red-950/30 border border-red-500/20 text-red-200 text-xs flex items-center justify-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* 확인 메일 안내 */}
+          {notice && (
+            <div className="w-full p-3 mb-6 rounded-xl bg-[#121401] border border-[#e3fe06]/30 text-[#e3fe06] text-xs flex items-start gap-2 text-left">
+              <MailCheck className="w-4 h-4 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{notice}</span>
             </div>
           )}
 
@@ -197,7 +263,7 @@ function LoginContent() {
                 <path d="M21.35,11.1H12v2.7h5.38C17.15,15.11,15.42,16.5,12,16.5c-3.59,0-6.5-2.91-6.5-6.5S8.41,3.5,12,3.5c1.72,0,3.28,0.67,4.45,1.75l2.02-2.02C16.65,1.55,14.48,0.8,12,0.8C6.92,0.8,2.8,4.92,2.8,10s4.12,9.2,9.2,9.2c5.3,0,9.23-3.72,9.23-9.2C21.23,11.75,21.31,11.1,21.35,11.1z" fill="currentColor" />
               </g>
             </svg>
-            Google로 로그인
+            {mode === 'signup' ? 'Google로 가입' : 'Google로 로그인'}
           </button>
 
           <div className="relative flex py-6 items-center w-full">
@@ -207,7 +273,7 @@ function LoginContent() {
           </div>
 
           {/* Credentials Form */}
-          <form onSubmit={handleLogin} className="space-y-4 w-full">
+          <form onSubmit={mode === 'signup' ? handleSignup : handleLogin} className="space-y-4 w-full">
             <div className="w-full">
               <label htmlFor="email-input" className="block text-[11px] font-semibold text-gray-400 mb-1.5 ml-1 text-left">
                 이메일
@@ -231,10 +297,12 @@ function LoginContent() {
                 id="password-input"
                 type="password"
                 required
+                minLength={mode === 'signup' ? 6 : undefined}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3.5 rounded-xl bg-[#141414] border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#e3fe06] focus:bg-[#1a1a1a] focus:ring-1 focus:ring-[#e3fe06]/50 transition-all text-sm font-medium"
-                placeholder="••••••••"
+                placeholder={mode === 'signup' ? '6자 이상' : '••••••••'}
               />
             </div>
 
@@ -244,15 +312,37 @@ function LoginContent() {
               disabled={loading}
               className="w-full py-3.5 px-4 mt-4 rounded-xl bg-[#e3fe06] hover:bg-[#cbe304] text-black font-extrabold transition-all disabled:opacity-50 text-sm flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(227,254,6,0.3)] hover:shadow-[0_0_20px_rgba(227,254,6,0.5)] cursor-pointer disabled:cursor-not-allowed"
             >
-              {loading ? '로그인 중...' : '로그인'}
+              {loading
+                ? mode === 'signup' ? '가입 중...' : '로그인 중...'
+                : mode === 'signup' ? '가입하기' : '로그인'}
               {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
 
           <div className="text-center mt-6 w-full">
-            <p className="text-gray-500 text-xs font-medium">
-              계정이 없으신가요? <a href="/signup" className="text-white font-bold hover:text-[#e3fe06] hover:underline transition-colors">무료 가입하기</a>
-            </p>
+            {mode === 'signup' ? (
+              <p className="text-gray-500 text-xs font-medium">
+                이미 계정이 있으신가요?{' '}
+                <button
+                  type="button"
+                  onClick={() => switchMode('login')}
+                  className="text-white font-bold hover:text-[#e3fe06] hover:underline transition-colors cursor-pointer"
+                >
+                  로그인하기
+                </button>
+              </p>
+            ) : (
+              <p className="text-gray-500 text-xs font-medium">
+                계정이 없으신가요?{' '}
+                <button
+                  type="button"
+                  onClick={() => switchMode('signup')}
+                  className="text-white font-bold hover:text-[#e3fe06] hover:underline transition-colors cursor-pointer"
+                >
+                  무료 가입하기
+                </button>
+              </p>
+            )}
           </div>
 
           <div className="mt-12 w-full flex justify-center">
