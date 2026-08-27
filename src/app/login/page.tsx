@@ -341,7 +341,13 @@ function Wordmark({ className = '', compact = false }: { className?: string; com
   // basePath 가 붙지 않아 window.location.origin + '/' (쿠키플레이 홈)로 간다.
   return (
     <a href="/" className={`flex items-center gap-2 select-none w-fit ${className}`}>
-      <span className={compact ? 'text-[18px]' : 'text-[26px]'} aria-hidden="true">🍪</span>
+      {/* 허브 메인과 같은 쿠키 캐릭터 마크(대표 2026-08-28: "캐릭터 로고로, 메인페이지에 맞춰") */}
+      <img
+        src={withBase('/images/cookie-mark.png')}
+        alt=""
+        aria-hidden="true"
+        className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} shrink-0 rounded-full object-cover`}
+      />
       <span className={`${compact ? 'text-[16px]' : 'text-[24px]'} font-black tracking-tight leading-none`}>
         <span className="text-[#b6cc14]">COOKIE</span>
         <span className="text-white">PLAY</span>

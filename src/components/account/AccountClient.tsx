@@ -177,7 +177,13 @@ export default function AccountClient({ user }: Props) {
       <header className="border-b border-[#292929]">
         <div className="max-w-[560px] mx-auto px-6 py-5 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 select-none w-fit">
-            <span className="text-[20px]" aria-hidden="true">🍪</span>
+            {/* 허브 메인과 같은 쿠키 캐릭터 마크(대표 2026-08-28) */}
+            <img
+              src={withBase('/images/cookie-mark.png')}
+              alt=""
+              aria-hidden="true"
+              className="h-7 w-7 shrink-0 rounded-full object-cover"
+            />
             <span className="text-[18px] font-black tracking-tight leading-none">
               <span className="text-[#b6cc14]">COOKIE</span>
               <span className="text-white">PLAY</span>
