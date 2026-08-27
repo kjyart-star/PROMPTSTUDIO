@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Camera, Check, AlertCircle, LogOut, ArrowLeft } from 'lucide-react'
+import { withBase } from '@/lib/basePath'
 
 /**
  * 쿠키플레이 계정 설정 — 실제로 동작하는 것만 놓는다.
