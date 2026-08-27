@@ -16,7 +16,7 @@
       "permanent": true
     },
     {
-      "source": "/:path((?!music($|/)).*)",
+      "source": "/:path((?!music(?:$|/)).*)",
       "has": [
         {
           "type": "host",
