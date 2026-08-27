@@ -136,7 +136,8 @@ function LoginContent() {
     <div className="min-h-screen bg-[#0d0d0d] flex font-sans selection:bg-[#8251f6] selection:text-white">
 
       {/* 왼쪽 — 쿠키플레이 브랜드 패널 */}
-      <div className="hidden lg:flex flex-col w-1/2 p-12 lg:p-16 justify-between relative overflow-hidden">
+      {/* 표시용 브랜드 패널 — I빔·드래그 선택이 뜨면 제품스럽지 않다(대표 2026-08-28, 윈도우 실측) */}
+      <div className="hidden lg:flex flex-col w-1/2 p-12 lg:p-16 justify-between relative overflow-hidden select-none cursor-default">
 
         <div className="absolute inset-0 z-0">
           <Image
@@ -193,7 +194,7 @@ function LoginContent() {
 
         <div className="w-full max-w-[360px] flex flex-col items-center">
 
-          <div className="mb-8 text-center w-full">
+          <div className="mb-8 text-center w-full select-none cursor-default">
             <h2 className="text-2xl font-extrabold text-white mb-2">
               {isSignup ? '쿠키플레이 계정 만들기' : '쿠키플레이 계정으로 로그인'}
             </h2>
