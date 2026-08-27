@@ -1,4 +1,30 @@
 {
   "framework": "nextjs",
-  "regions": ["hnd1"]
+  "regions": [
+    "hnd1"
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "music.cookieplay.app"
+        }
+      ],
+      "destination": "https://cookieplay.app/music",
+      "permanent": true
+    },
+    {
+      "source": "/:path((?!music($|/)).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "music.cookieplay.app"
+        }
+      ],
+      "destination": "https://cookieplay.app/music/:path",
+      "permanent": true
+    }
+  ]
 }
