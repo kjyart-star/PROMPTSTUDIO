@@ -133,7 +133,7 @@ function LoginContent() {
 
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/auth-cookie-hero.webp"
+            src={withBase('/images/auth-cookie-dj.webp')}
             alt=""
             aria-hidden="true"
             fill
@@ -154,15 +154,16 @@ function LoginContent() {
           </h1>
 
           <p className="text-[#dedede] text-sm leading-relaxed max-w-md">
-            하나의 계정으로 쿠키플레이의 모든 서비스를 씁니다.
-            편집 도구는 계정 없이도 전부 무료입니다.
+            하나의 계정으로 쿠키컷 영상 편집부터 쿠키픽스·쿠키일러스트·쿠키뮤직까지
+            전부 잇습니다. 편집 도구는 계정 없이도 무료입니다.
           </p>
         </div>
 
         <ul className="relative z-10 space-y-3">
           {[
-            '음악 업로드와 내 채널',
-            '좋아요와 플레이리스트',
+            '쿠키컷 — 영상 편집, 설치 없이 무료',
+            '쿠키픽스 · 쿠키일러스트 — 사진 보정과 벡터 드로잉',
+            '쿠키뮤직 — 업로드 · 내 채널 · 좋아요 · 플레이리스트',
             '쿠키플레이 서비스 어디서나 같은 계정',
           ].map((item) => (
             <li key={item} className="flex items-center gap-3 text-sm text-[#dedede]">
