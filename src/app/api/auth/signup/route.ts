@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withBase } from '@/lib/basePath'
 
 /**
  * 회원가입 — 로그인(`/api/auth/login`)과 같은 모양으로 맞춘다.
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     const isLocal = host?.includes('localhost') || host?.includes('127.0.0.1')
     const proto = request.headers.get('x-forwarded-proto') || (isLocal ? 'http' : 'https')
     const origin = host ? `${proto}://${host}` : new URL(request.url).origin
-    const redirectTo = `${origin}/api/auth/callback?next=${encodeURIComponent(next || '/')}`
+    const redirectTo = `${origin}${withBase('/api/auth/callback')}?next=${encodeURIComponent(next || '/')}`
 
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signUp({

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Bell, Shield, LogOut, Trash2, Globe, Settings, ChevronDown, Check } from 'lucide-react'
+import { withBase } from '@/lib/basePath'
 
 interface HeaderProps {
   user: any
@@ -96,7 +97,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
     } catch (err) {
       console.error('SignOut error:', err)
     }
-    window.location.href = '/'
+    window.location.href = withBase('/')
   }
 
   // 회원 탈퇴
@@ -117,7 +118,7 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
         console.error('SignOut error:', err)
       }
       alert('회원 탈퇴가 완료되었습니다.')
-      window.location.href = '/'
+      window.location.href = withBase('/')
     }
     setConfirmDeleteOpen(false)
   }

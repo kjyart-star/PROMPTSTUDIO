@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withBase } from '@/lib/basePath'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     console.error('SignOut error:', error)
   }
 
-  return NextResponse.redirect(origin, {
+  return NextResponse.redirect(`${origin}${withBase('/')}`, {
     status: 303,
   })
 }

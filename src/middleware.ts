@@ -1,5 +1,6 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { legacyHostRedirect } from '@/lib/auth/gateway'
 
 /**
  * 세션 자동 갱신 — 이 파일이 없던 게 "가끔 조용히 로그아웃되는" 문제의 직접 원인이었다.
@@ -13,6 +14,17 @@ import { updateSession } from '@/lib/supabase/middleware'
  * 들어 있고, 새 NextResponse 를 만들어 돌려주면 그 쿠키가 통째로 버려진다.
  */
 export async function middleware(request: NextRequest) {
+  // 주소 정리가 먼저다. 어차피 다른 호스트로 보낼 요청이라면 세션을 갱신할 이유가 없고,
+  // 갱신해 봐야 그 쿠키는 리다이렉트와 함께 버려진다.
+  const destination = legacyHostRedirect(
+    request.headers.get('x-forwarded-host') || request.headers.get('host'),
+    request.nextUrl.pathname,
+    request.nextUrl.search
+  )
+  if (destination) {
+    return NextResponse.redirect(destination, 301)
+  }
+
   const { supabaseResponse } = await updateSession(request)
   return supabaseResponse
 }

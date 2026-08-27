@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Track } from '@/types/music';
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { withBase } from '@/lib/basePath'
 
 export function NowPlayingPanel() {
   const {
@@ -503,10 +504,10 @@ export function NowPlayingPanel() {
                       if (slug && slug !== 'loose') {
                         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
                         if (isUUID) {
-                          if (typeof window !== 'undefined') window.location.href = `/profile?tab=albums&playlistId=${slug}`
+                          if (typeof window !== 'undefined') window.location.href = withBase(`/profile?tab=albums&playlistId=${slug}`)
                         } else {
                           const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
-                          if (typeof window !== 'undefined') window.location.href = `/albums/${slug}?artist=${artistSlug}`
+                          if (typeof window !== 'undefined') window.location.href = withBase(`/albums/${slug}?artist=${artistSlug}`)
                         }
                       } else {
                         setShowConfirm(true);
@@ -895,7 +896,7 @@ export function NowPlayingPanel() {
         onConfirm={() => {
           const artistSlug = track.album?.artist?.slug || (track as any).artist?.slug || 'suno-ai';
           if (typeof window !== 'undefined') {
-            window.location.href = `/artists/${artistSlug}`;
+            window.location.href = withBase(`/artists/${artistSlug}`);
           }
           setShowConfirm(false);
         }}

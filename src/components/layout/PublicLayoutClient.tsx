@@ -12,6 +12,7 @@ import {
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
 import { usePlayerStore } from '@/stores/playerStore'
+import { withBase } from '@/lib/basePath'
 
 interface PublicLayoutClientProps {
   children: React.ReactNode
@@ -232,7 +233,7 @@ export function PublicLayoutClient({
     } catch (err) {
       console.error('SignOut error:', err)
     }
-    window.location.href = '/'
+    window.location.href = withBase('/')
   }
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { safeRedirect } from '@/lib/auth/redirectTarget'
+import { withBase } from '@/lib/basePath'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const origin = host ? `${proto}://${host}` : new URL(request.url).origin
 
   // 허브로 돌아가는 경우엔 이미 절대 URL 이라 origin 을 앞에 붙이면 안 된다.
-  const destination = next.startsWith('/') ? `${origin}${next}` : next
+  const destination = next.startsWith('/') ? `${origin}${withBase(next)}` : next
 
   if (code) {
     const supabase = await createClient()
@@ -25,5 +26,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth-callback-failed`)
+  return NextResponse.redirect(`${origin}${withBase('/login')}?error=auth-callback-failed`)
 }

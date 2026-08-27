@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { User, Users, Check, Upload, ArrowLeft, Clock, Settings, CreditCard, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { withBase } from '@/lib/basePath'
 
 interface SettingsClientProps {
   user: any
@@ -252,7 +253,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
       } catch (err) {
         console.error('SignOut error:', err)
       }
-      window.location.href = '/'
+      window.location.href = withBase('/')
     }
   }
 
