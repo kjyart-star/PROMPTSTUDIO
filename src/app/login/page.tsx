@@ -18,7 +18,14 @@ import { withBase } from '@/lib/basePath'
 function LoginContent() {
   const searchParams = useSearchParams()
   // 허브는 `redirect`, 앱 안의 가드는 `next` 를 쓴다. 허용 목록 밖이면 기본 동선으로 떨어진다.
-  const nextPath = readRedirectParam(searchParams)
+  // 기본 동선은 **쿠키플레이 홈**이다(대표 2026-08-28: "로그인하면 쿠키플레이 화면"). 이 앱은
+  // basePath /music 위에 살아서 '/' 를 그대로 두면 뮤직 홈으로 떨어진다 — 관문은 쿠키플레이
+  // 관문이므로, 목적지를 따로 실어 오지 않은 로그인은 허브 루트(현재 오리진의 /)로 보낸다.
+  // 뮤직 앱 내부 가드는 언제나 `next` 를 명시하므로 이 기본값에 걸리지 않는다.
+  const nextPath = readRedirectParam(
+    searchParams,
+    typeof window === 'undefined' ? '/' : `${window.location.origin}/`
+  )
   // `?switch=1` 은 "세션이 있어도 폼을 보여달라" — 계정을 바꾸려는 사람의 길이다.
   const forceForm = searchParams.get('switch') === '1'
 
