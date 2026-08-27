@@ -9,6 +9,7 @@ import {
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
+import { withBase } from '@/lib/basePath'
 
 export function PersistentPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -319,7 +320,7 @@ export function PersistentPlayer() {
       id: 'dummy-album-1',
       slug: 'neonecho',
       title: 'Electric Dreams',
-      cover_url: '/images/vanguard_cover.png',
+      cover_url: withBase('/images/vanguard_cover.png'),
       release_type: 'lp',
       status: 'published',
       created_at: '',
@@ -557,7 +558,7 @@ export function PersistentPlayer() {
                         }`}
                       >
                         <div className="w-10 h-10 rounded overflow-hidden bg-[#18181b] shrink-0">
-                          <img src={track.album?.cover_url || track.image_url || '/default-album.png'} alt="" className="w-full h-full object-cover" />
+                          <img src={track.album?.cover_url || track.image_url || withBase('/default-album.png')} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className={`text-xs font-bold truncate ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>

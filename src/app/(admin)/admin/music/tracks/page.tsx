@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Music, EyeOff, Eye, Loader2, Play, Pause, FileText, User, Calendar, ShieldAlert, X, Search } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
+import { withBase } from '@/lib/basePath'
 
 interface SongTrack {
   id: string
@@ -70,7 +71,7 @@ export default function TracksPage() {
       album: {
         id: 'ugc-album',
         title: 'UGC Manager Catalog',
-        cover_url: song.image_url || '/default-album.png',
+        cover_url: song.image_url || withBase('/default-album.png'),
         artist: {
           name: song.profiles?.display_name || `User: ${song.user_id.slice(0, 8)}`,
           slug: song.user_id || 'ugc-user'

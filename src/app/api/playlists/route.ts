@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
+import { withBase } from '@/lib/basePath'
 
 export async function GET(request: Request) {
   try {
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         title,
-        cover_url: cover_url || '/default-album.png',
+        cover_url: cover_url || withBase('/default-album.png'),
         description: finalDescription,
         genre: genre || '',
         is_published: is_published !== undefined ? is_published : false,

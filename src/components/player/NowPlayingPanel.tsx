@@ -158,7 +158,7 @@ export function NowPlayingPanel() {
       artist_id: 'neonecho',
       title: 'Electric Dreams (Single)',
       release_type: 'single',
-      cover_url: '/images/vanguard_cover.png',
+      cover_url: withBase('/images/vanguard_cover.png'),
       release_date: new Date().toISOString(),
       genres: ['Synthwave'],
       moods: ['Energetic'],
@@ -174,7 +174,7 @@ export function NowPlayingPanel() {
         slug: 'neonecho',
         name: 'Neon Echo',
         bio: 'Neon Echo is an AI-native project exploring high-energy electronic soundscapes, nostalgic synth frequencies, and futuristic melodies.',
-        avatar_url: '/images/vanguard_cover.png',
+        avatar_url: withBase('/images/vanguard_cover.png'),
         banner_url: null,
         links: null,
         is_ai_generated: true,
@@ -292,7 +292,7 @@ export function NowPlayingPanel() {
             .insert({
               user_id: user.id,
               title: titleVal.trim(),
-              cover_url: '/default-album.png',
+              cover_url: withBase('/default-album.png'),
               description: description,
               genre: 'Pop',
               is_published: false
@@ -568,7 +568,7 @@ export function NowPlayingPanel() {
           {/* Full-width Cover Art with Gradient Bottom Overlay */}
           <div className="relative w-full aspect-square bg-surface-container-low shrink-0">
             <img 
-              src={track.album?.cover_url || '/default-album.png'} 
+              src={track.album?.cover_url || withBase('/default-album.png')} 
               alt={track.title}
               className="w-full h-full object-cover"
             />
@@ -590,7 +590,7 @@ export function NowPlayingPanel() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/default-album.png";
+                        e.currentTarget.src = withBase("/default-album.png");
                       }}
                     />
                   </div>
@@ -647,7 +647,7 @@ export function NowPlayingPanel() {
               className="h-28 w-full relative overflow-hidden bg-gradient-to-b from-[#e3fe06]/10 to-transparent block hover:opacity-90 transition-opacity"
             >
               <img 
-                src={track.album?.cover_url || '/default-album.png'} 
+                src={track.album?.cover_url || withBase('/default-album.png')} 
                 alt={track.album?.artist?.name || 'Suno AI'}
                 className="w-full h-full object-cover opacity-20 blur-[6px] scale-110"
               />
@@ -665,7 +665,7 @@ export function NowPlayingPanel() {
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/20 shrink-0 bg-surface-container-high">
                   <img 
-                    src={track.album?.artist?.avatar_url || track.album?.cover_url || '/default-album.png'} 
+                    src={track.album?.artist?.avatar_url || track.album?.cover_url || withBase('/default-album.png')} 
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -778,7 +778,7 @@ export function NowPlayingPanel() {
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-outline-variant/5 hover:bg-white/[0.04] transition-all">
                 <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 shadow bg-surface-container-low border border-outline-variant/10">
                   <img 
-                    src={nextTrack.album?.cover_url || '/default-album.png'} 
+                    src={nextTrack.album?.cover_url || withBase('/default-album.png')} 
                     alt="" 
                     className="w-full h-full object-cover"
                   />

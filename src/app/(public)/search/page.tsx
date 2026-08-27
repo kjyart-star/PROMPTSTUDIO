@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SearchClient } from '@/components/search/SearchClient'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { Track, Album } from '@/types/music'
+import { withBase } from '@/lib/basePath'
 
 interface PageProps {
   searchParams: Promise<{
@@ -77,7 +78,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
         id: playlist.id,
         slug: playlist.id,
         title: playlist.title,
-        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+        cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
         release_type: 'playlist',
         status: 'published',
         genres: [formGenre],
@@ -87,7 +88,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
           id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
           name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
           slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
-          avatar_url: songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png',
+          avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
           bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
           created_at: song.created_at
         }
@@ -95,7 +96,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
         id: `suno-album-${song.id}`,
         slug: 'loose',
         title: song.form?.styleDesc || song.title,
-        cover_url: song.image_url || '/default-album.png',
+        cover_url: song.image_url || withBase('/default-album.png'),
         release_type: 'single',
         status: 'published',
         genres: [formGenre],
@@ -105,7 +106,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
           id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
           name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
           slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
-          avatar_url: songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png',
+          avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
           bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
           created_at: song.created_at
         }
@@ -164,7 +165,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
     const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
     const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
-    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
 
     return {
@@ -173,7 +174,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       artist_id: finalArtistId,
       title: playlist.title,
       release_type: 'lp',
-      cover_url: playlist.cover_url || '/default-album.png',
+      cover_url: playlist.cover_url || withBase('/default-album.png'),
       release_date: playlist.created_at,
       genres: playlist.genre ? [playlist.genre] : [],
       moods: [],

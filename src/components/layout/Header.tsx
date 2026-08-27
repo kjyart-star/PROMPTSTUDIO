@@ -253,6 +253,16 @@ export default function Header({ user, isAdmin, initialAnnouncements }: HeaderPr
                     </div>
                     
                     <div className="flex flex-col gap-1">
+                      {/* 계정(사진·이름·비밀번호)은 쿠키플레이가 전체 관리한다 — 정본은 /account */}
+                      <Link
+                        href="/account"
+                        onClick={() => setIsAuthMenuOpen(false)}
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm font-medium text-[#A1A1AA] hover:text-white hover:bg-slate-900 rounded-xl transition-all group text-left cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4 text-[#71717A] group-hover:text-white transition-colors" />
+                        쿠키플레이 계정 설정
+                      </Link>
+
                       <button 
                         onClick={handleSignOut} 
                         className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm font-medium text-[#A1A1AA] hover:text-white hover:bg-slate-900 rounded-xl transition-all group text-left cursor-pointer"

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ArtistClient } from '@/components/artist/ArtistClient'
 import { Artist, Album, Track } from '@/types/music'
 import { notFound, redirect } from 'next/navigation'
+import { withBase } from '@/lib/basePath'
 
 interface PageProps {
   params: Promise<{
@@ -111,7 +112,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
           id: playlist.id,
           slug: playlist.id,
           title: playlist.title,
-          cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+          cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
           release_type: 'playlist',
           status: 'published',
           created_at: playlist.created_at,
@@ -121,7 +122,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
           id: `user-album-${song.id}`,
           slug: 'loose',
           title: song.form?.styleDesc || song.title,
-          cover_url: song.image_url || '/default-album.png',
+          cover_url: song.image_url || withBase('/default-album.png'),
           release_type: 'single',
           status: 'published',
           created_at: song.created_at,
@@ -219,7 +220,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
         id: playlist.id,
         slug: playlist.id,
         title: playlist.title,
-        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+        cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
         release_type: 'playlist',
         status: 'published',
         created_at: playlist.created_at,
@@ -229,7 +230,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
         id: `ugc-${song.id}`,
         slug: 'loose',
         title: 'Single',
-        cover_url: song.image_url || '/default-album.png',
+        cover_url: song.image_url || withBase('/default-album.png'),
         release_type: 'single',
         status: 'published',
         created_at: song.created_at,

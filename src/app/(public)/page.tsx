@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { HomeClient } from '@/components/home/HomeClient'
 import { Track, Album, Artist } from '@/types/music'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { withBase } from '@/lib/basePath'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -131,7 +132,7 @@ export default async function PublicHomePage() {
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
     const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
     const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'suno-ai')
-    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator')
 
     return {
@@ -153,7 +154,7 @@ export default async function PublicHomePage() {
         id: playlist.id,
         slug: playlist.id,
         title: playlist.title,
-        cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+        cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
         release_type: 'playlist',
         status: 'published',
         created_at: playlist.created_at,
@@ -170,7 +171,7 @@ export default async function PublicHomePage() {
         id: `suno-album-${song.id}`,
         slug: 'loose',
         title: song.form?.styleDesc || song.title,
-        cover_url: song.image_url || '/default-album.png',
+        cover_url: song.image_url || withBase('/default-album.png'),
         release_type: 'single',
         status: 'published',
         created_at: song.created_at,
@@ -274,7 +275,7 @@ export default async function PublicHomePage() {
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
     const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
     const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
-    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+    const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
 
     return {
@@ -283,7 +284,7 @@ export default async function PublicHomePage() {
       artist_id: finalArtistId,
       title: playlist.title,
       release_type: 'lp',
-      cover_url: playlist.cover_url || '/default-album.png',
+      cover_url: playlist.cover_url || withBase('/default-album.png'),
       release_date: playlist.created_at,
       genres: playlist.genre ? [playlist.genre] : [],
       moods: [],

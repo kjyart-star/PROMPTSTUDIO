@@ -14,6 +14,7 @@ import { AudioDuration } from '@/components/player/AudioDuration'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { AlbumCard } from '@/components/common/AlbumCard'
+import { withBase } from '@/lib/basePath'
 
 interface HomeClientProps {
   initialTracks: Track[]
@@ -714,8 +715,8 @@ export function HomeClient({
 
   const heroImages = [
     "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&h=500&q=80",
-    "/images/hero-bg-2.png",
-    "/images/hero-bg-3.png"
+    withBase("/images/hero-bg-2.png"),
+    withBase("/images/hero-bg-3.png")
   ]
 
   useEffect(() => {

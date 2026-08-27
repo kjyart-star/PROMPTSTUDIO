@@ -9,6 +9,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { withBase } from '@/lib/basePath'
 
 const formatCount = (count: number) => {
   if (!count) return '0'
@@ -359,12 +360,12 @@ export function AlbumClient({
                       onClick={() => handlePlayTrack(track, idx)}
                     >
                       <img 
-                        src={(track as any).image_url || album.cover_url || "/default-album.png"} 
+                        src={(track as any).image_url || album.cover_url || withBase("/default-album.png")} 
                         alt="" 
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/default-album.png";
+                          e.currentTarget.src = withBase("/default-album.png");
                         }}
                       />
                       {/* Hover Play/Pause Overlay */}

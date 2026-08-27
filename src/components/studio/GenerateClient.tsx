@@ -6,6 +6,7 @@ import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, Folder
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
+import { withBase } from '@/lib/basePath'
 
 interface GenerateClientProps {
   user: any
@@ -1063,15 +1064,15 @@ export function GenerateClient({
                                 file_url: track.audio_url,
                                 duration_sec: 180,
                                 album_id: 'studio-generated',
-                                image_url: track.image_url || '/default-album.png',
+                                image_url: track.image_url || withBase('/default-album.png'),
                                 album: {
                                   id: 'studio-generated',
                                   title: 'Studio Generation',
-                                  cover_url: track.image_url || '/default-album.png',
+                                  cover_url: track.image_url || withBase('/default-album.png'),
                                   artist: {
                                     name: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
                                     slug: user?.email?.split('@')[0] || 'ai-generator',
-                                    avatar_url: profile?.avatar_url || '/default-album.png',
+                                    avatar_url: profile?.avatar_url || withBase('/default-album.png'),
                                     bio: 'AI Artist'
                                   }
                                 }

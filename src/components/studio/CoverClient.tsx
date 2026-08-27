@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Music, Disc, Upload, Play, Pause, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
+import { withBase } from '@/lib/basePath'
 
 interface CoverClientProps {
   user: any
@@ -64,7 +65,7 @@ export function CoverClient({ user }: CoverClientProps) {
       album: {
         id: 'source-audio-album',
         title: 'Uploaded Audio Source',
-        cover_url: '/default-album.png',
+        cover_url: withBase('/default-album.png'),
         artist: {
           name: 'Source Audio',
           slug: 'source-audio'
@@ -90,7 +91,7 @@ export function CoverClient({ user }: CoverClientProps) {
       album: {
         id: 'cover-audio-album',
         title: 'Cover Generation',
-        cover_url: audio.image_url || '/default-album.png',
+        cover_url: audio.image_url || withBase('/default-album.png'),
         artist: {
           name: 'AI Cover',
           slug: 'ai-cover'

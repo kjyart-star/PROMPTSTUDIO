@@ -3,6 +3,7 @@ import { AlbumClient } from '@/components/album/AlbumClient'
 import { Album, Track } from '@/types/music'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { withBase } from '@/lib/basePath'
 
 interface PageProps {
   params: Promise<{
@@ -65,7 +66,7 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
       const mainChannel = channelsData?.[0]
       const artistName = mainChannel?.name || profileData?.display_name || 'Unknown Artist'
       const artistSlug = mainChannel?.slug || profileData?.username || 'user'
-      const artistAvatar = mainChannel?.avatar_url || profileData?.avatar_url || '/default-album.png'
+      const artistAvatar = mainChannel?.avatar_url || profileData?.avatar_url || withBase('/default-album.png')
 
       const album: Album = {
         id: playlistData.id,
@@ -73,7 +74,7 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
         artist_id: playlistData.user_id,
         title: playlistData.title,
         release_type: 'playlist',
-        cover_url: playlistData.cover_url || '/default-album.png',
+        cover_url: playlistData.cover_url || withBase('/default-album.png'),
         release_date: playlistData.created_at,
         genres: playlistData.genre ? [playlistData.genre] : [],
         moods: [],

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { ChartClient } from '@/components/chart/ChartClient'
+import { withBase } from '@/lib/basePath'
 
 interface PageProps {
   searchParams: Promise<{
@@ -127,7 +128,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
       const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
       const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'suno-ai')
-      const finalAvatarUrl = songChannel ? (songChannel.avatar_url || '/default-album.png') : (songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png')
+      const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
       const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator')
 
       return {
@@ -156,7 +157,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
             id: playlist.id,
             slug: playlist.id,
             title: playlist.title,
-            cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+            cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
             release_type: 'playlist',
             status: 'published',
             created_at: playlist.created_at,
@@ -174,7 +175,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
             id: `suno-album-${song.id}`,
             slug: 'loose',
             title: song.form?.styleDesc || song.title,
-            cover_url: song.image_url || '/default-album.png',
+            cover_url: song.image_url || withBase('/default-album.png'),
             artist_id: finalArtistId,
             genres: [formGenre],
             artist: {

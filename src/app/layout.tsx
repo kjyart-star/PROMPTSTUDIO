@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BasePathFetch from "@/components/common/BasePathFetch";
+import AuthCodeCatcher from "@/components/common/AuthCodeCatcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <BasePathFetch />
+        {/* 잘못 떨어진 ?code= 를 세션으로 바꾸는 구글 로그인 안전망 */}
+        <AuthCodeCatcher />
         {children}
       </body>
     </html>

@@ -562,6 +562,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
               <div>
                 <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '프로필 관리' : uiLanguage === 'JA' ? 'プロフィール管理' : 'Profile Management'}</h3>
                 <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '내 아티스트 채널에 표시될 프로필 정보를 편집합니다.' : uiLanguage === 'JA' ? 'アーティストチャンネルに表示される情報を編集します。' : 'Edit display info visible on your artist channel.'}</p>
+                {/* 계정 관리의 정본은 쿠키플레이 /account — 같은 profiles 테이블을 쓰므로 값은 어긋나지 않는다 */}
+                <p className="text-[11px] text-zinc-500 mt-2 text-left">
+                  {uiLanguage === 'KO' ? '사진·이름·비밀번호 같은 계정 정보는 ' : uiLanguage === 'JA' ? '写真・名前・パスワードなどのアカウント情報は ' : 'Account info like photo, name, and password lives in '}
+                  <a href={withBase('/account')} className="text-primary font-bold hover:underline">
+                    {uiLanguage === 'KO' ? '쿠키플레이 계정 설정' : uiLanguage === 'JA' ? 'クッキープレイ アカウント設定' : 'CookiePlay account settings'}
+                  </a>
+                  {uiLanguage === 'KO' ? '에서 전체 관리합니다.' : uiLanguage === 'JA' ? 'で一括管理します。' : '.'}
+                </p>
               </div>
 
               {/* Banner Image Upload */}

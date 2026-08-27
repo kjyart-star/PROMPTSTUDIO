@@ -5,6 +5,7 @@ import { Music, Library, EyeOff, Search, Loader2, Play, Pause, AlertCircle, Shie
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
+import { withBase } from '@/lib/basePath'
 
 export function UgcManagementClient() {
   const [songs, setSongs] = useState<any[]>([])
@@ -200,7 +201,7 @@ export function UgcManagementClient() {
       album: {
         id: 'ugc-album',
         title: 'UGC Manager Catalog',
-        cover_url: song.image_url || '/default-album.png',
+        cover_url: song.image_url || withBase('/default-album.png'),
         artist: {
           name: song.user_id ? `User: ${song.user_id.slice(0, 8)}` : 'UGC User',
           slug: song.user_id || 'ugc-user'

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Heart, Disc3, FileText, ListMusic } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
+import { withBase } from '@/lib/basePath'
 
 /* ------------------------------------------------------------- useRafLoop */
 
@@ -410,7 +411,7 @@ const DEFAULT_TRACK = {
     id: 'dummy-album-1',
     slug: 'neonecho',
     title: 'Electric Dreams',
-    cover_url: '/images/vanguard_cover.png',
+    cover_url: withBase('/images/vanguard_cover.png'),
     release_type: 'lp',
     status: 'published',
     created_at: '',
@@ -733,7 +734,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
   if (!isOpen || !pipWindow || !pipContainerRef.current) return null;
 
   const activeTrack = currentTrack || DEFAULT_TRACK;
-  const coverUrl = (activeTrack as any).album?.cover_url || (activeTrack as any).image_url || '/images/vanguard_cover.png';
+  const coverUrl = (activeTrack as any).album?.cover_url || (activeTrack as any).image_url || withBase('/images/vanguard_cover.png');
 
   const pipContent = (
     <div className="pip-player relative">
@@ -762,7 +763,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
             <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5 custom-scrollbar scroll-smooth">
               {queue.map((track, idx) => {
                 const isCurrent = activeTrack.id === track.id;
-                const cover = track.album?.cover_url || track.image_url || '/default-album.png';
+                const cover = track.album?.cover_url || track.image_url || withBase('/default-album.png');
                 return (
                   <div
                     key={`${track.id}-${idx}`}
@@ -827,7 +828,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
             trackKey={activeTrack.id === 'dummy-1' ? 0 : layers[layers.length - 1]?.id || 0}
             direction={direction}
             onZoomToggle={() => setIsZoomed((z) => !z)}
-            defaultCover="/images/vanguard_cover.png"
+            defaultCover={withBase("/images/vanguard_cover.png")}
           />
         )}
 

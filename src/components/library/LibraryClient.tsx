@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { AlbumCard } from '@/components/common/AlbumCard'
+import { withBase } from '@/lib/basePath'
 
 
 interface LibraryClientProps {
@@ -531,7 +532,7 @@ export function LibraryClient({
           body: JSON.stringify({
             title: editTitle,
             description: serializePlaylistDescription('playlist', editDescription),
-            cover_url: editCoverUrl || '/images/top100_cover.png',
+            cover_url: editCoverUrl || withBase('/images/top100_cover.png'),
             genre: editGenre,
             is_published: editIsPublished,
             exposure_order: editExposureOrder === '' ? null : Number(editExposureOrder)
@@ -877,7 +878,7 @@ export function LibraryClient({
       id: 'liked',
       title: uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs',
       description: uiLanguage === 'KO' ? '내가 좋아하는 곡 보관함' : uiLanguage === 'JA' ? 'あなたのお気に入りのトラック' : 'Your liked tracks',
-      cover_url: '/images/liked_cover.png',
+      cover_url: withBase('/images/liked_cover.png'),
       tracks: likedTracks as Track[],
       type: 'PLAYLIST',
       isSystem: true,
@@ -951,7 +952,7 @@ export function LibraryClient({
           const originalProfile = trackProfiles[song.user_id]
           const artistName = originalProfile ? (originalProfile.display_name || originalProfile.email?.split('@')[0]) : 'Me'
           const artistSlug = originalProfile ? (originalProfile.email?.split('@')[0] || 'me') : 'me'
-          const artistAvatar = originalProfile?.avatar_url || '/default-album.png'
+          const artistAvatar = originalProfile?.avatar_url || withBase('/default-album.png')
 
           return {
             id: song.id,
@@ -968,11 +969,11 @@ export function LibraryClient({
             arranger: song.form?.arranger || '',
             lyrics: song.lyrics || '',
             style_prompt: song.prompt || song.form?.prompt || '',
-            image_url: song.image_url || cp.cover_url || '/default-album.png',
+            image_url: song.image_url || cp.cover_url || withBase('/default-album.png'),
             album: {
               id: cp.id,
               title: song.form?.styleDesc || cp.title,
-              cover_url: cp.cover_url || '/default-album.png',
+              cover_url: cp.cover_url || withBase('/default-album.png'),
               release_type: 'single',
               status: cp.is_published ? 'published' : 'private',
               created_at: cp.created_at,
@@ -1320,12 +1321,12 @@ export function LibraryClient({
                   </div>
                 ) : (
                   <img 
-                    src={activePlaylist.cover_url || '/default-album.png'} 
+                    src={activePlaylist.cover_url || withBase('/default-album.png')} 
                     alt="Album Cover" 
                     className="absolute inset-0 w-full h-full object-cover z-10" 
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/default-album.png";
+                      e.currentTarget.src = withBase("/default-album.png");
                     }}
                   />
                 )}
@@ -1446,12 +1447,12 @@ export function LibraryClient({
                             onClick={(e) => { e.stopPropagation(); handlePlay(track, activePlaylist.tracks); }}
                           >
                             <img 
-                              src={track.image_url || track.album?.cover_url || '/default-album.png'} 
+                              src={track.image_url || track.album?.cover_url || withBase('/default-album.png')} 
                               alt="Track Cover" 
                               className="w-full h-full object-cover" 
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
-                                e.currentTarget.src = "/default-album.png";
+                                e.currentTarget.src = withBase("/default-album.png");
                               }}
                             />
                             {/* Hover Play/Pause Overlay */}
@@ -1713,14 +1714,14 @@ export function LibraryClient({
                       <div className="flex gap-1.5 justify-center flex-wrap">
                         <button 
                           type="button"
-                          onClick={() => setEditCoverUrl('/images/top100_cover.png')}
+                          onClick={() => setEditCoverUrl(withBase('/images/top100_cover.png'))}
                           className="px-2.5 py-1 rounded bg-[#141415] border border-outline-variant/10 hover:border-primary/30 text-[9px] font-bold transition-all cursor-pointer text-on-surface-variant hover:text-white"
                         >
                           Neon Wave
                         </button>
                         <button 
                           type="button"
-                          onClick={() => setEditCoverUrl('/images/liked_cover.png')}
+                          onClick={() => setEditCoverUrl(withBase('/images/liked_cover.png'))}
                           className="px-2.5 py-1 rounded bg-[#141415] border border-outline-variant/10 hover:border-primary/30 text-[9px] font-bold transition-all cursor-pointer text-on-surface-variant hover:text-white"
                         >
                           Neon Heart

@@ -13,6 +13,7 @@ import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
+import { withBase } from '@/lib/basePath'
 
 const durationCache: Record<string, number> = {}
 
@@ -2638,7 +2639,7 @@ function LibraryView({
       waveform_data: null,
       lyrics: item.lyrics || null,
       style_prompt: item.prompt || item.promptText || null,
-      image_url: item.image_url || '/default-album.png',
+      image_url: item.image_url || withBase('/default-album.png'),
       bpm: null,
       song_key: null,
       prompt_meta: null,
@@ -2653,7 +2654,7 @@ function LibraryView({
         artist_id: profile?.id || user?.id || 'user',
         title: uiLanguage === 'KO' ? '라이브러리' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library',
         release_type: 'single' as const,
-        cover_url: item.image_url || '/default-album.png',
+        cover_url: item.image_url || withBase('/default-album.png'),
         release_date: null,
         genres: [],
         moods: [],
@@ -2668,7 +2669,7 @@ function LibraryView({
           id: profile?.id || user?.id || 'user',
           name: profile?.display_name || user?.email?.split('@')[0] || 'AI Artist',
           slug: user?.email?.split('@')[0] || 'user',
-          avatar_url: profile?.avatar_url || '/default-album.png',
+          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
           bio: 'AI Artist'
         }
       }
@@ -3179,7 +3180,7 @@ Rain on the midnight road
                             }}
                           >
                             <img 
-                              src={item.image_url || '/default-album.png'} 
+                              src={item.image_url || withBase('/default-album.png')} 
                               alt="Cover" 
                               className="w-full h-full object-cover"
                             />
@@ -3516,7 +3517,7 @@ Rain on the midnight road
             <div className="flex items-center justify-between border-b border-outline-variant/10 px-6 py-5 sm:px-8 bg-[#0e130f] rounded-t-2xl">
               <div className="flex items-center gap-4 min-w-0">
                 <img 
-                  src={selectedItem.image_url || '/default-album.png'} 
+                  src={selectedItem.image_url || withBase('/default-album.png')} 
                   alt="Cover" 
                   className="w-12 h-12 rounded-lg object-cover bg-zinc-900 border border-zinc-800/50 flex-shrink-0"
                 />

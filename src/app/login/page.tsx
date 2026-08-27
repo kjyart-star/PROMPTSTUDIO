@@ -337,14 +337,16 @@ function LoginContent() {
 
 /** 허브 헤더와 같은 락업 — COOKIE 는 라임, PLAY 는 흰색. */
 function Wordmark({ className = '', compact = false }: { className?: string; compact?: boolean }) {
+  // 로고를 누르면 쿠키플레이 메인으로 — 대표 확정 동선. 일반 <a href="/"> 는
+  // basePath 가 붙지 않아 window.location.origin + '/' (쿠키플레이 홈)로 간다.
   return (
-    <div className={`flex items-center gap-2 select-none ${className}`}>
+    <a href="/" className={`flex items-center gap-2 select-none w-fit ${className}`}>
       <span className={compact ? 'text-[18px]' : 'text-[26px]'} aria-hidden="true">🍪</span>
       <span className={`${compact ? 'text-[16px]' : 'text-[24px]'} font-black tracking-tight leading-none`}>
         <span className="text-[#b6cc14]">COOKIE</span>
         <span className="text-white">PLAY</span>
       </span>
-    </div>
+    </a>
   )
 }
 

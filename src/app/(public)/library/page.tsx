@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { LibraryClient } from '@/components/library/LibraryClient'
 import { Track } from '@/types/music'
+import { withBase } from '@/lib/basePath'
 
 export const revalidate = 0
 
@@ -83,7 +84,7 @@ export default async function LibraryPage() {
           id: playlist.id,
           slug: playlist.id,
           title: playlist.title,
-          cover_url: song.image_url || playlist.cover_url || '/default-album.png',
+          cover_url: song.image_url || playlist.cover_url || withBase('/default-album.png'),
           release_type: 'playlist',
           status: 'published',
           created_at: playlist.created_at,
@@ -92,7 +93,7 @@ export default async function LibraryPage() {
             id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
             name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
             slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
-            avatar_url: songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png',
+            avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
             bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
             created_at: song.created_at
           }
@@ -100,7 +101,7 @@ export default async function LibraryPage() {
           id: `suno-album-${song.id}`,
           slug: 'loose',
           title: song.form?.styleDesc || song.title,
-          cover_url: song.image_url || '/default-album.png',
+          cover_url: song.image_url || withBase('/default-album.png'),
           release_type: 'single',
           status: 'published',
           created_at: song.created_at,
@@ -109,7 +110,7 @@ export default async function LibraryPage() {
             id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
             name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
             slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
-            avatar_url: songProfile ? (songProfile.avatar_url || '/default-album.png') : '/default-album.png',
+            avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
             bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
             created_at: song.created_at
           }

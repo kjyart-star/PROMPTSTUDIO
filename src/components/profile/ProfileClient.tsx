@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/playerStore'
 import { GENRES } from '@/lib/constants'
+import { withBase } from '@/lib/basePath'
 
 
 interface ProfileClientProps {
@@ -1990,11 +1991,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           album: {
             id: song.playlist_id || 'loose',
             title: song.playlist_title || 'Single Track',
-            cover_url: song.image_url || '/default-album.png',
+            cover_url: song.image_url || withBase('/default-album.png'),
             artist: {
               name: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.name || profile?.display_name || user?.email?.split('@')[0] || 'AI Artist') : (profile?.display_name || user?.email?.split('@')[0] || 'AI Artist'),
               slug: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
-              avatar_url: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+              avatar_url: song.channel_id && channels ? (channels.find((c: any) => c.id === song.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
             }
           }
         }
@@ -2168,12 +2169,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         onClick={() => handleSelectPlaylist(playlist)}
       >
         <img 
-          src={playlist.cover_url || "/default-album.png"} 
+          src={playlist.cover_url || withBase("/default-album.png")} 
           alt={playlist.title} 
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
           onError={(e) => {
             e.currentTarget.onerror = null;
-            e.currentTarget.src = "/default-album.png";
+            e.currentTarget.src = withBase("/default-album.png");
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-4">
@@ -2227,11 +2228,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       album: {
         id: item.playlist_id || 'loose',
         title: item.playlist_title || 'Single Track',
-        cover_url: item.image_url || '/default-album.png',
+        cover_url: item.image_url || withBase('/default-album.png'),
         artist: {
           name: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.name || profile?.display_name || user.email.split('@')[0]) : (profile?.display_name || user.email.split('@')[0]),
           slug: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.slug || user.email.split('@')[0]) : (user.email.split('@')[0]),
-          avatar_url: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+          avatar_url: item.channel_id && channels ? (channels.find((c: any) => c.id === item.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
         }
       }
     };
@@ -2256,11 +2257,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         album: {
           id: h.playlist_id || 'loose',
           title: h.playlist_title || 'Single Track',
-          cover_url: h.image_url || '/default-album.png',
+          cover_url: h.image_url || withBase('/default-album.png'),
           artist: {
             name: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.name || profile?.display_name || user.email.split('@')[0]) : (profile?.display_name || user.email.split('@')[0]),
             slug: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.slug || user.email.split('@')[0]) : (user.email.split('@')[0]),
-            avatar_url: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+            avatar_url: h.channel_id && channels ? (channels.find((c: any) => c.id === h.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
           }
         }
       }));
@@ -2282,7 +2283,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               className="w-full h-full object-cover" 
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = "/default-album.png";
+                e.currentTarget.src = withBase("/default-album.png");
               }}
             />
           ) : (
@@ -2415,12 +2416,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       <div key={playlist.id} className="bg-surface-container p-3 rounded-xl border border-outline-variant/10 shadow-sm flex flex-col gap-3 transition-all hover:bg-surface-container-high group hover:scale-[1.02] cursor-pointer relative" onClick={() => handleSelectPlaylist(playlist)}>
         <div className="relative aspect-square w-full rounded-t-2xl rounded-b-lg overflow-hidden bg-surface-container-highest flex items-center justify-center border-t-8 border-primary/20 group-hover:opacity-80 transition-opacity">
           <img 
-            src={playlist.cover_url || '/default-album.png'} 
+            src={playlist.cover_url || withBase('/default-album.png')} 
             alt="Cover" 
             className="w-full h-full object-cover" 
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "/default-album.png";
+              e.currentTarget.src = withBase("/default-album.png");
             }}
           />
           {!isPublicView && (
@@ -2638,12 +2639,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               {/* Cover Art */}
               <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden shadow-2xl shrink-0 border border-white/5 bg-zinc-900">
                 <img 
-                  src={selectedPlaylist.cover_url || '/default-album.png'} 
+                  src={selectedPlaylist.cover_url || withBase('/default-album.png')} 
                   alt="Album Cover" 
                   className="w-full h-full object-cover" 
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/default-album.png";
+                    e.currentTarget.src = withBase("/default-album.png");
                   }}
                 />
               </div>
@@ -2677,11 +2678,11 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                           album: {
                             id: selectedPlaylist.id,
                             title: selectedPlaylist.title,
-                            cover_url: selectedPlaylist.cover_url || '/default-album.png',
+                            cover_url: selectedPlaylist.cover_url || withBase('/default-album.png'),
                             artist: {
                               name: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
                               slug: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
-                              avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+                              avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
                             }
                           }
                         }));
@@ -2804,15 +2805,15 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     arranger: track.form?.arranger || track.arranger || '',
                     lyrics: track.lyrics || '',
                     style_prompt: track.prompt || track.style_prompt || '',
-                    image_url: track.image_url || selectedPlaylist.cover_url || '/default-album.png',
+                    image_url: track.image_url || selectedPlaylist.cover_url || withBase('/default-album.png'),
                     album: {
                       id: selectedPlaylist.id,
                       title: selectedPlaylist.title,
-                      cover_url: selectedPlaylist.cover_url || '/default-album.png',
+                      cover_url: selectedPlaylist.cover_url || withBase('/default-album.png'),
                       artist: {
                         name: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
                         slug: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
-                        avatar_url: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+                        avatar_url: track.channel_id && channels ? (channels.find((c: any) => c.id === track.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
                       }
                     }
                   };
@@ -2846,15 +2847,15 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                 album_id: selectedPlaylist.id,
                                 lyrics: t.lyrics || '',
                                 style_prompt: t.prompt || t.style_prompt || '',
-                                image_url: t.image_url || selectedPlaylist.cover_url || '/default-album.png',
+                                image_url: t.image_url || selectedPlaylist.cover_url || withBase('/default-album.png'),
                                 album: {
                                   id: selectedPlaylist.id,
                                   title: selectedPlaylist.title,
-                                  cover_url: selectedPlaylist.cover_url || '/default-album.png',
+                                  cover_url: selectedPlaylist.cover_url || withBase('/default-album.png'),
                                   artist: {
                                     name: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.name || profile?.display_name || 'AI Artist') : (profile?.display_name || 'AI Artist'),
                                     slug: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.slug || user?.email?.split('@')[0] || 'user') : (user?.email?.split('@')[0] || 'user'),
-                                    avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png') : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '/default-album.png')
+                                    avatar_url: t.channel_id && channels ? (channels.find((c: any) => c.id === t.channel_id)?.avatar_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png')) : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || withBase('/default-album.png'))
                                   }
                                 }
                               })));
@@ -2863,12 +2864,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                           }}
                         >
                           <img 
-                            src={track.image_url || selectedPlaylist.cover_url || '/default-album.png'} 
+                            src={track.image_url || selectedPlaylist.cover_url || withBase('/default-album.png')} 
                             alt="Track Cover" 
                             className="w-full h-full object-cover" 
                             onError={(e) => {
                               e.currentTarget.onerror = null;
-                              e.currentTarget.src = "/default-album.png";
+                              e.currentTarget.src = withBase("/default-album.png");
                             }}
                           />
                           {/* Hover Play/Pause Overlay */}
@@ -3350,12 +3351,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                     >
                                       <img 
                                         draggable={false}
-                                        src={song.image_url || "/default-album.png"} 
+                                        src={song.image_url || withBase("/default-album.png")} 
                                         alt="Cover" 
                                         className={`w-full h-full object-cover transition-opacity ${isPlayingThis ? 'opacity-40' : 'group-hover/thumb:opacity-50'}`}
                                         onError={(e) => {
                                           e.currentTarget.onerror = null;
-                                          e.currentTarget.src = "/default-album.png";
+                                          e.currentTarget.src = withBase("/default-album.png");
                                         }}
                                       />
                                       {!isPlayingThis && (
@@ -3995,12 +3996,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 shadow-md">
                               <img 
-                                src={song.image_url || "/default-album.png"} 
+                                src={song.image_url || withBase("/default-album.png")} 
                                 alt="Cover" 
                                 className="w-full h-full object-cover" 
                                 onError={(e) => {
                                   e.currentTarget.onerror = null;
-                                  e.currentTarget.src = "/default-album.png";
+                                  e.currentTarget.src = withBase("/default-album.png");
                                 }}
                               />
                               <button 
@@ -4234,12 +4235,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                             
                             <div className="relative w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-lg group">
                               <img 
-                                src={song.image_url || "/default-album.png"} 
+                                src={song.image_url || withBase("/default-album.png")} 
                                 alt="Featured Cover" 
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                                 onError={(e) => {
                                   e.currentTarget.onerror = null;
-                                  e.currentTarget.src = "/default-album.png";
+                                  e.currentTarget.src = withBase("/default-album.png");
                                 }}
                               />
                               <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold font-mono text-white">
@@ -4327,12 +4328,12 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 shadow-md">
                               <img 
-                                src={song.image_url || "/default-album.png"} 
+                                src={song.image_url || withBase("/default-album.png")} 
                                 alt="Cover" 
                                 className="w-full h-full object-cover" 
                                 onError={(e) => {
                                   e.currentTarget.onerror = null;
-                                  e.currentTarget.src = "/default-album.png";
+                                  e.currentTarget.src = withBase("/default-album.png");
                                 }}
                               />
                               <button 

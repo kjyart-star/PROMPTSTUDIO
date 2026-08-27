@@ -11,6 +11,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { AlbumCard } from '@/components/common/AlbumCard'
+import { withBase } from '@/lib/basePath'
 
 interface ArtistClientProps {
   artist: Artist
@@ -430,17 +431,17 @@ export function ArtistClient({
 
   // Neon Echo grayscale portrait / User banner / default banner
   const portraitUrl = isNeonEcho 
-    ? '/images/media__1779826172648.png' 
+    ? withBase('/images/media__1779826172648.png') 
     : artist.is_user
       ? (profileBanner || 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80')
-      : artist.banner_url || '/images/media__1779826172648.png'
+      : artist.banner_url || withBase('/images/media__1779826172648.png')
 
   // Neon Echo silhouette / User banner / default silhouette
   const silhouetteUrl = isNeonEcho 
-    ? '/images/media__1779826553763.png' 
+    ? withBase('/images/media__1779826553763.png') 
     : artist.is_user
       ? (profileBanner || 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80')
-      : '/images/media__1779826553763.png'
+      : withBase('/images/media__1779826553763.png')
 
   const totalPlays = tracks.reduce((sum, track) => sum + (track.play_count || 0), 0) + Number(profilePlays)
   const totalLikes = tracks.reduce((sum, track) => sum + (track.like_count || 0), 0) + Number(profileLikes)
@@ -586,12 +587,12 @@ export function ArtistClient({
                     
                     <div className="relative w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-lg">
                       <img 
-                        src={song.album?.cover_url || "/default-album.png"} 
+                        src={song.album?.cover_url || withBase("/default-album.png")} 
                         alt="Cover" 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/default-album.png";
+                          e.currentTarget.src = withBase("/default-album.png");
                         }}
                       />
                       <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-bold font-mono text-white">
@@ -672,12 +673,12 @@ export function ArtistClient({
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 shadow-md">
                       <img 
-                        src={song.album?.cover_url || "/default-album.png"} 
+                        src={song.album?.cover_url || withBase("/default-album.png")} 
                         alt="Cover" 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/default-album.png";
+                          e.currentTarget.src = withBase("/default-album.png");
                         }}
                       />
                       <button 
@@ -773,12 +774,12 @@ export function ArtistClient({
                 >
                   <div className="relative aspect-square w-full rounded-t-2xl rounded-b-lg overflow-hidden bg-surface-container-highest flex items-center justify-center border-t-8 border-primary/20 group-hover:opacity-80 transition-opacity">
                     <img 
-                      src={playlist.cover_url || '/default-album.png'} 
+                      src={playlist.cover_url || withBase('/default-album.png')} 
                       alt="Cover" 
                       className="w-full h-full object-cover" 
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/default-album.png";
+                        e.currentTarget.src = withBase("/default-album.png");
                       }}
                     />
                   </div>
@@ -1184,7 +1185,7 @@ export function ArtistClient({
               </h2>
               <div className="bg-surface-container-low border border-outline-variant/15 p-4 rounded-2xl flex items-center gap-4 shadow-xl">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-surface-container-lowest border border-outline-variant/20 shrink-0">
-                  <img src={artist.avatar_url || "/images/media__1779823538571.png"} alt="" className="w-full h-full object-cover" />
+                  <img src={artist.avatar_url || withBase("/images/media__1779823538571.png")} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center gap-1.5">
