@@ -33,7 +33,8 @@ interface PlayerState {
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
-  setNowPlayingOpen: (open: boolean) => void;
+  /** persist=false 는 화면 폭 때문에 접는 경우 — 사용자의 선택을 덮어쓰지 않는다 */
+  setNowPlayingOpen: (open: boolean, persist?: boolean) => void;
   
   // Shuffle & Repeat actions
   toggleShuffle: () => void;
@@ -43,6 +44,30 @@ interface PlayerState {
   _setProgress: (currentTime: number, duration: number) => void;
   _markPlayLogged: () => void;
   _resetPlayLog: () => void;
+}
+
+/** 우측 「지금 재생 중」 패널의 여닫힌 상태 기억용 키 */
+export const NOW_PLAYING_KEY = 'cm.now-playing-open';
+
+/* 최근 재생 — 서버에 사용자별 이력 API 가 없어서(play_events 는 집계 전용 쓰기)
+   실제로 재생한 곡만 브라우저에 남긴다. 새 큐 시스템을 만들지 않는다. */
+const RECENT_KEY = 'cm.recent-tracks';
+const RECENT_LIMIT = 20;
+
+export function readRecentTracks(): Track[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+function pushRecentTrack(track: Track) {
+  if (typeof window === 'undefined' || !track?.id) return;
+  try {
+    const next = [track, ...readRecentTracks().filter((t) => t.id !== track.id)].slice(0, RECENT_LIMIT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch { /* quota / private mode */ }
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -77,6 +102,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       playStartTime: Date.now(),
       hasLoggedPlay: false,
     });
+    pushRecentTrack(track);
   },
 
   togglePlay: () => {
@@ -162,7 +188,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setVolume: (volume) => set({ volume, isMuted: volume === 0 }),
   toggleMute: () => set((s) => ({ isMuted: !s.isMuted })),
-  setNowPlayingOpen: (open) => set({ isNowPlayingOpen: open }),
+  setNowPlayingOpen: (open, persist = true) => {
+    if (persist && typeof window !== 'undefined') {
+      try { localStorage.setItem(NOW_PLAYING_KEY, open ? '1' : '0'); } catch { /* private mode */ }
+    }
+    set({ isNowPlayingOpen: open });
+  },
 
   toggleShuffle: () => set((s) => ({ isShuffle: !s.isShuffle })),
   toggleRepeatMode: () => set((s) => {

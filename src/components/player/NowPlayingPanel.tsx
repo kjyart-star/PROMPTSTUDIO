@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Heart, ListMusic, Music, Info, Share2, MoreHorizontal, Plus, Search, Check, Disc3 } from 'lucide-react';
-import { usePlayerStore } from '@/stores/playerStore';
+import { X, Heart, ListMusic, Music, Info, Share2, MoreHorizontal, Plus, Search, Check, Disc3, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { usePlayerStore, readRecentTracks } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import type { Track } from '@/types/music';
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils';
@@ -17,7 +17,8 @@ export function NowPlayingPanel() {
     queue,
     queueIndex,
     isNowPlayingOpen,
-    setNowPlayingOpen
+    setNowPlayingOpen,
+    playTrack
   } = usePlayerStore();
 
   const [lang, setLang] = useState('KO');
@@ -30,6 +31,7 @@ export function NowPlayingPanel() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [recent, setRecent] = useState<Track[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -127,65 +129,103 @@ export function NowPlayingPanel() {
     return () => window.removeEventListener('pageshow', handlePageShow)
   }, [])
 
-  if (!isNowPlayingOpen) return null;
+  // 곡 미선택 화면에 쓸 최근 재생 (브라우저에만 남는다)
+  useEffect(() => {
+    if (!isNowPlayingOpen || currentTrack) return;
+    setRecent(readRecentTracks());
+  }, [isNowPlayingOpen, currentTrack]);
 
-  // Fallback default track if none is active
-  const DEFAULT_TRACK: Track = {
-    id: 'dummy-1',
-    album_id: 'dummy-album-1',
-    track_number: 1,
-    title: 'Electric Dreams',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    duration_sec: 222,
-    file_size: null,
-    waveform_data: null,
-    bpm: null,
-    song_key: null,
-    prompt_meta: null,
-    like_count: 3421,
-    play_count: 12000,
-    status: 'published',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    lyrics: 'Neon lights reflecting on the glass\nSpeeding through the future, moving fast\nDigital dreams and electric hearts\nThis is where the real life starts',
-    style_prompt: 'cyberpunk synthwave high energy female vocal future bass retro 80s',
-    lyricist: 'Acorn Joey',
-    composer: 'Acorn Joey',
-    arranger: 'GenerativeAI',
-    album: {
-      id: 'dummy-album-1',
-      slug: 'neonecho',
-      artist_id: 'neonecho',
-      title: 'Electric Dreams (Single)',
-      release_type: 'single',
-      cover_url: withBase('/images/vanguard_cover.png'),
-      release_date: new Date().toISOString(),
-      genres: ['Synthwave'],
-      moods: ['Energetic'],
-      description: 'Retro futuristic sounds',
-      status: 'published',
-      generation_tool: 'Suno AI',
-      total_plays: 12000,
-      total_likes: 3421,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      artist: {
-        id: 'neonecho',
-        slug: 'neonecho',
-        name: 'Neon Echo',
-        bio: 'Neon Echo is an AI-native project exploring high-energy electronic soundscapes, nostalgic synth frequencies, and futuristic melodies.',
-        avatar_url: withBase('/images/vanguard_cover.png'),
-        banner_url: null,
-        links: null,
-        is_ai_generated: true,
-        owner_user_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    }
-  };
+  /* 패널 왼쪽 경계 한가운데 셰브론 손잡이 — 닫혀도 남아 여는 손잡이가 된다 */
+  const edgeHandle = (
+    <button
+      type="button"
+      onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
+      aria-expanded={isNowPlayingOpen}
+      aria-controls="now-playing-panel"
+      aria-label={isNowPlayingOpen
+        ? (lang === 'KO' ? '재생 정보 패널 닫기' : lang === 'JA' ? '再生情報パネルを閉じる' : 'Hide now playing panel')
+        : (lang === 'KO' ? '재생 정보 패널 열기' : lang === 'JA' ? '再生情報パネルを開く' : 'Show now playing panel')}
+      className={`fixed top-1/2 z-[45] -translate-y-1/2 h-20 w-6 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-low text-on-surface-variant shadow-lg transition-colors hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer ${
+        isNowPlayingOpen
+          ? 'right-[372px] hidden md:flex'   /* 열려 있을 때: 좁은 폭에선 손잡이가 화면 밖으로 나가므로 감춘다(패널의 X 로 닫는다) */
+          : 'right-0 rounded-r-none border-r-0 flex'
+      }`}
+    >
+      {isNowPlayingOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+    </button>
+  );
 
-  const track = currentTrack || DEFAULT_TRACK;
+  if (!isNowPlayingOpen) return edgeHandle;
+
+  const panelClass = "fixed right-3 top-[52px] h-[calc(100vh-160px)] w-[360px] z-40 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col shadow-2xl animate-slide-in-right";
+  const panelHeader = (
+    <div className="flex items-center justify-between px-5 py-4 border-b border-[#282828] bg-surface-container-low/65 sticky top-0 z-10 backdrop-blur-md relative rounded-t-lg">
+      <h2 className="text-sm font-bold text-on-surface truncate pr-4">
+        {lang === 'KO' ? '지금 재생 중' : lang === 'JA' ? '再生中' : 'Now Playing'}
+      </h2>
+      <button
+        onClick={() => setNowPlayingOpen(false)}
+        aria-label={lang === 'KO' ? '재생 정보 패널 닫기' : 'Hide now playing panel'}
+        className="text-on-surface-variant hover:text-on-surface p-1.5 rounded-full hover:bg-white/[0.04] transition-all cursor-pointer"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+  );
+
+  /* 곡 미선택 — 대기열이 있으면 대기열, 없으면 최근 재생, 그것도 없으면 빈 문구 */
+  if (!currentTrack) {
+    const list = queue.length > 0 ? queue : recent;
+    const listLabel = queue.length > 0
+      ? (lang === 'KO' ? '재생 대기열' : lang === 'JA' ? '再生キュー' : 'Play queue')
+      : (lang === 'KO' ? '최근 재생' : lang === 'JA' ? '最近再生' : 'Recently played');
+
+    return (
+      <>
+        {edgeHandle}
+        <aside id="now-playing-panel" className={panelClass} style={{ boxShadow: '-10px 0 30px rgba(0,0,0,0.5)' }}>
+          {panelHeader}
+          <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col rounded-b-lg">
+            {list.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+                <Music className="w-10 h-10 text-primary/60" />
+                <p className="text-on-surface text-base font-medium">
+                  {lang === 'KO' ? '아직 재생 중인 곡이 없습니다' : lang === 'JA' ? 'まだ再生中の曲がありません' : 'Nothing is playing yet'}
+                </p>
+                <p className="text-on-surface-variant text-sm">
+                  {lang === 'KO' ? '곡을 고르면 여기에 가사와 정보가 나옵니다' : lang === 'JA' ? '曲を選ぶとここに歌詞と情報が表示されます' : 'Pick a track and its lyrics and details appear here'}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col p-3 gap-1">
+                <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{listLabel}</div>
+                {list.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => playTrack(t, list)}
+                    className="group flex items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.05] cursor-pointer"
+                  >
+                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-surface-container">
+                      <img src={t.album?.cover_url || withBase('/default-album.png')} alt="" className="h-full w-full object-cover" />
+                      <span className="absolute inset-0 hidden items-center justify-center bg-black/50 group-hover:flex">
+                        <Play className="w-4 h-4 text-white" />
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-bold text-on-surface">{t.title}</span>
+                      <span className="block truncate text-[11px] text-on-surface-variant">{t.album?.artist?.name ?? 'Unknown Artist'}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+      </>
+    );
+  }
+
+  const track = currentTrack;
   const nextTrack = queueIndex >= 0 && queueIndex < queue.length - 1 ? queue[queueIndex + 1] : null;
 
   const handleLikeClick = async () => {
@@ -343,14 +383,16 @@ export function NowPlayingPanel() {
 
   return (
     <>
+      {edgeHandle}
       <aside 
-        className="fixed right-0 top-10 h-[calc(100vh-136px)] w-[360px] z-40 bg-background border-l border-outline-variant/10 flex flex-col shadow-2xl overflow-visible animate-slide-in-right"
+        id="now-playing-panel"
+        className={panelClass + ' overflow-visible'}
         style={{
           boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#282828] bg-background/65 sticky top-0 z-10 backdrop-blur-md relative">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#282828] bg-surface-container-low/65 sticky top-0 z-10 backdrop-blur-md relative rounded-t-lg">
           <h2 className="text-sm font-bold text-on-surface truncate pr-4">
             {track.album?.title || (lang === 'KO' ? '정보' : 'Details')}
           </h2>
@@ -563,7 +605,7 @@ export function NowPlayingPanel() {
 
 
         {/* Scrollable Container */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col rounded-b-lg">
           
           {/* Full-width Cover Art with Gradient Bottom Overlay */}
           <div className="relative w-full aspect-square bg-surface-container-low shrink-0">
@@ -601,7 +643,7 @@ export function NowPlayingPanel() {
                   </h3>
                   <Link
                     href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
-                    onClick={() => setNowPlayingOpen(false)}
+                    onClick={() => setNowPlayingOpen(false, false)}
                     className="block text-sm font-bold text-on-surface-variant/80 hover:text-on-surface hover:underline truncate mt-0.5"
                   >
                     {track.album?.artist?.name || 'Suno AI'}
@@ -643,7 +685,7 @@ export function NowPlayingPanel() {
             {/* Artist Card Header Visual */}
             <Link 
               href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
-              onClick={() => setNowPlayingOpen(false)}
+              onClick={() => setNowPlayingOpen(false, false)}
               className="h-28 w-full relative overflow-hidden bg-gradient-to-b from-primary/10 to-transparent block hover:opacity-90 transition-opacity"
             >
               <img 
@@ -660,7 +702,7 @@ export function NowPlayingPanel() {
             <div className="p-5 -mt-6 relative z-10 flex flex-col gap-3">
               <Link 
                 href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
-                onClick={() => setNowPlayingOpen(false)}
+                onClick={() => setNowPlayingOpen(false, false)}
                 className="flex items-center gap-3 group/artist hover:opacity-80 transition-opacity"
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden border border-outline-variant/20 shrink-0 bg-surface-container-high">
@@ -712,7 +754,7 @@ export function NowPlayingPanel() {
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-outline-variant/5 hover:bg-white/[0.04] transition-all">
                 <Link 
                   href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
-                  onClick={() => setNowPlayingOpen(false)}
+                  onClick={() => setNowPlayingOpen(false, false)}
                   className="min-w-0 flex-1 hover:opacity-85"
                 >
                   <p className="text-xs font-bold text-on-surface truncate hover:underline">
@@ -787,7 +829,7 @@ export function NowPlayingPanel() {
                   <p className="text-xs font-bold text-on-surface truncate">{nextTrack.title}</p>
                   <Link
                     href={`/artists/${nextTrack.album?.artist?.slug || 'suno-ai'}`}
-                    onClick={() => setNowPlayingOpen(false)}
+                    onClick={() => setNowPlayingOpen(false, false)}
                     className="block text-[10px] font-semibold text-on-surface-variant/80 hover:text-on-surface hover:underline truncate mt-0.5"
                   >
                     {nextTrack.album?.artist?.name || 'Suno AI'}

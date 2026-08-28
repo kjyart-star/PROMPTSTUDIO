@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Play, Pause, SkipBack, SkipForward,
-  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart
+  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart, PanelRight, Music
 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
@@ -243,11 +243,8 @@ export function PersistentPlayer() {
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
         const state = usePlayerStore.getState();
-        if (!state.currentTrack) {
-          state.playTrack(DEFAULT_TRACK as any, [DEFAULT_TRACK] as any);
-        } else {
-          state.togglePlay();
-        }
+        if (!state.currentTrack) return;
+        state.togglePlay();
       } else if (e.code === 'ArrowUp' || e.key === 'ArrowUp') {
         e.preventDefault();
         const state = usePlayerStore.getState();
@@ -309,40 +306,14 @@ export function PersistentPlayer() {
     seek(newTime);
   };
 
-  const DEFAULT_TRACK = {
-    id: 'dummy-1',
-    title: 'Electric Dreams',
-    file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    duration_sec: 222,
-    like_count: 342109002,
-    album_id: 'dummy-album-1',
-    album: {
-      id: 'dummy-album-1',
-      slug: 'neonecho',
-      title: 'Electric Dreams',
-      cover_url: withBase('/images/vanguard_cover.png'),
-      release_type: 'lp',
-      status: 'published',
-      created_at: '',
-      artist_id: 'neonecho',
-      artist: {
-        name: 'Neon Echo',
-        slug: 'neonecho'
-      }
-    }
-  };
-
-  const displayTrack = (currentTrack || DEFAULT_TRACK) as any;
-  const displayCurrentTime = currentTrack ? currentTime : 84;
-  const displayDuration = currentTrack ? duration || displayTrack.duration_sec : displayTrack.duration_sec;
+  const displayTrack = currentTrack as any;
+  const displayCurrentTime = currentTrack ? currentTime : 0;
+  const displayDuration = currentTrack ? duration || displayTrack.duration_sec : 0;
 
   // 재생/일시정지 핸들러
   const handlePlayClick = () => {
-    if (!currentTrack) {
-      playTrack(DEFAULT_TRACK as any, [DEFAULT_TRACK] as any);
-    } else {
-      togglePlay();
-    }
+    if (!currentTrack) return;
+    togglePlay();
   };
 
   return (
@@ -381,7 +352,22 @@ export function PersistentPlayer() {
         
         {/* 좌: 트랙 정보 */}
         <div className="flex items-center gap-[16px] w-1/4 min-w-0">
-          {displayTrack.album?.cover_url && (
+          {!currentTrack && (
+            <>
+              <div className="w-14 h-14 rounded-lg shrink-0 border border-outline-variant/10 bg-surface-container flex items-center justify-center">
+                <Music className="w-5 h-5 text-on-surface-variant/50" />
+              </div>
+              <div className="hidden sm:block min-w-0">
+                <p className="font-semibold text-[14px] leading-[20px] text-on-surface-variant truncate">
+                  {lang === 'KO' ? '재생 중인 곡 없음' : lang === 'JA' ? '再生中の曲はありません' : 'Nothing playing'}
+                </p>
+                <p className="font-medium text-[12px] leading-[16px] text-on-surface-variant/60 truncate mt-0.5">
+                  {lang === 'KO' ? '곡을 골라 주세요' : lang === 'JA' ? '曲を選んでください' : 'Pick a track'}
+                </p>
+              </div>
+            </>
+          )}
+          {displayTrack?.album?.cover_url && (
             <div 
               onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
               className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-lg border border-outline-variant/10 cursor-pointer hover:opacity-85 active:scale-95 transition-all"
@@ -394,24 +380,27 @@ export function PersistentPlayer() {
               />
             </div>
           )}
-          <div className="hidden sm:block min-w-0">
-            <button
-              onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
-              className="block font-semibold text-[14px] leading-[20px] text-on-surface hover:underline truncate text-left w-full focus:outline-none"
-              title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
-            >
-              {displayTrack.title}
-            </button>
-            <Link
-              href={`/artists/${displayTrack.album?.artist?.slug ?? ''}`}
-              className="block font-medium text-[12px] leading-[16px] text-on-surface-variant hover:underline truncate mt-0.5"
-            >
-              {displayTrack.album?.artist?.name ?? 'Unknown Artist'}
-            </Link>
-          </div>
+          {currentTrack && (
+            <div className="hidden sm:block min-w-0">
+              <button
+                onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
+                className="block font-semibold text-[14px] leading-[20px] text-on-surface hover:underline truncate text-left w-full focus:outline-none"
+                title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
+              >
+                {displayTrack.title}
+              </button>
+              <Link
+                href={`/artists/${displayTrack.album?.artist?.slug ?? ''}`}
+                className="block font-medium text-[12px] leading-[16px] text-on-surface-variant hover:underline truncate mt-0.5"
+              >
+                {displayTrack.album?.artist?.name ?? 'Unknown Artist'}
+              </Link>
+            </div>
+          )}
           <button 
             onClick={handleLikeClick}
-            className={`transition-colors ml-[8px] cursor-pointer shrink-0 ${
+            disabled={!currentTrack}
+            className={`transition-colors ml-[8px] cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-default ${
               isLiked ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
@@ -524,6 +513,18 @@ export function PersistentPlayer() {
 
         {/* 우: 볼륨 및 기능 */}
         <div className="flex items-center justify-end gap-[16px] w-1/4">
+          <button
+            onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
+            aria-expanded={isNowPlayingOpen}
+            aria-controls="now-playing-panel"
+            className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${isNowPlayingOpen ? 'text-primary' : 'text-on-surface-variant'}`}
+            title={isNowPlayingOpen
+              ? (lang === 'KO' ? '지금 재생 중 닫기' : lang === 'JA' ? '再生中を閉じる' : 'Hide now playing')
+              : (lang === 'KO' ? '지금 재생 중 열기' : lang === 'JA' ? '再生中を開く' : 'Show now playing')}
+          >
+            <PanelRight className="w-5 h-5" />
+          </button>
+
           <div className="relative" ref={queueRef}>
             <button 
               onClick={() => setIsQueueOpen(!isQueueOpen)}

@@ -7,11 +7,11 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Home, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
-  Search, Settings, Heart, ListMusic, CreditCard, Music, Disc
+  Search, Settings, Heart, ListMusic, CreditCard, Music, Disc, Sparkles
 } from 'lucide-react'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
-import { usePlayerStore } from '@/stores/playerStore'
+import { usePlayerStore, NOW_PLAYING_KEY } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
 import { SuiteBar } from '@/components/layout/SuiteBar'
 
@@ -33,7 +33,24 @@ export function PublicLayoutClient({
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
-  const { isNowPlayingOpen } = usePlayerStore()
+  const { isNowPlayingOpen, setNowPlayingOpen } = usePlayerStore()
+  const [isWideForPanel, setIsWideForPanel] = useState(false)
+
+  /* 우측 「지금 재생 중」 패널: 기본은 열림, 닫은 선택은 기억.
+     1280 미만에서는 본문이 찌그러지므로 자동으로 접는다(선택은 덮어쓰지 않는다).
+     스토어 기본값은 닫힘 그대로 두고 마운트 뒤에 적용해 SSR 과 어긋나지 않게 한다. */
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 1280px)')
+    const apply = () => {
+      let stored: string | null = null
+      try { stored = localStorage.getItem(NOW_PLAYING_KEY) } catch { /* private mode */ }
+      setIsWideForPanel(wide.matches)
+      setNowPlayingOpen(wide.matches && stored !== '0', false)
+    }
+    apply()
+    wide.addEventListener('change', apply)
+    return () => wide.removeEventListener('change', apply)
+  }, [setNowPlayingOpen])
 
   // UI 상태
   const [uiLanguage, setUiLanguage] = useState('KO')
@@ -61,7 +78,10 @@ export function PublicLayoutClient({
     const getActiveTab = () => {
       if (pathname === '/studio') return 'studio'
       if (pathname === '/charts') return 'charts'
-      if (pathname === '/search') return 'search'
+      if (pathname === '/search') {
+        const params = new URLSearchParams(window.location.search)
+        return params.get('q')?.toLowerCase() === 'latest-tracks' ? 'latest' : 'search'
+      }
       if (pathname === '/library') {
         const params = new URLSearchParams(window.location.search)
         const plId = params.get('playlistId')
@@ -224,15 +244,13 @@ export function PublicLayoutClient({
   }
 
   return (
-    <div className="min-h-screen bg-background text-on-background font-body-md selection:bg-primary selection:text-on-primary">
+    <div className="min-h-screen bg-background md:h-screen md:min-h-0 md:overflow-hidden md:flex md:flex-col md:bg-surface-container-lowest text-on-background font-body-md selection:bg-primary selection:text-on-primary">
       {/* 스위트 공통 상단 바 — 아래 고정/스티키 요소는 전부 이 40px 만큼 내려간다 */}
       <SuiteBar active="music" />
       
       {/* Shell: Side Navigation (Desktop Only) */}
       {/* 아래 패딩은 고정 플레이어(h-24) 높이만큼 비운다 — 안 그러면 사이드바 맨 아래가 가린다 */}
-      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-[calc(100vh-40px)] w-64 border-r border-outline-variant/10 fixed left-0 top-10 z-50 justify-between overflow-y-auto custom-scrollbar ${
-        activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
-      }`}>
+      <aside className="hidden md:flex flex-col pt-[24px] pb-[24px] px-[16px] h-[calc(100vh-160px)] w-64 rounded-lg border border-outline-variant bg-surface-container-low fixed left-3 top-[52px] z-50 justify-between overflow-y-auto custom-scrollbar">
         <div className="flex flex-col gap-[24px]">
           <div className="flex justify-center">
             {/* 캐릭터와 아치 글씨가 한 장으로 그려진 로고(대표 2026-08-29:
@@ -262,19 +280,6 @@ export function PublicLayoutClient({
             </Link>
 
             <Link 
-              href="/search" 
-              onClick={() => setActiveTab('search')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
-                activeTab === 'search' 
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              <Search className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
-            </Link>
-            
-            <Link 
               href="/charts" 
               onClick={() => setActiveTab('charts')}
               className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
@@ -285,6 +290,34 @@ export function PublicLayoutClient({
             >
               <Trophy className="w-5 h-5 text-current" />
               <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '실시간 차트' : uiLanguage === 'JA' ? 'ライブチャート' : 'Live Charts'}</span>
+            </Link>
+
+            {/* 최신 음원 — 홈의 「최신 음원 > 전체보기」와 같은 화면(SearchClient 의 특수 질의) */}
+            <Link
+              href="/search?q=latest-tracks"
+              onClick={() => setActiveTab('latest')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'latest'
+                  ? 'text-on-surface bg-white/[0.05]'
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Sparkles className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '최신 음원' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks'}</span>
+            </Link>
+
+            {/* 카테고리는 장르로 훑는 탐색 입구라 곡 목록(차트·최신 음원) 아래에 둔다 — 본문 상단 검색줄이 따로 있어 유일한 입구가 아니다 */}
+            <Link 
+              href="/search" 
+              onClick={() => setActiveTab('search')}
+              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                activeTab === 'search' 
+                  ? 'text-on-surface bg-white/[0.05]' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <Search className="w-5 h-5 text-current" />
+              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
             </Link>
 
             <Link 
@@ -421,13 +454,13 @@ export function PublicLayoutClient({
       </aside>
 
       {/* Main Canvas */}
-      <div className={`flex-1 pl-0 md:pl-64 flex flex-col min-h-screen relative pb-32 transition-all duration-300 ${
-        isNowPlayingOpen ? 'md:pr-[360px]' : ''
+      <div className={`flex-1 flex flex-col min-h-screen relative pb-32 bg-surface transition-all duration-300 md:min-h-0 md:pb-6 md:ml-[280px] md:mt-3 md:mb-[108px] md:overflow-y-auto custom-scrollbar md:rounded-lg md:border md:border-outline-variant ${
+        isNowPlayingOpen && isWideForPanel ? 'md:mr-[384px]' : 'md:mr-3'
       }`}>
         
         {/* Shell: Top Navigation */}
         {/* Shell: Top Navigation */}
-        <header className="w-full h-16 z-40 bg-surface/80 backdrop-blur-xl sticky top-10 border-b border-outline-variant/10">
+        <header className="w-full h-16 z-40 bg-surface/80 backdrop-blur-xl sticky top-10 md:top-0 border-b border-outline-variant/10">
           <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-[32px]">
             <div className="flex items-center gap-[16px] flex-1">
               <div className="hidden md:flex gap-[8px]">
