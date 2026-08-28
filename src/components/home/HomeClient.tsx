@@ -16,6 +16,38 @@ import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { AlbumCard } from '@/components/common/AlbumCard'
 import { withBase } from '@/lib/basePath'
+import { GenreCard } from '@/components/common/GenreCard'
+import { GENRES } from '@/lib/constants'
+
+// 메인 「인기 카테고리」 줄 — 개수와 순서는 종전 그대로, 카드 생김새만 「모두 둘러보기」와 한 벌로 쓴다.
+const HOME_CATEGORY_NAMES = [
+  'K-Pop',
+  'Pop',
+  'Hip Hop',
+  'R&B',
+  'Electronic',
+  'Rock',
+  'Jazz',
+  'Classical',
+  'J-Pop',
+  'Gospel',
+  'Country',
+  'Latin',
+  'Afrobeats',
+  'Folk',
+  'Blues',
+  'House',
+  'Punk',
+  'Dance',
+  'Reggae',
+  'Metal',
+  'Soundtrack',
+  'Ambient',
+  'Chill',
+]
+const HOME_CATEGORIES = HOME_CATEGORY_NAMES
+  .map((name) => GENRES.find((g) => g.name === name))
+  .filter((g): g is (typeof GENRES)[number] => !!g)
 
 interface HomeClientProps {
   initialTracks: Track[]
@@ -25,7 +57,6 @@ interface HomeClientProps {
   initialUserLikes: string[]
   initialRecommendedTracks?: Track[]
   initialLatestTracks?: Track[]
-  initialGenreCovers?: Record<string, string>
 }
 
 // 아티스트 구역의 목표 슬롯 수. 실제 아티스트로 먼저 채우고 남는 칸만 자리 표시로 메운다.
@@ -42,7 +73,6 @@ const PLACEHOLDER_COVERS = [
 ]
 
 // 'K-Pop' · 'k pop' · '케이팝' 처럼 표기만 다른 장르를 같은 키로 본다
-const normalizeGenre = (g: string) => g.toLowerCase().replace(/[\s\-&_/.]/g, '')
 
 // Premium fallback dummy artists
 const DUMMY_ARTISTS = [
@@ -712,8 +742,7 @@ export function HomeClient({
   initialArtists,
   initialUserLikes,
   initialRecommendedTracks = [],
-  initialLatestTracks = [],
-  initialGenreCovers = {}
+  initialLatestTracks = []
 }: HomeClientProps) {
   const displayTracks = initialTracks as Track[]
   const initialMergedArtists = [...(initialArtists || [])].sort((a, b) => {
@@ -739,15 +768,6 @@ export function HomeClient({
   }
   const notReadyToast = () =>
     showToast(uiLanguage === 'KO' ? '아직 준비 중입니다' : uiLanguage === 'JA' ? 'まだ準備中です' : 'Not ready yet')
-
-  // 장르 카드 배경 — 실제 그 장르 곡/앨범의 커버만 쓴다. 없으면 null 이라 카드는 지금 모습 그대로 남는다.
-  const genreCoverMap: Record<string, string> = {}
-  Object.entries(initialGenreCovers).forEach(([genre, url]) => {
-    const key = normalizeGenre(genre)
-    if (key && !genreCoverMap[key]) genreCoverMap[key] = url
-  })
-  const coverForCategory = (cat: { name: string; koName: string }) =>
-    genreCoverMap[normalizeGenre(cat.name)] || genreCoverMap[normalizeGenre(cat.koName)] || null
 
   // 실제 앨범을 먼저 채우고 남는 칸만 자리 표시로 메운다 (앨범이 늘면 자리 표시가 줄어든다).
   // coverOffset 으로 구역마다 자켓 순서를 어긋나게 해 두 줄이 복제처럼 보이지 않게 한다.
@@ -1559,72 +1579,15 @@ export function HomeClient({
         </h2>
 
         <Carousel
-          items={[
-            { name: 'K-Pop', koName: '케이팝', gradient: 'from-pink-600/20 to-fuchsia-600/20 hover:border-pink-500/40 text-pink-300' },
-            { name: 'Pop', koName: '팝', gradient: 'from-emerald-600/20 to-teal-600/20 hover:border-emerald-500/40 text-emerald-300' },
-            { name: 'Hip Hop', koName: '힙합', gradient: 'from-amber-600/20 to-orange-600/20 hover:border-amber-500/40 text-amber-300' },
-            { name: 'R&B', koName: '알앤비', gradient: 'from-rose-600/20 to-red-600/20 hover:border-rose-500/40 text-rose-300' },
-            { name: 'Electronic', koName: '일렉트로닉', gradient: 'from-cyan-600/20 to-blue-600/20 hover:border-cyan-500/40 text-cyan-300' },
-            { name: 'Rock', koName: '락', gradient: 'from-red-700/20 to-stone-800/20 hover:border-red-500/40 text-red-300' },
-            { name: 'Jazz', koName: '재즈', gradient: 'from-indigo-600/20 to-violet-600/20 hover:border-indigo-500/40 text-indigo-300' },
-            { name: 'Classical', koName: '클래식', gradient: 'from-slate-600/20 to-zinc-700/20 hover:border-slate-500/40 text-zinc-300' },
-            { name: 'J-Pop', koName: '제이팝', gradient: 'from-sky-600/20 to-indigo-600/20 hover:border-sky-500/40 text-sky-300' },
-            { name: 'Gospel', koName: '가스펠', gradient: 'from-yellow-600/20 to-amber-700/20 hover:border-yellow-500/40 text-yellow-300' },
-            { name: 'Country', koName: '컨트리', gradient: 'from-amber-700/20 to-yellow-800/20 hover:border-amber-600/40 text-amber-400' },
-            { name: 'Latin', koName: '라틴', gradient: 'from-orange-600/20 to-red-500/20 hover:border-orange-500/40 text-orange-300' },
-            { name: 'Afrobeats', koName: '아프로비트', gradient: 'from-yellow-500/20 to-red-600/20 hover:border-yellow-400/40 text-yellow-200' },
-            { name: 'Folk', koName: '포크', gradient: 'from-green-700/20 to-emerald-800/20 hover:border-green-600/40 text-green-300' },
-            { name: 'Blues', koName: '블루스', gradient: 'from-blue-800/20 to-indigo-900/20 hover:border-blue-700/40 text-blue-300' },
-            { name: 'House', koName: '하우스', gradient: 'from-purple-600/20 to-pink-700/20 hover:border-purple-500/40 text-purple-300' },
-            { name: 'Punk', koName: '펑크락', gradient: 'from-red-600/20 to-orange-700/20 hover:border-red-500/40 text-red-300' },
-            { name: 'Dance', koName: '댄스', gradient: 'from-fuchsia-500/20 to-rose-600/20 hover:border-fuchsia-400/40 text-fuchsia-200' },
-            { name: 'Reggae', koName: '레게', gradient: 'from-green-600/20 to-yellow-600/20 hover:border-green-500/40 text-green-200' },
-            { name: 'Metal', koName: '메탈', gradient: 'from-zinc-700/20 to-neutral-900/20 hover:border-zinc-500/40 text-zinc-400' },
-            { name: 'Soundtrack', koName: '사운드트랙', gradient: 'from-violet-700/20 to-fuchsia-900/20 hover:border-violet-600/40 text-violet-300' },
-            { name: 'Ambient', koName: '엠비언트', gradient: 'from-teal-700/20 to-cyan-800/20 hover:border-teal-600/40 text-teal-300' },
-            { name: 'Chill', koName: '칠아웃', gradient: 'from-blue-600/20 to-teal-600/20 hover:border-blue-500/40 text-blue-200' }
-          ]}
-          renderItem={(cat) => {
-            const cover = coverForCategory(cat)
-            return (
-            <div 
-              key={cat.name} 
-              className="flex-none w-[45%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/4)] lg:w-[calc((100%-168px)/8)] transition-all duration-300"
+          items={HOME_CATEGORIES}
+          renderItem={(g) => (
+            <div
+              key={g.name}
+              className="flex-none w-[45%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/4)] lg:w-[calc((100%-120px)/6)] transition-all duration-300"
             >
-              <Link
-                href={`/charts?genre=${cat.name}`}
-                className={`relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${cat.gradient} p-5 flex flex-col justify-between aspect-square hover:scale-[1.03] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-300 cursor-pointer group w-full`}
-              >
-                {cover && (
-                  <>
-                    {/* 커버는 은은하게 — 사진 없는 카드와 톤이 벌어지지 않게 낮은 대비로 깐다 */}
-                    <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-55 transition-opacity duration-300" />
-                    {/* 장르색을 사진 위에 다시 얹어 카드끼리 구분이 남게 한다 */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient}`} />
-                    {/* 글씨용 스크림 */}
-                    <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/45 to-transparent" />
-                  </>
-                )}
-                <div className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-                {!cover && (
-                  <div className="flex-1 flex items-center justify-center">
-                    <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
-                  </div>
-                )}
-                <div className={`text-left ${cover ? 'relative z-10 mt-auto' : ''}`}>
-                  <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
-                    {uiLanguage === 'KO' ? cat.koName : uiLanguage === 'JA' ? (cat as any).jaName || cat.name : cat.name}
-                  </p>
-                  <p className="text-[9px] font-mono text-zinc-400 mt-0.5 tracking-wider uppercase">
-                    {cat.name}
-                  </p>
-                </div>
-              </Link>
+              <GenreCard genre={g} uiLanguage={uiLanguage} href={`/charts?genre=${g.name}`} />
             </div>
-            )
-          }}
+          )}
         />
       </section>
 

@@ -312,19 +312,6 @@ export default async function PublicHomePage() {
     }
   })
 
-  // 장르별 대표 커버 한 장 — 이미 조회한 데이터에서만 고른다(추가 쿼리·쓰기 없음).
-  // 키는 DB 에 저장된 원본 장르 문자열 그대로 두고, 표기 차이 흡수는 화면 쪽에서 한다.
-  const genreCovers: Record<string, string> = {}
-  const pickCover = (genre: any, cover: any) => {
-    if (!genre || !cover) return
-    const key = String(genre).trim()
-    if (!key || genreCovers[key]) return
-    if (String(cover).includes('default-album')) return
-    genreCovers[key] = String(cover)
-  }
-  realSongs.forEach((song: any) => pickCover(song.genre || song.form?.genre, song.image_url))
-  dbAlbums.forEach((playlist: any) => pickCover(playlist.genre, playlist.cover_url))
-
   const initialAlbums: Album[] = mappedAlbums
   const initialPopularAlbums: Album[] = [...mappedAlbums].sort((a, b) => (b.total_plays || 0) - (a.total_plays || 0))
 
@@ -359,7 +346,6 @@ export default async function PublicHomePage() {
       initialUserLikes={initialUserLikes}
       initialRecommendedTracks={initialRecommendedTracks}
       initialLatestTracks={initialLatestTracks}
-      initialGenreCovers={genreCovers}
     />
   )
 }

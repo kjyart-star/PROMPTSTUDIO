@@ -7,6 +7,7 @@ import { Track, Album, Artist } from '@/types/music'
 import { Play, Pause, Heart, Users, Library, Music, Search, TrendingUp, Sparkles, Compass } from 'lucide-react'
 import { TrackDropdown } from '@/components/common/TrackDropdown'
 import { AlbumCard } from '@/components/common/AlbumCard'
+import { GenreCard } from '@/components/common/GenreCard'
 import { usePlayerStore } from '@/stores/playerStore'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -235,21 +236,12 @@ export function SearchClient({
             </h1>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               {GENRES.map((g) => (
-                <button
+                <GenreCard
                   key={g.name}
+                  genre={g}
+                  uiLanguage={uiLanguage}
                   onClick={() => router.push(`/search?q=${encodeURIComponent(g.q)}`)}
-                  className={`relative aspect-[4/3] rounded-2xl ${g.color} p-5 overflow-hidden group shadow-lg text-left hover:scale-[1.04] transition-all cursor-pointer`}
-                >
-                  <div className="flex flex-col select-none">
-                    <span className="text-lg font-black tracking-tight text-white leading-tight">{g.name}</span>
-                    <span className="text-xs font-bold text-white/80 mt-0.5">{uiLanguage === 'KO' ? g.korean : uiLanguage === 'JA' ? g.japanese : g.name}</span>
-                  </div>
-                  <img 
-                    src={g.image} 
-                    alt="" 
-                    className="absolute -right-4 -bottom-4 w-20 h-20 object-cover rounded-xl rotate-[25deg] shadow-2xl group-hover:scale-110 transition-transform duration-300"
-                  />
-                </button>
+                />
               ))}
             </div>
           </div>
