@@ -11,7 +11,9 @@ import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
 import { withBase } from '@/lib/basePath'
 
-export function PersistentPlayer() {
+// hasMobileNav — 이 화면에 모바일 하단 내비(md:hidden, h-24)가 있으면 true.
+// 스트리밍 셸만 해당하고, 스튜디오·관리자 화면은 내비가 없어 종전대로 bottom-0 에 붙는다.
+export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const seekRef = useRef<HTMLInputElement>(null);
 
@@ -348,7 +350,10 @@ export function PersistentPlayer() {
       />
 
       {/* 하단 고정 플레이어 UI */}
-      <footer className="fixed bottom-0 left-0 w-full z-50 flex items-center justify-between px-[32px] h-24 glass-panel border-t border-outline-variant/10">
+      {/* 모바일에선 하단 내비(h-24)가 bottom-0 을 차지하므로 플레이어를 그 바로 위에 얹는다. md+ 는 내비가 없어 종전대로 bottom-0. */}
+      <footer className={`fixed left-0 w-full z-50 flex items-center justify-between px-[32px] h-24 glass-panel border-t border-outline-variant/10 ${
+        hasMobileNav ? 'bottom-24 md:bottom-0' : 'bottom-0'
+      }`}>
         
         {/* 좌: 트랙 정보 */}
         <div className="flex items-center gap-[16px] w-1/4 min-w-0">

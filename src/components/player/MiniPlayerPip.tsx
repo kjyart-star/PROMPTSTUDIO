@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Heart, Disc3, FileText, ListMusic } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Heart, Disc3, FileText, ListMusic, Music } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { withBase } from '@/lib/basePath'
@@ -399,30 +399,6 @@ interface MiniPlayerPipProps {
   onClose: () => void;
 }
 
-const DEFAULT_TRACK = {
-  id: 'dummy-1',
-  title: 'Electric Dreams',
-  file_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-  duration_sec: 222,
-  like_count: 342109002,
-  album_id: 'dummy-album-1',
-  lyrics: 'Neon lights reflecting on the glass\nSpeeding through the future, moving fast\nDigital dreams and electric hearts\nThis is where the real life starts',
-  album: {
-    id: 'dummy-album-1',
-    slug: 'neonecho',
-    title: 'Electric Dreams',
-    cover_url: withBase('/images/vanguard_cover.png'),
-    release_type: 'lp',
-    status: 'published',
-    created_at: '',
-    artist_id: 'neonecho',
-    artist: {
-      name: 'Neon Echo',
-      slug: 'neonecho'
-    }
-  }
-};
-
 export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
   const pipContainerRef = useRef<HTMLDivElement | null>(null);
@@ -440,9 +416,9 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [lang, setLang] = useState('KO');
 
-  const [layers, setLayers] = useState<Layer[]>(() => [
-    { id: 0, track: currentTrack || DEFAULT_TRACK, dir: null },
-  ]);
+  const [layers, setLayers] = useState<Layer[]>(() =>
+    currentTrack ? [{ id: 0, track: currentTrack, dir: null }] : []
+  );
   const lastIndex = useRef(-1);
   const lastTrackId = useRef<string | null>(null);
   const idRef = useRef(1);
@@ -465,7 +441,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
 
   // Sync like state
   useEffect(() => {
-    if (!currentTrack || currentTrack.id === 'dummy-1') {
+    if (!currentTrack) {
       setIsLiked(false);
       return;
     }
@@ -491,15 +467,21 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
 
   // Sync layers & trigger sound
   useEffect(() => {
-    const activeTrack = currentTrack || DEFAULT_TRACK;
-    
+    if (!currentTrack) {
+      lastTrackId.current = null;
+      setLayers([]);
+      return;
+    }
+
+    const activeTrack = currentTrack;
+
     if (activeTrack.id === lastTrackId.current) return;
 
     // Reset lyrics view when song changes
     setShowLyrics(false);
 
     let dir: 'next' | 'prev' | null = null;
-    if (lastTrackId.current !== null && lastTrackId.current !== 'dummy-1') {
+    if (lastTrackId.current !== null) {
       const store = usePlayerStore.getState();
       const currIndex = store.queueIndex;
       if (lastIndex.current !== -1) {
@@ -570,11 +552,8 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
         const state = usePlayerStore.getState();
-        if (!state.currentTrack) {
-          state.playTrack(DEFAULT_TRACK as any, [DEFAULT_TRACK] as any);
-        } else {
-          state.togglePlay();
-        }
+        if (!state.currentTrack) return;
+        state.togglePlay();
       } else if (e.code === 'ArrowUp' || e.key === 'ArrowUp') {
         e.preventDefault();
         const state = usePlayerStore.getState();
@@ -688,8 +667,9 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
   }, [isOpen]);
 
   const handleLikeClick = async () => {
-    const activeTrack = currentTrack || DEFAULT_TRACK;
-    if (!activeTrack.id || activeTrack.id === 'dummy-1') return;
+    if (!currentTrack) return;
+    const activeTrack = currentTrack;
+    if (!activeTrack.id) return;
 
     try {
       const prevLiked = isLiked;
@@ -733,8 +713,27 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
 
   if (!isOpen || !pipWindow || !pipContainerRef.current) return null;
 
-  const activeTrack = currentTrack || DEFAULT_TRACK;
-  const coverUrl = (activeTrack as any).album?.cover_url || (activeTrack as any).image_url || withBase('/images/vanguard_cover.png');
+  if (!currentTrack) {
+    return createPortal(
+      <div className="pip-player relative">
+        <div className="pip-player-card">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+            <Music className="w-10 h-10 text-primary/60" />
+            <p className="text-on-surface text-base font-medium">
+              {lang === 'KO' ? '아직 재생 중인 곡이 없습니다' : lang === 'JA' ? 'まだ再生中の曲がありません' : 'Nothing is playing yet'}
+            </p>
+            <p className="text-on-surface-variant text-sm">
+              {lang === 'KO' ? '곡을 고르면 여기에 표시됩니다' : lang === 'JA' ? '曲を選ぶとここに表示されます' : 'Pick a track and it appears here'}
+            </p>
+          </div>
+        </div>
+      </div>,
+      pipContainerRef.current
+    );
+  }
+
+  const activeTrack = currentTrack;
+  const coverUrl = (activeTrack as any).album?.cover_url || (activeTrack as any).image_url || withBase('/default-album.png');
 
   const pipContent = (
     <div className="pip-player relative">
@@ -825,10 +824,10 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
             layers={layers}
             isPlaying={isPlaying}
             isZoomed={isZoomed}
-            trackKey={activeTrack.id === 'dummy-1' ? 0 : layers[layers.length - 1]?.id || 0}
+            trackKey={layers[layers.length - 1]?.id || 0}
             direction={direction}
             onZoomToggle={() => setIsZoomed((z) => !z)}
-            defaultCover={withBase("/images/vanguard_cover.png")}
+            defaultCover={withBase("/default-album.png")}
           />
         )}
 

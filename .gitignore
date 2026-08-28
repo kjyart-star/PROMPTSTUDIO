@@ -10,3 +10,6 @@ yarn-error.log
 .vercel
 .next
 .env*.local
+
+# 빌드 산출물 — 커밋할 때마다 바뀌어 diff 를 더럽힌다
+tsconfig.tsbuildinfo

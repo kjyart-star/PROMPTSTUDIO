@@ -454,7 +454,8 @@ export function PublicLayoutClient({
       </aside>
 
       {/* Main Canvas */}
-      <div className={`flex-1 flex flex-col min-h-screen relative pb-32 bg-surface transition-all duration-300 md:min-h-0 md:pb-6 md:ml-[280px] md:mt-3 md:mb-[108px] md:overflow-y-auto custom-scrollbar md:rounded-lg md:border md:border-outline-variant ${
+      {/* 모바일 아래 여백은 플레이어(h-24) + 하단 내비(h-24) = 12rem 만큼 비운다 */}
+      <div className={`flex-1 flex flex-col min-h-screen relative pb-48 bg-surface transition-all duration-300 md:min-h-0 md:pb-6 md:ml-[280px] md:mt-3 md:mb-[108px] md:overflow-y-auto custom-scrollbar md:rounded-lg md:border md:border-outline-variant ${
         isNowPlayingOpen && isWideForPanel ? 'md:mr-[384px]' : 'md:mr-3'
       }`}>
         
@@ -758,7 +759,7 @@ export function PublicLayoutClient({
         </div>
       )}
 
-      <PersistentPlayer />
+      <PersistentPlayer hasMobileNav />
       <NowPlayingPanel />
     </div>
   )
