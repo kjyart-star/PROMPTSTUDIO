@@ -83,6 +83,10 @@ export function GenerateClient({
   const [activePlaylistMenuId, setActivePlaylistMenuId] = useState<string | null>(null)
   const [publishConfirmItem, setPublishConfirmItem] = useState<any | null>(null)
   const [selectedPublishGenre, setSelectedPublishGenre] = useState<string>('')
+  const [myChannels, setMyChannels] = useState<any[]>([])
+  const [selectedPublishChannelId, setSelectedPublishChannelId] = useState<string>('')
+  const [publishError, setPublishError] = useState<string>('')
+  const [publishedLink, setPublishedLink] = useState<{ title: string; href: string } | null>(null)
   const [status, setStatus] = useState('대기 중')
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [userCredits, setUserCredits] = useState<number>(120)
@@ -534,6 +538,22 @@ export function GenerateClient({
     fetchPlaylists()
   }, [user])
 
+  useEffect(() => {
+    const fetchChannels = async () => {
+      if (!user) return
+      try {
+        const res = await fetch('/api/channels')
+        if (res.ok) {
+          const data = await res.json()
+          setMyChannels(data?.channels || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch channels:', err)
+      }
+    }
+    fetchChannels()
+  }, [user])
+
   const handleLikeToggle = async (track: any) => {
     const nextLiked = !track.liked
     try {
@@ -566,6 +586,10 @@ export function GenerateClient({
       }
     } else {
       setSelectedPublishGenre(track.genre || '')
+      // 내 채널이 하나뿐이면 기본 선택해 둔다(아무것도 안 골라도 되게).
+      setSelectedPublishChannelId(track.channel_id || (myChannels.length === 1 ? myChannels[0].id : ''))
+      setPublishError('')
+      setPublishedLink(null)
       setPublishConfirmItem(track)
     }
   }
@@ -575,21 +599,38 @@ export function GenerateClient({
     if (!selectedPublishGenre) return
 
     const track = publishConfirmItem
+    setPublishError('')
     try {
+      const payload: any = { is_published: true, genre: selectedPublishGenre }
+      if (selectedPublishChannelId) payload.channel_id = selectedPublishChannelId
+
       const res = await fetch(`/api/song-history/${track.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_published: true, genre: selectedPublishGenre })
+        body: JSON.stringify(payload)
       })
       if (res.ok) {
         await refreshHistoryList()
+        const channel = myChannels.find((c: any) => c.id === selectedPublishChannelId)
+        setPublishedLink({
+          title: track.title || 'Untitled',
+          href: withBase(channel?.slug ? `/artists/${channel.slug}` : '/')
+        })
+        setPublishConfirmItem(null)
+        setSelectedPublishGenre('')
+        setSelectedPublishChannelId('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setPublishError(
+          res.status === 401
+            ? (uiLanguage === 'KO' ? '로그인이 필요합니다. 로그인 후 다시 시도해 주세요.' : uiLanguage === 'JA' ? 'ログインが必要です。' : 'You need to be signed in to publish.')
+            : (data?.error || (uiLanguage === 'KO' ? `퍼블리싱에 실패했습니다 (${res.status}).` : `Publishing failed (${res.status}).`))
+        )
       }
     } catch (err) {
       console.error(err)
+      setPublishError(uiLanguage === 'KO' ? '네트워크 오류로 퍼블리싱에 실패했습니다.' : 'Publishing failed due to a network error.')
     }
-
-    setPublishConfirmItem(null)
-    setSelectedPublishGenre('')
   }
 
   const completedSongs = historyList
@@ -1160,11 +1201,45 @@ export function GenerateClient({
               </select>
             </div>
 
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">공개할 채널</label>
+              {myChannels.length > 0 ? (
+                <select
+                  value={selectedPublishChannelId}
+                  onChange={(e) => setSelectedPublishChannelId(e.target.value)}
+                  className="w-full bg-[#242429] border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
+                >
+                  <option value="">-- 채널 없이 공개 --</option>
+                  {myChannels.map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  {uiLanguage === 'KO'
+                    ? '내 채널이 없습니다. 채널 없이 공개하면 쿠키뮤직 메인·차트에는 뜨지만 채널 페이지에는 모이지 않습니다.'
+                    : 'You have no channel yet. The track will appear on CookieMusic home and charts, but not on a channel page.'}
+                  {' '}
+                  <a href={withBase('/profile')} className="text-primary underline underline-offset-2">
+                    {uiLanguage === 'KO' ? '채널 만들기' : 'Create a channel'}
+                  </a>
+                </p>
+              )}
+            </div>
+
+            {publishError && (
+              <p className="text-[11px] text-red-400 leading-relaxed bg-red-950/30 border border-red-900/40 rounded-lg p-2.5">
+                {publishError}
+              </p>
+            )}
+
             <div className="flex gap-2.5 pt-2">
-              <button 
+              <button
                 onClick={() => {
                   setPublishConfirmItem(null)
                   setSelectedPublishGenre('')
+                  setSelectedPublishChannelId('')
+                  setPublishError('')
                 }}
                 className="flex-1 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-lg text-xs font-bold text-zinc-400 transition-colors cursor-pointer"
               >
@@ -1179,6 +1254,28 @@ export function GenerateClient({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {publishedLink && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#18181c] border border-primary/40 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <Check className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-xs text-zinc-200">
+            {uiLanguage === 'KO' ? `'${publishedLink.title}' 퍼블리싱 완료` : `Published '${publishedLink.title}'`}
+          </span>
+          <a
+            href={publishedLink.href}
+            className="text-xs font-bold text-primary underline underline-offset-2 shrink-0"
+          >
+            {uiLanguage === 'KO' ? '쿠키뮤직에서 보기' : 'View on CookieMusic'}
+          </a>
+          <button
+            onClick={() => setPublishedLink(null)}
+            className="text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer shrink-0"
+            aria-label="close"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

@@ -877,28 +877,11 @@ export function StudioClient({ user }: StudioClientProps) {
   const [playlists, setPlaylists] = useState<any[]>([])
   const [userCredits, setUserCredits] = useState<number>(120)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [publishConfirmItem, setPublishConfirmItem] = useState<any | null>(null)
 
   const confirmDelete = async () => {
     if (!deleteConfirmId) return
     await deleteHistoryItem(deleteConfirmId)
     setDeleteConfirmId(null)
-  }
-
-  const publishTrack = async (item: any) => {
-    if (!item) return
-    try {
-      const res = await fetch('/api/publish-track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackId: item.id })
-      })
-      if (res.ok) {
-        alert(uiLanguage === 'KO' ? '곡이 성공적으로 게시되었습니다!' : 'Track published successfully!')
-      }
-    } catch (e) {
-      console.error(e)
-    }
   }
 
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
@@ -2432,34 +2415,6 @@ export function StudioClient({ user }: StudioClientProps) {
         </div>
       )}
 
-      {publishConfirmItem && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 sm:p-6" onClick={() => setPublishConfirmItem(null)}>
-          <div className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-low/95 backdrop-blur-xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-white mb-2">
-                {uiLanguage === 'KO' ? '게시 확인' : uiLanguage === 'JA' ? '公開の確認' : 'Confirm Publish'}
-              </h3>
-              <p className="text-sm text-zinc-400">
-                {uiLanguage === 'KO' ? '이 곡을 커뮤니티에 게시하시겠습니까?' : uiLanguage === 'JA' ? 'この曲をコミュニティに公開しますか？' : 'Do you want to publish this track to the community?'}
-              </p>
-            </div>
-            <div className="border-t border-outline-variant/10 p-4 bg-surface-container-lowest/30 flex gap-3 justify-end">
-              <button 
-                onClick={() => setPublishConfirmItem(null)}
-                className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
-              </button>
-              <button 
-                onClick={() => { publishTrack(publishConfirmItem); setPublishConfirmItem(null); }}
-                className="px-5 py-2.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/20 cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '게시' : uiLanguage === 'JA' ? '公開する' : 'Publish'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

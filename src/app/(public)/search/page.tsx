@@ -52,7 +52,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
 
   // 4. song_history 음원을 Track 형태로 변환
   const mappedRealSongs = songHistory.map((song: any) => {
-    const formGenre = song.form?.genre || song.genre || 'Pop'
+    const formGenre = song.genre || song.form?.genre || 'Pop'
     const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
     const dbPlayCount = Number(song.form?.play_count || 0)
     const songProfile = profiles.find((p: any) => p.id === song.user_id)

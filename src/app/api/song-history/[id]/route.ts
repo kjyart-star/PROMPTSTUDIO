@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked, image_url, video_url } = body
+    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
@@ -42,7 +42,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     // 소유자가 아니고 관리자일 경우, 오직 'is_published'만 수정 가능하도록 제한
     const updateData: any = {}
     if (!isOwner && isAdmin) {
-      if (playlist_id !== undefined) {
+      if (playlist_id !== undefined || channel_id !== undefined) {
         return NextResponse.json({ error: 'Admins can only change the publishing status or media of other users\' songs.' }, { status: 403 })
       }
       if (is_published !== undefined) updateData.is_published = is_published
@@ -55,6 +55,24 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (liked !== undefined) updateData.liked = liked
       if (image_url !== undefined) updateData.image_url = image_url
       if (video_url !== undefined) updateData.video_url = video_url
+      if (genre !== undefined) updateData.genre = genre
+      if (channel_id !== undefined) {
+        // 남의 채널에 내 곡을 붙일 수 없다. 채널 소유권을 서버에서 반드시 확인한다.
+        if (channel_id === null) {
+          updateData.channel_id = null
+        } else {
+          const { data: channelCheck } = await supabase
+            .from('artists')
+            .select('owner_user_id')
+            .eq('id', channel_id)
+            .single()
+
+          if (!channelCheck || channelCheck.owner_user_id !== user.id) {
+            return NextResponse.json({ error: 'You do not own this channel.' }, { status: 403 })
+          }
+          updateData.channel_id = channel_id
+        }
+      }
     }
 
     const { data, error } = await supabase

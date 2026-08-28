@@ -120,7 +120,7 @@ export default async function PublicHomePage() {
   const playlistsData = playlistsRes.data || []
 
   const mappedRealSongs = realSongs.map((song: any) => {
-    const formGenre = song.form?.genre || song.genre || 'Pop'
+    const formGenre = song.genre || song.form?.genre || 'Pop'
     const dbLikeCount = Number(song.form?.like_count || (song.liked ? 1 : 0))
     const dbPlayCount = Number(song.form?.play_count || 0)
     
