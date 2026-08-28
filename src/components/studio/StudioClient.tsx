@@ -1521,7 +1521,7 @@ export function StudioClient({ user }: StudioClientProps) {
         user={user}
         history={history}
         childrenLeft={
-          <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar">
+          <div className="w-full h-full p-6 pb-32 overflow-y-auto custom-scrollbar">
             {currentTab === 'suno' && (
               <div className="max-w-[1700px] mx-auto w-full">
                 <GenerateClient user={user} />

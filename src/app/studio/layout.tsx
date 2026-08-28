@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { SuiteBar } from '@/components/layout/SuiteBar'
+import { PersistentPlayer } from '@/components/player/PersistentPlayer'
+import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
 
 export const metadata: Metadata = {
   title: '쿠키뮤직스튜디오 — All-in-One AI Music Studio',
@@ -15,6 +17,11 @@ export default function StudioRootLayout({
     <div className="cm-studio min-h-screen bg-[#07090e] text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
       <SuiteBar active="studio" />
       {children}
+      {/* 하단 재생 바 — 쿠키뮤직 스트리밍과 같은 플레이어를 그대로 쓴다.
+          playerStore 는 모듈 싱글턴이라 스튜디오의 재생 버튼이 이미 이 스토어를 물고 있었고,
+          여기서 오디오 엘리먼트를 붙여줘야 실제로 소리가 난다. */}
+      <PersistentPlayer />
+      <NowPlayingPanel />
     </div>
   )
 }
