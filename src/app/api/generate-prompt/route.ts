@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireAiAccess } from '@/lib/auth/aiGate'
 
 export async function POST(request: Request) {
   try {
+    // [임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고
+    const gate = await requireAiAccess('generate-prompt')
+    if (!gate.ok) return gate.response
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

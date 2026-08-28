@@ -1,12 +1,16 @@
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { StudioClient } from '@/components/studio/StudioClient'
+import { hasAiAccess } from '@/lib/auth/aiGate'
 
 export const revalidate = 0
 
 export default async function StudioPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // [임시 게이트] AI 프롬프트 생성 UI 노출 여부. 실제 차단은 서버 라우트에서 한다.
+  const canUseAi = await hasAiAccess()
 
   // 작업 편의 및 추후 부분 로그인 방식 적용을 위해 로그인 없이도 바로 진입 허용
   return (
@@ -17,7 +21,7 @@ export default async function StudioPage() {
           <span className="text-xs font-bold tracking-widest uppercase text-purple-400">Loading CookieMusic Studio...</span>
         </div>
       }>
-        <StudioClient user={user} />
+        <StudioClient user={user} canUseAi={canUseAi} />
       </Suspense>
     </main>
   )

@@ -808,9 +808,11 @@ ${form.songType === 'instrumental' ?
 
 interface StudioClientProps {
   user?: any
+  /** [임시 게이트] AI 프롬프트 생성 UI 노출 여부. 해제 방법은 src/lib/auth/aiGate.ts 참고 */
+  canUseAi?: boolean
 }
 
-export function StudioClient({ user }: StudioClientProps) {
+export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [uiLanguage, setUiLanguage] = useState('KO')
   // TRANSLATIONS only defines KO/EN; fall back to EN for any other language
   // (e.g. 'JA') so the page never crashes on an undefined translation table.
@@ -1698,25 +1700,27 @@ export function StudioClient({ user }: StudioClientProps) {
                 
                 {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
                 <div className="xl:col-span-3 space-y-4">
-                  {/* AI 설정 */}
-                  <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
-                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
-                      <Settings className="w-3.5 h-3.5 text-primary" />
-                      AI 설정
-                    </h3>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-zinc-500">모델</label>
-                      <select
-                        value={settings.model}
-                        onChange={(e) => setSettings({ ...settings, model: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-primary/60"
-                      >
-                        {provider.models.map((model) => (
-                          <option key={model} value={model}>{model}</option>
-                        ))}
-                      </select>
+                  {/* AI 설정 ([임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고) */}
+                  {canUseAi && (
+                    <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
+                      <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
+                        <Settings className="w-3.5 h-3.5 text-primary" />
+                        AI 설정
+                      </h3>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-500">모델</label>
+                        <select
+                          value={settings.model}
+                          onChange={(e) => setSettings({ ...settings, model: e.target.value })}
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-primary/60"
+                        >
+                          {provider.models.map((model) => (
+                            <option key={model} value={model}>{model}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 지침서 (가이드) */}
                   <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3.5 shadow-xl">
@@ -2131,6 +2135,15 @@ export function StudioClient({ user }: StudioClientProps) {
                     </div>
 
                     {/* 9. 하단 액션 버튼들 (참고 이미지와 100% 동일) */}
+                    {/* [임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고 */}
+                    {!canUseAi && (
+                      <div className="pt-2">
+                        <div className="px-4 py-3.5 rounded-xl border border-[#232323] bg-[#0f0f0f] text-center text-[11px] font-semibold text-zinc-500">
+                          AI 생성 기능은 준비 중입니다.
+                        </div>
+                      </div>
+                    )}
+                    {canUseAi && (
                     <div className="pt-2 flex items-center gap-2">
                       <button
                         type="button"
@@ -2181,6 +2194,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         샘플 생성
                       </button>
                     </div>
+                    )}
                   </div>
                 </div>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireAiAccess } from '@/lib/auth/aiGate'
 
 const API_KEY = process.env.APIPASS_API_KEY
 
@@ -8,6 +9,10 @@ export async function POST(request: Request) {
     if (!API_KEY) {
       return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
     }
+
+    // [임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고
+    const gate = await requireAiAccess('suno/generate')
+    if (!gate.ok) return gate.response
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
