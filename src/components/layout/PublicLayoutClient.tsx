@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { 
-  Home, Sparkles, Library, Trophy, Bell, Shield, LogOut, 
+  Home, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
   Search, Settings, Heart, ListMusic, CreditCard, Music, Coins, Disc
 } from 'lucide-react'
@@ -317,19 +317,6 @@ export function PublicLayoutClient({
             >
               <Music className="w-5 h-5 text-current" />
               <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : uiLanguage === 'JA' ? 'チャンネル & オーディオ管理' : 'Channel & Audio Management'}</span>
-            </Link>
-
-            <Link 
-              href="/studio" 
-              onClick={() => setActiveTab('studio')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
-                activeTab === 'studio'
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              <Sparkles className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '스튜디오' : uiLanguage === 'JA' ? 'スタジオ' : 'Studio'}</span>
             </Link>
 
             {/* Divider to separate Playlists section */}

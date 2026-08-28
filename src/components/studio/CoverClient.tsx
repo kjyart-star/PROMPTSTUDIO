@@ -169,7 +169,8 @@ export function CoverClient({ user }: CoverClientProps) {
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${user.id}/${fileName}`
+      const userId = user?.id || 'guest'
+      const filePath = `${userId}/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('audio_uploads')
@@ -262,23 +263,22 @@ export function CoverClient({ user }: CoverClientProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 pt-6 md:pt-8">
-      <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide mb-8">
-        <Music className="w-6 h-6 text-primary shrink-0" />
+    <div className="w-full pb-10 space-y-6">
+      <h1 className="text-xl sm:text-2xl font-black text-zinc-100 flex items-center gap-2.5 uppercase tracking-wide">
+        <Music className="w-6 h-6 text-[#e6ff00] shrink-0" />
         {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : uiLanguage === 'JA' ? 'AIカバースタジオ' : 'AI Cover Studio'}
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column: Input Data */}
-        <div className="space-y-6 bg-surface p-6 rounded-2xl border border-outline-variant/10 shadow-lg custom-scrollbar max-h-[80vh] overflow-y-auto">
-          
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Input Data (6칸) */}
+        <div className="lg:col-span-6 space-y-5 bg-[#121612] p-6 rounded-2xl border border-[#1e261f] shadow-xl">
           <div className="space-y-4">
             {/* Audio Upload */}
             <div className="space-y-2 relative">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '원본 오디오 (Source Audio)' : uiLanguage === 'JA' ? 'ソース音声' : 'Source Audio'}</label>
+              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '원본 오디오 (Source Audio)' : uiLanguage === 'JA' ? 'ソース音声' : 'Source Audio'}</label>
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${uploadedFileUrl ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-high'}`}
+                className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${uploadedFileUrl ? 'border-[#e6ff00] bg-[#e6ff00]/5' : 'border-[#1e261f] hover:border-[#e6ff00]/50 hover:bg-[#090d0a]'}`}
               >
                 <input 
                   type="file" 
@@ -288,26 +288,27 @@ export function CoverClient({ user }: CoverClientProps) {
                   className="hidden" 
                 />
                 {isUploading ? (
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-8 h-8 border-4 border-[#e6ff00] border-t-transparent rounded-full animate-spin"></div>
                 ) : uploadedFileUrl ? (
                   <>
-                    <Music className="w-8 h-8 text-primary mb-2" />
-                    <p className="text-sm font-bold text-primary">오디오 준비 완료</p>
+                    <Music className="w-8 h-8 text-[#e6ff00] mb-2" />
+                    <p className="text-sm font-bold text-[#e6ff00]">오디오 준비 완료</p>
                      <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePlaySourceAudio();
                       }}
-                      className="mt-4 px-4 py-2 bg-[#141415] border border-outline-variant/20 hover:border-primary/50 text-on-surface hover:text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow"
+                      className="mt-4 px-4 py-2 bg-[#090d0a] border border-[#1a231b] hover:border-[#e6ff00]/50 text-zinc-200 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow"
                      >
                        {isPlaying && currentTrack?.id === 'source-audio' ? (
                          <>
-                           <Pause className="w-3.5 h-3.5 fill-current text-primary" />
+                           <Pause className="w-3.5 h-3.5 fill-current text-[#e6ff00]" />
                            <span>{uiLanguage === 'KO' ? '재생 일시정지' : uiLanguage === 'JA' ? '一時停止' : 'Pause'}</span>
                          </>
                        ) : (
                          <>
-                           <Play className="w-3.5 h-3.5 fill-current text-primary" />
+                           <Play className="w-3.5 h-3.5 fill-current text-[#e6ff00]" />
                            <span>{uiLanguage === 'KO' ? '미리듣기' : uiLanguage === 'JA' ? 'プレビュー' : 'Preview'}</span>
                          </>
                        )}
@@ -315,8 +316,8 @@ export function CoverClient({ user }: CoverClientProps) {
                   </>
                 ) : (
                   <>
-                    <Upload className="w-8 h-8 text-on-surface-variant mb-2" />
-                    <h3 className="text-xs font-bold text-on-surface mb-1">{uiLanguage === 'KO' ? '클릭하여 파일 업로드' : uiLanguage === 'JA' ? 'クリックしてアップロード' : 'Click to Upload'}</h3>
+                    <Upload className="w-8 h-8 text-zinc-500 mb-2" />
+                    <h3 className="text-xs font-bold text-zinc-200 mb-1">{uiLanguage === 'KO' ? '클릭하여 파일 업로드' : uiLanguage === 'JA' ? 'クリックしてアップロード' : 'Click to Upload'}</h3>
                     <p className="text-[10px] text-zinc-500">MP3, WAV {uiLanguage === 'KO' ? '등 (최대 50MB)' : uiLanguage === 'JA' ? 'など (最大50MB)' : 'etc. (Max 50MB)'}</p>
                   </>
                 )}
@@ -325,11 +326,11 @@ export function CoverClient({ user }: CoverClientProps) {
 
             {/* Model Version */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : uiLanguage === 'JA' ? 'モデルバージョン' : 'Model Version'}</label>
+              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : uiLanguage === 'JA' ? 'モデルバージョン' : 'Model Version'}</label>
               <select 
                 value={generateForm.modelVersion} 
                 onChange={e => setGenerateForm(prev => ({ ...prev, modelVersion: e.target.value }))}
-                className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
               >
                 <option value="V5">Suno V5</option>
                 <option value="V4_5PLUS">V4.5 Plus</option>
@@ -340,22 +341,24 @@ export function CoverClient({ user }: CoverClientProps) {
 
             {/* Custom Mode & Instrumental */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '커스텀 모드' : uiLanguage === 'JA' ? 'カスタムモード' : 'Custom Mode'}</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#090d0a] border border-[#1a231b]">
+                <label className="text-xs font-bold text-zinc-200">{uiLanguage === 'KO' ? '커스텀 모드' : uiLanguage === 'JA' ? 'カスタムモード' : 'Custom Mode'}</label>
                 <button 
+                  type="button"
                   onClick={() => setGenerateForm(prev => ({ ...prev, customMode: !prev.customMode }))}
-                  className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.customMode ? 'bg-primary' : 'bg-surface-container-high'}`}
+                  className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 cursor-pointer ${generateForm.customMode ? 'bg-[#e6ff00]' : 'bg-zinc-800'}`}
                 >
-                  <div className={`w-3.5 h-3.5 rounded-full bg-black transition-transform ${generateForm.customMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <div className={`w-4 h-4 rounded-full bg-black transition-transform ${generateForm.customMode ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '연주곡만 생성' : uiLanguage === 'JA' ? 'インストゥルメンタルのみ' : 'Instrumental Only'}</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#090d0a] border border-[#1a231b]">
+                <label className="text-xs font-bold text-zinc-200">{uiLanguage === 'KO' ? '연주곡만 생성' : uiLanguage === 'JA' ? 'インストゥルメンタルのみ' : 'Instrumental Only'}</label>
                 <button 
+                  type="button"
                   onClick={() => setGenerateForm(prev => ({ ...prev, instrumental: !prev.instrumental }))}
-                  className={`w-10 h-5 rounded-full transition-colors flex items-center px-1 ${generateForm.instrumental ? 'bg-primary' : 'bg-surface-container-high'}`}
+                  className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 cursor-pointer ${generateForm.instrumental ? 'bg-[#e6ff00]' : 'bg-zinc-800'}`}
                 >
-                  <div className={`w-3.5 h-3.5 rounded-full bg-black transition-transform ${generateForm.instrumental ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <div className={`w-4 h-4 rounded-full bg-black transition-transform ${generateForm.instrumental ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
               </div>
             </div>
@@ -363,13 +366,13 @@ export function CoverClient({ user }: CoverClientProps) {
             {/* Prompt */}
             {!generateForm.customMode && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '대상 스타일 프롬프트 (Target Style Prompt)' : uiLanguage === 'JA' ? 'ターゲットスタイルプロンプト' : 'Target Style Prompt'}</label>
+                <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '대상 스타일 프롬프트 (Target Style Prompt)' : uiLanguage === 'JA' ? 'ターゲットスタイルプロンプト' : 'Target Style Prompt'}</label>
                 <textarea 
                   value={generateForm.prompt}
                   onChange={e => setGenerateForm(prev => ({ ...prev, prompt: e.target.value }))}
                   placeholder={uiLanguage === 'KO' ? "장르나 분위기 입력 (예: 피아노와 색소폰이 어우러진 부드러운 재즈로 변환)" : uiLanguage === 'JA' ? "ジャンルやムードを入力（例：ピアノとサックスのソフトジャズ）" : "Enter genre or mood (e.g., Soft jazz with piano and saxophone)"}
                   rows={3}
-                  className="w-full h-24 bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-3 text-xs text-on-surface resize-none focus:outline-none focus:border-[#e3fe06]/50 transition-colors custom-scrollbar"
+                  className="w-full h-24 bg-[#090d0a] border border-[#1a231b] rounded-xl p-3 text-xs text-zinc-200 resize-none focus:outline-none focus:border-[#e6ff00]/60 transition-colors custom-scrollbar"
                 />
               </div>
             )}
@@ -378,23 +381,23 @@ export function CoverClient({ user }: CoverClientProps) {
             {generateForm.customMode && (
               <>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 (Style)' : uiLanguage === 'JA' ? 'スタイル' : 'Style'}</label>
+                  <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '스타일 (Style)' : uiLanguage === 'JA' ? 'スタイル' : 'Style'}</label>
                   <input 
                     type="text"
                     value={generateForm.style}
                     onChange={e => setGenerateForm(prev => ({ ...prev, style: e.target.value }))}
                     placeholder="예: 재즈, 스무스, 라운지"
-                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
+                    className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '곡 제목 (Title)' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</label>
+                  <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '곡 제목 (Title)' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</label>
                   <input 
                     type="text"
                     value={generateForm.title}
                     onChange={e => setGenerateForm(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="예: 나의 첫 커버곡 (재즈 버전)"
-                    className="w-full bg-surface-container-low border border-outline-variant/20 rounded-lg p-2.5 text-xs text-on-surface outline-none"
+                    className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-bold focus:outline-none focus:border-[#e6ff00]/60"
                   />
                 </div>
               </>
@@ -403,17 +406,19 @@ export function CoverClient({ user }: CoverClientProps) {
             {/* Vocal Gender */}
             {!generateForm.instrumental && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : uiLanguage === 'JA' ? 'ボーカルの性別' : 'Vocal Gender'}</label>
+                <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : uiLanguage === 'JA' ? 'ボーカルの性別' : 'Vocal Gender'}</label>
                 <div className="flex gap-2">
                   <button 
+                    type="button"
                     onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'm' }))}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'm' ? 'bg-[#e3fe06] text-black border-[#e3fe06]' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${generateForm.vocalGender === 'm' ? 'bg-[#e6ff00] text-black border-[#e6ff00]' : 'bg-[#090d0a] text-zinc-400 border-[#1a231b] hover:border-zinc-700'}`}
                   >
                     {uiLanguage === 'KO' ? '남성 보컬' : uiLanguage === 'JA' ? '男性' : 'Male'}
                   </button>
                   <button 
+                    type="button"
                     onClick={() => setGenerateForm(prev => ({ ...prev, vocalGender: 'f' }))}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${generateForm.vocalGender === 'f' ? 'bg-[#e3fe06] text-black border-[#e3fe06]' : 'bg-transparent text-on-surface border-outline-variant/30 hover:border-outline-variant'}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${generateForm.vocalGender === 'f' ? 'bg-[#e6ff00] text-black border-[#e6ff00]' : 'bg-[#090d0a] text-zinc-400 border-[#1a231b] hover:border-zinc-700'}`}
                   >
                     {uiLanguage === 'KO' ? '여성 보컬' : uiLanguage === 'JA' ? '女性' : 'Female'}
                   </button>
@@ -423,39 +428,40 @@ export function CoverClient({ user }: CoverClientProps) {
 
             {/* Sliders */}
             <div className="space-y-4 pt-2">
-              <div className="space-y-2">
+              <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : uiLanguage === 'JA' ? 'スタイルウェイト' : 'Style Weight'}</label>
-                  <span className="font-bold">{generateForm.styleWeight}</span>
+                  <label className="font-bold text-zinc-300">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : uiLanguage === 'JA' ? 'スタイルウェイト' : 'Style Weight'}</label>
+                  <span className="font-mono font-bold text-[#e6ff00]">{generateForm.styleWeight}</span>
                 </div>
                 <input 
                   type="range" min="0" max="1" step="0.1" 
                   value={generateForm.styleWeight} 
                   onChange={e => setGenerateForm(prev => ({ ...prev, styleWeight: parseFloat(e.target.value) }))}
-                  className="w-full accent-primary"
+                  className="w-full accent-[#e6ff00] cursor-pointer"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-bold text-on-surface">{uiLanguage === 'KO' ? '오디오 보존율 (Audio Weight)' : uiLanguage === 'JA' ? 'オーディオウェイト' : 'Audio Weight'}</label>
-                  <span className="font-bold">{generateForm.audioWeight}</span>
+                  <label className="font-bold text-zinc-300">{uiLanguage === 'KO' ? '오디오 보존율 (Audio Weight)' : uiLanguage === 'JA' ? 'オーディオウェイト' : 'Audio Weight'}</label>
+                  <span className="font-mono font-bold text-[#e6ff00]">{generateForm.audioWeight}</span>
                 </div>
                 <input 
                   type="range" min="0" max="1" step="0.1" 
                   value={generateForm.audioWeight} 
                   onChange={e => setGenerateForm(prev => ({ ...prev, audioWeight: parseFloat(e.target.value) }))}
-                  className="w-full accent-primary"
+                  className="w-full accent-[#e6ff00] cursor-pointer"
                 />
               </div>
             </div>
 
             {/* Action Button */}
-            <div className="flex justify-end pt-4 border-t border-outline-variant/10">
+            <div className="flex justify-end pt-4 border-t border-[#1e261f]">
               <button 
+                type="button"
                 onClick={handleGenerate}
                 disabled={isMusicGenerating || !uploadedFileUrl}
-                className="w-full py-3 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-xl text-sm font-extrabold transition-colors disabled:opacity-50"
+                className="w-full py-3 bg-[#e6ff00] hover:bg-[#d4f900] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
               >
                 {uiLanguage === 'KO' ? '커버 음악 생성하기 (10 크레딧)' : uiLanguage === 'JA' ? 'カバー音楽を生成 (10クレジット)' : 'Generate Cover Music (10 Credits)'}
               </button>
@@ -463,84 +469,77 @@ export function CoverClient({ user }: CoverClientProps) {
           </div>
         </div>
 
-        {/* Right Column: Generation & Output */}
-        <div className="space-y-6 bg-surface-container p-6 rounded-2xl border border-primary/20 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
-          
-          <h2 className="text-sm font-bold text-on-surface border-b border-outline-variant/10 pb-3 flex justify-between items-center">
-            {uiLanguage === 'KO' ? '진행 상태' : uiLanguage === 'JA' ? 'ステータス' : 'Status'}
-            <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded">{status}</span>
-          </h2>
+        {/* Right Column: Generation & Output (6칸) */}
+        <div className="lg:col-span-6 space-y-6 bg-[#121612] p-6 rounded-2xl border border-[#1e261f] shadow-xl relative flex flex-col justify-between">
+          <div className="space-y-6 flex-1 flex flex-col">
+            <h2 className="text-sm font-bold text-zinc-200 border-b border-[#1e261f] pb-3 flex justify-between items-center shrink-0">
+              <span>{uiLanguage === 'KO' ? '진행 상태' : uiLanguage === 'JA' ? 'ステータス' : 'Status'}</span>
+              <span className="text-xs text-[#e6ff00] bg-[#e6ff00]/10 border border-[#e6ff00]/30 px-2.5 py-0.5 rounded-full font-bold">{status}</span>
+            </h2>
 
-          <div className="flex flex-col h-full justify-center space-y-6 min-h-[300px]">
-            {activeAudioList.length > 0 ? (
-               <div className="flex flex-col gap-4">
-                 <p className="text-sm font-bold text-on-surface text-center mb-2">🎵 {uiLanguage === 'KO' ? '커버 곡이 생성되었습니다!' : uiLanguage === 'JA' ? 'カバーが生成されました！' : 'Covers generated!'}</p>
+            <div className="flex flex-col h-full justify-center space-y-6 min-h-[300px] flex-1">
+              {activeAudioList.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm font-bold text-zinc-200 text-center mb-2">🎵 {uiLanguage === 'KO' ? '커버 곡이 생성되었습니다!' : uiLanguage === 'JA' ? 'カバーが生成されました！' : 'Covers generated!'}</p>
                   {activeAudioList.map((audio: any, idx: number) => (
-                     <div key={idx} className="flex items-center justify-between gap-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 w-full">
-                       <div className="flex items-center gap-4">
-                         {audio.image_url ? (
-                           <img src={audio.image_url} alt="Cover" className="w-16 h-16 rounded-lg object-cover" />
-                         ) : (
-                           <div className="w-16 h-16 bg-[#18181b] rounded-lg flex items-center justify-center border border-outline-variant/10 text-on-surface-variant">
-                             <Music className="w-6 h-6 text-on-surface-variant" />
-                           </div>
-                         )}
-                         <div className="flex flex-col">
-                           <span className="text-sm font-bold text-on-surface">
-                             {audio.title || `Cover Track #${idx + 1}`}
-                           </span>
-                           <span className="text-xs text-on-surface-variant">AI Cover Track</span>
-                         </div>
-                       </div>
+                    <div key={idx} className="flex items-center justify-between gap-4 p-4 bg-[#090d0a] rounded-xl border border-[#1a231b] w-full">
+                      <div className="flex items-center gap-4">
+                        {audio.image_url ? (
+                          <img src={audio.image_url} alt="Cover" className="w-16 h-16 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-16 h-16 bg-[#161c16] rounded-lg flex items-center justify-center border border-[#232d24] text-zinc-500">
+                            <Music className="w-6 h-6 text-zinc-500" />
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-zinc-100">
+                            {audio.title || `Cover Track #${idx + 1}`}
+                          </span>
+                          <span className="text-xs text-zinc-500">AI Cover Track</span>
+                        </div>
+                      </div>
 
-                       <button
-                         onClick={() => handlePlayCoverAudio(audio, idx)}
-                         className="px-4 py-2 bg-[#141415] border border-outline-variant/20 hover:border-primary/50 text-on-surface hover:text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow"
-                       >
-                         {isPlaying && currentTrack?.id === `cover-audio-${idx}` ? (
-                           <>
-                             <Pause className="w-3.5 h-3.5 fill-current text-primary" />
-                             <span>{uiLanguage === 'KO' ? '일시정지' : uiLanguage === 'JA' ? '一時停止' : 'Pause'}</span>
-                           </>
-                         ) : (
-                           <>
-                             <Play className="w-3.5 h-3.5 fill-current text-primary" />
-                             <span>{uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}</span>
-                           </>
-                         )}
-                       </button>
-                     </div>
+                      <button
+                        type="button"
+                        onClick={() => handlePlayCoverAudio(audio, idx)}
+                        className="px-4 py-2 bg-[#161c16] border border-[#232d24] hover:border-[#e6ff00]/50 text-zinc-200 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow"
+                      >
+                        {isPlaying && currentTrack?.id === `cover-audio-${idx}` ? (
+                          <>
+                            <Pause className="w-3.5 h-3.5 fill-current text-[#e6ff00]" />
+                            <span>{uiLanguage === 'KO' ? '일시정지' : uiLanguage === 'JA' ? '一時停止' : 'Pause'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-current text-[#e6ff00]" />
+                            <span>{uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   ))}
-                 
-                 <button 
-                   onClick={() => router.push('/profile')}
-                   className="mt-4 w-full py-3 bg-surface-container-highest hover:bg-white/10 text-on-surface font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2"
-                 >
-                   <User className="w-4 h-4" />
-                   {uiLanguage === 'KO' ? '프로필 보관함 확인' : uiLanguage === 'JA' ? 'ライブラリを見る' : 'View Library'}
-                 </button>
-               </div>
-            ) : isMusicGenerating ? (
-              <div className="flex flex-col items-center justify-center p-8 bg-surface-container-lowest rounded-xl border border-primary/20 h-full">
-                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                 <p className="text-sm text-primary font-bold">{uiLanguage === 'KO' ? 'Apipass에서 커버를 생성 중입니다...' : uiLanguage === 'JA' ? 'カバーを生成中...' : 'Generating covers...'}</p>
-                 <p className="text-xs text-on-surface-variant mt-2 text-center">{uiLanguage === 'KO' ? '실제 1~2분이 소요될 수 있습니다.' : uiLanguage === 'JA' ? '1〜2分かかる場合があります。' : 'May take 1-2 minutes.'}</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50 relative z-10">
-                <div className="w-16 h-16 rounded-full border border-outline-variant/30 flex items-center justify-center mb-2">
-                  <Disc className="w-6 h-6 text-zinc-500" />
                 </div>
-                <p className="text-sm text-on-surface text-center">
-                  {uiLanguage === 'KO' ? (
-                    <>오디오를 업로드하고 설정을 마친 뒤,<br/>생성 버튼을 눌러주세요.</>
-                  ) : (
-                    <>Upload audio and finish settings,<br/>then click Generate.</>
-                  )}
-                </p>
-              </div>
-            )}
+              ) : isMusicGenerating ? (
+                <div className="flex flex-col items-center justify-center p-8 bg-[#090d0a] rounded-xl border border-[#1a231b] h-full">
+                  <div className="w-12 h-12 border-4 border-[#e6ff00] border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-sm text-[#e6ff00] font-bold">{uiLanguage === 'KO' ? '커버 음원을 생성 중입니다...' : uiLanguage === 'JA' ? 'カバーを生成中...' : 'Generating covers...'}</p>
+                  <p className="text-xs text-zinc-500 mt-2 text-center">{uiLanguage === 'KO' ? '실제 1~2분이 소요될 수 있습니다.' : uiLanguage === 'JA' ? '1〜2分かかる場合があります。' : 'May take 1-2 minutes.'}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-70 relative z-10 py-12">
+                  <div className="w-16 h-16 rounded-full bg-[#090d0a] border border-[#1a231b] flex items-center justify-center mb-2 shadow-lg">
+                    <Disc className="w-6 h-6 text-zinc-500" />
+                  </div>
+                  <p className="text-sm text-zinc-400 text-center leading-relaxed">
+                    {uiLanguage === 'KO' ? (
+                      <>오디오를 업로드하고 설정을 마친 뒤,<br/>생성 버튼을 눌러주세요.</>
+                    ) : (
+                      <>Upload audio and finish settings,<br/>then click Generate.</>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

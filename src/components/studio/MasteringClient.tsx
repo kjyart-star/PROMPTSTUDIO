@@ -714,7 +714,7 @@ export function MasteringClient() {
   const activeTrack = tracks.find(t => t.id === activeTrackId)
 
   return (
-    <div className="w-full max-w-[1360px] mx-auto p-4 lg:p-8 text-white font-sans selection:bg-[#e3fe06] selection:text-black space-y-8 animate-in fade-in duration-500">
+    <div className="w-full pb-10 text-white font-sans selection:bg-[#e6ff00] selection:text-black space-y-8 animate-in fade-in duration-500">
       
       {/* Hidden Audio Element */}
       <audio 

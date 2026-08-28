@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users, Library } from 'lucide-react'
+import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users, Library, HardDrive } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -13,6 +12,8 @@ import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
+import { StudioHeader } from './StudioHeader'
+import { StudioWorkspace } from './StudioWorkspace'
 import { withBase } from '@/lib/basePath'
 
 const durationCache: Record<string, number> = {}
@@ -873,9 +874,103 @@ export function StudioClient({ user }: StudioClientProps) {
   
   // Suno API States
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null)
+  const [history, setHistory] = useState<any[]>([])
+  const [playlists, setPlaylists] = useState<any[]>([])
+  const [userCredits, setUserCredits] = useState<number>(120)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [publishConfirmItem, setPublishConfirmItem] = useState<any | null>(null)
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return
+    try {
+      if (user) {
+        await fetch(`/api/tracks/${deleteConfirmId}`, { method: 'DELETE' })
+      }
+      setHistory((prev) => prev.filter((item) => item.id !== deleteConfirmId))
+      setDeleteConfirmId(null)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const publishTrack = async (item: any) => {
+    if (!item) return
+    try {
+      const res = await fetch('/api/publish-track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackId: item.id })
+      })
+      if (res.ok) {
+        alert(uiLanguage === 'KO' ? '곡이 성공적으로 게시되었습니다!' : 'Track published successfully!')
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+
+  const playHistoryTrack = (item: any) => {
+    if (!item) return
+    const audioUrl = item.audio_url || item.stream_url || item.url
+    if (!audioUrl) return
+    playTrack({
+      id: item.id,
+      title: item.title || 'Untitled Track',
+      artist: item.artist || 'AI Studio',
+      audio_url: audioUrl,
+      image_url: item.image_url,
+      genre: item.genre || item.style || 'AI'
+    } as any)
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const updateCredits = () => {
+      const saved = localStorage.getItem('user-credits')
+      if (saved !== null) {
+        setUserCredits(parseFloat(saved))
+      } else {
+        localStorage.setItem('user-credits', '120')
+        setUserCredits(120)
+      }
+    }
+    updateCredits()
+    const interval = setInterval(updateCredits, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   const supabase = createClient()
   const options = useMemo(() => getOptions(uiLanguage), [uiLanguage])
+
+  // Load guidelines (both system and user guidelines)
+  const fetchGuidelines = async (currentUser: any) => {
+    try {
+      // 1. Fetch user guides if logged in
+      let userGuides: any[] = []
+      if (currentUser) {
+        const userRes = await fetch('/api/user-guides')
+        if (userRes.ok) {
+          userGuides = await userRes.json()
+        }
+      }
+      setGuides(userGuides)
+      if (currentUser) {
+        const activeRes = await fetch('/api/profile/active-guides')
+        if (activeRes.ok) {
+          const data = await activeRes.json()
+          if (data && data.active_guide_ids) {
+            const allAvailableIds = userGuides.map((g: any) => g.id)
+            const validSavedIds = data.active_guide_ids.filter((id: string) => allAvailableIds.includes(id))
+            setActiveGuideIds(validSavedIds)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
     if (!url) return
@@ -946,53 +1041,6 @@ export function StudioClient({ user }: StudioClientProps) {
       window.removeEventListener('languageChange', handleLangChange)
     }
   }, [user])
-
-  const [history, setHistory] = useState<any[]>([])
-  const [playlists, setPlaylists] = useState<any[]>([])
-
-  // Load guidelines (both system and user guidelines)
-  const fetchGuidelines = async (currentUser: any) => {
-    try {
-      // 1. Fetch user guides if logged in
-      let userGuides: any[] = []
-      if (currentUser) {
-        const userRes = await fetch('/api/user-guides')
-        if (userRes.ok) {
-          userGuides = await userRes.json()
-        }
-      }
-
-      setGuides(userGuides)
-
-      // 2. Fetch active guide IDs
-      if (currentUser) {
-        const activeRes = await fetch('/api/profile/active-guides')
-        if (activeRes.ok) {
-          const activeData = await activeRes.json()
-          if (Array.isArray(activeData)) {
-            const allAvailableIds = userGuides.map(g => g.id)
-            const activeDbIds = activeData.filter(id => allAvailableIds.includes(id))
-            setActiveGuideIds(activeDbIds)
-            return
-          }
-        }
-      }
-
-      // Fallback for non-logged in or API failure
-      const savedActive = readJson(STORAGE_KEYS.activeGuides, null)
-      if (savedActive && Array.isArray(savedActive)) {
-        const allAvailableIds = userGuides.map(g => g.id)
-        const activeLocalIds = savedActive.filter(id => allAvailableIds.includes(id))
-        setActiveGuideIds(activeLocalIds)
-      } else {
-        setActiveGuideIds([])
-      }
-    } catch (e) {
-      console.error('Error fetching guidelines:', e)
-      setGuides([])
-      setActiveGuideIds([])
-    }
-  }
 
   const fetchSongHistory = async () => {
     if (!user) return
@@ -1342,6 +1390,7 @@ export function StudioClient({ user }: StudioClientProps) {
       const parsedParts = parseGeneratedText(textToSave)
 
       // Deduct credits and save transaction!
+      const currentCredits = parseFloat(localStorage.getItem('user-credits') || '120')
       const nextCredits = Number((currentCredits - modelCost).toFixed(1))
       localStorage.setItem('user-credits', String(nextCredits))
 
@@ -1380,15 +1429,14 @@ export function StudioClient({ user }: StudioClientProps) {
     }
   }
 
-  const copyText = async (label: string, text: string) => {
-    await navigator.clipboard.writeText(text)
-    setStatus(`${label} ${t.statusCopied}`)
-  }
-
-  const clearResult = () => {
-    setResultParts(EMPTY_RESULT)
-    setCurrentHistoryId(null)
-    setStatus(t.statusCleared)
+  const copyToClipboard = async (text: string, type: 'all' | 'style' | 'lyrics' | 'meta' = 'all') => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setStatus(uiLanguage === 'KO' ? '클립보드에 복사되었습니다!' : uiLanguage === 'JA' ? 'クリップボードにコピーしました！' : 'Copied to clipboard!')
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const saveHistory = async (parts: typeof EMPTY_RESULT) => {
@@ -1422,14 +1470,9 @@ export function StudioClient({ user }: StudioClientProps) {
           setStatus(uiLanguage === 'KO' ? '서버 히스토리에 저장했습니다' : uiLanguage === 'JA' ? 'サーバー履歴に保存しました' : 'Saved to server history')
           setCurrentHistoryId(newHistoryItem.id)
           return newHistoryItem.id
-        } else {
-          const err = await res.json()
-          console.error('Error saving history on server:', err)
-          setStatus(uiLanguage === 'KO' ? `서버 저장 실패: ${err.error}` : uiLanguage === 'JA' ? `サーバー保存に失敗しました: ${err.error}` : `Server save failed: ${err.error}`)
         }
       } catch (e: any) {
         console.error('Error saving history on server:', e)
-        setStatus(uiLanguage === 'KO' ? '서버 저장 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'サーバーの保存に失敗しました (ネットワークエラー)' : 'Server save failed (Network error)')
       }
     } else {
       const localPayload = {
@@ -1448,2181 +1491,795 @@ export function StudioClient({ user }: StudioClientProps) {
   }
 
   const navigateToGenerate = async () => {
-    if (!user) {
-      alert("음악 생성 기능은 로그인 후 이용 가능합니다.")
-      return
-    }
-    
     let historyId = currentHistoryId
     if (!historyId) {
-       historyId = await saveHistory(resultParts)
+      historyId = await saveHistory(resultParts)
     }
-    
-    if (!historyId) {
-      alert("기록 저장 실패로 생성을 진행할 수 없습니다.")
-      return
-    }
-
-    // Switch tab to suno and set history ID internally
-    setCurrentHistoryId(historyId)
     setCurrentTab('suno')
-  }
-
-  const openHistoryItem = (item: any, mode: 'all' | 'style' | 'lyrics' = 'all') => {
-    setCurrentHistoryId(item.id)
-    if (mode === 'all') {
-      setResultParts({
-        structurePlan: item.structurePlan || '',
-        prompt: item.prompt || '',
-        negativePrompt: item.negativePrompt || item.form?.negativePrompt || '',
-        title: item.title || '',
-        lyrics: item.lyrics || '',
-        notes: item.notes || '',
-        raw: '',
-      })
-      if (item.form) setForm((current) => ({ ...current, ...item.form }))
-    } else if (mode === 'style') {
-      if (item.form) {
-        setForm((current) => ({
-          ...current,
-          styleDesc: item.form.styleDesc || [item.form.genre, item.form.mood].filter(Boolean).join(', ') || current.styleDesc,
-          language: item.form.language || current.language,
-          vocalGender: item.form.vocalGender || current.vocalGender,
-          vocalFeaturing: item.form.vocalFeaturing || current.vocalFeaturing || '없음',
-          vocal: item.form.vocal || current.vocal,
-          vocalGroup: item.form.vocalGroup || current.vocalGroup,
-          tempo: item.form.tempo || current.tempo,
-          songType: item.form.songType || current.songType || 'vocal',
-          bgmType: item.form.bgmType || current.bgmType || '영화음악',
-          musicLength: item.form.musicLength || current.musicLength || '1분'
-        }))
-      }
-      setResultParts((current) => ({
-        ...current,
-        prompt: item.prompt || '',
-        negativePrompt: item.negativePrompt || item.form?.negativePrompt || ''
-      }))
-    } else if (mode === 'lyrics') {
-      if (item.form) {
-        setForm((current) => ({
-          ...current,
-          targetTool: item.form.targetTool || current.targetTool,
-          title: item.form.title || current.title,
-          extra: item.form.extra || current.extra
-        }))
-      }
-      setResultParts((current) => ({
-        ...current,
-        title: item.title || '',
-        lyrics: item.lyrics || '',
-        notes: item.notes || ''
-      }))
-    }
-    setStatus(t.statusHistoryOpened)
-  }
-
-  const deleteHistoryItem = async (id: string) => {
-    if (user) {
-      try {
-        const res = await fetch(`/api/song-history?id=${id}`, {
-          method: 'DELETE'
-        })
-
-        if (res.ok) {
-          setHistory(prev => prev.filter(item => item.id !== id))
-          setStatus(uiLanguage === 'KO' ? '서버 히스토리 항목을 삭제했습니다' : uiLanguage === 'JA' ? 'サーバー履歴アイテムを削除しました' : 'Deleted server history item')
-        } else {
-          const err = await res.json()
-          console.error('Error deleting history on server:', err)
-          setStatus(uiLanguage === 'KO' ? `서버 삭제 실패: ${err.error}` : uiLanguage === 'JA' ? `サーバー削除に失敗しました: ${err.error}` : `Server delete failed: ${err.error}`)
-        }
-      } catch (e: any) {
-        console.error('Error deleting history on server:', e)
-        setStatus(uiLanguage === 'KO' ? '서버 삭제 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'サーバー履歴の削除に失敗しました (ネットワークエラー)' : 'Failed to delete from server (Network error)')
-      }
-    } else {
-      const nextHistory = history.filter((item) => item.id !== id)
-      writeJson(STORAGE_KEYS.localHistory, nextHistory)
-      setHistory(nextHistory)
-      setStatus(t.statusHistoryLocalDeleted)
-    }
   }
 
   const provider = PROVIDERS.openai
   const modelCost = getModelCreditCost(settings.model)
 
   return (
-    <div className="bg-background text-on-surface min-h-screen font-sans">
-      {/* Studio / Library Tab Control */}
-      <div className="border-b border-outline-variant/10 bg-background/80 p-4 sticky top-16 z-30 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setCurrentTab('studio')}
-              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
-                currentTab === 'studio'
-                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
-              }`}
-            >
-              {uiLanguage === 'KO' ? '음악 프롬프트' : uiLanguage === 'JA' ? '音楽プロンプト' : 'Music Prompt'}
-            </button>
-            <button
-              onClick={() => setCurrentTab('library')}
-              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
-                currentTab === 'library'
-                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
-              }`}
-            >
-              {uiLanguage === 'KO' ? '보관함' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library'}
-            </button>
-            <button
-              onClick={() => setCurrentTab('cover')}
-              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
-                currentTab === 'cover'
-                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
-              }`}
-            >
-              {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : uiLanguage === 'JA' ? 'AIカバースタジオ' : 'AI Cover Studio'}
-            </button>
-            <button
-              onClick={() => setCurrentTab('suno')}
-              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
-                currentTab === 'suno'
-                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
-              }`}
-            >
-              {uiLanguage === 'KO' ? '음악 생성' : uiLanguage === 'JA' ? '音楽スタジオ' : 'Music Studio'}
-            </button>
-            <button
-              onClick={() => setCurrentTab('mastering')}
-              className={`px-5 py-2.5 text-xs font-bold rounded-full transition-all duration-300 cursor-pointer scale-100 hover:scale-[1.02] active:scale-[0.98] ${
-                currentTab === 'mastering'
-                  ? 'bg-primary text-[#080d08] shadow-lg shadow-primary/10 border border-primary/20'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
-              }`}
-            >
-              {uiLanguage === 'KO' ? '마스터링' : uiLanguage === 'JA' ? 'マスタリング' : 'Mastering'}
-            </button>
-          </div>
+    <div className="bg-[#0a0a0e] text-zinc-200 min-h-screen font-sans flex flex-col overflow-hidden">
+      {/* Studio Header */}
+      <StudioHeader
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        uiLanguage={uiLanguage}
+        userCredits={userCredits}
+        user={user}
+      />
 
-        </div>
-      </div>
-
-      {currentTab === 'studio' ? (
-        <div className="max-w-[1480px] mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-      
-      {/* 1열: AI 설정 & 지침서 */}
-      <div className="space-y-6">
-        
-        {/* AI 설정 */}
-        <section className="bg-surface-container-low border border-outline-variant/10 p-5 rounded-2xl space-y-4 shadow-xl shadow-black/30">
-          <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-outline-variant/10 pb-3 text-on-surface">
-            <Settings className="w-4 h-4 text-primary" />
-            {t.panelAiConfig}
-          </h2>
-          
-          <div className="space-y-3.5">
-            {/* 모델 선택 */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.model}</label>
-              <div className="relative">
-                <select
-                  value={settings.model}
-                  onChange={(e) => setSettings({ ...settings, model: e.target.value })}
-                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-                >
-                  {provider.models.map((model) => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
+      {/* Main Studio Multi-Pane Workspace */}
+      <StudioWorkspace
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        uiLanguage={uiLanguage}
+        userCredits={userCredits}
+        user={user}
+        history={history}
+        childrenLeft={
+          <div className="w-full h-full p-6 overflow-y-auto custom-scrollbar">
+            {currentTab === 'suno' && (
+              <div className="max-w-[1700px] mx-auto w-full">
+                <GenerateClient user={user} />
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 지침서 (가이드) */}
-        <section className="bg-surface-container-low border border-outline-variant/10 p-5 rounded-2xl space-y-4 shadow-xl shadow-black/30">
-          <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-outline-variant/10 pb-3 text-on-surface">
-            <FileText className="w-4 h-4 text-primary" />
-            {t.panelGuides}
-          </h2>
-
-          {/* 지침서 목록 */}
-          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-            {guides.map((guide) => (
-              <div
-                key={guide.id}
-                className={`p-3 rounded-xl border transition-all duration-200 flex items-start justify-between gap-2 group ${
-                  activeGuideIds.includes(guide.id)
-                    ? 'bg-primary/10 border-primary/35 text-primary'
-                    : 'bg-surface-container-lowest/60 border-outline-variant/10 text-on-surface-variant hover:border-white/[0.1]'
-                }`}
-              >
-                <button
-                  onClick={() =>
-                    setActiveGuideIds((prev) =>
-                      prev.includes(guide.id) ? prev.filter((id) => id !== guide.id) : [...prev, guide.id]
-                    )
-                  }
-                  className="flex-1 text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <Check className={`w-3.5 h-3.5 transition-all ${activeGuideIds.includes(guide.id) ? 'opacity-100 text-primary' : 'opacity-20'}`} />
-                    {guide.title}
-                  </div>
-                  <p className="text-[10px] text-on-surface-variant/80 mt-1 line-clamp-2 leading-relaxed">{guide.body}</p>
-                </button>
-                
-                <button
-                  onClick={() => removeGuide(guide.id)}
-                  className="text-on-surface-variant/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* 지침서 수동 등록 */}
-          <div className="space-y-2 border-t border-outline-variant/10 pt-3">
-            <input
-              type="text"
-              placeholder={t.newGuideTitlePlaceholder}
-              value={draftGuide.title}
-              onChange={(e) => setDraftGuide({ ...draftGuide, title: e.target.value })}
-              className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 focus:outline-none focus:border-primary/70 transition-all"
-            />
-            <textarea
-              placeholder={t.newGuideBodyPlaceholder}
-              rows={2}
-              value={draftGuide.body}
-              onChange={(e) => setDraftGuide({ ...draftGuide, body: e.target.value })}
-              className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 resize-none focus:outline-none focus:border-primary/70 transition-all custom-scrollbar"
-            />
-            <button
-              onClick={addGuide}
-              className="w-full py-2.5 bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] hover:bg-white/[0.02] text-on-surface text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer"
-            >
-              {t.registerGuide}
-            </button>
-          </div>
-
-          {/* 파일 업로드 */}
-          <div className="border-t border-outline-variant/10 pt-3 space-y-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.uploadGuideline}</span>
-            <div className="relative border border-dashed border-white/[0.1] hover:border-primary/50 bg-white/[0.01] hover:bg-primary/[0.02] rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all duration-300">
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".pdf,.txt"
-                onChange={handleFileUpload}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              />
-              <Upload className="w-5 h-5 text-on-surface-variant/40 mb-1.5" />
-              <span className="text-[10px] text-on-surface-variant/60 text-center leading-relaxed">
-                {isParsing ? t.parsingFile : t.uploadPlaceholder}
-              </span>
-            </div>
-          </div>
-        </section>
-
-      </div>
-
-      {/* 2~3열: 곡 정보 입력 */}
-      <div className="lg:col-span-2 space-y-6">
-        <section className="bg-surface-container-low border border-outline-variant/10 p-6 rounded-2xl space-y-6 shadow-xl shadow-black/30 h-full flex flex-col">
-          <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-outline-variant/10 pb-3 text-on-surface">
-            <Disc className="w-4 h-4 text-primary" />
-            {t.panelInput}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* 곡 제목 */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.songTitle}</label>
-              <input
-                type="text"
-                placeholder={t.songTitlePlaceholder}
-                value={form.title}
-                onChange={(e) => updateForm('title', e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 font-bold focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-              />
-            </div>
-
-            {/* 대상 툴 */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.targetTool}</label>
-              <div className="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                <button
-                  onClick={() => updateForm('targetTool', 'Suno')}
-                  className={`py-2.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                    form.targetTool.toLowerCase() === 'suno'
-                      ? 'bg-primary text-[#080d08] shadow-md shadow-primary/10'
-                      : 'text-on-surface-variant/60 hover:text-on-surface-variant'
-                  }`}
-                >
-                  Suno
-                </button>
-                <button
-                  onClick={() => alert('Udio 맞춤형 프롬프트 생성 기능은 곧 지원될 예정입니다!')}
-                  className="py-2.5 text-xs font-bold rounded-lg transition-all duration-200 text-on-surface-variant/40 cursor-not-allowed relative"
-                >
-                  Udio
-                  <span className="absolute -top-1 -right-1 bg-red-500/10 border border-red-500/30 text-red-400 text-[8px] px-1 py-0.5 rounded-md leading-none">예정</span>
-                </button>
-                <button
-                  onClick={() => alert('MusicFX 맞춤형 프롬프트 생성 기능은 곧 지원될 예정입니다!')}
-                  className="py-2.5 text-xs font-bold rounded-lg transition-all duration-200 text-on-surface-variant/40 cursor-not-allowed relative"
-                >
-                  MusicFX
-                  <span className="absolute -top-1 -right-1 bg-red-500/10 border border-red-500/30 text-red-400 text-[8px] px-1 py-0.5 rounded-md leading-none">예정</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 곡 유형 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.songType}</label>
-              <div className="grid grid-cols-2 gap-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/20">
-                {options.songType.map((o) => (
-                  <button
-                    key={o.value}
-                    onClick={() => updateForm('songType', o.value)}
-                    className={`py-2.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-                      form.songType === o.value
-                        ? 'bg-primary text-[#080d08] shadow-md shadow-primary/10'
-                        : 'text-on-surface-variant/60 hover:text-on-surface-variant'
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 장르 설정 (Genre Blending) */}
-            <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 1' : uiLanguage === 'JA' ? 'ジャンル 1' : 'Genre 1'}</label>
-                  <button
-                    onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
-                    className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
-                  >
-                    <span className="truncate">{form.genre1 ? (uiLanguage === 'KO' ? form.genre1 : (GENRE_TRANSLATIONS[form.genre1] || form.genre1)) : (uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre')}</span>
-                    <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 2' : uiLanguage === 'JA' ? 'ジャンル 2' : 'Genre 2'}</label>
-                  <button
-                    onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
-                    className="w-full text-left bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-3 text-xs font-bold text-on-surface focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all flex justify-between items-center"
-                  >
-                    <span className="truncate">{form.genre2 ? (uiLanguage === 'KO' ? form.genre2 : (GENRE_TRANSLATIONS[form.genre2] || form.genre2)) : (uiLanguage === 'KO' ? '없음' : uiLanguage === 'JA' ? 'なし' : 'None')}</span>
-                    <ChevronDown className="w-4 h-4 text-zinc-555 flex-shrink-0" />
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '장르 비중' : uiLanguage === 'JA' ? 'ジャンル比率' : 'Genre Ratio'}</label>
-                  <span className="text-xs font-bold text-[#e3fe06]">{form.genreRatio} : {100 - form.genreRatio}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="10"
-                  value={form.genreRatio}
-                  onChange={(e) => updateForm('genreRatio', parseInt(e.target.value))}
-                  className="w-full accent-[#e3fe06]"
-                />
-              </div>
-            </div>
-
-            {/* 스타일 설명 (Style Description) */}
-            <div className="space-y-1.5 md:col-span-2 bg-[#121614]/80 p-3 rounded-xl border border-[#233533]/50">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                {uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明' : 'STYLE DESCRIPTION'}
-              </label>
-              <input
-                type="text"
-                placeholder={uiLanguage === 'KO' ? '예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic' : uiLanguage === 'JA' ? '例: シティポップ、シンセポップ、ノスタルジック、雨、温かい、シネマティック' : 'e.g., city pop, synth pop, nostalgic, rainy, warm, cinematic'}
-                value={form.styleDesc}
-                onChange={(e) => updateForm('styleDesc', e.target.value)}
-                className="w-full bg-[#0a0f0d] border border-outline-variant/20 rounded-xl p-3.5 text-xs text-on-surface focus:outline-none focus:border-[#3fd4b6]/70 focus:ring-1 focus:ring-[#3fd4b6]/20 transition-all duration-300"
-              />
-            </div>
-
-            {/* 곡 전개 구조 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '곡 전개 구조 (Song Structure)' : uiLanguage === 'JA' ? '曲の構成' : 'Song Structure'}</label>
-              <div className="relative">
-                <select
-                  value={form.songStructure}
-                  onChange={(e) => updateForm('songStructure', e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                >
-                  {options.songStructure.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 md:col-span-2">
-              {/* 목표 음악 길이 */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.musicLength || '음악 길이 (Music Length)'}</label>
-                <div className="relative">
-                  <select
-                    value={form.musicLength}
-                    onChange={(e) => updateForm('musicLength', e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                  >
-                    {options.musicLength.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                </div>
-              </div>
-            </div>
-
-            {/* 4x4 Grid for Vocal Properties removed from here, moving down to vocal specific block */}
-
-            {form.songType === 'vocal' ? (
-              <>
-                {/* 보컬 2x2 Grid */}
-                <div className="grid grid-cols-2 gap-4 md:col-span-2">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '가사 분량' : uiLanguage === 'JA' ? '歌詞の密度' : 'Lyrics Density'}</label>
-                    <div className="relative">
-                      <select
-                        value={form.lyricDensity}
-                        onChange={(e) => updateForm('lyricDensity', e.target.value)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                      >
-                        {options.lyricDensity.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보이스 톤' : uiLanguage === 'JA' ? 'ボーカルのトーン' : 'Vocal Tone'}</label>
-                    <div className="relative">
-                      <select
-                        value={form.vocalTone}
-                        onChange={(e) => updateForm('vocalTone', e.target.value)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                      >
-                        {options.vocalTone.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 나이' : uiLanguage === 'JA' ? 'ボーカルの年齢' : 'Vocal Age'}</label>
-                    <div className="relative">
-                      <select
-                        value={form.vocalAge}
-                        onChange={(e) => updateForm('vocalAge', e.target.value)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                      >
-                        {options.vocalAge.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '보컬 젠더/구성' : uiLanguage === 'JA' ? 'ボーカルの性別/編成' : 'Vocal Gender/Format'}</label>
-                    <div className="relative">
-                      <select
-                        value={form.vocalGenderGroup}
-                        onChange={(e) => updateForm('vocalGenderGroup', e.target.value)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                      >
-                        {options.vocalGenderGroup.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 다국어 혼합 (Language Blending) */}
-                <div className="space-y-4 md:col-span-2 border border-outline-variant/30 rounded-xl p-3 bg-surface-container-lowest/50">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 1' : uiLanguage === 'JA' ? '言語 1' : 'Language 1'}</label>
-                      <div className="relative">
-                        <select
-                          value={form.language1}
-                          onChange={(e) => updateForm('language1', e.target.value)}
-                          className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                        >
-                          {options.language1.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 2' : uiLanguage === 'JA' ? '言語 2' : 'Language 2'}</label>
-                      <div className="relative">
-                        <select
-                          value={form.language2}
-                          onChange={(e) => updateForm('language2', e.target.value)}
-                          className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                        >
-                          {options.language2.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{uiLanguage === 'KO' ? '언어 비중' : uiLanguage === 'JA' ? '言語比率' : 'Language Ratio'}</label>
-                      <span className="text-xs font-bold text-[#e3fe06]">{form.languageRatio} : {100 - form.languageRatio}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="10"
-                      value={form.languageRatio}
-                      onChange={(e) => updateForm('languageRatio', parseInt(e.target.value))}
-                      className="w-full accent-[#e3fe06]"
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* BGM 용도 */}
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.bgmType}</label>
-                  <div className="relative">
-                    <select
-                      value={form.bgmType}
-                      onChange={(e) => updateForm('bgmType', e.target.value)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs font-bold appearance-none text-on-surface cursor-pointer focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all"
-                    >
-                      {options.bgmType.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-3 top-3 pointer-events-none text-zinc-555" />
-                  </div>
-                </div>
-              </>
             )}
 
-            {/* 템포 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.tempo}</span>
-                <span className="text-primary font-mono font-extrabold">{form.tempo} BPM</span>
+            {currentTab === 'cover' && (
+              <div className="max-w-[1700px] mx-auto w-full">
+                <CoverClient user={user} />
               </div>
-              <input
-                type="range"
-                min={60}
-                max={200}
-                value={form.tempo}
-                onChange={(e) => updateForm('tempo', parseInt(e.target.value))}
-                className="w-full h-1.5 bg-surface-container-lowest accent-[#e3fe06] hover:accent-[#e3fe06] rounded-lg cursor-pointer transition-all duration-305"
-              />
-              <div className="grid grid-cols-5 gap-1 pt-1 text-[10px] text-zinc-555">
-                <button type="button" onClick={() => updateForm('tempo', 70)} className="hover:text-on-surface-variant cursor-pointer text-left">{t.tempoVerySlow}</button>
-                <button type="button" onClick={() => updateForm('tempo', 95)} className="hover:text-on-surface-variant cursor-pointer text-left">{t.tempoSlow}</button>
-                <button type="button" onClick={() => updateForm('tempo', 120)} className="hover:text-on-surface text-center font-bold text-on-surface-variant cursor-pointer">{t.tempoNormal}</button>
-                <button type="button" onClick={() => updateForm('tempo', 145)} className="hover:text-on-surface-variant cursor-pointer text-right">{t.tempoFast}</button>
-                <button type="button" onClick={() => updateForm('tempo', 180)} className="hover:text-on-surface-variant cursor-pointer text-right">{t.tempoVeryFast}</button>
-              </div>
-            </div>
+            )}
 
-            {/* 추가 요청 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.extraRequests}</span>
-                <span className="text-[10px] text-zinc-600 font-normal normal-case">{t.extraSub}</span>
+            {currentTab === 'mastering' && (
+              <div className="max-w-[1700px] mx-auto w-full">
+                <MasteringClient />
               </div>
-              <textarea
-                placeholder={t.extraPlaceholder}
-                rows={3}
-                value={form.extra}
-                onChange={(e) => updateForm('extra', e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 resize-none focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300 custom-scrollbar"
-              />
-            </div>
+            )}
 
-            {/* 제외 요소 */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">{t.excludeElements}</label>
-              <input
-                type="text"
-                placeholder={t.excludePlaceholder}
-                value={form.exclude}
-                onChange={(e) => updateForm('exclude', e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-2.5 text-xs text-on-surface placeholder-zinc-700 focus:outline-none focus:border-primary/70 focus:ring-1 focus:ring-[#e3fe06]/20 transition-all duration-300"
-              />
-            </div>
+            {currentTab === 'library' && (
+              <div className="max-w-[1700px] mx-auto w-full space-y-5 pb-10">
+                <div className="flex items-center justify-between pb-3 border-b border-[#1e261f]">
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
+                      <HardDrive className="w-4 h-4 text-[#e6ff00]" />
+                      <span>미디어 클립 보관함 ({history.length})</span>
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다.</p>
+                  </div>
+                  <button 
+                    onClick={fetchSongHistory} 
+                    className="px-3.5 py-1.5 rounded-xl bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-[#e6ff00] transition-all cursor-pointer shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>새로고침</span>
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {history.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedItem(item)}
+                      className="p-3.5 rounded-2xl bg-[#121612] hover:bg-[#181f18] border border-[#1e261f] hover:border-[#e6ff00]/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-[#090d0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a231b] relative">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Music className="w-6 h-6 text-[#e6ff00]/60" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-[#e6ff00]">{item.title || 'Untitled'}</h4>
+                        <p className="text-[11px] text-zinc-500 truncate mt-0.5 font-mono">{item.style || item.style_desc || 'AI Track'}</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); playHistoryTrack(item); }}
+                        className="w-8 h-8 rounded-full bg-[#e6ff00] text-black flex items-center justify-center transition-all shadow-md shadow-yellow-950/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 ml-0.5 fill-current text-black" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentTab === 'studio' && (
+              <div className="max-w-[1700px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-5 pb-10">
+                
+                {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
+                <div className="xl:col-span-3 space-y-4">
+                  {/* AI 설정 */}
+                  <div className="bg-[#121612] border border-[#1e261f] p-4 rounded-2xl space-y-3 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
+                      <Settings className="w-3.5 h-3.5 text-[#e6ff00]" />
+                      AI 설정
+                    </h3>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-500">모델</label>
+                      <select
+                        value={settings.model}
+                        onChange={(e) => setSettings({ ...settings, model: e.target.value })}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                      >
+                        {provider.models.map((model) => (
+                          <option key={model} value={model}>{model}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 지침서 (가이드) */}
+                  <div className="bg-[#121612] border border-[#1e261f] p-4 rounded-2xl space-y-3.5 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
+                      <FileText className="w-3.5 h-3.5 text-[#e6ff00]" />
+                      지침서 (가이드)
+                    </h3>
+
+                    {/* 지침서 목록 */}
+                    {guides.length > 0 && (
+                      <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+                        {guides.map((guide) => (
+                          <div
+                            key={guide.id}
+                            className={`p-2.5 rounded-xl border transition-all flex items-start justify-between gap-2 group ${
+                              activeGuideIds.includes(guide.id)
+                                ? 'bg-[#e6ff00]/10 border-[#e6ff00]/40 text-[#e6ff00]'
+                                : 'bg-[#090d0a]/60 border-[#1a231b] text-zinc-400 hover:border-zinc-700'
+                            }`}
+                          >
+                            <button
+                              onClick={() =>
+                                setActiveGuideIds((prev) =>
+                                  prev.includes(guide.id) ? prev.filter((id) => id !== guide.id) : [...prev, guide.id]
+                                )
+                              }
+                              className="flex-1 text-left cursor-pointer"
+                            >
+                              <div className="flex items-center gap-1.5 font-bold text-xs">
+                                <Check className={`w-3.5 h-3.5 transition-all ${activeGuideIds.includes(guide.id) ? 'opacity-100 text-[#e6ff00]' : 'opacity-20'}`} />
+                                <span className="truncate">{guide.title}</span>
+                              </div>
+                              <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">{guide.body}</p>
+                            </button>
+                            <button
+                              onClick={() => removeGuide(guide.id)}
+                              className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-0.5 cursor-pointer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 지침서 등록 폼 */}
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="새 지침서 제목"
+                        value={draftGuide.title}
+                        onChange={(e) => setDraftGuide({ ...draftGuide, title: e.target.value })}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                      />
+                      <textarea
+                        placeholder="작사 규칙, 금지어, 브랜드 톤, 구조 등을 입력"
+                        rows={2}
+                        value={draftGuide.body}
+                        onChange={(e) => setDraftGuide({ ...draftGuide, body: e.target.value })}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-[#e6ff00]/60 custom-scrollbar"
+                      />
+                      <button
+                        onClick={addGuide}
+                        className="w-full py-2.5 bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                      >
+                        지침서 등록하기
+                      </button>
+                    </div>
+
+                    {/* 문서 업로드 (PDF/TXT) */}
+                    <div className="pt-2 space-y-1.5 border-t border-[#1a231b]">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">문서 업로드 (PDF/TXT)</span>
+                      <div className="relative border border-dashed border-[#232d24] hover:border-[#e6ff00]/50 bg-[#090d0a]/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept=".pdf,.txt"
+                          onChange={handleFileUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        />
+                        <Upload className="w-4 h-4 text-zinc-500 mb-1" />
+                        <span className="text-[10px] text-zinc-500 text-center">
+                          {isParsing ? '문서 읽는 중...' : '드래그하거나 클릭하여 파일 선택'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2열: 중앙 패널 (곡 정보 및 프롬프트 설정) - 5칸 */}
+                <div className="xl:col-span-5 space-y-4">
+                  <div className="bg-[#121612] border border-[#1e261f] p-5 rounded-2xl space-y-4 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
+                      <Disc className="w-3.5 h-3.5 text-[#e6ff00]" />
+                      곡 정보 및 프롬프트 설정
+                    </h3>
+
+                    {/* 1. 곡 제목 & 대상 툴 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-400">곡 제목 (TITLE)</label>
+                        <input
+                          type="text"
+                          placeholder="예: Neon City Lights"
+                          value={form.title}
+                          onChange={(e) => updateForm('title', e.target.value)}
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs font-bold text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-400">대상 툴 (TARGET AI)</label>
+                        <div className="grid grid-cols-3 gap-1 bg-[#090d0a] p-1 rounded-xl border border-[#1a231b]">
+                          <button
+                            type="button"
+                            onClick={() => updateForm('targetTool', 'Suno')}
+                            className={`py-2 text-xs font-extrabold rounded-lg transition-all ${form.targetTool.toLowerCase() === 'suno' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          >
+                            Suno
+                          </button>
+                          <button
+                            type="button"
+                            disabled
+                            className="py-2 text-xs font-semibold rounded-lg text-zinc-500 relative flex items-center justify-center gap-1 cursor-not-allowed"
+                          >
+                            <span>Udio</span>
+                            <span className="text-[8px] bg-red-950/80 text-red-400 border border-red-800/40 px-1 rounded">예정</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled
+                            className="py-2 text-xs font-semibold rounded-lg text-zinc-500 relative flex items-center justify-center gap-1 cursor-not-allowed"
+                          >
+                            <span>MusicFX</span>
+                            <span className="text-[8px] bg-red-950/80 text-red-400 border border-red-800/40 px-1 rounded">예정</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. 곡 형태 */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-400">곡 유형 (SONG TYPE)</label>
+                      <div className="grid grid-cols-2 gap-1.5 bg-[#090d0a] p-1 rounded-xl border border-[#1a231b]">
+                        <button
+                          type="button"
+                          onClick={() => updateForm('songType', 'vocal')}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'vocal' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                        >
+                          가사 있는 곡
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateForm('songType', 'instrumental')}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'instrumental' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                        >
+                          가사 없는 연주곡 (BGM)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3. 장르 1 & 장르 2 */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-400">장르 1</label>
+                        <button
+                          type="button"
+                          onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
+                        >
+                          <span className="truncate">{form.genre1 || '케이팝'}</span>
+                          <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-400">장르 2</label>
+                        <button
+                          type="button"
+                          onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
+                        >
+                          <span className="truncate">{form.genre2 || '없음'}</span>
+                          <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 장르 비중 슬라이더 */}
+                    <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[10px] font-bold text-zinc-400">장르 비중</span>
+                        <span className="font-mono font-bold text-[#e6ff00] text-xs">{form.genreRatio || 70} : {100 - (form.genreRatio || 70)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        step="5"
+                        value={form.genreRatio || 70}
+                        onChange={(e) => updateForm('genreRatio', parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    {/* 4. 스타일 설명 */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-400">스타일 설명 (STYLE DESCRIPTION)</label>
+                      <textarea
+                        rows={2}
+                        placeholder="예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic"
+                        value={form.styleDesc}
+                        onChange={(e) => updateForm('styleDesc', e.target.value)}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                      />
+                    </div>
+
+                    {/* 5. 곡 전개 구조 */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-400">곡 전개 구조 (SONG STRUCTURE)</label>
+                      <select
+                        value={form.songStructure || '대중적인 팝 (Verse-Chorus)'}
+                        onChange={(e) => updateForm('songStructure', e.target.value)}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                      >
+                        <option value="대중적인 팝 (Verse-Chorus)">대중적인 팝 (Verse-Chorus)</option>
+                        <option value="EDM / 댄스 구조 (Build-up & Drop)">EDM / 댄스 구조 (Build-up & Drop)</option>
+                        <option value="발라드 기승전결 (Intro-Verse-Chorus-Bridge-Outro)">발라드 기승전결 (Intro-Verse-Chorus-Bridge-Outro)</option>
+                        <option value="힙합/랩 그루브 (Hook & Verse)">힙합/랩 그루브 (Hook & Verse)</option>
+                        <option value="자유로운 전개 (Freeform)">자유로운 전개 (Freeform)</option>
+                      </select>
+                    </div>
+
+                    {/* 6. 음악 길이 */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-400">음악 길이 (LENGTH)</label>
+                      <select
+                        value={form.musicLength || '3분'}
+                        onChange={(e) => updateForm('musicLength', e.target.value)}
+                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                      >
+                        <option value="1분">1분</option>
+                        <option value="2분">2분</option>
+                        <option value="3분">3분</option>
+                        <option value="4분">4분</option>
+                        <option value="5분">5분</option>
+                      </select>
+                    </div>
+
+                    {/* 보컬 곡 옵션들 */}
+                    {form.songType !== 'instrumental' && (
+                      <div className="space-y-3 pt-1">
+                        {/* 가사 분량 & 보이스 톤 */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">가사 분량</label>
+                            <select
+                              value={form.lyricDensity || '보통 (Medium)'}
+                              onChange={(e) => updateForm('lyricDensity', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="적음 (Short)">적음 (Short)</option>
+                              <option value="보통 (Medium)">보통 (Medium)</option>
+                              <option value="많음 (Dense)">많음 (Dense)</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">보이스 톤</label>
+                            <select
+                              value={form.vocalTone || '밝고 쾌활한'}
+                              onChange={(e) => updateForm('vocalTone', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="밝고 쾌활한">밝고 쾌활한</option>
+                              <option value="부드럽고 감미로운">부드럽고 감미로운</option>
+                              <option value="허스키하고 소울풀한">허스키하고 소울풀한</option>
+                              <option value="파워풀한">파워풀한</option>
+                              <option value="몽환적 / 위스퍼">몽환적 / 위스퍼</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* 보컬 나이 & 보컬 젠더/구성 */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">보컬 나이</label>
+                            <select
+                              value={form.vocalAge || '청소년'}
+                              onChange={(e) => updateForm('vocalAge', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="청소년">청소년</option>
+                              <option value="20대 청년">20대 청년</option>
+                              <option value="30-40대 성인">30-40대 성인</option>
+                              <option value="중후한 노년">중후한 노년</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">보컬 젠더/구성</label>
+                            <select
+                              value={form.vocalGenderGroup || '여자'}
+                              onChange={(e) => updateForm('vocalGenderGroup', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="여자">여자</option>
+                              <option value="남자">남자</option>
+                              <option value="혼성 듀엣">혼성 듀엣</option>
+                              <option value="여성 그룹">여성 그룹</option>
+                              <option value="남성 그룹">남성 그룹</option>
+                              <option value="합창">합창</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* 언어 1 & 언어 2 */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">언어 1</label>
+                            <select
+                              value={form.language1 || '한국어'}
+                              onChange={(e) => updateForm('language1', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="한국어">한국어</option>
+                              <option value="영어">영어</option>
+                              <option value="일본어">일본어</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-zinc-400">언어 2</label>
+                            <select
+                              value={form.language2 || '없음'}
+                              onChange={(e) => updateForm('language2', e.target.value)}
+                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                            >
+                              <option value="없음">없음</option>
+                              <option value="영어">영어</option>
+                              <option value="한국어">한국어</option>
+                              <option value="일본어">일본어</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* 언어 비중 슬라이더 */}
+                        <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[10px] font-bold text-zinc-400">언어 비중</span>
+                            <span className="font-mono font-bold text-[#e6ff00] text-xs">{form.languageRatio || 70} : {100 - (form.languageRatio || 70)}</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="10"
+                            max="90"
+                            step="5"
+                            value={form.languageRatio || 70}
+                            onChange={(e) => updateForm('languageRatio', parseInt(e.target.value))}
+                            className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 7. 템포 (BPM/TEMPO) */}
+                    <div className="space-y-2 bg-[#090d0a] p-3.5 rounded-xl border border-[#1a231b]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-zinc-400">템포 (BPM/TEMPO)</span>
+                        <span className="font-mono font-black text-[#e6ff00] text-xs">{form.tempo || 120} BPM</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="60"
+                        max="180"
+                        step="1"
+                        value={form.tempo || 120}
+                        onChange={(e) => updateForm('tempo', parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[9px] text-zinc-500 font-semibold px-0.5">
+                        <span>아주 느리게</span>
+                        <span>느리게</span>
+                        <span>보통</span>
+                        <span>빠르게</span>
+                        <span>아주 빠르게</span>
+                      </div>
+                    </div>
+
+                    {/* 8. 추가 요청 & 제외 요소 */}
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-bold text-zinc-400">추가 요청 (EXTRA REQUESTS)</label>
+                          <span className="text-[9px] text-zinc-600">특정 악기, 특수 효과 등</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="예: 코러스에 일렉기타 솔로 추가, 리버브 이펙트 강조"
+                          value={form.extra}
+                          onChange={(e) => updateForm('extra', e.target.value)}
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-zinc-400">제외 요소 (NEGATIVE PROMPT)</label>
+                        <input
+                          type="text"
+                          placeholder="예: lo-fi, noise, bad vocals (선택 사항)"
+                          value={form.exclude}
+                          onChange={(e) => updateForm('exclude', e.target.value)}
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 9. 하단 액션 버튼들 (참고 이미지와 100% 동일) */}
+                    <div className="pt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={generate}
+                        disabled={isGenerating}
+                        className="flex-1 py-3.5 bg-[#e6ff00] hover:bg-[#d4f900] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-4 h-4 fill-current text-black" />
+                        <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)`}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm({
+                            ...form,
+                            title: 'Neon City Lights',
+                            genre1: '케이팝',
+                            genre2: '시티팝',
+                            genreRatio: 70,
+                            styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, 80s analog synth',
+                            songStructure: '대중적인 팝 (Verse-Chorus)',
+                            musicLength: '3분',
+                            lyricDensity: '보통 (Medium)',
+                            vocalTone: '밝고 쾌활한',
+                            vocalAge: '20대 청년',
+                            vocalGenderGroup: '여자',
+                            language1: '한국어',
+                            language2: '영어',
+                            languageRatio: 80,
+                            tempo: 120,
+                            extra: '후렴구에 그루비한 슬랩 베이스와 시티팝 브라스 강조',
+                            exclude: 'lo-fi, noise, harsh distortion'
+                          })
+                          setResultParts({
+                            structurePlan: '- 목표 길이: 3분 (180초)\n- 추천 BPM: 120 BPM\n- 총 마디 수: 90 Bars\n- 섹션: Intro(8) - Verse 1(16) - Pre-Chorus(8) - Chorus(16) - Verse 2(16) - Chorus(16) - Outro(10)',
+                            prompt: 'k-city pop, 80s synth pop, groovy slap bass, warm analog synthesizer, bright female vocal, brass hits, urban night mood, 120 bpm, polished mix',
+                            negativePrompt: 'lo-fi, noise, harsh distortion, muddy bass',
+                            title: 'Neon City Lights (네온 시티 라이츠)',
+                            lyrics: '[Intro | dreamy synth pad & groovy bassline]\n\n[Verse 1 | bright female vocal]\n비 내린 거리 위로 번지는 네온 사인\n우산 끝을 타고 흐르는 멜로디라인\n라디오에선 익숙한 시티팝 소리\n멈춰 선 이 순간 너를 떠올려\n\n[Pre-Chorus | building drums & brass stabs]\n점점 더 선명해지는 밤하늘의 불빛\n우리의 시간을 향해 달려가고 있어\n\n[Chorus | energetic & catchy hook]\nNeon City Lights, 밤을 밝혀줘\n흘러가는 음악 속에 우리 둘의 기억을\n끝없이 빛나는 이 도시 속에서\n너와 나 다시 만날 수 있게\n\n[Outro | fading synth & guitar riff]\nUnder the neon lights... Yeah...',
+                            notes: '1. 80년대 신스 사운드와 세련된 슬랩 베이스를 결합한 전형적인 K-시티팝 구조입니다.\n2. [Chorus] 부분에서 신스 브라스와 보컬 코러스가 풍성하게 어우러집니다.',
+                            raw: ''
+                          })
+                          setStatus('샘플 프롬프트와 가사가 로드되었습니다!')
+                        }}
+                        className="py-3.5 px-4 bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        샘플 생성
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3열: 우측 패널 (생성 결과 OUTPUT) - 가운데 패널과 아래쪽 높이 일치 */}
+                <div className="xl:col-span-4 h-full flex flex-col">
+                  <div className="bg-[#121612] border border-[#1e261f] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
+                    <div className="space-y-3 flex-1 flex flex-col">
+                      <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
+                        <FileText className="w-3.5 h-3.5 text-[#e6ff00]" />
+                        생성 결과 (OUTPUT)
+                      </h3>
+
+                      {/* 1. SUNO 스타일 프롬프트 */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">SUNO 스타일 프롬프트</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.prompt, 'style')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={3}
+                          value={resultParts.prompt}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, prompt: e.target.value }))}
+                          placeholder="여기에 음악 스타일 프롬프트가 생성됩니다."
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                        />
+                      </div>
+
+                      {/* 2. 제외 프롬프트 (NEGATIVE PROMPT) */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">제외 프롬프트 (NEGATIVE PROMPT)</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.negativePrompt, 'meta')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={resultParts.negativePrompt}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, negativePrompt: e.target.value }))}
+                          placeholder="제외할 스타일 프롬프트가 여기에 생성됩니다."
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                        />
+                      </div>
+
+                      {/* 3. 곡 제목 */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">곡 제목</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.title, 'meta')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={resultParts.title}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="곡 제목"
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-bold placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60"
+                        />
+                      </div>
+
+                      {/* 4. 가사 편집기 (가운데 패널 높이에 맞춰 쾌적하게 확장) */}
+                      <div className="space-y-1 flex-1 flex flex-col min-h-[220px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">가사 편집기</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.lyrics, 'lyrics')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={11}
+                          value={resultParts.lyrics}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, lyrics: e.target.value }))}
+                          placeholder="섹션 태그가 포함된 가사가 여기에 표시됩니다. 직접 수정하며 최종 완성하세요."
+                          className="w-full flex-1 bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar leading-relaxed"
+                        />
+                      </div>
+
+                      {/* 5. 곡 구조 설계 (마디수/BPM) */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">곡 구조 설계 (마디수/BPM)</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.structurePlan, 'meta')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={resultParts.structurePlan}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, structurePlan: e.target.value }))}
+                          placeholder="생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다."
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                        />
+                      </div>
+
+                      {/* 6. AI 메모 (SUGGESTIONS) */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-400">AI 메모 (SUGGESTIONS)</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(resultParts.notes, 'meta')}
+                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            title="복사"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={resultParts.notes}
+                          onChange={(e) => setResultParts(prev => ({ ...prev, notes: e.target.value }))}
+                          placeholder="제작 메모 또는 AI의 추가 제안이 표시됩니다."
+                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 하단 액션 버튼 영역 (가운데 패널 바닥선과 정렬) */}
+                    <div className="space-y-2 pt-2 border-t border-[#1a231b]">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const full = composeGeneratedText(resultParts)
+                            if (full) copyToClipboard(full, 'all')
+                          }}
+                          className="py-3 px-3 rounded-xl bg-[#151c15] hover:bg-[#1f291f] border border-[#232d24] text-[#e6ff00] text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>클립보드에 전체 복사</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setResultParts(EMPTY_RESULT)
+                            setStatus('생성 결과를 비웠습니다.')
+                          }}
+                          className="py-3 px-3 rounded-xl bg-[#151c15] hover:bg-[#1f291f] border border-[#232d24] text-zinc-400 hover:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>결과 지우기</span>
+                        </button>
+                      </div>
+
+                      {/* 최하단 음악 생성 스튜디오로 이동 */}
+                      <button
+                        type="button"
+                        onClick={navigateToGenerate}
+                        className="w-full py-3 rounded-xl bg-[#0e140f] hover:bg-[#162017] border border-[#232d24] hover:border-[#e6ff00]/40 text-zinc-300 hover:text-[#e6ff00] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-black/40"
+                      >
+                        <Music className="w-4 h-4 text-[#e6ff00]" />
+                        <span>음악 생성 스튜디오로 이동 ↗</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
+        }
+      />
 
-          {/* 액션 버튼 */}
-          <div className="flex gap-3 pt-4 border-t border-outline-variant/10 mt-auto">
-            <button
-              onClick={generate}
-              disabled={isGenerating}
-              className="flex-1 py-4 bg-primary hover:bg-[#e3fe06] active:scale-[0.98] text-[#080d08] font-extrabold text-xs tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {isGenerating ? t.generating : (uiLanguage === 'KO' ? `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)` : uiLanguage === 'JA' ? `プロンプト & 歌詞を生成 (${modelCost} クレジット)` : `GENERATE PROMPT & LYRICS (${modelCost} Credits)`)}
-            </button>
-            <button
-              onClick={generateSample}
-              className="px-6 py-4 bg-surface-container-lowest border border-outline-variant/20 hover:border-white/[0.15] hover:bg-white/[0.02] text-on-surface hover:text-white font-bold text-xs rounded-xl transition-all duration-200 cursor-pointer"
-            >
-              {uiLanguage === 'KO' ? '샘플 생성' : uiLanguage === 'JA' ? 'サンプル出力' : 'Generate Sample'}
-            </button>
-          </div>
-        </section>
-      </div>
-
-      {/* 4열: 생성 결과 */}
-      <div className="space-y-6">
-        <section className="bg-surface-container-low border border-outline-variant/10 p-5 rounded-2xl shadow-xl shadow-black/30 relative flex flex-col h-full">
-          <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-outline-variant/10 pb-3 text-on-surface mb-4">
-            <FileText className="w-4 h-4 text-primary" />
-            {t.panelOutput}
-          </h2>
- 
-          <div className="space-y-4 flex-1">
-            {/* 스타일 프롬프트 */}
-            <div className="space-y-1.5 relative group/item">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.promptLabel}</span>
-                <button
-                  onClick={() => copyText(t.copyPrompt, resultParts.prompt)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <textarea
-                readOnly
-                placeholder={t.promptPlaceholder}
-                value={resultParts.prompt}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[110px]"
-              />
-            </div>
- 
-            {/* 제외 프롬프트 */}
-            <div className="space-y-1.5 relative group/item">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.negativePromptLabel}</span>
-                <button
-                  onClick={() => copyText(t.copyNegativePrompt, resultParts.negativePrompt)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <textarea
-                readOnly
-                placeholder={t.negativePromptPlaceholder}
-                value={resultParts.negativePrompt}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[80px]"
-              />
-            </div>
- 
-            {/* 곡 제목 */}
-            <div className="space-y-1.5 relative group/item">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.titleLabel}</span>
-                <button
-                  onClick={() => copyText(t.copyTitle, resultParts.title)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <input
-                type="text"
-                readOnly
-                placeholder={t.titlePlaceholder}
-                value={resultParts.title}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface font-bold focus:outline-none placeholder-zinc-750"
-              />
-            </div>
- 
-            {/* 가사 편집기 */}
-            <div className="space-y-1.5 relative group/item">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.lyricsLabel}</span>
-                <button
-                  onClick={() => copyText(t.copyLyrics, resultParts.lyrics)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <textarea
-                readOnly
-                placeholder={t.lyricsPlaceholder}
-                value={resultParts.lyrics}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[380px]"
-              />
-            </div>
- 
-            {/* DURATION PLAN */}
-            <div className="space-y-1.5 relative group/item mt-4">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{uiLanguage === 'KO' ? '곡 구조 설계 (마디수/BPM)' : uiLanguage === 'JA' ? '構成 & BPM計画' : 'Structure & BPM Plan'}</span>
-                <button
-                  onClick={() => copyText(uiLanguage === 'KO' ? '설계 복사' : uiLanguage === 'JA' ? '計画をコピー' : 'Copy Plan', resultParts.structurePlan)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <textarea
-                readOnly
-                placeholder={uiLanguage === 'KO' ? '생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다.' : uiLanguage === 'JA' ? '曲の長さとBPM計画がここに表示されます。' : 'Structure and BPM plan will be shown here.'}
-                value={resultParts.structurePlan}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[120px]"
-              />
-            </div>
-
-            {/* AI 메모 (SUGGESTIONS) */}
-            <div className="space-y-1.5 relative group/item">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">
-                <span>{t.notesLabel}</span>
-                <button
-                  onClick={() => copyText(t.copyNotes, resultParts.notes)}
-                  className="transition-all duration-200 text-on-surface-variant/85 hover:text-primary cursor-pointer p-1 rounded hover:bg-white/[0.03]"
-                  title={t.copyTooltip}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <textarea
-                readOnly
-                placeholder={t.notesPlaceholder}
-                value={resultParts.notes}
-                className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-2.5 text-xs text-on-surface resize-none focus:outline-none placeholder-zinc-750 custom-scrollbar h-[110px]"
-              />
-            </div>
-          </div>
- 
-          {/* 하단 액션 버튼 */}
-          <div className="flex gap-3 pt-4 border-t border-outline-variant/10 mt-auto">
-            <button
-              onClick={() => copyText(t.copyAll, composeGeneratedText(resultParts))}
-              className="flex-1 py-3.5 bg-primary/5 hover:bg-primary/10 active:scale-[0.98] border border-primary/20 hover:border-primary/45 text-primary font-extrabold text-[11px] rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-1 cursor-pointer text-center leading-tight"
-            >
-              <Copy className="w-4 h-4 mb-0.5" />
-              {uiLanguage === 'KO' ? (
-                <>
-                  <span>클립보드에</span>
-                  <span>전체 복사</span>
-                </>
-              ) : (
-                <>
-                  <span>Copy All to</span>
-                  <span>Clipboard</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={clearResult}
-              className="flex-1 py-3.5 bg-surface-container-lowest hover:bg-white/[0.02] border border-outline-variant/20 hover:border-white/[0.15] text-on-surface hover:text-white font-extrabold text-[11px] rounded-xl transition-all duration-205 flex flex-col items-center justify-center gap-1 cursor-pointer text-center leading-tight"
-            >
-              <Trash2 className="w-4 h-4 mb-0.5" />
-              {uiLanguage === 'KO' ? (
-                <>
-                  <span>결과</span>
-                  <span>지우기</span>
-                </>
-              ) : (
-                <>
-                  <span>Clear</span>
-                  <span>Result</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Suno Audio Player UI */}
-          <div className="mt-4 border-t border-outline-variant/10 pt-4">
-            <button 
-              onClick={navigateToGenerate}
-              disabled={!resultParts.prompt}
-              className="w-full py-3 bg-surface-container-lowest hover:bg-white/[0.05] border border-primary/30 hover:border-primary/60 text-primary font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Music className="w-4 h-4" />
-              음악 생성 스튜디오로 이동 ➡️
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-      ) : currentTab === 'library' ? (
-        <LibraryView
-          history={history}
-          t={t}
-          uiLanguage={uiLanguage}
-          openHistoryItem={openHistoryItem}
-          deleteHistoryItem={deleteHistoryItem}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          selectedItem={selectedItem}
-          setSelectedItem={setSelectedItem}
-          setCurrentTab={setCurrentTab}
-          playlists={playlists}
-          onRefreshHistory={fetchSongHistory}
-          user={user}
-          profile={profile}
-        />
-      ) : currentTab === 'cover' ? (
-        <CoverClient user={user} />
-      ) : currentTab === 'suno' ? (
-        <GenerateClient 
-          user={user} 
-          historyId={currentHistoryId}
-          initialPrompt={resultParts.lyrics}
-          initialStyle={resultParts.prompt}
-          initialTitle={resultParts.title}
-          initialNegativePrompt={resultParts.negativePrompt}
-        />
-      ) : currentTab === 'mastering' ? (
-        <MasteringClient />
-      ) : null}
-
+      {/* 장르 선택 모달 */}
       <GenreModal
         isOpen={isGenreModalOpen}
         onClose={() => setIsGenreModalOpen(false)}
         title={genreModalTarget === 'genre1' ? (uiLanguage === 'KO' ? '장르 1 선택' : uiLanguage === 'JA' ? 'ジャンル 1 を選択' : 'Select Genre 1') : (uiLanguage === 'KO' ? '장르 2 선택' : uiLanguage === 'JA' ? 'ジャンル 2 を選択' : 'Select Genre 2')}
         selectedGenre={genreModalTarget === 'genre1' ? form.genre1 : form.genre2}
-        onSelect={(genre) => {
-          updateForm(genreModalTarget, genre)
+        onSelect={(genreName) => {
+          updateForm(genreModalTarget, genreName)
           setIsGenreModalOpen(false)
         }}
         uiLanguage={uiLanguage}
       />
-    </div>
-  )
-}
-
-interface LibraryViewProps {
-  history: any[]
-  t: any
-  uiLanguage: string
-  openHistoryItem: (item: any, mode?: 'all' | 'style' | 'lyrics') => void
-  deleteHistoryItem: (id: string) => void
-  searchTerm: string
-  setSearchTerm: (term: string) => void
-  currentPage: number
-  setCurrentPage: (page: number | ((p: number) => number)) => void
-  selectedItem: any
-  setSelectedItem: (item: any) => void
-  setCurrentTab: (tab: 'studio' | 'library') => void
-  playlists: any[]
-  onRefreshHistory: () => Promise<void>
-  user?: any
-  profile?: any
-}
-
-function LibraryView({
-  history,
-  t,
-  uiLanguage,
-  openHistoryItem,
-  deleteHistoryItem,
-  searchTerm,
-  setSearchTerm,
-  currentPage,
-  setCurrentPage,
-  selectedItem,
-  setSelectedItem,
-  setCurrentTab,
-  playlists,
-  onRefreshHistory,
-  user,
-  profile
-}: LibraryViewProps) {
-  const itemsPerPage = 15 // 15 items per page
-  const [deletedIds, setDeletedIds] = useState<string[]>(() => readJson(STORAGE_KEYS.deletedDummyItems, []))
-  const [copiedPrompt, setCopiedPrompt] = useState(false)
-  const [copiedLyrics, setCopiedLyrics] = useState(false)
-
-  const handleCopyPrompt = (text: string) => {
-    navigator.clipboard.writeText(text || '')
-    setCopiedPrompt(true)
-    setTimeout(() => setCopiedPrompt(false), 1500)
-  }
-
-  const handleCopyLyrics = (text: string) => {
-    navigator.clipboard.writeText(text || '')
-    setCopiedLyrics(true)
-    setTimeout(() => setCopiedLyrics(false), 1500)
-  }
-
-  // usePlayerStore hook
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
-  const supabase = createClient()
-
-  const [channels, setChannels] = useState<any[]>([])
-
-  const fetchChannels = async () => {
-    if (!user) return
-    try {
-      const { data } = await supabase.from('artists').select('*').eq('owner_user_id', user.id).eq('is_user', false)
-      if (data) setChannels(data)
-    } catch (e) { console.error(e) }
-  }
-
-  useEffect(() => {
-    fetchChannels()
-  }, [user])
-
-  const assignSongToChannel = async (historyId: string, channelId: string | null) => {
-    try {
-      const { error } = await supabase.from('song_history').update({ channel_id: channelId }).eq('id', historyId)
-      if (error) {
-        alert(uiLanguage === 'KO' ? '채널 연결 변경 실패' : uiLanguage === 'JA' ? 'チャンネルの変更に失敗しました' : 'Failed to change channel connection')
-        console.error(error)
-      } else {
-        await onRefreshHistory()
-        alert(channelId 
-          ? (uiLanguage === 'KO' ? '음원이 채널에 연결되었습니다.' : uiLanguage === 'JA' ? '曲がチャンネルに割り当てられました。' : 'Song assigned to channel.')
-          : (uiLanguage === 'KO' ? '채널 연결이 해제되었습니다.' : uiLanguage === 'JA' ? 'チャンネルの接続が解除されました。' : 'Channel connection disconnected.'))
-      }
-    } catch (e) { console.error(e) }
-  }
-
-  const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
-    if (!url) return
-    try {
-      let downloadUrl = url;
-      if (downloadUrl && !downloadUrl.startsWith('http') && !downloadUrl.startsWith('dummy-') && !downloadUrl.startsWith('sample-') && !downloadUrl.startsWith('hook-') && !downloadUrl.startsWith('featured-')) {
-        try {
-          const { data, error } = await supabase.storage
-            .from('tracks')
-            .createSignedUrl(downloadUrl, 3600)
-          if (!error && data) {
-            downloadUrl = data.signedUrl;
-          }
-        } catch (err) {
-          console.error(err)
-        }
-      }
-      let proxyUrl = `/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(filename)}`
-      if (imageUrl) {
-        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
-      }
-      const a = document.createElement('a')
-      a.href = proxyUrl
-      a.download = `${filename}.mp3`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } catch (e) {
-      console.error(e)
-      window.open(url, '_blank')
-    }
-  }
-
-
-
-  // Local state for dropdown playlist selector active item
-  const [activePlaylistMenuId, setActivePlaylistMenuId] = useState<string | null>(null)
-
-  // Local state for dummy playlist id tracking
-  const [dummyPlaylistIds, setDummyPlaylistIds] = useState<Record<string, string | null>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('dummy_playlist_ids')
-        return stored ? JSON.parse(stored) : {}
-      } catch {
-        return {}
-      }
-    }
-    return {}
-  })
-
-  const setDummyPlaylistId = (itemId: string, playlistId: string | null) => {
-    const updated = { ...dummyPlaylistIds, [itemId]: playlistId }
-    setDummyPlaylistIds(updated)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dummy_playlist_ids', JSON.stringify(updated))
-    }
-  }
-
-  // Local state for dummy liked tracking
-  const [dummyLikes, setDummyLikes] = useState<Record<string, boolean>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('dummy_likes')
-        return stored ? JSON.parse(stored) : {}
-      } catch {
-        return {}
-      }
-    }
-    return {}
-  })
-
-  const setDummyLike = (itemId: string, liked: boolean) => {
-    const updated = { ...dummyLikes, [itemId]: liked }
-    setDummyLikes(updated)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dummy_likes', JSON.stringify(updated))
-    }
-  }
-
-  // Playlist filter state: 'all' | 'liked' | string (playlist_id)
-  const [selectedPlaylistFilter, setSelectedPlaylistFilter] = useState<string>('all')
-
-  const handleLikeToggle = async (item: any) => {
-    const nextLiked = !item.liked
-    if (item.id.startsWith('dummy')) {
-      setDummyLike(item.id, nextLiked)
-    } else {
-      try {
-        const res = await fetch(`/api/song-history/${item.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ liked: nextLiked })
-        })
-        if (res.ok) {
-          await onRefreshHistory()
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
-  }
-
-  // Local state for publishing and genres on mockup items
-  const [dummyPublishState, setDummyPublishState] = useState<Record<string, boolean>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('dummy_publish_state')
-        return stored ? JSON.parse(stored) : {}
-      } catch {
-        return {}
-      }
-    }
-    return {}
-  })
-
-  const [dummyGenres, setDummyGenres] = useState<Record<string, string>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('dummy_genres')
-        return stored ? JSON.parse(stored) : {}
-      } catch {
-        return {}
-      }
-    }
-    return {}
-  })
-
-  const updateDummyPublish = (itemId: string, isPublished: boolean, genre?: string) => {
-    const nextPublish = { ...dummyPublishState, [itemId]: isPublished }
-    setDummyPublishState(nextPublish)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('dummy_publish_state', JSON.stringify(nextPublish))
-    }
-
-    if (genre) {
-      const nextGenres = { ...dummyGenres, [itemId]: genre }
-      setDummyGenres(nextGenres)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('dummy_genres', JSON.stringify(nextGenres))
-      }
-    }
-  }
-
-  const [publishConfirmItem, setPublishConfirmItem] = useState<any | null>(null)
-  const [selectedPublishGenre, setSelectedPublishGenre] = useState<string>('')
-
-  const handlePublishToggle = async (item: any) => {
-    if (item.is_published) {
-      // Toggle to Private
-      if (item.id.startsWith('dummy')) {
-        updateDummyPublish(item.id, false)
-      } else {
-        try {
-          const res = await fetch(`/api/song-history/${item.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_published: false })
-          })
-          if (res.ok) {
-            await onRefreshHistory()
-          }
-        } catch (err) {
-          console.error(err)
-        }
-      }
-    } else {
-      // Toggle to Public (Open genre select modal)
-      setSelectedPublishGenre(item.genre || '')
-      setPublishConfirmItem(item)
-    }
-  }
-
-  const confirmPublish = async () => {
-    if (!publishConfirmItem) return
-    if (!selectedPublishGenre) return
-
-    const item = publishConfirmItem
-    if (item.id.startsWith('dummy')) {
-      updateDummyPublish(item.id, true, selectedPublishGenre)
-    } else {
-      try {
-        const res = await fetch(`/api/song-history/${item.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ is_published: true, genre: selectedPublishGenre })
-        })
-        if (res.ok) {
-          await onRefreshHistory()
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
-
-    setPublishConfirmItem(null)
-    setSelectedPublishGenre('')
-  }
-
-  // Handle play/pause toggles
-  const handlePlayToggle = (item: any) => {
-    const audioUrl = item.audio_url || item.file_url
-    if (!audioUrl) return
-
-    const trackToPlay = {
-      id: item.id,
-      album_id: item.playlist_id || 'library',
-      track_number: 1,
-      title: item.title || t.untitledProject,
-      duration_sec: 180,
-      file_url: audioUrl,
-      file_size: null,
-      waveform_data: null,
-      lyrics: item.lyrics || null,
-      style_prompt: item.prompt || item.promptText || null,
-      image_url: item.image_url || withBase('/default-album.png'),
-      bpm: null,
-      song_key: null,
-      prompt_meta: null,
-      play_count: 0,
-      like_count: 0,
-      status: 'published' as const,
-      created_at: item.created_at,
-      updated_at: item.created_at,
-      album: {
-        id: item.playlist_id || 'library',
-        slug: 'library',
-        artist_id: profile?.id || user?.id || 'user',
-        title: uiLanguage === 'KO' ? '라이브러리' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library',
-        release_type: 'single' as const,
-        cover_url: item.image_url || withBase('/default-album.png'),
-        release_date: null,
-        genres: [],
-        moods: [],
-        description: null,
-        status: 'published' as const,
-        generation_tool: 'Suno',
-        total_plays: 0,
-        total_likes: 0,
-        created_at: item.created_at,
-        updated_at: item.created_at,
-        artist: {
-          id: profile?.id || user?.id || 'user',
-          name: profile?.display_name || user?.email?.split('@')[0] || 'AI Artist',
-          slug: user?.email?.split('@')[0] || 'user',
-          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
-          bio: 'AI Artist'
-        }
-      }
-    }
-
-    if (currentTrack?.id === item.id) {
-      togglePlay()
-    } else {
-      playTrack(trackToPlay as any)
-    }
-  }
-
-  // Format date to '2026. 5. 27.'
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr)
-      const y = date.getFullYear()
-      const m = date.getMonth() + 1
-      const d = date.getDate()
-      return `${y}. ${m}. ${d}.`
-    } catch {
-      return dateStr
-    }
-  }
-
-  // Combined real history from database + mockup-identical dummy items
-  const combinedHistory = useMemo(() => {
-    const realHistoryWithFields = history.map((item) => ({
-      ...item,
-      promptText: item.prompt || item.form?.styleDesc || '',
-      langText: item.form?.language || '한국어',
-    }))
-
-    const fullMockupLyrics = `[Verse 1]
-젖은 유리창 위로 네 이름이 번져
-신호등 불빛마다 마음이 멈춰 서
-돌아갈 길은 없다는 걸 알면서도
-나는 같은 거리를 다시 지나가
-
-[Pre-Chorus]
-라디오 끝에 남은 작은 숨처럼
-아직도 넌 내 밤을 흔들어
-
-[Chorus]
-Rain on the midnight road
-너를 잊는 법을 몰라
-흐려진 불빛 사이로
-우리의 계절이 또 지나가
-Rain on the midnight road
-끝내 말하지 못한 말
-빗소리 안에 묻어둘게
-오늘도 널 지나쳐 가
-
-[Verse 2]
-텅 빈 조수석 위로 새벽이 내려
-익숙한 골목마다 추억이 켜져
-괜찮아질 거라는 흔한 말 대신
-가만히 속도를 낮춰 숨을 쉬어
-
-[Bridge]
-언젠가 이 노래가 끝나면
-나도 웃으며 널 놓을 수 있을까
-
-[Final Chorus]
-Rain on the midnight road
-너를 잊는 법을 배워
-희미한 불빛 너머로
-새로운 아침이 날 부르나 봐`;
-
-    // Construct 15 dummy items matching the mockup titles and styles
-    const dummyItems = [
-      {
-        id: 'dummy-1',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T06:21:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-2',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T06:18:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-3',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T06:10:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-4',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T05:55:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-5',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T05:30:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-6',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T05:00:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-7',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-27T04:22:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, nostalgic, rainy, warm, cinematic, female vocal, soft vocal, airy harmony, tempo 120 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-8',
-        title: '이밤이 지나도',
-        prompt: '90s Korean hip hop, energetic swing jazz groove, funky rhythm guitars, rapid-fire rap, male vocals, tempo 95 bpm',
-        lyrics: '[Verse 1]\n이밤이 지나도 아직 난 여기에\n네가 남겨둔 온기 속에 갇혀서\n\n[Chorus]\n이밤이 지나면 모두 지워질까\n그리운 너의 목소리도 너의 미소도',
-        created_at: '2026-05-12T21:40:00Z',
-        form: {
-          styleDesc: '90s Korean hip hop, energetic swing jazz groove, funky rhythm guitars, rapid-fire rap, male vocals, tempo 95 bpm',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-9',
-        title: '이밤이 지나도',
-        prompt: '90s Korean hip hop duo, fast tempo 150 bpm, swing jazz style, funky rhythm guitar, scratching sound',
-        lyrics: '[Verse 1]\n이밤이 지나도 아직 난 여기에\n네가 남겨둔 온기 속에 갇혀서\n\n[Chorus]\n이밤이 지나면 모두 지워질까\n그리운 너의 목소리도 너의 미소도',
-        created_at: '2026-05-12T20:15:00Z',
-        form: {
-          styleDesc: '90s Korean hip hop duo, fast tempo 150 bpm, swing jazz style, funky rhythm guitar, scratching sound',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-10',
-        title: '식은커피한잔',
-        prompt: '90s Korean hip hop duo, fast tempo 150 bpm, swing jazz style, funky rhythm guitar, scratching sound',
-        lyrics: '[Verse 1]\n식어버린 커피 한 잔에 담긴 너의 말\n돌이킬 수 없는 우리 시간들의 끝\n\n[Chorus]\n식은 커피처럼 차갑게 식어버린\n우리 사랑의 온도',
-        created_at: '2026-05-12T19:30:00Z',
-        form: {
-          styleDesc: '90s Korean hip hop duo, fast tempo 150 bpm, swing jazz style, funky rhythm guitar, scratching sound',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-11',
-        title: '식은커피한잔',
-        prompt: 'hip hop duo, funky, rock, modern hip hop, hybrid, idol, rap, catchy hooks, smooth, male vocal',
-        lyrics: '[Verse 1]\n식어버린 커피 한 잔에 담긴 너의 말\n돌이킬 수 없는 우리 시간들의 끝\n\n[Chorus]\n식은 커피처럼 차갑게 식어버린\n우리 사랑의 온도',
-        created_at: '2026-05-12T18:50:00Z',
-        form: {
-          styleDesc: 'hip hop duo, funky, rock, modern hip hop, hybrid, idol, rap, catchy hooks, smooth, male vocal',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-12',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'hip hop duo, funky, rock, modern hip hop, hybrid style, dynamic vocal harmonies, high quality',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-12T17:10:00Z',
-        form: {
-          styleDesc: 'hip hop duo, funky, rock, modern hip hop, hybrid style, dynamic vocal harmonies, high quality',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-13',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'hip-hop duo, funky, rock, modern hip-hop, hybrid, idol, rap',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-12T16:20:00Z',
-        form: {
-          styleDesc: 'hip-hop duo, funky, rock, modern hip-hop, hybrid, idol, rap',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-14',
-        title: 'Drive on a Rainy Night',
-        prompt: 'Korean city pop, synth pop, hip hop duo, funky, rock, modern hip hop, hybrid, idol, rap, catchy hooks, smooth vocal',
-        lyrics: 'Walking down the neon lights\nEverything is shining bright\nRain is falling on my face\nI am lost in this cool place',
-        created_at: '2026-05-12T15:10:00Z',
-        form: {
-          styleDesc: 'Korean city pop, synth pop, hip hop duo, funky, rock, modern hip hop, hybrid, idol, rap, catchy hooks, smooth vocal',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      },
-      {
-        id: 'dummy-15',
-        title: '비 오는 밤의 드라이브',
-        prompt: 'hip-hop duo, funky, rock, modern hip-hop, hybrid, idol, rap, tempo 115 bpm, female vocal',
-        lyrics: fullMockupLyrics,
-        created_at: '2026-05-12T14:00:00Z',
-        form: {
-          styleDesc: 'hip-hop duo, funky, rock, modern hip-hop, hybrid, idol, rap, tempo 115 bpm, female vocal',
-          language: '한국어',
-          targetTool: 'Suno',
-          songType: 'vocal'
-        }
-      }
-    ].map((item, idx) => {
-      const audioIdx = (idx % 15) + 1
-      const imgIdx = idx % 5
-      const testImages = [
-        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=300&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=60',
-        'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=300&auto=format&fit=crop&q=60'
-      ]
-      return {
-        ...item,
-        audio_url: `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${audioIdx}.mp3`,
-        image_url: testImages[imgIdx],
-        promptText: item.prompt,
-        langText: item.form.language,
-      }
-    })
-
-    const dummyItemsPage2 = dummyItems.map((item, idx) => ({
-      ...item,
-      id: `dummy-page2-${idx}`,
-      audio_url: item.audio_url,
-      image_url: item.image_url,
-      created_at: new Date(new Date(item.created_at).getTime() - 15 * 24 * 60 * 60 * 1000).toISOString()
-    }))
-
-    const unfiltered = [...realHistoryWithFields, ...dummyItems, ...dummyItemsPage2]
-    return unfiltered.map(item => {
-      let updatedItem = { ...item }
-      if (item.id.startsWith('dummy')) {
-        if (dummyPlaylistIds[item.id] !== undefined) {
-          updatedItem.playlist_id = dummyPlaylistIds[item.id]
-        }
-        if (dummyLikes[item.id] !== undefined) {
-          updatedItem.liked = dummyLikes[item.id]
-        } else {
-          updatedItem.liked = false
-        }
-        // 더미 공개 여부 및 장르 맵핑
-        updatedItem.is_published = !!dummyPublishState[item.id]
-        updatedItem.genre = dummyGenres[item.id] || ''
-      } else {
-        updatedItem.liked = !!item.liked
-        // real item: mapping published and genre
-        updatedItem.is_published = !!item.is_published
-        updatedItem.genre = item.genre || ''
-      }
-      return updatedItem
-    }).filter(item => !deletedIds.includes(item.id))
-  }, [history, deletedIds, dummyPlaylistIds, dummyLikes, dummyPublishState, dummyGenres])
-
-  const filteredHistory = useMemo(() => {
-    let result = combinedHistory
-
-    // 1. Playlist Filter
-    if (selectedPlaylistFilter === 'liked') {
-      result = result.filter(item => !!item.liked)
-    } else if (selectedPlaylistFilter !== 'all') {
-      result = result.filter(item => item.playlist_id === selectedPlaylistFilter)
-    }
-
-    // 2. Search Term Filter
-    if (searchTerm.trim()) {
-      const lower = searchTerm.toLowerCase()
-      result = result.filter(item => 
-        (item.title || t.untitledProject).toLowerCase().includes(lower) ||
-        (item.promptText || '').toLowerCase().includes(lower)
-      )
-    }
-
-    return result
-  }, [combinedHistory, searchTerm, t.untitledProject, selectedPlaylistFilter])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, selectedPlaylistFilter])
-
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage) || 1
-  const currentItems = useMemo(() => {
-    return filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  }, [filteredHistory, currentPage, itemsPerPage])
-
-
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-
-  const handleDelete = (id: string) => {
-    setDeleteConfirmId(id)
-  }
-
-  const confirmDelete = async () => {
-    if (!deleteConfirmId) return
-    const id = deleteConfirmId
-    
-    if (!id.startsWith('dummy')) {
-      await deleteHistoryItem(id)
-    } else {
-      const currentDummyIds = readJson(STORAGE_KEYS.deletedDummyItems, [])
-      writeJson(STORAGE_KEYS.deletedDummyItems, Array.from(new Set([...currentDummyIds, id])))
-    }
-    setDeletedIds(prev => [...prev, id])
-    setDeleteConfirmId(null)
-  }
-
-  return (
-    <div className="mx-auto max-w-7xl px-6 py-8 font-sans space-y-6 text-on-surface">
-      {/* Top Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl sm:text-2xl font-black text-on-surface flex items-center gap-2 uppercase tracking-wide">
-            <Library className="w-6 h-6 text-primary shrink-0" />
-            {uiLanguage === 'KO' ? '보관함' : uiLanguage === 'JA' ? 'ライブラリ' : 'Library'}
-          </h1>
-          <span className="px-3 py-1 rounded-full bg-[#18181c] border border-zinc-800 text-xs font-bold text-zinc-400">
-            {filteredHistory.length}
-          </span>
-        </div>
-
-        <div className="relative w-full sm:w-80">
-          <input 
-            type="text" 
-            className="w-full bg-[#111612] border border-zinc-800 rounded-full pl-10 pr-4 py-2.5 text-xs text-on-surface-variant placeholder-zinc-700 focus:outline-none focus:border-zinc-700 transition-all duration-300" 
-            placeholder={uiLanguage === 'KO' ? '제목, 스타일 설명 검색...' : uiLanguage === 'JA' ? 'タイトル、スタイルの説明を検索...' : 'Search title, style description...'}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Playlist Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <button
-          onClick={() => setSelectedPlaylistFilter('all')}
-          className={`px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap border ${
-            selectedPlaylistFilter === 'all'
-              ? 'bg-primary text-[#080d08] border-primary shadow-md shadow-primary/10'
-              : 'bg-[#18181c] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
-          }`}
-        >
-          {uiLanguage === 'KO' ? '전체' : uiLanguage === 'JA' ? 'すべて' : 'All'}
-        </button>
-        <button
-          onClick={() => setSelectedPlaylistFilter('liked')}
-          className={`px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap border flex items-center gap-1.5 ${
-            selectedPlaylistFilter === 'liked'
-              ? 'bg-[#FF2D55] text-white border-[#FF2D55] shadow-md shadow-red-500/15'
-              : 'bg-[#18181c] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
-          }`}
-        >
-          <Heart className={`w-3.5 h-3.5 ${selectedPlaylistFilter === 'liked' ? 'fill-current text-white' : 'text-[#FF2D55] fill-current'}`} />
-          <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs'}</span>
-        </button>
-        {[
-          ...playlists.filter(p => parsePlaylistDescription(p.description).type === 'album'),
-          ...playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist')
-        ].map((playlist) => (
-          <button
-            key={playlist.id}
-            onClick={() => setSelectedPlaylistFilter(playlist.id)}
-            className={`px-4 py-2 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap border ${
-              selectedPlaylistFilter === playlist.id
-                ? 'bg-primary text-[#080d08] border-primary shadow-md shadow-primary/10'
-                : 'bg-[#18181c] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
-            }`}
-          >
-            {playlist.title}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Full-Width Table */}
-      {filteredHistory.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-outline-variant/20 bg-white/[0.01] py-20 text-center">
-          <Music className="mb-4 h-12 w-12 text-zinc-700" />
-          <p className="text-sm font-medium text-on-surface-variant">
-            {uiLanguage === 'KO' ? '보관된 음원이나 프롬프트가 없습니다.' : uiLanguage === 'JA' ? '保存された曲やプロンプトが見つかりません。' : 'No saved tracks or prompts.'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="overflow-x-auto bg-transparent">
-            <table className="w-full text-left text-xs text-zinc-400 border-collapse">
-              <thead>
-                <tr className="border-t border-b border-zinc-800 text-[11px] font-extrabold uppercase tracking-wider text-zinc-500">
-                  <th className="px-6 py-4.5 w-14 text-center">{uiLanguage === 'KO' ? '번호' : uiLanguage === 'JA' ? '番号' : 'No.'}</th>
-                  <th className="px-6 py-4.5 w-24">{uiLanguage === 'KO' ? '작성일' : uiLanguage === 'JA' ? '作成日' : 'Created At'}</th>
-                  <th className="px-6 py-4.5">{uiLanguage === 'KO' ? '제목' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</th>
-                  <th className="px-6 py-4.5 w-32">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}</th>
-                  <th className="px-6 py-4.5 w-20">{uiLanguage === 'KO' ? '언어' : uiLanguage === 'JA' ? '言語' : 'Language'}</th>
-                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '재생 시간' : uiLanguage === 'JA' ? '再生時間' : 'Duration'}</th>
-                  <th className="px-6 py-4.5 w-20 text-center">{uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}</th>
-                  <th className="px-6 py-4.5 w-24 text-center">{uiLanguage === 'KO' ? '공개 여부' : uiLanguage === 'JA' ? '公開' : 'Public/Private'}</th>
-                  <th className="px-6 py-4.5 w-32 text-center">{uiLanguage === 'KO' ? '관리' : uiLanguage === 'JA' ? '管理' : 'Manage'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-900/50">
-                {currentItems.map((item, index) => {
-                  const absoluteIndex = filteredHistory.length - ((currentPage - 1) * itemsPerPage + index)
-                  
-                  const styleDescText = item.promptText || ''
-                  const displayStyle = styleDescText.length > 10 
-                    ? styleDescText.slice(0, 8) + '...' 
-                    : styleDescText || '-'
-                    
-                  const cleanLang = item.langText 
-                    ? (item.langText.includes(' ') ? item.langText.split(' ')[0] : item.langText) 
-                    : '-'
-
-                   const isProcessing = item.status === 'processing'
-                  const hasAudio = !!(item.audio_url || item.file_url) && !isProcessing
-                  const isCurrentPlaying = currentTrack?.id === item.id && isPlaying && !isProcessing
-
-                  return (
-                    <tr 
-                      key={item.id} 
-                      className="transition-all duration-200 hover:bg-white/[0.01] group/row cursor-pointer border-b border-zinc-800/30 last:border-0"
-                      onClick={() => setSelectedItem(item)}
-                    >
-                      {/* 번호 */}
-                      <td className="px-6 py-5 whitespace-nowrap text-center text-zinc-500 font-mono font-bold text-xs">
-                        {absoluteIndex}
-                      </td>
-
-                      {/* 작성일 */}
-                      <td className="px-6 py-5 whitespace-nowrap text-zinc-400 font-mono font-bold text-[11px]">
-                        {formatDate(item.created_at)}
-                      </td>
-
-                      {/* 제목 (커버 이미지 및 재생 오버레이 통합) */}
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <div 
-                            className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 group/cover cursor-pointer bg-zinc-900 border border-zinc-800/50"
-                            onClick={(e) => {
-                              if (hasAudio) {
-                                e.stopPropagation()
-                                handlePlayToggle(item)
-                              }
-                            }}
-                          >
-                            <img 
-                              src={item.image_url || withBase('/default-album.png')} 
-                              alt="Cover" 
-                              className="w-full h-full object-cover"
-                            />
-                            {isProcessing ? (
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                              </div>
-                            ) : hasAudio ? (
-                              <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-200 ${
-                                isCurrentPlaying ? 'opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
-                              }`}>
-                                {isCurrentPlaying ? (
-                                  <div className="flex items-end justify-center gap-[4px] h-6 w-6">
-                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                  </div>
-                                ) : (
-                                  <Play className="w-6 h-6 text-primary fill-primary ml-0.5" />
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-
-                          <div className="space-y-1 min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="block text-sm font-bold text-white group-hover/row:text-primary transition-colors truncate">
-                                {item.title || t.untitledProject}
-                              </span>
-                              {isProcessing && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
-                                  {uiLanguage === 'KO' ? '생성 중' : uiLanguage === 'JA' ? '生成中' : 'Generating'}
-                                </span>
-                              )}
-                            </div>
-                            <span className="block text-[11px] text-zinc-500 font-medium line-clamp-1 leading-normal max-w-xs truncate">
-                              {styleDescText.length > 20 ? styleDescText.slice(0, 18) + '...' : styleDescText}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 스타일 설명 */}
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className="inline-block px-3 py-1.5 rounded-lg bg-[#242429] border border-zinc-800 text-[10px] font-bold text-zinc-300 tracking-wide">
-                          {displayStyle}
-                        </span>
-                      </td>
-
-                      {/* 언어 */}
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className="inline-block px-3 py-1.5 rounded-lg bg-[#242429] border border-zinc-800 text-[10px] font-bold text-zinc-300 tracking-wide font-sans">
-                          {cleanLang}
-                        </span>
-                      </td>
-
-                      {/* 재생 시간 */}
-                      <td className="px-6 py-5 whitespace-nowrap text-center text-zinc-400 font-mono font-bold text-[11px]" onClick={(e) => e.stopPropagation()}>
-                        {isProcessing ? (
-                          <span>-:-</span>
-                        ) : item.audio_url || item.file_url ? (
-                          <AudioDuration url={item.audio_url || item.file_url} />
-                        ) : (
-                          <span>-:-</span>
-                        )}
-                      </td>
-
-                      {/* 좋아요 */}
-                      <td className="px-6 py-5 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleLikeToggle(item)}
-                          className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer group/heart"
-                          title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
-                        >
-                          <Heart 
-                            className={`w-4 h-4 transition-transform active:scale-125 ${
-                              item.liked 
-                                ? 'text-primary fill-current' 
-                                : 'text-zinc-500 hover:text-primary group-hover/heart:scale-105'
-                            }`} 
-                          />
-                        </button>
-                      </td>
-
-                      {/* 공개 여부 */}
-                      <td className="px-6 py-5 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handlePublishToggle(item)}
-                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all cursor-pointer border ${
-                            item.is_published
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                              : 'bg-zinc-800/40 text-zinc-400 border-zinc-800/80 hover:text-white hover:border-zinc-700'
-                          }`}
-                        >
-                          {item.is_published 
-                            ? (uiLanguage === 'KO' ? `공개 (${item.genre || '기타'})` : uiLanguage === 'JA' ? `公開 (${item.genre || 'その他'})` : `Public (${item.genre || 'Other'})`)
-                            : (uiLanguage === 'KO' ? '비공개' : uiLanguage === 'JA' ? '非公開' : 'Private')
-                          }
-                        </button>
-                      </td>
-
-                      {/* 관리 (삭제 및 플레이리스트 추가) */}
-                      <td className="px-6 py-5 whitespace-nowrap text-center relative" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            onClick={() => handleDownloadTrack(item.audio_url || item.file_url, item.title, item.image_url)}
-                            className="text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
-                            title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-
-                          <div className="relative text-zinc-500 hover:text-primary p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer" title={uiLanguage === 'KO' ? '채널 연결' : uiLanguage === 'JA' ? 'チャンネルに割り当て' : 'Connect Channel'}>
-                            <Users className="w-4 h-4" />
-                            <select 
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                              value={item.channel_id || ''}
-                              onChange={(e) => assignSongToChannel(item.id, e.target.value || null)}
-                              disabled={item.id.startsWith('dummy')}
-                            >
-                              <option value="">{uiLanguage === 'KO' ? '메인 프로필 (채널 없음)' : uiLanguage === 'JA' ? 'メインプロフィール (チャンネルなし)' : 'Main Profile (No Channel)'}</option>
-                              {channels.map(ch => (
-                                <option key={ch.id} value={ch.id}>{ch.name}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <button
-                            onClick={() => setActivePlaylistMenuId(activePlaylistMenuId === item.id ? null : item.id)}
-                            className="text-zinc-500 hover:text-white p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer"
-                            title={uiLanguage === 'KO' ? '플레이리스트에 추가' : uiLanguage === 'JA' ? 'プレイリストに追加' : 'Add to Playlist'}
-                          >
-                            <FolderPlus className="w-4 h-4" />
-                          </button>
-                          
-                          <button 
-                            onClick={() => handleDelete(item.id)} 
-                            className="text-zinc-500 hover:text-[#FF2D55] font-bold text-xs transition-colors cursor-pointer"
-                          >
-                            {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
-                          </button>
-                        </div>
-
-                        {/* Playlist Dropdown Popover */}
-                        {activePlaylistMenuId === item.id && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setActivePlaylistMenuId(null)} />
-                            <div className="absolute right-6 mt-2 w-48 bg-[#18181c] border border-zinc-800 rounded-xl shadow-2xl p-2 z-50 text-left">
-                              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2.5 py-1.5 border-b border-zinc-900">
-                                {uiLanguage === 'KO' ? '플레이리스트 선택' : uiLanguage === 'JA' ? 'プレイリストを選択' : 'Select Playlist'}
-                              </p>
-                              <div className="max-h-40 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
-                                {/* 해제 버튼 */}
-                                <button
-                                  onClick={async () => {
-                                    setActivePlaylistMenuId(null)
-                                    if (item.id.startsWith('dummy')) {
-                                      setDummyPlaylistId(item.id, null)
-                                    } else {
-                                      try {
-                                        const res = await fetch(`/api/song-history/${item.id}`, {
-                                          method: 'PUT',
-                                          headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({ playlist_id: null })
-                                        })
-                                        if (res.ok) {
-                                          await onRefreshHistory()
-                                        }
-                                      } catch (err) {
-                                        console.error(err)
-                                      }
-                                    }
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[11px] font-bold cursor-pointer"
-                                >
-                                  <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}</span>
-                                  {!item.playlist_id && <Check className="w-3.5 h-3.5 text-primary" />}
-                                </button>
-
-                                {/* 좋아요 표시한 음악 퀵토글 */}
-                                <button
-                                  onClick={async () => {
-                                    setActivePlaylistMenuId(null)
-                                    await handleLikeToggle(item)
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[11px] font-bold cursor-pointer"
-                                >
-                                  <span className="flex items-center gap-1.5">
-                                    <Heart className="w-3.5 h-3.5 text-primary fill-current" />
-                                    <span>{uiLanguage === 'KO' ? '좋아요 표시한 음악' : uiLanguage === 'JA' ? 'お気に入りの曲' : 'Liked Songs'}</span>
-                                  </span>
-                                  {item.liked && <Check className="w-3.5 h-3.5 text-primary" />}
-                                </button>
-
-                                {/* Albums Section */}
-                                {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').length > 0 && (
-                                  <div className="px-2 py-1 text-[8px] font-black tracking-widest text-[#e3fe06] uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                    {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
-                                  </div>
-                                )}
-                                {playlists.filter(p => parsePlaylistDescription(p.description).type === 'album').map((playlist) => {
-                                  const isSelected = item.playlist_id === playlist.id
-                                  return (
-                                    <button
-                                      key={playlist.id}
-                                      onClick={async () => {
-                                        setActivePlaylistMenuId(null)
-                                        if (item.id.startsWith('dummy')) {
-                                          setDummyPlaylistId(item.id, playlist.id)
-                                        } else {
-                                          try {
-                                            const res = await fetch(`/api/song-history/${item.id}`, {
-                                              method: 'PUT',
-                                              headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify({ playlist_id: playlist.id })
-                                            })
-                                            if (res.ok) {
-                                              await onRefreshHistory()
-                                            }
-                                          } catch (err) {
-                                            console.error(err)
-                                          }
-                                        }
-                                      }}
-                                      className="w-full text-left px-2.5 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[11px] font-bold cursor-pointer"
-                                    >
-                                      <span className="truncate max-w-[120px]">{playlist.title}</span>
-                                      {isSelected && <Check className="w-3.5 h-3.5 text-primary" />}
-                                    </button>
-                                  )
-                                })}
-
-                                {/* Playlists Section */}
-                                {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').length > 0 && (
-                                  <div className="px-2 py-1 text-[8px] font-black tracking-widest text-zinc-400 uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
-                                    {uiLanguage === 'KO' ? '나만의 플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'}
-                                  </div>
-                                )}
-                                {playlists.filter(p => parsePlaylistDescription(p.description).type === 'playlist').map((playlist) => {
-                                  const isSelected = item.playlist_id === playlist.id
-                                  return (
-                                    <button
-                                      key={playlist.id}
-                                      onClick={async () => {
-                                        setActivePlaylistMenuId(null)
-                                        if (item.id.startsWith('dummy')) {
-                                          setDummyPlaylistId(item.id, playlist.id)
-                                        } else {
-                                          try {
-                                            const res = await fetch(`/api/song-history/${item.id}`, {
-                                              method: 'PUT',
-                                              headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify({ playlist_id: playlist.id })
-                                            })
-                                            if (res.ok) {
-                                              await onRefreshHistory()
-                                            }
-                                          } catch (err) {
-                                            console.error(err)
-                                          }
-                                        }
-                                      }}
-                                      className="w-full text-left px-2.5 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[11px] font-bold cursor-pointer"
-                                    >
-                                      <span className="truncate max-w-[120px]">{playlist.title}</span>
-                                      {isSelected && <Check className="w-3.5 h-3.5 text-primary" />}
-                                    </button>
-                                  )
-                                })}
-                                {playlists.length === 0 && (
-                                  <p className="text-[10px] text-zinc-600 px-2.5 py-2 text-center">
-                                    {uiLanguage === 'KO' ? '생성된 플레이리스트 없음' : uiLanguage === 'JA' ? 'プレイリストなし' : 'No playlists created'}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-2 pt-2">
-              <p className="text-xs text-zinc-500 font-bold">
-                {uiLanguage === 'KO' 
-                  ? `페이지 ${currentPage} / ${totalPages}` 
-                  : uiLanguage === 'JA' ? `${currentPage} / ${totalPages} ページ` : `Page ${currentPage} of ${totalPages}`}
-              </p>
-              <div className="flex gap-1.5">
-                <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-                >
-                  {uiLanguage === 'KO' ? '이전' : uiLanguage === 'JA' ? '前へ' : 'Prev'}
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`h-8 w-8 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
-                        currentPage === page 
-                          ? 'bg-[#FF2D55] text-white shadow-md shadow-red-500/10' 
-                          : 'text-zinc-400 hover:bg-white/[0.03] hover:text-white'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-                <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-[#1a1a1f] hover:bg-zinc-855 border border-zinc-800 rounded-xl text-xs font-bold text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-                >
-                  {uiLanguage === 'KO' ? '다음' : uiLanguage === 'JA' ? '次へ' : 'Next'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {selectedItem && (
-        <div className="fixed inset-0 z-[100] flex items-start pt-12 md:pt-20 justify-center bg-black/85 backdrop-blur-sm px-4 pb-4 sm:px-6 sm:pb-6" onClick={() => setSelectedItem(null)}>
-          <div className="w-full max-w-5xl rounded-2xl border border-outline-variant/20 bg-surface-container-low/95 backdrop-blur-xl shadow-2xl shadow-black/80 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-outline-variant/10 px-6 py-5 sm:px-8 bg-[#0e130f] rounded-t-2xl">
-              <div className="flex items-center gap-4 min-w-0">
-                <img 
-                  src={selectedItem.image_url || withBase('/default-album.png')} 
-                  alt="Cover" 
-                  className="w-12 h-12 rounded-lg object-cover bg-zinc-900 border border-zinc-800/50 flex-shrink-0"
-                />
-                <h2 className="text-xl sm:text-2xl font-bold text-on-surface truncate">{selectedItem.title || t.untitledProject}</h2>
-              </div>
-              <button onClick={() => setSelectedItem(null)} className="text-zinc-400 hover:text-white transition-colors bg-surface-container-lowest/60 hover:bg-surface-container-lowest p-2 rounded-full w-9 h-9 flex items-center justify-center cursor-pointer">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar bg-surface-container-low">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">{uiLanguage === 'KO' ? '프롬프트' : uiLanguage === 'JA' ? 'プロンプト' : 'Prompt'}</h3>
-                    <button
-                      onClick={() => handleCopyPrompt(selectedItem.prompt || '')}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
-                        copiedPrompt 
-                          ? 'text-primary border-primary/40 bg-primary/5' 
-                          : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
-                      }`}
-                    >
-                      {copiedPrompt ? (uiLanguage === 'KO' ? '복사 완료' : uiLanguage === 'JA' ? 'コピー完了' : 'Copied') : (uiLanguage === 'KO' ? '복사' : uiLanguage === 'JA' ? 'コピー' : 'Copy')}
-                    </button>
-                  </div>
-                  <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
-                    {selectedItem.prompt || (uiLanguage === 'KO' ? '내용 없음' : uiLanguage === 'JA' ? '内容なし' : 'No content')}
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider">{uiLanguage === 'KO' ? '가사' : uiLanguage === 'JA' ? '歌詞' : 'Lyrics'}</h3>
-                    <button
-                      onClick={() => handleCopyLyrics(selectedItem.lyrics || '')}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
-                        copiedLyrics 
-                          ? 'text-primary border-primary/40 bg-primary/5' 
-                          : 'text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border-zinc-800'
-                      }`}
-                    >
-                      {copiedLyrics ? (uiLanguage === 'KO' ? '복사 완료' : uiLanguage === 'JA' ? 'コピー完了' : 'Copied') : (uiLanguage === 'KO' ? '복사' : uiLanguage === 'JA' ? 'コピー' : 'Copy')}
-                    </button>
-                  </div>
-                  <div className="rounded-xl bg-surface-container-lowest p-4 border border-outline-variant/10 whitespace-pre-wrap text-xs leading-relaxed text-on-surface h-[500px] overflow-y-auto custom-scrollbar">
-                    {selectedItem.lyrics || (uiLanguage === 'KO' ? '내용 없음' : uiLanguage === 'JA' ? '内容なし' : 'No content')}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="col-span-1 lg:col-span-3 flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? '스타일 설명 (STYLE DESCRIPTION)' : uiLanguage === 'JA' ? 'スタイルの説明 (STYLE DESCRIPTION)' : 'STYLE DESCRIPTION'}</h3>
-                  <p className="text-xs text-on-surface bg-surface-container-lowest/60 px-4 py-3 rounded-xl border border-outline-variant/10 break-words font-medium">
-                    {selectedItem.form?.styleDesc || [selectedItem.form?.genre, selectedItem.form?.mood].filter(Boolean).join(', ') || '-'}
-                  </p>
-                </div>
-                <div className="col-span-1 flex flex-col">
-                  <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? '보컬 톤/스타일 (VOCAL STYLE)' : uiLanguage === 'JA' ? 'ボーカルトーン/スタイル (VOCAL STYLE)' : 'VOCAL STYLE'}</h3>
-                  <p className="text-xs text-on-surface bg-surface-container-lowest/60 px-4 py-3 rounded-xl border border-outline-variant/10 break-words font-medium">
-                    {selectedItem.form?.vocal || '-'}
-                    {selectedItem.form?.vocalFeaturing && selectedItem.form?.vocalFeaturing !== '없음' ? ` (Ft. ${selectedItem.form.vocalFeaturing})` : ''}
-                  </p>
-                </div>
-              </div>
-
-              {/* AI 메모 */}
-              <div className="flex flex-col">
-                <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5">{uiLanguage === 'KO' ? 'AI 메모' : uiLanguage === 'JA' ? 'AI メモ' : 'AI Memo'}</h3>
-                <div className="rounded-xl bg-surface-container-lowest/60 p-4 border border-outline-variant/10 text-xs text-on-surface leading-relaxed font-sans whitespace-pre-line">
-                  {selectedItem.notes || [
-                    `- 대상 툴: ${selectedItem.form?.targetTool || selectedItem.targetTool || 'Suno'}`,
-                    `- 가사 언어: ${selectedItem.form?.language || selectedItem.langText || '한국어'}`,
-                    `- 보컬 구성: ${selectedItem.form?.vocalGroup === 'vocal' || selectedItem.form?.vocalGroup === 'solo' ? '솔로' : (selectedItem.form?.vocalGroup || '솔로')}`,
-                    `- 반영 지침: 등록 지침 포함`
-                  ].join('\n')}
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t border-outline-variant/10 p-5 sm:px-8 flex flex-wrap gap-3 justify-end bg-surface-container-lowest/30 rounded-b-2xl">
-              <button 
-                onClick={() => { openHistoryItem(selectedItem, 'style'); setSelectedItem(null); setCurrentTab('studio'); }}
-                className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '스타일 프롬프트만 재사용' : uiLanguage === 'JA' ? 'スタイルプロンプトのみ再利用' : 'Reuse style prompt only'}
-              </button>
-              <button 
-                onClick={() => { openHistoryItem(selectedItem, 'lyrics'); setSelectedItem(null); setCurrentTab('studio'); }}
-                className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '가사만 재사용' : uiLanguage === 'JA' ? '歌詞のみ再利用' : 'Reuse lyrics only'}
-              </button>
-              <button 
-                onClick={() => { openHistoryItem(selectedItem, 'all'); setSelectedItem(null); setCurrentTab('studio'); }}
-                className="px-5 py-2.5 text-xs font-extrabold text-[#080d08] bg-primary hover:bg-[#e3fe06] active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/10 cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '전체 재사용' : uiLanguage === 'JA' ? 'すべて再利用' : 'Reuse all'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {deleteConfirmId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 sm:p-6" onClick={() => setDeleteConfirmId(null)}>
@@ -3643,7 +2300,7 @@ Rain on the midnight road
                 {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
               </button>
               <button 
-                onClick={confirmDelete}
+                onClick={() => { confirmDelete(); setDeleteConfirmId(null); }}
                 className="px-5 py-2.5 text-xs font-extrabold text-white bg-[#FF2D55] hover:bg-red-500 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-red-500/20 cursor-pointer"
               >
                 {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
@@ -3656,51 +2313,27 @@ Rain on the midnight road
       {publishConfirmItem && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 sm:p-6" onClick={() => setPublishConfirmItem(null)}>
           <div className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-low/95 backdrop-blur-xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">
-                  {uiLanguage === 'KO' ? '음원 퍼블리싱' : uiLanguage === 'JA' ? '音楽を公開' : 'Publish Track'}
-                </h3>
-                <p className="text-xs text-zinc-400">
-                  {uiLanguage === 'KO' 
-                    ? `'${publishConfirmItem.title || t.untitledProject}' 곡을 퍼블리싱하여 내 채널에 공개하시겠습니까?`
-                    : uiLanguage === 'JA' ? `本当に公開しますか: ` : `Are you sure you want to publish '${publishConfirmItem.title || t.untitledProject}'?`
-                  }
-                </p>
-              </div>
-
-              <div className="space-y-1.5 text-xs text-left">
-                <label className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                  {uiLanguage === 'KO' ? '장르 카테고리 (필수)' : uiLanguage === 'JA' ? 'ジャンルカテゴリー (必須)' : 'Genre Category (Required)'}
-                </label>
-                <select
-                  value={selectedPublishGenre}
-                  onChange={(e) => setSelectedPublishGenre(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
-                >
-                  <option value="">{uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre'}</option>
-                  {GENRES.map(g => (
-                    <option key={g.name} value={g.name}>
-                      {g.name} {uiLanguage === 'KO' && g.korean ? `(${g.korean})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-white mb-2">
+                {uiLanguage === 'KO' ? '게시 확인' : uiLanguage === 'JA' ? '公開の確認' : 'Confirm Publish'}
+              </h3>
+              <p className="text-sm text-zinc-400">
+                {uiLanguage === 'KO' ? '이 곡을 커뮤니티에 게시하시겠습니까?' : uiLanguage === 'JA' ? 'この曲をコミュニティに公開しますか？' : 'Do you want to publish this track to the community?'}
+              </p>
             </div>
             <div className="border-t border-outline-variant/10 p-4 bg-surface-container-lowest/30 flex gap-3 justify-end">
-               <button 
-                 onClick={() => setPublishConfirmItem(null)}
-                 className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
-               >
-                 {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
-               </button>
-               <button 
-                 onClick={confirmPublish}
-                 disabled={!selectedPublishGenre}
-                 className="px-5 py-2.5 text-xs font-extrabold text-[#080d08] bg-primary hover:bg-[#e3fe06] disabled:opacity-50 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/10 cursor-pointer"
-               >
-                 {uiLanguage === 'KO' ? '퍼블리싱' : uiLanguage === 'JA' ? '公開する' : 'Publish'}
-               </button>
+              <button 
+                onClick={() => setPublishConfirmItem(null)}
+                className="px-4 py-2 text-xs font-bold text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-white rounded-xl transition-all border border-outline-variant/20 cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
+              </button>
+              <button 
+                onClick={() => { publishTrack(publishConfirmItem); setPublishConfirmItem(null); }}
+                className="px-5 py-2.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-primary/20 cursor-pointer"
+              >
+                {uiLanguage === 'KO' ? '게시' : uiLanguage === 'JA' ? '公開する' : 'Publish'}
+              </button>
             </div>
           </div>
         </div>
