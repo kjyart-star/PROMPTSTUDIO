@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Home, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
-  Search, Settings, Heart, ListMusic, CreditCard, Music, Coins, Disc
+  Search, Settings, Heart, ListMusic, CreditCard, Music, Disc
 } from 'lucide-react'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
@@ -53,22 +53,8 @@ export function PublicLayoutClient({
   }, [])
 
   const [activeTab, setActiveTab] = useState('')
-  const [userCredits, setUserCredits] = useState<number>(0)
   const [playlists, setPlaylists] = useState<any[]>([])
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const updateCredits = () => {
-      const saved = localStorage.getItem('user-credits')
-      if (saved !== null) {
-        setUserCredits(parseFloat(saved))
-      }
-    }
-    updateCredits()
-    const interval = setInterval(updateCredits, 2000)
-    return () => clearInterval(interval)
-  }, [])
 
   // 활성화된 탭 판별 (Client-safe to avoid SSR Suspense deopt)
   useEffect(() => {
@@ -502,18 +488,6 @@ export function PublicLayoutClient({
                   JA
                 </button>
               </div>
-
-              {/* Credits (User only) */}
-              {user && (
-                <Link 
-                  href="/pricing"
-                  className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-variant border border-primary/30 px-3 py-1.5 rounded-full transition-all cursor-pointer group"
-                  title={uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットを購入' : 'Buy Credits'}
-                >
-                  <Coins className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[12px] font-bold text-on-surface">{userCredits.toLocaleString()}</span>
-                </Link>
-              )}
 
               {/* Notification (Bell) */}
               <div className="relative">

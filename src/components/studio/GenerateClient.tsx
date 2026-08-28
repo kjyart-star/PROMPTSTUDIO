@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download } from 'lucide-react'
+import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
@@ -458,6 +458,35 @@ export function GenerateClient({
     }
   }
 
+  // 행 전체 클릭·원형 버튼이 함께 쓰는 재생 동작
+  const playListTrack = (track: any) => {
+    if (!track?.audio_url) return
+    if (currentTrack?.id === track.id) {
+      togglePlay()
+      return
+    }
+    const trackToPlay = {
+      id: track.id,
+      title: track.title,
+      file_url: track.audio_url,
+      duration_sec: 180,
+      album_id: 'studio-generated',
+      image_url: track.image_url || withBase('/default-album.png'),
+      album: {
+        id: 'studio-generated',
+        title: 'Studio Generation',
+        cover_url: track.image_url || withBase('/default-album.png'),
+        artist: {
+          name: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
+          slug: user?.email?.split('@')[0] || 'ai-generator',
+          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
+          bio: 'AI Artist'
+        }
+      }
+    }
+    playTrack(trackToPlay as any, [trackToPlay] as any[])
+  }
+
   const handleSelectTrack = (track: any) => {
     setCurrentHistoryId(track.id)
     const url = new URL(window.location.href)
@@ -852,7 +881,7 @@ export function GenerateClient({
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-zinc-400 tracking-wider flex justify-between items-center">
                   <span>{uiLanguage === 'KO' ? `🎵 생성 완료된 곡 목록 (최근 ${topCompletedSongs.length}곡)` : uiLanguage === 'JA' ? `🎵 完了した曲 (最近 ${topCompletedSongs.length}件)` : `🎵 Completed Songs (Recent ${topCompletedSongs.length})`}</span>
-                  <span className="text-[9px] text-zinc-500 font-normal normal-case">{uiLanguage === 'KO' ? '* 클릭 시 옵션/가사 불러오기' : uiLanguage === 'JA' ? '* クリックしてオプション/歌詞をロード' : '* Click to load options/lyrics'}</span>
+                  <span className="text-[9px] text-zinc-500 font-normal normal-case">{uiLanguage === 'KO' ? '* 클릭 시 재생 · 지팡이 아이콘으로 옵션/가사 불러오기' : uiLanguage === 'JA' ? '* クリックで再生 · ワンドアイコンでオプション/歌詞をロード' : '* Click to play · wand icon loads options/lyrics'}</span>
                 </p>
                 
                 <div className="space-y-2">
@@ -865,8 +894,16 @@ export function GenerateClient({
                     return (
                       <div 
                         key={track.id}
-                        onClick={() => handleSelectTrack(track)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none group/item ${
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => playListTrack(track)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            playListTrack(track)
+                          }
+                        }}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none group/item focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                           isSelected
                             ? 'bg-primary/10 border-primary/40 shadow-lg shadow-emerald-500/5'
                             : 'bg-black/25 border-zinc-800/40 hover:bg-white/[0.02] hover:border-zinc-700/50'
@@ -894,6 +931,15 @@ export function GenerateClient({
                         </div>
                         
                         <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {/* 옵션/가사 불러오기 */}
+                          <button
+                            onClick={() => handleSelectTrack(track)}
+                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
+                            title={uiLanguage === 'KO' ? '옵션/가사 불러오기' : uiLanguage === 'JA' ? 'オプション/歌詞をロード' : 'Load options/lyrics'}
+                          >
+                            <Wand2 className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-primary' : 'text-zinc-500 hover:text-primary'}`} />
+                          </button>
+
                           {/* 공개 여부 설정 */}
                           <button
                             onClick={() => handlePublishToggle(track)}
@@ -1051,32 +1097,7 @@ export function GenerateClient({
 
                           {/* 재생 버튼 */}
                           <button
-                            onClick={() => {
-                              const trackToPlay = {
-                                id: track.id,
-                                title: track.title,
-                                file_url: track.audio_url,
-                                duration_sec: 180,
-                                album_id: 'studio-generated',
-                                image_url: track.image_url || withBase('/default-album.png'),
-                                album: {
-                                  id: 'studio-generated',
-                                  title: 'Studio Generation',
-                                  cover_url: track.image_url || withBase('/default-album.png'),
-                                  artist: {
-                                    name: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
-                                    slug: user?.email?.split('@')[0] || 'ai-generator',
-                                    avatar_url: profile?.avatar_url || withBase('/default-album.png'),
-                                    bio: 'AI Artist'
-                                  }
-                                }
-                              }
-                              if (currentTrack?.id === track.id) {
-                                togglePlay()
-                              } else {
-                                playTrack(trackToPlay as any, [trackToPlay] as any[])
-                              }
-                            }}
+                            onClick={() => playListTrack(track)}
                             className="h-8 w-8 rounded-full bg-primary text-black flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                           >
                             {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}

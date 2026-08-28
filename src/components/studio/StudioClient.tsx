@@ -850,7 +850,6 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedItem, setSelectedItem] = useState<any>(null)
   
   const [form, setForm] = useState(INITIAL_FORM)
   const [settings, setSettings] = useState({
@@ -882,15 +881,8 @@ export function StudioClient({ user }: StudioClientProps) {
 
   const confirmDelete = async () => {
     if (!deleteConfirmId) return
-    try {
-      if (user) {
-        await fetch(`/api/tracks/${deleteConfirmId}`, { method: 'DELETE' })
-      }
-      setHistory((prev) => prev.filter((item) => item.id !== deleteConfirmId))
-      setDeleteConfirmId(null)
-    } catch (e) {
-      console.error(e)
-    }
+    await deleteHistoryItem(deleteConfirmId)
+    setDeleteConfirmId(null)
   }
 
   const publishTrack = async (item: any) => {
@@ -915,14 +907,32 @@ export function StudioClient({ user }: StudioClientProps) {
     if (!item) return
     const audioUrl = item.audio_url || item.stream_url || item.url
     if (!audioUrl) return
-    playTrack({
+    if (currentTrack?.id === item.id) {
+      togglePlay()
+      return
+    }
+    // 하단 플레이어는 file_url 을 읽는다 — audio_url 로 넘기면 재생되지 않는다
+    const cover = item.image_url || withBase('/default-album.png')
+    const trackToPlay = {
       id: item.id,
       title: item.title || 'Untitled Track',
-      artist: item.artist || 'AI Studio',
-      audio_url: audioUrl,
-      image_url: item.image_url,
-      genre: item.genre || item.style || 'AI'
-    } as any)
+      file_url: audioUrl,
+      duration_sec: 180,
+      album_id: 'studio-generated',
+      image_url: cover,
+      album: {
+        id: 'studio-generated',
+        title: 'Studio Generation',
+        cover_url: cover,
+        artist: {
+          name: item.artist || profile?.display_name || user?.email?.split('@')[0] || 'AI Studio',
+          slug: user?.email?.split('@')[0] || 'ai-generator',
+          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
+          bio: 'AI Artist'
+        }
+      }
+    }
+    playTrack(trackToPlay as any, [trackToPlay] as any[])
   }
 
   useEffect(() => {
@@ -1495,7 +1505,85 @@ export function StudioClient({ user }: StudioClientProps) {
     if (!historyId) {
       historyId = await saveHistory(resultParts)
     }
+    if (historyId) setCurrentHistoryId(historyId)
     setCurrentTab('suno')
+  }
+
+  const openHistoryItem = (item: any, mode: 'all' | 'style' | 'lyrics' = 'all') => {
+    setCurrentHistoryId(item.id)
+    if (mode === 'all') {
+      setResultParts({
+        structurePlan: item.structurePlan || '',
+        prompt: item.prompt || '',
+        negativePrompt: item.negativePrompt || item.form?.negativePrompt || '',
+        title: item.title || '',
+        lyrics: item.lyrics || '',
+        notes: item.notes || '',
+        raw: '',
+      })
+      if (item.form) setForm((current) => ({ ...current, ...item.form }))
+    } else if (mode === 'style') {
+      if (item.form) {
+        setForm((current) => ({
+          ...current,
+          styleDesc: item.form.styleDesc || [item.form.genre, item.form.mood].filter(Boolean).join(', ') || current.styleDesc,
+          language: item.form.language || current.language,
+          vocalGender: item.form.vocalGender || current.vocalGender,
+          vocalFeaturing: item.form.vocalFeaturing || current.vocalFeaturing || '없음',
+          vocal: item.form.vocal || current.vocal,
+          vocalGroup: item.form.vocalGroup || current.vocalGroup,
+          tempo: item.form.tempo || current.tempo,
+          songType: item.form.songType || current.songType || 'vocal',
+          bgmType: item.form.bgmType || current.bgmType || '영화음악',
+          musicLength: item.form.musicLength || current.musicLength || '1분'
+        }))
+      }
+      setResultParts((current) => ({
+        ...current,
+        prompt: item.prompt || '',
+        negativePrompt: item.negativePrompt || item.form?.negativePrompt || ''
+      }))
+    } else if (mode === 'lyrics') {
+      if (item.form) {
+        setForm((current) => ({
+          ...current,
+          targetTool: item.form.targetTool || current.targetTool,
+          title: item.form.title || current.title,
+          extra: item.form.extra || current.extra
+        }))
+      }
+      setResultParts((current) => ({
+        ...current,
+        title: item.title || '',
+        lyrics: item.lyrics || '',
+        notes: item.notes || ''
+      }))
+    }
+    setStatus(t.statusHistoryOpened)
+  }
+
+  const deleteHistoryItem = async (id: string) => {
+    if (user) {
+      try {
+        const res = await fetch(`/api/song-history?id=${id}`, { method: 'DELETE' })
+        if (res.ok) {
+          setHistory(prev => prev.filter(item => item.id !== id))
+          setStatus(uiLanguage === 'KO' ? '서버 히스토리 항목을 삭제했습니다' : uiLanguage === 'JA' ? 'サーバー履歴アイテムを削除しました' : 'Deleted server history item')
+        } else {
+          const err = await res.json()
+          console.error('Error deleting history on server:', err)
+          setStatus(uiLanguage === 'KO' ? `서버 삭제 실패: ${err.error}` : uiLanguage === 'JA' ? `サーバー削除に失敗しました: ${err.error}` : `Server delete failed: ${err.error}`)
+        }
+      } catch (e: any) {
+        console.error('Error deleting history on server:', e)
+        setStatus(uiLanguage === 'KO' ? '서버 삭제 실패 (네트워크 오류)' : uiLanguage === 'JA' ? 'サーバー履歴の削除に失敗しました (ネットワークエラー)' : 'Failed to delete from server (Network error)')
+      }
+    } else {
+      const nextHistory = history.filter((item) => item.id !== id)
+      writeJson(STORAGE_KEYS.localHistory, nextHistory)
+      setHistory(nextHistory)
+      setStatus(t.statusHistoryLocalDeleted)
+    }
   }
 
   const provider = PROVIDERS.openai
@@ -1524,7 +1612,14 @@ export function StudioClient({ user }: StudioClientProps) {
           <div className="w-full h-full p-6 pb-32 overflow-y-auto custom-scrollbar">
             {currentTab === 'suno' && (
               <div className="max-w-[1700px] mx-auto w-full">
-                <GenerateClient user={user} />
+                <GenerateClient
+                  user={user}
+                  historyId={currentHistoryId}
+                  initialPrompt={resultParts.lyrics}
+                  initialStyle={resultParts.prompt}
+                  initialTitle={resultParts.title}
+                  initialNegativePrompt={resultParts.negativePrompt}
+                />
               </div>
             )}
 
@@ -1548,7 +1643,7 @@ export function StudioClient({ user }: StudioClientProps) {
                       <HardDrive className="w-4 h-4 text-primary" />
                       <span>미디어 클립 보관함 ({history.length})</span>
                     </h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다.</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다. * 카드 클릭 시 재생 · 지팡이 아이콘으로 프롬프트 되돌리기</p>
                   </div>
                   <button 
                     onClick={fetchSongHistory} 
@@ -1562,8 +1657,16 @@ export function StudioClient({ user }: StudioClientProps) {
                   {history.map((item) => (
                     <div
                       key={item.id}
-                      onClick={() => setSelectedItem(item)}
-                      className="p-3.5 rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => playHistoryTrack(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          playHistoryTrack(item)
+                        }
+                      }}
+                      className="p-3.5 rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                     >
                       <div className="w-14 h-14 rounded-xl bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative">
                         {item.image_url ? (
@@ -1576,12 +1679,31 @@ export function StudioClient({ user }: StudioClientProps) {
                         <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-primary">{item.title || 'Untitled'}</h4>
                         <p className="text-[11px] text-zinc-500 truncate mt-0.5 font-mono">{item.style || item.style_desc || 'AI Track'}</p>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); playHistoryTrack(item); }}
-                        className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center transition-all shadow-md shadow-yellow-950/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 ml-0.5 fill-current text-black" />
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => { openHistoryItem(item, 'all'); setCurrentTab('studio'); }}
+                          title={uiLanguage === 'KO' ? '프롬프트로 되돌리기' : uiLanguage === 'JA' ? 'プロンプトに戻す' : 'Restore to prompt'}
+                          className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                        >
+                          <Wand2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(item.id)}
+                          title={uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除' : 'Delete'}
+                          className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => playHistoryTrack(item)}
+                          title={uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}
+                          className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center transition-all shadow-md shadow-black/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                        >
+                          {currentTrack?.id === item.id && isPlaying
+                            ? <Pause className="w-3.5 h-3.5 fill-current text-black" />
+                            : <Play className="w-3.5 h-3.5 ml-0.5 fill-current text-black" />}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
