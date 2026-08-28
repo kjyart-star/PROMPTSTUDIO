@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Track, Album, Artist } from '@/types/music'
 import { 
@@ -25,6 +26,19 @@ interface HomeClientProps {
   initialRecommendedTracks?: Track[]
   initialLatestTracks?: Track[]
 }
+
+// 아티스트 구역의 목표 슬롯 수. 실제 아티스트로 먼저 채우고 남는 칸만 자리 표시로 메운다.
+// 아티스트가 늘어나면 자리 표시가 하나씩 저절로 사라지고, 이 값을 0 으로 두면 기능이 꺼진다.
+const ARTIST_SLOTS = 6
+const ALBUM_SLOTS = 6
+
+// 앨범 자리 표시용 자켓 (가상 인물, 제목·로고 없음). 순서대로 돌려 쓴다.
+const PLACEHOLDER_COVERS = [
+  '/images/placeholder/album-1.jpg',
+  '/images/placeholder/album-2.jpg',
+  '/images/placeholder/album-3.jpg',
+  '/images/placeholder/album-4.jpg'
+]
 
 // Premium fallback dummy artists
 const DUMMY_ARTISTS = [
@@ -538,6 +552,66 @@ const generateDummyTracks = (baseTracks: typeof DUMMY_TRACKS, count: number): Tr
   return list
 }
 
+// 아직 콘텐츠가 없는 자리를 메우는 카드. 아티스트(원형)·앨범(커버) 두 구역이 함께 쓴다.
+// 실제 데이터가 늘면 호출부에서 개수를 줄여 하나씩 사라진다.
+function PlaceholderSlot({
+  shape,
+  uiLanguage,
+  onClick,
+  index = 0,
+  className = ''
+}: {
+  shape: 'circle' | 'cover'
+  uiLanguage: string
+  onClick: () => void
+  index?: number
+  className?: string
+}) {
+  const isCircle = shape === 'circle'
+  const ariaLabel = uiLanguage === 'KO' ? '준비 중인 자리' : uiLanguage === 'JA' ? '準備中の枠' : 'Slot in preparation'
+  const label = isCircle
+    ? (uiLanguage === 'KO' ? '자리 준비 중' : uiLanguage === 'JA' ? '準備中' : 'Open spot')
+    : (uiLanguage === 'KO' ? '준비 중' : uiLanguage === 'JA' ? '準備中' : 'Coming up')
+
+  if (!isCircle) {
+    // 앨범 자리 — 실제 목록처럼 보이도록 준비된 자켓을 쓰고, 제목 자리에는 담담한 한 줄만 둔다
+    const cover = PLACEHOLDER_COVERS[index % PLACEHOLDER_COVERS.length]
+    return (
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        onClick={onClick}
+        className={`flex flex-col group transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-outline-variant rounded-2xl ${className}`}
+      >
+        <div className="relative w-full aspect-[2/3] rounded-2xl overflow-hidden bg-surface-container-lowest border border-white/5">
+          <img src={withBase(cover)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <div className="absolute inset-x-0 bottom-0 p-3 pt-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent text-left">
+            <p className="font-bold text-xs text-white/70 truncate">{label}</p>
+          </div>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className={`flex flex-col items-center text-center gap-3 rounded-xl transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-outline-variant p-4 bg-white/[0.01] border border-dashed border-outline-variant/25 hover:border-outline-variant/40 ${className}`}
+    >
+      <div className="relative flex items-center justify-center bg-surface-container-lowest/40 border border-dashed border-outline-variant/25 overflow-hidden w-20 h-20 rounded-full">
+        <img
+          src={withBase('/images/cookiemusic-mark.png')}
+          alt=""
+          className="object-contain opacity-20 grayscale w-10 h-10"
+        />
+      </div>
+      <p className="w-full truncate font-bold text-xs text-on-surface-variant/40">{label}</p>
+    </button>
+  )
+}
+
 interface CarouselProps<T> {
   items: T[]
   renderItem: (item: T, index: number) => React.ReactNode
@@ -651,6 +725,31 @@ export function HomeClient({
   const displayLatestTracks = initialLatestTracks || []
 
   const [tracks, setTracks] = useState<Track[]>(displayTracks)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showToast = (message: string) => {
+    setToast(message)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2000)
+  }
+  const notReadyToast = () =>
+    showToast(uiLanguage === 'KO' ? '아직 준비 중입니다' : uiLanguage === 'JA' ? 'まだ準備中です' : 'Not ready yet')
+
+  // 실제 앨범을 먼저 채우고 남는 칸만 자리 표시로 메운다 (앨범이 늘면 자리 표시가 줄어든다).
+  // coverOffset 으로 구역마다 자켓 순서를 어긋나게 해 두 줄이 복제처럼 보이지 않게 한다.
+  const withAlbumSlots = (albums: Album[], key: string, coverOffset: number): any[] => {
+    const shown = albums.slice(0, 10)
+    return [
+      ...shown,
+      ...Array.from({ length: Math.max(0, ALBUM_SLOTS - shown.length) }).map((_, i) => ({
+        id: `${key}-slot-${i}`,
+        __placeholder: true,
+        __slotIndex: i + coverOffset
+      }))
+    ]
+  }
+  const popularAlbumItems = withAlbumSlots(displayPopularAlbums, 'popular-album', 0)
+  const latestAlbumItems = withAlbumSlots(displayAlbums, 'latest-album', 2)
   const isRealTrack = (track: any) => {
     if (!track) return false
     const id = (track.id || '').toLowerCase()
@@ -887,7 +986,14 @@ export function HomeClient({
 
   return (
     <div className="font-sans text-on-surface w-full">
-      
+
+      {toast && createPortal(
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-in transition-all duration-300 bg-[#0d0d0d]/90 border-outline-variant/40 text-white font-bold text-xs uppercase tracking-wider">
+          <span role="status">{toast}</span>
+        </div>,
+        document.body
+      )}
+
       {/* Hero Banner (Edge-to-Edge) */}
       <section className="-mx-[32px] -mt-[24px] relative h-[25vh] min-h-[220px] md:h-[30vh] overflow-hidden bg-[#0d0d0d] flex flex-col justify-end animate-fade-in">
         {/* Background Pop Artist Image */}
@@ -934,10 +1040,10 @@ export function HomeClient({
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-[32px] py-10 space-y-12 animate-fade-in-up animation-delay-150">
         {/* 인기 음원 & 최신 앨범 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        
+        <div className="space-y-12">
+
         {/* 실시간 인기곡 탑 5 */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between pb-2">
             <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
               <span className="h-5 w-5 rounded-full border border-primary/30 flex items-center justify-center bg-primary/10">
@@ -950,12 +1056,12 @@ export function HomeClient({
             </Link>
           </div>
 
-          <div className="space-y-1.5">
-            {sortedTracks.slice(0, 5).map((track, idx) => {
+          <div>
+            {sortedTracks.slice(0, 10).map((track, idx) => {
               const isCurrent = currentTrack?.id === track.id
               const playCount = track.play_count || 0;
               return (
-                <div key={track.id} className={`py-3 flex items-center justify-between group hover:bg-white/[0.05] px-3.5 rounded-xl transition-all duration-200 ${isCurrent ? 'bg-primary/15' : ''}`}>
+                <div key={track.id} className={`py-3 flex items-center justify-between group hover:bg-white/[0.05] px-3.5 rounded-xl border-b border-outline-variant/40 last:border-b-0 transition-all duration-200 ${isCurrent ? 'bg-primary/15' : ''}`}>
                   <div className="flex items-center gap-4 min-w-0">
                     <span className="font-mono text-xs font-bold text-on-surface-variant/50 w-4 text-center">
                       {idx + 1}
@@ -1050,25 +1156,35 @@ export function HomeClient({
             </Link>
           </div>
 
-          <div className="space-y-2.5">
-            {artists.slice(0, 6).map((artist) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {artists.slice(0, ARTIST_SLOTS).map((artist) => (
               <Link
                 key={artist.id}
                 href={`/artists/${artist.slug}`}
-                className="flex items-center gap-3.5 p-2.5 bg-white/[0.01] border border-outline-variant/5 hover:border-outline-variant/30 hover:bg-white/[0.04] rounded-xl transition-all duration-200 cursor-pointer group"
+                className="flex flex-col items-center text-center gap-3 p-4 bg-white/[0.01] border border-outline-variant/5 hover:border-outline-variant/30 hover:bg-white/[0.04] rounded-xl transition-all duration-200 cursor-pointer group"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container-lowest border border-outline-variant/10 flex items-center justify-center shrink-0">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-surface-container-lowest border border-outline-variant/10 flex items-center justify-center shrink-0">
                   {artist.avatar_url ? (
                     <img src={artist.avatar_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   ) : (
-                    <Users className="w-4 h-4 text-on-surface-variant/40" />
+                    <Users className="w-7 h-7 text-on-surface-variant/40" />
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 w-full">
                   <p className="font-bold text-xs truncate text-on-surface group-hover:text-white transition-colors">{artist.name}</p>
                   <p className="text-[9px] text-primary/70 font-mono truncate mt-0.5 font-bold">@{artist.slug}</p>
                 </div>
               </Link>
+            ))}
+
+            {/* 빈 자리 표시 — 실제 아티스트가 늘어나면 하나씩 저절로 줄어든다 */}
+            {Array.from({ length: Math.max(0, ARTIST_SLOTS - artists.slice(0, ARTIST_SLOTS).length) }).map((_, i) => (
+              <PlaceholderSlot
+                key={`artist-slot-${i}`}
+                shape="circle"
+                uiLanguage={uiLanguage}
+                onClick={notReadyToast}
+              />
             ))}
           </div>
         </div>
@@ -1090,9 +1206,20 @@ export function HomeClient({
         </div>
 
         <Carousel
-          items={displayPopularAlbums.slice(0, 10)}
+          items={popularAlbumItems}
           renderItem={(album, index) => (
-            <AlbumCard key={album.id} album={album} variant="home" rank={index + 1} />
+            album.__placeholder ? (
+              <PlaceholderSlot
+                key={album.id}
+                shape="cover"
+                uiLanguage={uiLanguage}
+                onClick={notReadyToast}
+                index={album.__slotIndex}
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)]"
+              />
+            ) : (
+              <AlbumCard key={album.id} album={album} variant="home" rank={index + 1} />
+            )
           )}
         />
       </section>
@@ -1246,9 +1373,20 @@ export function HomeClient({
         </div>
 
         <Carousel
-          items={displayAlbums.slice(0, 10)}
+          items={latestAlbumItems}
           renderItem={(album) => (
-            <AlbumCard key={album.id} album={album} variant="home" />
+            album.__placeholder ? (
+              <PlaceholderSlot
+                key={album.id}
+                shape="cover"
+                uiLanguage={uiLanguage}
+                onClick={notReadyToast}
+                index={album.__slotIndex}
+                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)]"
+              />
+            ) : (
+              <AlbumCard key={album.id} album={album} variant="home" />
+            )
           )}
         />
       </section>
