@@ -25,6 +25,7 @@ interface HomeClientProps {
   initialUserLikes: string[]
   initialRecommendedTracks?: Track[]
   initialLatestTracks?: Track[]
+  initialGenreCovers?: Record<string, string>
 }
 
 // 아티스트 구역의 목표 슬롯 수. 실제 아티스트로 먼저 채우고 남는 칸만 자리 표시로 메운다.
@@ -39,6 +40,9 @@ const PLACEHOLDER_COVERS = [
   '/images/placeholder/album-3.jpg',
   '/images/placeholder/album-4.jpg'
 ]
+
+// 'K-Pop' · 'k pop' · '케이팝' 처럼 표기만 다른 장르를 같은 키로 본다
+const normalizeGenre = (g: string) => g.toLowerCase().replace(/[\s\-&_/.]/g, '')
 
 // Premium fallback dummy artists
 const DUMMY_ARTISTS = [
@@ -708,7 +712,8 @@ export function HomeClient({
   initialArtists,
   initialUserLikes,
   initialRecommendedTracks = [],
-  initialLatestTracks = []
+  initialLatestTracks = [],
+  initialGenreCovers = {}
 }: HomeClientProps) {
   const displayTracks = initialTracks as Track[]
   const initialMergedArtists = [...(initialArtists || [])].sort((a, b) => {
@@ -734,6 +739,15 @@ export function HomeClient({
   }
   const notReadyToast = () =>
     showToast(uiLanguage === 'KO' ? '아직 준비 중입니다' : uiLanguage === 'JA' ? 'まだ準備中です' : 'Not ready yet')
+
+  // 장르 카드 배경 — 실제 그 장르 곡/앨범의 커버만 쓴다. 없으면 null 이라 카드는 지금 모습 그대로 남는다.
+  const genreCoverMap: Record<string, string> = {}
+  Object.entries(initialGenreCovers).forEach(([genre, url]) => {
+    const key = normalizeGenre(genre)
+    if (key && !genreCoverMap[key]) genreCoverMap[key] = url
+  })
+  const coverForCategory = (cat: { name: string; koName: string }) =>
+    genreCoverMap[normalizeGenre(cat.name)] || genreCoverMap[normalizeGenre(cat.koName)] || null
 
   // 실제 앨범을 먼저 채우고 남는 칸만 자리 표시로 메운다 (앨범이 늘면 자리 표시가 줄어든다).
   // coverOffset 으로 구역마다 자켓 순서를 어긋나게 해 두 줄이 복제처럼 보이지 않게 한다.
@@ -1570,7 +1584,9 @@ export function HomeClient({
             { name: 'Ambient', koName: '엠비언트', gradient: 'from-teal-700/20 to-cyan-800/20 hover:border-teal-600/40 text-teal-300' },
             { name: 'Chill', koName: '칠아웃', gradient: 'from-blue-600/20 to-teal-600/20 hover:border-blue-500/40 text-blue-200' }
           ]}
-          renderItem={(cat) => (
+          renderItem={(cat) => {
+            const cover = coverForCategory(cat)
+            return (
             <div 
               key={cat.name} 
               className="flex-none w-[45%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/4)] lg:w-[calc((100%-168px)/8)] transition-all duration-300"
@@ -1579,13 +1595,25 @@ export function HomeClient({
                 href={`/charts?genre=${cat.name}`}
                 className={`relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br ${cat.gradient} p-5 flex flex-col justify-between aspect-square hover:scale-[1.03] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-300 cursor-pointer group w-full`}
               >
-                <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
+                {cover && (
+                  <>
+                    {/* 커버는 은은하게 — 사진 없는 카드와 톤이 벌어지지 않게 낮은 대비로 깐다 */}
+                    <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-55 transition-opacity duration-300" />
+                    {/* 장르색을 사진 위에 다시 얹어 카드끼리 구분이 남게 한다 */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient}`} />
+                    {/* 글씨용 스크림 */}
+                    <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/45 to-transparent" />
+                  </>
+                )}
+                <div className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
                   <ChevronRight className="w-4 h-4" />
                 </div>
-                <div className="flex-1 flex items-center justify-center">
-                  <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
-                </div>
-                <div className="text-left">
+                {!cover && (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Disc className="w-8 h-8 opacity-20 group-hover:opacity-40 group-hover:rotate-[360deg] transition-all duration-1000" />
+                  </div>
+                )}
+                <div className={`text-left ${cover ? 'relative z-10 mt-auto' : ''}`}>
                   <p className="text-xs font-black text-white group-hover:text-primary transition-colors">
                     {uiLanguage === 'KO' ? cat.koName : uiLanguage === 'JA' ? (cat as any).jaName || cat.name : cat.name}
                   </p>
@@ -1595,7 +1623,8 @@ export function HomeClient({
                 </div>
               </Link>
             </div>
-          )}
+            )
+          }}
         />
       </section>
 
