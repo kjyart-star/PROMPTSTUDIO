@@ -77,12 +77,7 @@ export function StudioHeader({
           href="/studio"
           className="text-base font-black text-white hover:text-primary tracking-wide transition-colors px-2 py-1 shrink-0 flex items-center gap-1.5"
         >
-          <img
-            src={withBase('/images/cookiemusic-studio-mark.png')}
-            alt=""
-            aria-hidden="true"
-            className="h-6 w-6 shrink-0 rounded-full object-cover"
-          />
+          {/* 스튜디오는 전용 캐릭터를 두지 않는다(대표 2026-08-29) — 글씨만 쓴다 */}
           <span><span className="cm-wordmark cm-wordmark-studio">COOKIEMUSIC</span> STUDIO</span>
         </Link>
       </div>
