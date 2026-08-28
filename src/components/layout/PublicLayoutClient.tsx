@@ -233,17 +233,17 @@ export function PublicLayoutClient({
       <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-[calc(100vh-40px)] w-64 border-r border-outline-variant/10 fixed left-0 top-10 z-50 justify-between overflow-y-auto custom-scrollbar ${
         activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
       }`}>
-        <div className="flex flex-col gap-[48px]">
+        <div className="flex flex-col gap-[24px]">
           <div className="flex justify-center">
             {/* 마크 + 워드마크 락업 (세로) — 마크는 public/images/cookiemusic-mark.png */}
-            <Link href="/" className="select-none flex flex-col items-center gap-1.5">
+            <Link href="/" className="select-none flex flex-col items-center gap-0.5">
               {/* 스케이트보드 마스코트 — 네온 링·불꽃까지 한 장의 그림이라
                   잘라내지 않고 통째로 보여 준다(대표 2026-08-29 지정) */}
               <img
                 src={withBase('/images/cookiemusic-mark.png')}
                 alt=""
                 aria-hidden="true"
-                className="h-24 w-24 shrink-0 rounded-2xl object-contain"
+                className="h-28 w-28 shrink-0 rounded-2xl object-contain"
               />
               <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
             </Link>
