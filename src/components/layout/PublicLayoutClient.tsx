@@ -230,23 +230,20 @@ export function PublicLayoutClient({
       
       {/* Shell: Side Navigation (Desktop Only) */}
       {/* 아래 패딩은 고정 플레이어(h-24) 높이만큼 비운다 — 안 그러면 사이드바 맨 아래가 가린다 */}
-      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-[calc(100vh-40px)] w-64 border-r border-outline-variant/10 fixed left-0 top-10 z-50 justify-between ${
+      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-[calc(100vh-40px)] w-64 border-r border-outline-variant/10 fixed left-0 top-10 z-50 justify-between overflow-y-auto custom-scrollbar ${
         activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
       }`}>
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
-            {/* 마크 + 워드마크 락업 — 마크는 public/images/cookiemusic-mark.png */}
-            <Link href="/" className="select-none flex items-center gap-2">
+            {/* 마크 + 워드마크 락업 (세로) — 마크는 public/images/cookiemusic-mark.png */}
+            <Link href="/" className="select-none flex flex-col items-center gap-2">
               <img
                 src={withBase('/images/cookiemusic-mark.png')}
                 alt=""
                 aria-hidden="true"
-                className="h-9 w-9 shrink-0 rounded-full object-cover"
+                className="h-20 w-20 shrink-0 rounded-full object-cover"
               />
-              <span className="flex flex-col gap-0.5">
-                <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
-                <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-on-surface-variant">쿠키뮤직</span>
-              </span>
+              <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
             </Link>
           </div>
 
