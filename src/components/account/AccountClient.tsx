@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Camera, Check, AlertCircle, LogOut, ArrowLeft } from 'lucide-react'
-import { withBase } from '@/lib/basePath'
+import { suiteHref, withBase } from '@/lib/basePath'
 
 /**
  * 쿠키플레이 계정 설정 — 실제로 동작하는 것만 놓는다.
@@ -168,7 +168,7 @@ export default function AccountClient({ user }: Props) {
       await fetch('/api/auth/signout', { method: 'POST' })
     } finally {
       // 계정에서 나가면 쿠키플레이 메인으로.
-      window.location.replace(window.location.origin + '/')
+      window.location.replace(suiteHref('/'))
     }
   }
 
@@ -177,7 +177,7 @@ export default function AccountClient({ user }: Props) {
       {/* 상단 — 쿠키플레이 워드마크. 클릭하면 쿠키플레이 메인(origin 루트). */}
       <header className="border-b border-[#292929]">
         <div className="max-w-[560px] mx-auto px-6 py-5 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 select-none w-fit">
+          <a href={suiteHref('/')} className="flex items-center gap-2 select-none w-fit">
             {/* 허브 메인과 같은 쿠키 캐릭터 마크(대표 2026-08-28) */}
             <img
               src={withBase('/images/cookie-mark.png')}
@@ -190,7 +190,7 @@ export default function AccountClient({ user }: Props) {
               <span className="text-white">PLAY</span>
             </span>
           </a>
-          <a href="/" className="flex items-center gap-1.5 text-[11px] font-semibold text-[#a1a1a1] hover:text-primary transition-colors">
+          <a href={suiteHref('/')} className="flex items-center gap-1.5 text-[11px] font-semibold text-[#a1a1a1] hover:text-primary transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" />
             쿠키플레이 홈
           </a>

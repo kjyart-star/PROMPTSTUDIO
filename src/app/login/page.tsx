@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { AlertCircle, Check, ArrowRight, MailCheck } from 'lucide-react'
 import Image from 'next/image'
 import { readRedirectParam } from '@/lib/auth/redirectTarget'
-import { withBase } from '@/lib/basePath'
+import { suiteHref, withBase } from '@/lib/basePath'
 
 /**
  * 쿠키플레이 통합 로그인 관문.
@@ -341,7 +341,7 @@ function Wordmark({ className = '', compact = false }: { className?: string; com
   // 로고를 누르면 쿠키플레이 메인으로 — 대표 확정 동선. 일반 <a href="/"> 는
   // basePath 가 붙지 않아 window.location.origin + '/' (쿠키플레이 홈)로 간다.
   return (
-    <a href="/" className={`flex items-center gap-2 select-none w-fit ${className}`}>
+    <a href={suiteHref('/')} className={`flex items-center gap-2 select-none w-fit ${className}`}>
       {/* 허브 메인과 같은 쿠키 캐릭터 마크(대표 2026-08-28: "캐릭터 로고로, 메인페이지에 맞춰") */}
       <img
         src={withBase('/images/cookie-mark.png')}

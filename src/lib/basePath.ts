@@ -14,6 +14,24 @@
 export const BASE_PATH = '/music'
 
 /**
+ * 허브(쿠키플레이)와 형제 서비스의 오리진.
+ *
+ * 배포에서는 허브와 같은 오리진(`cookieplay.app`)이라 비워 둔다 — 그러면 `/editor` 처럼
+ * 오리진 절대경로가 되고 허브 rewrite 가 받는다(지금까지의 동작 그대로).
+ * 로컬 개발에서는 뮤직 dev 서버와 허브 dev 서버가 **다른 포트**라 오리진 절대경로가
+ * 뮤직 앱 자신에게 떨어져 404 가 난다. 그때만 `NEXT_PUBLIC_SUITE_ORIGIN` 에
+ * 허브 dev 주소를 넣어 앞에 붙인다.
+ */
+export const SUITE_ORIGIN = (process.env.NEXT_PUBLIC_SUITE_ORIGIN ?? '').replace(/\/+$/, '')
+
+/**
+ * 허브·형제 서비스로 가는 링크. 뮤직 앱 자신의 경로에는 쓰지 않는다(그건 `withBase`).
+ */
+export function suiteHref(path: string): string {
+  return `${SUITE_ORIGIN}${path}`
+}
+
+/**
  * 앱 안의 절대경로에 basePath 를 붙인다. 이미 붙어 있거나 외부 URL 이면 그대로 둔다.
  */
 export function withBase(path: string): string {
