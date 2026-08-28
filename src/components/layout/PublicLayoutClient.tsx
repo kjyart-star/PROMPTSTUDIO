@@ -249,7 +249,7 @@ export function PublicLayoutClient({
       }`}>
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
-            {/* 워드마크는 타이포로 둔다 — 쿠키뮤직 전용 로고 이미지가 아직 없다 */}
+            {/* 마크 + 워드마크 락업 — 마크는 public/images/cookiemusic-mark.png */}
             <Link href="/" className="select-none flex items-center gap-2">
               <img
                 src={withBase('/images/cookiemusic-mark.png')}
