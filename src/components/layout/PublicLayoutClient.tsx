@@ -235,17 +235,15 @@ export function PublicLayoutClient({
       }`}>
         <div className="flex flex-col gap-[24px]">
           <div className="flex justify-center">
-            {/* 마크 + 워드마크 락업 (세로) — 마크는 public/images/cookiemusic-mark.png */}
-            <Link href="/" className="select-none flex flex-col items-center gap-0.5">
-              {/* 스케이트보드 마스코트 — 네온 링·불꽃까지 한 장의 그림이라
-                  잘라내지 않고 통째로 보여 준다(대표 2026-08-29 지정) */}
+            {/* 캐릭터와 아치 글씨가 한 장으로 그려진 로고(대표 2026-08-29:
+                "이미지 생성으로 캐릭터와 겹쳐야 함"). 글씨가 그림 안에 있으므로
+                아래에 텍스트를 따로 두지 않는다 — 두면 이름이 두 번 나온다. */}
+            <Link href="/" className="select-none block">
               <img
-                src={withBase('/images/cookiemusic-mark.png')}
-                alt=""
-                aria-hidden="true"
-                className="h-28 w-28 shrink-0 rounded-2xl object-contain"
+                src={withBase('/images/cookiemusic-logo.png')}
+                alt="쿠키뮤직"
+                className="h-36 w-36 shrink-0 object-contain"
               />
-              <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
             </Link>
           </div>
 
