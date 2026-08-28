@@ -248,7 +248,7 @@ export function PublicLayoutClient({
           <div className="flex justify-center">
             {/* 워드마크는 타이포로 둔다 — 쿠키뮤직 전용 로고 이미지가 아직 없다 */}
             <Link href="/" className="select-none flex flex-col items-center gap-0.5">
-              <span className="text-[22px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+              <span className="cm-wordmark text-[22px] font-black tracking-tight leading-none">쿠키뮤직</span>
               <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-on-surface-variant">COOKIEMUSIC</span>
             </Link>
           </div>
@@ -350,7 +350,7 @@ export function PublicLayoutClient({
                   }}
                   className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
                     activeTab === 'library' && activePlaylistId === 'liked'
-                      ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                      ? 'text-primary bg-primary/10 font-bold'
                       : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
                   }`}
                 >
@@ -367,7 +367,7 @@ export function PublicLayoutClient({
                   }}
                   className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
                     activeTab === 'library' && activePlaylistId === 'liked-albums'
-                      ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                      ? 'text-primary bg-primary/10 font-bold'
                       : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
                   }`}
                 >
@@ -386,7 +386,7 @@ export function PublicLayoutClient({
                     }}
                     className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
                       activeTab === 'library' && activePlaylistId === pl.id
-                        ? 'text-[#e3fe06] bg-[#e3fe06]/10 font-bold'
+                        ? 'text-primary bg-primary/10 font-bold'
                         : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
                     }`}
                   >
@@ -404,7 +404,7 @@ export function PublicLayoutClient({
           {isAdmin && (
             <Link
               href="/admin/music"
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#e3fe06]/10 border border-[#e3fe06]/20 text-[#e3fe06] hover:bg-[#e3fe06]/15 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
               <Shield className="w-4 h-4" />
               <span>{uiLanguage === 'KO' ? '어드민 관리자' : uiLanguage === 'JA' ? '管理者' : 'Administrator'}</span>
@@ -496,10 +496,10 @@ export function PublicLayoutClient({
               {user && (
                 <Link 
                   href="/pricing"
-                  className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-variant border border-[#e3fe06]/30 px-3 py-1.5 rounded-full transition-all cursor-pointer group"
+                  className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-variant border border-primary/30 px-3 py-1.5 rounded-full transition-all cursor-pointer group"
                   title={uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットを購入' : 'Buy Credits'}
                 >
-                  <Coins className="w-4 h-4 text-[#e3fe06] group-hover:scale-110 transition-transform" />
+                  <Coins className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
                   <span className="text-[12px] font-bold text-on-surface">{userCredits.toLocaleString()}</span>
                 </Link>
               )}
@@ -512,7 +512,7 @@ export function PublicLayoutClient({
                 >
                   <Bell className="w-5 h-5" />
                   {hasUnread && (
-                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#e3fe06]"></span>
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
                   )}
                 </button>
               </div>
@@ -566,16 +566,16 @@ export function PublicLayoutClient({
                         <div className="flex flex-col overflow-hidden">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e3fe06] opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#e3fe06]"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
                             </span>
-                            <span className="text-[8px] text-[#e3fe06] font-extrabold tracking-wider">ONLINE</span>
+                            <span className="text-[8px] text-primary font-extrabold tracking-wider">ONLINE</span>
                           </div>
                           <p className="text-xs font-bold text-on-surface truncate" title={profile?.display_name || user.email}>
                             {profile?.display_name || user.email}
                           </p>
                           {isAdmin && (
-                            <span className="inline-flex w-fit mt-1 text-[8px] bg-[#e3fe06]/10 border border-[#e3fe06]/25 text-[#e3fe06] px-1.5 py-0.5 rounded font-extrabold tracking-wider">
+                            <span className="inline-flex w-fit mt-1 text-[8px] bg-primary/10 border border-primary/25 text-primary px-1.5 py-0.5 rounded font-extrabold tracking-wider">
                               ADMINISTRATOR
                             </span>
                           )}
@@ -628,7 +628,7 @@ export function PublicLayoutClient({
 
         {/* Unread Announcements Marquee */}
         {hasUnread && announcements.length > 0 && (
-          <div className="w-full bg-[#e3fe06]/[0.03] border-b border-[#e3fe06]/10 py-2 px-4 flex items-center relative overflow-hidden z-30">
+          <div className="w-full bg-primary/[0.03] border-b border-primary/10 py-2 px-4 flex items-center relative overflow-hidden z-30">
             <style>{`
               @keyframes marquee {
                 0% { transform: translateX(100vw); }
@@ -644,16 +644,16 @@ export function PublicLayoutClient({
                 animation-play-state: paused;
               }
             `}</style>
-            <div className="bg-[#e3fe06] text-black rounded-full w-5 h-5 flex items-center justify-center shrink-0 z-10 font-black text-xs shadow-[0_0_10px_rgba(227,254,6,0.4)]">!</div>
+            <div className="bg-primary text-black rounded-full w-5 h-5 flex items-center justify-center shrink-0 z-10 font-black text-xs shadow-[0_0_10px_rgba(255,45,143,0.4)]">!</div>
             <div className="flex-1 overflow-hidden ml-3 relative whitespace-nowrap mask-image-linear-gradient h-5 flex items-center">
               <div className="animate-marquee cursor-default">
-                <span className="text-[#e3fe06] font-extrabold mr-2 tracking-wide">[공지사항]</span>
+                <span className="text-primary font-extrabold mr-2 tracking-wide">[공지사항]</span>
                 <span className="text-gray-200 text-sm font-medium">{announcements[0].title}: {announcements[0].content}</span>
               </div>
             </div>
             <button 
               onClick={handleOpenAnnouncements}
-              className="text-xs text-[#e3fe06] shrink-0 z-10 ml-4 font-bold bg-[#080808] pl-2 hover:text-white transition-colors cursor-pointer"
+              className="text-xs text-primary shrink-0 z-10 ml-4 font-bold bg-[#080808] pl-2 hover:text-white transition-colors cursor-pointer"
             >
               {uiLanguage === 'KO' ? '자세히 보기' : uiLanguage === 'JA' ? '詳細を見る' : 'View Details'}
             </button>
@@ -711,7 +711,7 @@ export function PublicLayoutClient({
           >
             <div className="flex items-center justify-between border-b border-outline-variant/10 p-5 bg-surface-container-lowest">
               <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#e3fe06] text-[#070709] text-[10px] font-black font-sans">!</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[#070709] text-[10px] font-black font-sans">!</span>
                 {uiLanguage === 'KO' ? '공지사항' : uiLanguage === 'JA' ? 'お知らせ' : 'Announcements'}
               </h3>
               <button 

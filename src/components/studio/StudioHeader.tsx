@@ -36,37 +36,37 @@ export function StudioHeader({
   ]
 
   return (
-    <header className="w-full h-14 bg-[#0b0f0b] border-b border-[#1b241c] flex items-center justify-between px-4 text-zinc-300 select-none z-50 shrink-0">
+    <header className="w-full h-14 bg-[#0b0b0b] border-b border-[#1b1b1b] flex items-center justify-between px-4 text-zinc-300 select-none z-50 shrink-0">
       {/* Left: Brand Name */}
       <div className="flex items-center gap-3">
         <Link
           href="/studio"
-          className="text-base font-black text-white hover:text-[#e6ff00] tracking-wide transition-colors px-2 py-1 shrink-0 flex items-center gap-1.5"
+          className="text-base font-black text-white hover:text-primary tracking-wide transition-colors px-2 py-1 shrink-0 flex items-center gap-1.5"
         >
-          쿠키뮤직스튜디오
+          <span className="cm-wordmark">쿠키뮤직</span>스튜디오
         </Link>
       </div>
 
       {/* Right: Actions & User Info */}
       <div className="flex items-center gap-3">
         {/* Credits */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#121a13] border border-[#1e2a1f] text-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#e6ff00] animate-pulse" />
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#131313] border border-[#1f1f1f] text-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           <span className="text-zinc-400 font-medium">크레딧</span>
-          <span className="font-mono font-black text-[#e6ff00]">{userCredits.toLocaleString()}P</span>
+          <span className="font-mono font-black text-primary">{userCredits.toLocaleString()}P</span>
         </div>
 
         {/* User profile / Login */}
         {!user ? (
           <Link
             href="/login?next=/studio"
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#131d14] hover:bg-[#1c2b1e] border border-[#233825] text-xs font-bold text-zinc-200 hover:text-[#e6ff00] transition-all"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#141414] hover:bg-[#1e1e1e] border border-[#262626] text-xs font-bold text-zinc-200 hover:text-primary transition-all"
           >
-            <LogIn className="w-3.5 h-3.5 text-[#e6ff00]" />
+            <LogIn className="w-3.5 h-3.5 text-primary" />
             <span>로그인</span>
           </Link>
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1e2a1f] border border-[#2b3d2d] text-xs font-bold text-[#e6ff00] shadow-sm" title={user.email}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1f1f1f] border border-[#2d2d2d] text-xs font-bold text-primary shadow-sm" title={user.email}>
             {user.email?.[0]?.toUpperCase() || 'U'}
           </div>
         )}

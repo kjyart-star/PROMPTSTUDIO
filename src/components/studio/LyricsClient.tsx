@@ -101,15 +101,15 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
   return (
     <div className="w-full pb-12 space-y-6">
       {/* 🚀 Top Lyrical Assistant Hero Banner (musicmake.ai 스타일) */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#121612] border border-[#1e261f] p-6 lg:p-8 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl bg-[#111111] border border-[#1e1e1e] p-6 lg:p-8 shadow-2xl">
         <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e6ff00]/10 border border-[#e6ff00]/30 text-[#e6ff00] text-xs font-black tracking-wider uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black tracking-wider uppercase">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI Dual Lyrics Engine (musicmake.ai style)</span>
           </div>
           <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
             <span>AI 가사 생성기</span>
-            <span className="text-[#e6ff00] drop-shadow-[0_0_15px_rgba(230,255,0,0.3)]">(Dual Version A & B)</span>
+            <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.3)]">(Dual Version A & B)</span>
           </h1>
           <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-3xl leading-relaxed">
             단 하나의 테마, 스토리, 훅(Hook)으로부터 <strong className="text-zinc-200">대중적 훅 중심의 Version A</strong>와 <strong className="text-zinc-200">감성적 은유 중심의 Version B</strong>를 동시에 생성하여 가장 완벽한 가사를 선택할 수 있습니다.
@@ -118,10 +118,10 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
       </div>
 
       {/* 🎯 Main Input Card */}
-      <div className="bg-[#121612] p-6 rounded-2xl border border-[#1e261f] shadow-xl space-y-5">
-        <div className="flex justify-between items-center border-b border-[#1e261f] pb-3">
+      <div className="bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl space-y-5">
+        <div className="flex justify-between items-center border-b border-[#1e1e1e] pb-3">
           <h2 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-[#e6ff00]" />
+            <Lightbulb className="w-4 h-4 text-primary" />
             <span>곡의 주제 및 스토리 아이디어 (Theme & Story Hook)</span>
           </h2>
           <span className="text-xs text-zinc-500 font-mono">{theme.length} / 300</span>
@@ -140,7 +140,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
                   setGenre(chip.genre)
                   setMood(chip.mood)
                 }}
-                className="px-3 py-1.5 rounded-xl bg-[#090d0a] hover:bg-[#162017] border border-[#1a231b] hover:border-[#e6ff00]/40 text-zinc-300 hover:text-[#e6ff00] text-xs font-semibold transition-all cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-[#0a0a0a] hover:bg-[#171717] border border-[#1a1a1a] hover:border-primary/40 text-zinc-300 hover:text-primary text-xs font-semibold transition-all cursor-pointer shadow-sm"
               >
                 {chip.label}
               </button>
@@ -156,71 +156,71 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
             maxLength={300}
             onChange={(e) => setTheme(e.target.value)}
             placeholder="어떤 노래를 만들고 싶으신가요? 상황, 감정, 스토리, 핵심 메시지, 또는 떠오르는 가사 한 줄을 자유롭게 적어주세요. (예: 비 내리는 여름밤, 이별 후 오랜만에 우연히 마주친 옛 연인과의 짧은 대화)"
-            className="w-full bg-[#090d0a] border border-[#1a231b] rounded-2xl p-4 text-xs lg:text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar leading-relaxed"
+            className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-xs lg:text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar leading-relaxed"
           />
         </div>
 
         {/* Settings Selectors Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
           {/* Genre */}
-          <div className="space-y-1.5 bg-[#090d0a] p-3.5 rounded-xl border border-[#1a231b]">
+          <div className="space-y-1.5 bg-[#0a0a0a] p-3.5 rounded-xl border border-[#1a1a1a]">
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">장르 (Genre)</label>
             <select
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
               className="w-full bg-transparent text-xs font-bold text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value="K-Pop" className="bg-[#121612]">K-Pop (케이팝)</option>
-              <option value="City Pop" className="bg-[#121612]">City Pop (시티팝)</option>
-              <option value="Ballad" className="bg-[#121612]">Ballad (발라드)</option>
-              <option value="R&B / Soul" className="bg-[#121612]">R&B / Soul (알앤비/소울)</option>
-              <option value="Rock / Metal" className="bg-[#121612]">Rock / Metal (록/메탈)</option>
-              <option value="Hip-Hop / Rap" className="bg-[#121612]">Hip-Hop / Rap (힙합/랩)</option>
-              <option value="EDM / Dance" className="bg-[#121612]">EDM / Dance (댄스/일렉트로닉)</option>
-              <option value="Acoustic / Indie" className="bg-[#121612]">Acoustic / Indie (어쿠스틱/인디)</option>
-              <option value="Jazz / Lo-Fi" className="bg-[#121612]">Jazz / Lo-Fi (재즈/로파이)</option>
+              <option value="K-Pop" className="bg-[#111111]">K-Pop (케이팝)</option>
+              <option value="City Pop" className="bg-[#111111]">City Pop (시티팝)</option>
+              <option value="Ballad" className="bg-[#111111]">Ballad (발라드)</option>
+              <option value="R&B / Soul" className="bg-[#111111]">R&B / Soul (알앤비/소울)</option>
+              <option value="Rock / Metal" className="bg-[#111111]">Rock / Metal (록/메탈)</option>
+              <option value="Hip-Hop / Rap" className="bg-[#111111]">Hip-Hop / Rap (힙합/랩)</option>
+              <option value="EDM / Dance" className="bg-[#111111]">EDM / Dance (댄스/일렉트로닉)</option>
+              <option value="Acoustic / Indie" className="bg-[#111111]">Acoustic / Indie (어쿠스틱/인디)</option>
+              <option value="Jazz / Lo-Fi" className="bg-[#111111]">Jazz / Lo-Fi (재즈/로파이)</option>
             </select>
           </div>
 
           {/* Mood */}
-          <div className="space-y-1.5 bg-[#090d0a] p-3.5 rounded-xl border border-[#1a231b]">
+          <div className="space-y-1.5 bg-[#0a0a0a] p-3.5 rounded-xl border border-[#1a1a1a]">
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">감정/분위기 (Mood)</label>
             <select
               value={mood}
               onChange={(e) => setMood(e.target.value)}
               className="w-full bg-transparent text-xs font-bold text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value="감성적인 (Emotional)" className="bg-[#121612]">감성적인 (Emotional)</option>
-              <option value="신나고 에너제틱한 (Energetic)" className="bg-[#121612]">신나고 에너제틱한 (Energetic)</option>
-              <option value="달콤하고 로맨틱한 (Sweet & Romantic)" className="bg-[#121612]">달콤하고 로맨틱한 (Romantic)</option>
-              <option value="몽환적이고 신비로운 (Dreamy)" className="bg-[#121612]">몽환적이고 신비로운 (Dreamy)</option>
-              <option value="우울하고 쓸쓸한 (Melancholic)" className="bg-[#121612]">우울하고 쓸쓸한 (Melancholic)</option>
-              <option value="다크하고 강렬한 (Dark & Intense)" className="bg-[#121612]">다크하고 강렬한 (Dark & Intense)</option>
+              <option value="감성적인 (Emotional)" className="bg-[#111111]">감성적인 (Emotional)</option>
+              <option value="신나고 에너제틱한 (Energetic)" className="bg-[#111111]">신나고 에너제틱한 (Energetic)</option>
+              <option value="달콤하고 로맨틱한 (Sweet & Romantic)" className="bg-[#111111]">달콤하고 로맨틱한 (Romantic)</option>
+              <option value="몽환적이고 신비로운 (Dreamy)" className="bg-[#111111]">몽환적이고 신비로운 (Dreamy)</option>
+              <option value="우울하고 쓸쓸한 (Melancholic)" className="bg-[#111111]">우울하고 쓸쓸한 (Melancholic)</option>
+              <option value="다크하고 강렬한 (Dark & Intense)" className="bg-[#111111]">다크하고 강렬한 (Dark & Intense)</option>
             </select>
           </div>
 
           {/* Language */}
-          <div className="space-y-1.5 bg-[#090d0a] p-3.5 rounded-xl border border-[#1a231b]">
+          <div className="space-y-1.5 bg-[#0a0a0a] p-3.5 rounded-xl border border-[#1a1a1a]">
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">가사 언어 (Language)</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               className="w-full bg-transparent text-xs font-bold text-zinc-200 focus:outline-none cursor-pointer"
             >
-              <option value="한국어 + 영어 혼합 (K-Pop Style)" className="bg-[#121612]">한국어 + 영어 혼합 (K-Pop Style)</option>
-              <option value="한국어 (Korean Only)" className="bg-[#121612]">한국어 전용 (Korean Only)</option>
-              <option value="영어 (English Only)" className="bg-[#121612]">영어 전용 (English Only)</option>
-              <option value="일본어 (Japanese)" className="bg-[#121612]">일본어 (Japanese)</option>
+              <option value="한국어 + 영어 혼합 (K-Pop Style)" className="bg-[#111111]">한국어 + 영어 혼합 (K-Pop Style)</option>
+              <option value="한국어 (Korean Only)" className="bg-[#111111]">한국어 전용 (Korean Only)</option>
+              <option value="영어 (English Only)" className="bg-[#111111]">영어 전용 (English Only)</option>
+              <option value="일본어 (Japanese)" className="bg-[#111111]">일본어 (Japanese)</option>
             </select>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1e261f]">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1e1e1e]">
           <button
             type="button"
             onClick={loadSample}
-            className="px-4 py-3 bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] rounded-xl text-xs font-bold text-zinc-300 transition-colors cursor-pointer"
+            className="px-4 py-3 bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] rounded-xl text-xs font-bold text-zinc-300 transition-colors cursor-pointer"
           >
             샘플 불러오기
           </button>
@@ -229,7 +229,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="px-7 py-3 bg-[#e6ff00] hover:bg-[#d4f900] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-7 py-3 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Sparkles className="w-4 h-4 fill-current text-black" />
             <span>{isGenerating ? 'AI 듀얼 가사 작성 중...' : '✨ 듀얼 가사 생성하기 (Version A & B)'}</span>
@@ -240,11 +240,11 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
       {/* 🎭 Dual Outputs (Version A vs Version B) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Version A */}
-        <div className="bg-[#121612] border border-[#1e261f] rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+        <div className="bg-[#111111] border border-[#1e1e1e] rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
           <div className="space-y-4 flex-1 flex flex-col">
-            <div className="flex items-center justify-between border-b border-[#1e261f] pb-3">
+            <div className="flex items-center justify-between border-b border-[#1e1e1e] pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#e6ff00]/10 border border-[#e6ff00]/30 text-[#e6ff00] text-xs font-black">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black">
                   Version A
                 </span>
                 <span className="text-xs text-zinc-400 font-semibold">• 대중적 & 캐치한 훅 (Direct & Catchy)</span>
@@ -254,9 +254,9 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
                 <button
                   type="button"
                   onClick={() => handleCopy(resultA.lyrics, 'lyricsA')}
-                  className="px-2.5 py-1 rounded-lg bg-[#090d0a] hover:bg-[#162017] border border-[#1a231b] text-zinc-300 hover:text-[#e6ff00] text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-[#0a0a0a] hover:bg-[#171717] border border-[#1a1a1a] text-zinc-300 hover:text-primary text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
-                  {copiedKey === 'lyricsA' ? <Check className="w-3.5 h-3.5 text-[#e6ff00]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedKey === 'lyricsA' ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'lyricsA' ? '복사됨!' : '가사 복사'}</span>
                 </button>
               )}
@@ -265,12 +265,12 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
             {resultA ? (
               <div className="space-y-3 flex-1 flex flex-col">
                 {/* Title & Style */}
-                <div className="bg-[#090d0a] p-3 rounded-xl border border-[#1a231b] space-y-2">
+                <div className="bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-zinc-400">곡 제목</span>
-                    <span className="text-xs font-black text-[#e6ff00]">{resultA.title}</span>
+                    <span className="text-xs font-black text-primary">{resultA.title}</span>
                   </div>
-                  <div className="flex items-center justify-between border-t border-[#1a231b] pt-1.5">
+                  <div className="flex items-center justify-between border-t border-[#1a1a1a] pt-1.5">
                     <span className="text-[10px] font-bold text-zinc-400">Suno 스타일 태그</span>
                     <span className="text-[11px] font-mono text-zinc-300 truncate max-w-xs">{resultA.stylePrompt}</span>
                   </div>
@@ -281,7 +281,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
                   rows={14}
                   value={resultA.lyrics}
                   onChange={(e) => setResultA({ ...resultA, lyrics: e.target.value })}
-                  className="w-full flex-1 bg-[#090d0a] border border-[#1a231b] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar leading-relaxed"
+                  className="w-full flex-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar leading-relaxed"
                 />
               </div>
             ) : (
@@ -293,11 +293,11 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
           </div>
 
           {resultA && (
-            <div className="pt-2 border-t border-[#1e261f] flex gap-2">
+            <div className="pt-2 border-t border-[#1e1e1e] flex gap-2">
               <button
                 type="button"
                 onClick={() => sendToGenerate(resultA)}
-                className="w-full py-3 bg-[#e6ff00] hover:bg-[#d4f900] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-yellow-950/30"
+                className="w-full py-3 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-yellow-950/30"
               >
                 <Music className="w-4 h-4 fill-current text-black" />
                 <span>Version A로 음악 생성하기 ↗</span>
@@ -307,9 +307,9 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
         </div>
 
         {/* Version B */}
-        <div className="bg-[#121612] border border-[#1e261f] rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+        <div className="bg-[#111111] border border-[#1e1e1e] rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
           <div className="space-y-4 flex-1 flex flex-col">
-            <div className="flex items-center justify-between border-b border-[#1e261f] pb-3">
+            <div className="flex items-center justify-between border-b border-[#1e1e1e] pb-3">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-black">
                   Version B
@@ -321,7 +321,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
                 <button
                   type="button"
                   onClick={() => handleCopy(resultB.lyrics, 'lyricsB')}
-                  className="px-2.5 py-1 rounded-lg bg-[#090d0a] hover:bg-[#162017] border border-[#1a231b] text-zinc-300 hover:text-purple-300 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-[#0a0a0a] hover:bg-[#171717] border border-[#1a1a1a] text-zinc-300 hover:text-purple-300 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   {copiedKey === 'lyricsB' ? <Check className="w-3.5 h-3.5 text-purple-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'lyricsB' ? '복사됨!' : '가사 복사'}</span>
@@ -332,12 +332,12 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
             {resultB ? (
               <div className="space-y-3 flex-1 flex flex-col">
                 {/* Title & Style */}
-                <div className="bg-[#090d0a] p-3 rounded-xl border border-[#1a231b] space-y-2">
+                <div className="bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-zinc-400">곡 제목</span>
                     <span className="text-xs font-black text-purple-300">{resultB.title}</span>
                   </div>
-                  <div className="flex items-center justify-between border-t border-[#1a231b] pt-1.5">
+                  <div className="flex items-center justify-between border-t border-[#1a1a1a] pt-1.5">
                     <span className="text-[10px] font-bold text-zinc-400">Suno 스타일 태그</span>
                     <span className="text-[11px] font-mono text-zinc-300 truncate max-w-xs">{resultB.stylePrompt}</span>
                   </div>
@@ -348,7 +348,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
                   rows={14}
                   value={resultB.lyrics}
                   onChange={(e) => setResultB({ ...resultB, lyrics: e.target.value })}
-                  className="w-full flex-1 bg-[#090d0a] border border-[#1a231b] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-purple-400/60 resize-none custom-scrollbar leading-relaxed"
+                  className="w-full flex-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-purple-400/60 resize-none custom-scrollbar leading-relaxed"
                 />
               </div>
             ) : (
@@ -360,7 +360,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
           </div>
 
           {resultB && (
-            <div className="pt-2 border-t border-[#1e261f] flex gap-2">
+            <div className="pt-2 border-t border-[#1e1e1e] flex gap-2">
               <button
                 type="button"
                 onClick={() => sendToGenerate(resultB)}

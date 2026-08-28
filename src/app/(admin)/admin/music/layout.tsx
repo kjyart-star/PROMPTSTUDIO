@@ -40,14 +40,14 @@ export default async function AdminLayout({
 
   return (
     <AdminAuthGuard>
-      <div className="min-h-screen bg-[#0e150e] text-[#dde5d9] flex flex-col font-sans selection:bg-[#e3fe06]/35 selection:text-black">
+      <div className="min-h-screen bg-[#0d0d0d] text-[#e4e4e4] flex flex-col font-sans selection:bg-primary/35 selection:text-black">
         <div className="flex flex-1 pb-24">
           
-          {/* Left Sidebar (브랜드 컬러 테마: #161d16 배경, #242c24 보더) */}
-          <aside className="w-64 bg-[#161d16] border-r border-[#242c24] shrink-0 hidden md:flex flex-col">
-            <div className="h-16 flex items-center justify-center border-b border-[#242c24]">
+          {/* Left Sidebar (브랜드 컬러 테마: #161616 배경, #232323 보더) */}
+          <aside className="w-64 bg-[#161616] border-r border-[#232323] shrink-0 hidden md:flex flex-col">
+            <div className="h-16 flex items-center justify-center border-b border-[#232323]">
               <Link href="/admin/music" className="select-none flex flex-col items-center">
-                <span className="text-[19px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+                <span className="cm-wordmark text-[19px] font-black tracking-tight leading-none">쿠키뮤직</span>
                 <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-white/45 mt-1">ADMIN</span>
               </Link>
             </div>
@@ -57,7 +57,7 @@ export default async function AdminLayout({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-slate-350 hover:text-[#e3fe06] hover:bg-[#242c24]/50 rounded-xl transition-all text-sm font-medium"
+                  className="flex items-center gap-3 px-4 py-3 text-slate-350 hover:text-primary hover:bg-[#232323]/50 rounded-xl transition-all text-sm font-medium"
                 >
                   <item.icon className="w-5 h-5 text-slate-500 shrink-0" />
                   {item.label}
@@ -65,7 +65,7 @@ export default async function AdminLayout({
               ))}
             </nav>
 
-            <div className="p-4 border-t border-[#242c24] space-y-2">
+            <div className="p-4 border-t border-[#232323] space-y-2">
               <Link
                 href="/"
                 className="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-slate-200 rounded-xl transition-all text-sm font-medium"
@@ -88,10 +88,10 @@ export default async function AdminLayout({
           {/* Main Content Workspace */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top Bar (브랜드 컬러 테마) */}
-            <header className="h-16 border-b border-[#242c24] bg-[#0e150e]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
+            <header className="h-16 border-b border-[#232323] bg-[#0d0d0d]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
               <div className="md:hidden flex items-center gap-2">
                 <Link href="/admin/music" className="select-none flex items-center">
-                  <span className="text-[15px] font-black tracking-tight leading-none text-[#e3fe06]">쿠키뮤직</span>
+                  <span className="cm-wordmark text-[15px] font-black tracking-tight leading-none">쿠키뮤직</span>
                   <span className="text-[9px] font-bold tracking-[0.24em] leading-none text-white/45 ml-2">ADMIN</span>
                 </Link>
               </div>
@@ -99,7 +99,7 @@ export default async function AdminLayout({
               <div className="flex-1 md:flex-none"></div>
 
               <div className="flex items-center gap-4">
-                <span className="text-xs text-slate-400 bg-[#161d16] border border-[#242c24] px-3 py-1.5 rounded-full font-mono">
+                <span className="text-xs text-slate-400 bg-[#161616] border border-[#232323] px-3 py-1.5 rounded-full font-mono">
                   {user?.email}
                 </span>
                 

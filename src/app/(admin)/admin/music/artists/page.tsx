@@ -90,7 +90,7 @@ export default function ArtistsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <Shield className="w-6 h-6 text-[#e3fe06]" />
+            <Shield className="w-6 h-6 text-primary" />
             아티스트 & 회원 관리
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -106,22 +106,22 @@ export default function ArtistsPage() {
             placeholder="이름, 이메일, 핸들 검색" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#091009] border border-[#242c24] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+            className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
       </div>
 
-      {/* 리스트 테이블 (브랜드 테마: bg-[#161d16], border-[#242c24]) */}
+      {/* 리스트 테이블 (브랜드 테마: bg-[#161616], border-[#232323]) */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-[#e3fe06] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#242c24] bg-[#091009]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-[#232323] bg-[#0a0a0a]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   <th className="py-4 px-6 w-20">프로필</th>
                   <th className="py-4 px-6">이름 / 이메일</th>
                   <th className="py-4 px-6">핸들</th>
@@ -131,12 +131,12 @@ export default function ArtistsPage() {
                   <th className="py-4 px-6 w-32 text-right">제재 조치</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#242c24]/60 text-sm">
+              <tbody className="divide-y divide-[#232323]/60 text-sm">
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => (
-                    <tr key={u.id} className={`hover:bg-[#091009]/30 transition-all ${u.is_banned ? 'bg-red-950/10 border-l-2 border-l-red-500/50' : ''}`}>
+                    <tr key={u.id} className={`hover:bg-[#0a0a0a]/30 transition-all ${u.is_banned ? 'bg-red-950/10 border-l-2 border-l-red-500/50' : ''}`}>
                       <td className="py-4 px-6">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#091009] border border-[#242c24] flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#0a0a0a] border border-[#232323] flex items-center justify-center shrink-0">
                           {u.avatar_url ? (
                             <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -159,11 +159,11 @@ export default function ArtistsPage() {
                       <td className="py-4 px-6 text-center">
                         <div className="flex flex-col gap-1 items-center">
                           {u.is_admin ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[#e3fe06]/10 text-[#e3fe06] border-[#e3fe06]/20">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/20">
                               관리자
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[#242c24] text-slate-400 border-[#242c24]">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[#232323] text-slate-400 border-[#232323]">
                               일반 회원
                             </span>
                           )}

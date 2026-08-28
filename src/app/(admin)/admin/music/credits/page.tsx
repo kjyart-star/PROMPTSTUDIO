@@ -97,7 +97,7 @@ export default function AdminCreditsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <CreditCard className="w-8 h-8 text-[#e3fe06]" />
+            <CreditCard className="w-8 h-8 text-primary" />
             크레딧 관리 (User Credits)
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -106,8 +106,8 @@ export default function AdminCreditsPage() {
         </div>
       </div>
 
-      <div className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6">
-        <div className="flex items-center gap-2 bg-[#091009] border border-[#242c24] rounded-xl px-4 py-2 mb-6">
+      <div className="bg-[#161616] border border-[#232323] rounded-2xl p-6">
+        <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-2 mb-6">
           <Search className="w-5 h-5 text-slate-400" />
           <input 
             type="text" 
@@ -120,14 +120,14 @@ export default function AdminCreditsPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#e3fe06]" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <span className="text-sm text-slate-400 font-medium">사용자 데이터를 불러오는 중입니다...</span>
           </div>
         ) : filteredUsers.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead>
-                <tr className="border-b border-[#242c24] text-slate-400 uppercase text-xs tracking-wider">
+                <tr className="border-b border-[#232323] text-slate-400 uppercase text-xs tracking-wider">
                   <th className="px-4 py-3 font-semibold">사용자</th>
                   <th className="px-4 py-3 font-semibold">이메일</th>
                   <th className="px-4 py-3 font-semibold">권한</th>
@@ -135,12 +135,12 @@ export default function AdminCreditsPage() {
                   <th className="px-4 py-3 font-semibold text-center">관리</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#242c24]">
+              <tbody className="divide-y divide-[#232323]">
                 {filteredUsers.map(user => (
-                  <tr key={user.id} className="hover:bg-[#091009] transition-colors">
+                  <tr key={user.id} className="hover:bg-[#0a0a0a] transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#242c24] overflow-hidden shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#232323] overflow-hidden shrink-0">
                           {user.avatar_url ? (
                             <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -158,7 +158,7 @@ export default function AdminCreditsPage() {
                         <span className="px-2 py-1 bg-slate-800 text-slate-300 text-[10px] font-bold rounded">사용자</span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-right font-mono font-bold text-[#e3fe06]">
+                    <td className="px-4 py-4 text-right font-mono font-bold text-primary">
                       {(user.credits ?? 120).toLocaleString()}
                     </td>
                     <td className="px-4 py-4 text-center">
@@ -166,7 +166,7 @@ export default function AdminCreditsPage() {
                         <button 
                           disabled={actionLoading === user.id}
                           onClick={() => setCreditModal({ isOpen: true, user, amount: 100, mode: 'add' })}
-                          className="p-1.5 bg-[#e3fe06]/10 hover:bg-[#e3fe06]/20 text-[#e3fe06] rounded-lg transition-colors border border-[#e3fe06]/20"
+                          className="p-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20"
                           title="크레딧 추가"
                         >
                           <Plus className="w-4 h-4" />
@@ -197,9 +197,9 @@ export default function AdminCreditsPage() {
       {/* Credit Modal */}
       {creditModal && creditModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-[#161d16] border border-[#242c24] rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#161616] border border-[#232323] rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5 pb-3 flex items-center gap-3">
-              <CreditCard className="w-6 h-6 text-[#e3fe06] shrink-0" />
+              <CreditCard className="w-6 h-6 text-primary shrink-0" />
               <h3 className="text-lg font-bold text-white">크레딧 {creditModal.mode === 'add' ? '추가' : '차감'}</h3>
             </div>
             
@@ -214,16 +214,16 @@ export default function AdminCreditsPage() {
                   type="number" 
                   value={creditModal.amount}
                   onChange={(e) => setCreditModal({ ...creditModal, amount: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-[#091009] border border-[#242c24] rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-[#e3fe06]/50"
+                  className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-primary/50"
                   min="1"
                 />
               </div>
             </div>
             
-            <div className="p-4 bg-[#091009] border-t border-[#242c24] flex justify-end gap-2">
+            <div className="p-4 bg-[#0a0a0a] border-t border-[#232323] flex justify-end gap-2">
               <button 
                 onClick={() => setCreditModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161d16] rounded-lg transition-all"
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161616] rounded-lg transition-all"
               >
                 취소
               </button>
@@ -231,7 +231,7 @@ export default function AdminCreditsPage() {
                 onClick={handleUpdateCredits}
                 disabled={actionLoading === creditModal.user.id}
                 className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all text-black ${
-                  creditModal.mode === 'add' ? 'bg-[#e3fe06] hover:bg-[#cce305]' : 'bg-red-500 hover:bg-red-600 text-white'
+                  creditModal.mode === 'add' ? 'bg-primary hover:bg-[#e51d75]' : 'bg-red-500 hover:bg-red-600 text-white'
                 }`}
               >
                 {actionLoading === creditModal.user.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

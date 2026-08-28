@@ -8,34 +8,42 @@
 }
 
 :root {
-  --background: #0e150e;
-  --foreground: #dde5d9;
+  /* ─── 쿠키플레이 스위트 브랜드 토큰 — 브랜드 변경은 여기 한 곳만 고친다 ─── */
+  --cm-brand: #ff2d8f;          /* 단색 대표색(아이콘·보더·포커스링·진행바) */
+  --cm-brand-dim: #e51d75;      /* 눌림·보조 */
+  --cm-brand-orange: #ff7a1a;
+  --cm-brand-violet: #a855f7;
+  --cm-brand-gradient: linear-gradient(100deg, #ff7a1a 0%, #ff2d8f 48%, #a855f7 100%);
+
+  --background: #0d0d0d;
+  --foreground: #e4e4e4;
 }
 
 @theme {
-  --color-background: #0e150e;
-  --color-foreground: #dde5d9;
+  --color-background: #0d0d0d;
+  --color-foreground: #e4e4e4;
   
-  --color-surface-container-lowest: #091009;
-  --color-surface-container-low: #161d16;
-  --color-surface-container: #1a211a;
-  --color-surface-container-high: #242c24;
-  --color-surface-container-highest: #2f372e;
-  --color-surface-variant: #2f372e;
-  --color-surface: #0e150e;
-  --color-surface-dim: #0e150e;
-  --color-surface-bright: #333b33;
+  --color-surface-container-lowest: #0a0a0a;
+  --color-surface-container-low: #161616;
+  --color-surface-container: #1a1a1a;
+  --color-surface-container-high: #232323;
+  --color-surface-container-highest: #2c2c2c;
+  --color-surface-variant: #2c2c2c;
+  --color-surface: #0d0d0d;
+  --color-surface-dim: #0d0d0d;
+  --color-surface-bright: #303030;
   
-  --color-on-surface: #dde5d9;
-  --color-on-surface-variant: #bccbb9;
+  --color-on-surface: #e4e4e4;
+  --color-on-surface-variant: #c4c4c4;
   
-  --color-outline: #869585;
-  --color-outline-variant: #3d4a3d;
+  --color-outline: #8a8a8a;
+  --color-outline-variant: #292929;
   
-  --color-primary: #e3fe06;
-  --color-primary-fixed: #e3fe06;
-  --color-primary-fixed-dim: #e3fe06;
-  --color-primary-container: #e3fe06;
+  --color-primary: #ff2d8f;
+  --color-primary-fixed: #ff2d8f;
+  --color-primary-fixed-dim: #e51d75;
+  --color-primary-container: #ff2d8f;
+  --color-on-primary: #0d0d0d;
   
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -53,25 +61,25 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0e150e;
+  background: #0d0d0d;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3d4a3d;
+  background: #292929;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #e3fe06;
+  background: #ff2d8f;
 }
 
 .glass-panel {
   backdrop-filter: blur(24px);
-  background-color: rgba(14, 21, 14, 0.8);
+  background-color: rgba(13, 13, 13, 0.8);
 }
 
 .hero-gradient {
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(14, 21, 14, 1) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(13, 13, 13, 1) 100%);
 }
 
 .track-hover:hover {
@@ -194,7 +202,7 @@ textarea:focus {
   justify-content: space-between;
   height: 100vh;
   padding: 24px;
-  background: #0a0f0a; /* Deep premium green background */
+  background: #0a0a0a; /* Deep premium green background */
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   overflow: hidden;
@@ -243,14 +251,14 @@ textarea:focus {
   cursor: default;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  background: #111811;
+  background: #111111;
   margin-top: 10px;
 }
 
 /* Commented out hover zoom effect for now
 .pip-disc-mask:hover {
   transform: scale(1.03) translateY(-2px);
-  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.8), 0 0 24px rgba(227, 254, 6, 0.2);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 45, 143, 0.2);
 }
 */
 
@@ -258,7 +266,7 @@ textarea:focus {
   width: 320px;
   height: 320px;
   margin-top: 40px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(227, 254, 6, 0.3);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 45, 143, 0.3);
 }
 
 .pip-disc-spin {
@@ -297,8 +305,8 @@ textarea:focus {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: #0a0f0a;
-  border: 1px solid rgba(227, 254, 6, 0.15);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 45, 143, 0.15);
   box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 20;
   display: flex;
@@ -311,7 +319,7 @@ textarea:focus {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #0a0f0a;
+  background: #0a0a0a;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
@@ -339,8 +347,8 @@ textarea:focus {
 }
 
 .pip-visualizer-svg circle {
-  fill: #e3fe06; /* Neon green primary accent */
-  filter: drop-shadow(0 0 3px rgba(227, 254, 6, 0.4));
+  fill: #ff2d8f; /* Neon green primary accent */
+  filter: drop-shadow(0 0 3px rgba(255, 45, 143, 0.4));
   transition: fill 0.3s ease;
 }
 
@@ -372,7 +380,7 @@ textarea:focus {
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.25em;
-  color: #e3fe06;
+  color: #ff2d8f;
   margin-bottom: 6px;
   opacity: 0.8;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
@@ -428,9 +436,9 @@ textarea:focus {
 
 .pip-progress-bar-fill {
   height: 100%;
-  background: #e3fe06; /* Neon primary */
+  background: #ff2d8f; /* Neon primary */
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(227, 254, 6, 0.5);
+  box-shadow: 0 0 10px rgba(255, 45, 143, 0.5);
   transition: width 0.1s linear;
 }
 
@@ -474,23 +482,23 @@ textarea:focus {
 }
 
 .pip-ctrl-toggle.is-active {
-  color: #e3fe06;
+  color: #ff2d8f;
 }
 
 .pip-ctrl-play {
   width: 56px;
   height: 56px;
   background: #ffffff;
-  color: #0a0f0a;
+  color: #0a0a0a;
   box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pip-ctrl-play:hover {
   transform: scale(1.05);
-  background: #e3fe06;
-  color: #0a0f0a;
-  box-shadow: 0 8px 28px rgba(227, 254, 6, 0.35);
+  background: #ff2d8f;
+  color: #0a0a0a;
+  box-shadow: 0 8px 28px rgba(255, 45, 143, 0.35);
 }
 
 .pip-ctrl-play:active {
@@ -508,7 +516,7 @@ textarea:focus {
   transform: translate(-50%, -50%);
   font-size: 8px;
   font-weight: 900;
-  color: #e3fe06;
+  color: #ff2d8f;
 }
 
 /* Hide scrollbars utility */
@@ -520,3 +528,23 @@ textarea:focus {
   scrollbar-width: none;
 }
 
+
+/* ─── 워드마크 — 로고 그라디언트를 텍스트에 입힌다 (허브 .cl-wordmark 와 같은 방식) */
+.cm-wordmark {
+  color: var(--cm-brand); /* 미지원 브라우저 폴백 */
+  background-image: var(--cm-brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .cm-wordmark {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+/* 그라디언트 표면(버튼·배너 등)에서 쓸 브랜드 배경 */
+.cm-brand-gradient {
+  background-image: var(--cm-brand-gradient);
+}

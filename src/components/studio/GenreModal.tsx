@@ -37,13 +37,13 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-4xl max-h-[85vh] bg-[#0d1311] border border-outline-variant/20 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
+        className="w-full max-w-4xl max-h-[85vh] bg-[#0f0f0f] border border-outline-variant/20 rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-outline-variant/10">
           <div>
-            <h3 className="text-[#e3fe06] text-[10px] font-bold uppercase tracking-widest mb-1">GENRE LIBRARY</h3>
+            <h3 className="text-primary text-[10px] font-bold uppercase tracking-widest mb-1">GENRE LIBRARY</h3>
             <h2 className="text-xl font-bold text-white">{title}</h2>
           </div>
           <button 
@@ -63,7 +63,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
               placeholder={uiLanguage === 'KO' ? "장르 검색" : uiLanguage === 'JA' ? "ジャンルを検索" : "Search genres"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-[#e3fe06]/50 focus:ring-1 focus:ring-[#e3fe06]/30 transition-all"
+              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
             />
           </div>
         </div>
@@ -85,7 +85,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
                       onClick={() => onSelect(genre)}
                       className={`py-2.5 px-3 text-xs font-bold rounded-lg border transition-all text-left truncate ${
                         selectedGenre === genre
-                          ? 'bg-[#e3fe06]/10 border-[#e3fe06]/50 text-[#e3fe06] shadow-[0_0_10px_rgba(227,254,6,0.1)]'
+                          ? 'bg-primary/10 border-primary/50 text-primary shadow-[0_0_10px_rgba(255,45,143,0.1)]'
                           : 'bg-surface-container border-outline-variant/10 text-zinc-400 hover:bg-surface-container-high hover:border-outline-variant/30 hover:text-zinc-200'
                       }`}
                     >

@@ -49,8 +49,8 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   // 인증 상태 로딩 중
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-[#0e150e] text-[#dde5d9] flex items-center justify-center font-sans">
-        <Loader2 className="w-8 h-8 text-[#e3fe06] animate-spin" />
+      <div className="min-h-screen bg-[#0d0d0d] text-[#e4e4e4] flex items-center justify-center font-sans">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     )
   }
@@ -60,14 +60,14 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // 인증 폼 렌더링 (브랜드 테마: #0e150e 배경 & #e3fe06 핵심 포인트 색상)
+  // 인증 폼 렌더링 (브랜드 테마: #0d0d0d 배경 & #ff2d8f 핵심 포인트 색상)
   return (
-    <div className="min-h-screen bg-[#0e150e] text-[#dde5d9] flex items-center justify-center p-4 font-sans selection:bg-[#e3fe06]/30">
-      <div className="w-full max-w-md bg-[#161d16] border border-[#242c24] rounded-2xl shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-250">
+    <div className="min-h-screen bg-[#0d0d0d] text-[#e4e4e4] flex items-center justify-center p-4 font-sans selection:bg-primary/30">
+      <div className="w-full max-w-md bg-[#161616] border border-[#232323] rounded-2xl shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-250">
         
         {/* 심볼 및 타이틀 */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 rounded-xl bg-[#e3fe06]/10 border border-[#e3fe06]/20 flex items-center justify-center text-[#e3fe06]">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <Key className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-black tracking-wide text-white">어드민 2차 보안 인증</h2>
@@ -87,7 +87,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
               required
               value={idInput}
               onChange={(e) => setIdInput(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#091009] border border-[#242c24] text-slate-200 focus:outline-none focus:border-[#e3fe06] transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-[#0a0a0a] border border-[#232323] text-slate-200 focus:outline-none focus:border-primary transition-colors text-sm"
               placeholder="ID 입력"
             />
           </div>
@@ -101,7 +101,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
               required
               value={pwInput}
               onChange={(e) => setPwInput(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#091009] border border-[#242c24] text-slate-200 focus:outline-none focus:border-[#e3fe06] transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-[#0a0a0a] border border-[#232323] text-slate-200 focus:outline-none focus:border-primary transition-colors text-sm"
               placeholder="비밀번호 입력"
             />
           </div>
@@ -116,7 +116,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-[#e3fe06] text-black font-bold text-sm hover:bg-[#c2d900] active:scale-[0.98] transition-all disabled:opacity-50 mt-6 shadow-lg shadow-[#e3fe06]/10"
+            className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary text-black font-bold text-sm hover:bg-[#e51d75] active:scale-[0.98] transition-all disabled:opacity-50 mt-6 shadow-lg shadow-primary/10"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />

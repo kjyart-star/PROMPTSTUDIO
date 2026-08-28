@@ -463,7 +463,7 @@ export function ArtistClient({
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="flex items-center gap-4 md:gap-6">
                 {/* Circular Avatar */}
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary/50 overflow-hidden shrink-0 bg-[#0e150e]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary/50 overflow-hidden shrink-0 bg-[#0d0d0d]">
                   {artist.avatar_url ? (
                     <img src={artist.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -537,7 +537,7 @@ export function ArtistClient({
             <button
               onClick={handlePlayAll}
               disabled={tracks.length === 0}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-[#080d08] font-bold text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-[#090909] font-bold text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               Play All
@@ -604,9 +604,9 @@ export function ArtistClient({
                       >
                         {isPlayingThis ? (
                           <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                           </div>
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1 shadow-md">
@@ -618,7 +618,7 @@ export function ArtistClient({
 
                     <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                        <span className="text-[10px] font-extrabold text-[#e3fe06] bg-[#e3fe06]/10 border border-[#e3fe06]/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                        <span className="text-[10px] font-extrabold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded uppercase tracking-wider">
                           FEATURED {index === 0 ? 'SINGLE' : 'TRACK'}
                         </span>
                       </div>
@@ -687,9 +687,9 @@ export function ArtistClient({
                       >
                         {isPlayingThis ? (
                           <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                           </div>
                         ) : (
                           <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
@@ -968,7 +968,7 @@ export function ArtistClient({
                 <button 
                   onClick={saveChannel}
                   disabled={isSaving || !editName || !editHandle}
-                  className="px-6 py-2.5 rounded-xl bg-primary text-[#080d08] text-sm font-extrabold hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-primary text-[#090909] text-sm font-extrabold hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
                 >
                   {isSaving ? 'Saving...' : 'Save Channel'}
                 </button>
@@ -986,7 +986,7 @@ export function ArtistClient({
     <div className="font-sans text-on-surface w-full">
       
       {/* 1. Artist Hero Section */}
-      <section className="-mx-[32px] -mt-[24px] relative h-[28vh] min-h-[240px] md:h-[34vh] overflow-hidden bg-[#0e150e] flex flex-col justify-end">
+      <section className="-mx-[32px] -mt-[24px] relative h-[28vh] min-h-[240px] md:h-[34vh] overflow-hidden bg-[#0d0d0d] flex flex-col justify-end">
         {/* Background portrait */}
         <div className="absolute inset-0 select-none">
           <img 
@@ -995,8 +995,8 @@ export function ArtistClient({
             className="w-full h-full object-cover grayscale opacity-55 brightness-[0.75]"
           />
           {/* Smooth gradients to blend image into the forest green-black background */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0e150e] via-[#0e150e]/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0e150e]/50 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d]/50 via-transparent to-transparent" />
         </div>
 
         {/* Artist Profile Content */}
@@ -1024,7 +1024,7 @@ export function ArtistClient({
               <button
                 onClick={handlePlayAll}
                 disabled={tracks.length === 0}
-                className="flex items-center justify-center gap-2 px-8 py-3 rounded-full bg-primary text-[#080d08] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 cursor-pointer"
+                className="flex items-center justify-center gap-2 px-8 py-3 rounded-full bg-primary text-[#090909] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-current stroke-[2px]" />
                 Play
@@ -1114,9 +1114,9 @@ export function ArtistClient({
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                           {isCurrent && isPlaying ? (
                             <div className="flex items-end justify-center gap-[3px] h-3.5 w-3.5">
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                             </div>
                           ) : (
                             <Play className="w-3.5 h-3.5 fill-current text-white" />
@@ -1211,7 +1211,7 @@ export function ArtistClient({
                 {/* Background */}
                 <div className="absolute inset-0 select-none">
                   <img src={silhouetteUrl} alt="" className="w-full h-full object-cover brightness-[0.7] group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0e150e] via-[#0e150e]/60 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/60 to-transparent" />
                 </div>
                 
                 <div className="relative z-10 space-y-2">
@@ -1241,7 +1241,7 @@ export function ArtistClient({
             <h2 className="text-xs font-black text-on-surface uppercase tracking-widest">
               Discography
             </h2>
-            <button className="text-[11px] text-primary hover:text-[#e3fe06] transition-colors font-bold tracking-tight">
+            <button className="text-[11px] text-primary hover:text-primary transition-colors font-bold tracking-tight">
               Show all
             </button>
           </div>

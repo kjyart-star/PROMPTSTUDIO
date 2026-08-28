@@ -1076,9 +1076,9 @@ export function LibraryClient({
             {/* Dashed Create Playlist Card */}
             <div 
               onClick={handleOpenCreate}
-              className="bg-[#111a12]/20 border border-dashed border-emerald-950/40 hover:border-primary/40 hover:bg-[#111a12]/40 p-4 rounded-xl flex flex-col items-center justify-center gap-3 transition-all duration-300 cursor-pointer aspect-square group select-none relative"
+              className="bg-[#121212]/20 border border-dashed border-emerald-950/40 hover:border-primary/40 hover:bg-[#121212]/40 p-4 rounded-xl flex flex-col items-center justify-center gap-3 transition-all duration-300 cursor-pointer aspect-square group select-none relative"
             >
-              <div className="w-12 h-12 rounded-full bg-[#111a12] border border-primary/10 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-zinc-500 transition-colors">
+              <div className="w-12 h-12 rounded-full bg-[#121212] border border-primary/10 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-zinc-500 transition-colors">
                 <Plus className="w-6 h-6" />
               </div>
               <span className="font-bold text-[11px] text-on-surface-variant/70 group-hover:text-primary transition-colors">
@@ -1093,25 +1093,25 @@ export function LibraryClient({
                 <div
                   key={pl.id}
                   onClick={() => setSelectedPlaylist(pl.id)}
-                  className="bg-[#111a12]/60 border border-emerald-950/15 hover:border-primary/30 hover:bg-[#111a12] p-3 rounded-xl flex flex-col group shadow-md text-left transition-all duration-300 cursor-pointer overflow-hidden relative hover:scale-[1.02]"
+                  className="bg-[#121212]/60 border border-emerald-950/15 hover:border-primary/30 hover:bg-[#121212] p-3 rounded-xl flex flex-col group shadow-md text-left transition-all duration-300 cursor-pointer overflow-hidden relative hover:scale-[1.02]"
                 >
                   {/* Jacket Container */}
-                  <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-gradient-to-br from-[#111a12] to-[#070b08] border border-outline-variant/20 shadow-md flex items-center justify-center select-none group-hover:shadow-primary/5 transition-all duration-300">
+                  <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-gradient-to-br from-[#121212] to-[#080808] border border-outline-variant/20 shadow-md flex items-center justify-center select-none group-hover:shadow-primary/5 transition-all duration-300">
                     <Music className="w-6 h-6 text-on-surface-variant/25 absolute" />
                     {pl.id === 'liked' ? (
                       <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
-                        <Heart className="w-12 h-12 text-primary fill-primary filter drop-shadow-[0_0_25px_rgba(227,254,6,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                        <Heart className="w-12 h-12 text-primary fill-primary filter drop-shadow-[0_0_25px_rgba(255,45,143,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
                       </div>
                     ) : pl.id === 'liked-albums' ? (
                       <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
-                        <Disc className="w-12 h-12 text-primary filter drop-shadow-[0_0_25px_rgba(227,254,6,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                        <Disc className="w-12 h-12 text-primary filter drop-shadow-[0_0_25px_rgba(255,45,143,0.6)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
                       </div>
                     ) : !pl.cover_url || pl.cover_url.includes('default-album') || pl.cover_url.includes('top100_cover') ? (
                       <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
-                        <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(227,254,6,0.5)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
+                        <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(255,45,143,0.5)] z-20 transform group-hover:scale-110 transition-transform duration-500" />
                       </div>
                     ) : (
                       <img
@@ -1151,7 +1151,7 @@ export function LibraryClient({
                           }}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                             isLiked
-                              ? 'bg-[#e3fe06] text-black font-extrabold'
+                              ? 'bg-primary text-black font-extrabold'
                               : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
                           }`}
                           title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
@@ -1317,7 +1317,7 @@ export function LibraryClient({
                 {activePlaylist.id === 'liked' ? (
                   <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60 scale-150"></div>
-                    <Heart className="w-16 h-16 md:w-20 md:h-20 text-primary fill-primary filter drop-shadow-[0_0_35px_rgba(227,254,6,0.6)] z-20" />
+                    <Heart className="w-16 h-16 md:w-20 md:h-20 text-primary fill-primary filter drop-shadow-[0_0_35px_rgba(255,45,143,0.6)] z-20" />
                   </div>
                 ) : (
                   <img 
@@ -1347,7 +1347,7 @@ export function LibraryClient({
                   <button 
                     onClick={() => handlePlay(activePlaylist.tracks[0], activePlaylist.tracks)}
                     disabled={activePlaylist.tracks.length === 0}
-                    className="px-6 py-2.5 rounded-full bg-primary hover:bg-[#e3fe06] text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
+                    className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" /> PLAY ALL
                   </button>
@@ -1356,7 +1356,7 @@ export function LibraryClient({
                     onClick={() => handleAlbumLikeToggle(activePlaylist.id)}
                     className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
                       likedAlbums.includes(activePlaylist.id)
-                        ? 'border-[#e3fe06] bg-[#e3fe06]/10 text-[#e3fe06] hover:bg-[#e3fe06]/25'
+                        ? 'border-primary bg-primary/10 text-primary hover:bg-primary/25'
                         : 'border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white'
                     }`}
                     title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
@@ -1521,7 +1521,7 @@ export function LibraryClient({
                               {/* Dropdown Menu */}
                               {openPlaylistTrackMenuId === track.id && (
                                 <div 
-                                  className="absolute right-0 top-8 w-48 bg-[#111a12] border border-emerald-950/40 rounded-xl shadow-xl py-1.5 z-50 overflow-hidden text-left"
+                                  className="absolute right-0 top-8 w-48 bg-[#121212] border border-emerald-950/40 rounded-xl shadow-xl py-1.5 z-50 overflow-hidden text-left"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   {!activePlaylist.isSystem && (
@@ -1784,7 +1784,7 @@ export function LibraryClient({
 
           {/* Toast Notification */}
           {toast && createPortal(
-            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-in transition-all duration-300 bg-[#0e150e]/90 border-emerald-500/20 text-white font-bold text-xs uppercase tracking-wider">
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-in transition-all duration-300 bg-[#0d0d0d]/90 border-emerald-500/20 text-white font-bold text-xs uppercase tracking-wider">
               {toast.type === 'success' && <Check className="w-4 h-4 text-primary" />}
               {toast.type === 'error' && <X className="w-4 h-4 text-red-500" />}
               <span>{toast.message}</span>
@@ -1795,7 +1795,7 @@ export function LibraryClient({
           {/* Custom Confirm Modal */}
           {confirmModal && confirmModal.isOpen && createPortal(
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-              <div className="bg-[#111a12] border border-emerald-950/40 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
+              <div className="bg-[#121212] border border-emerald-950/40 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl relative">
                 <div className="space-y-2">
                   <h3 className="text-base font-black text-white uppercase tracking-wider">
                     {confirmModal.title}
@@ -1813,7 +1813,7 @@ export function LibraryClient({
                     <select
                       value={publishGenre}
                       onChange={(e) => setPublishGenre(e.target.value)}
-                      className="w-full bg-[#070b08] border border-emerald-950/30 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full bg-[#080808] border border-emerald-950/30 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-primary/50 transition-colors"
                     >
                       <option value="">{uiLanguage === 'KO' ? '장르 선택' : uiLanguage === 'JA' ? 'ジャンルを選択' : 'Select Genre'}</option>
                       {GENRES.map(g => (
@@ -1856,14 +1856,14 @@ export function LibraryClient({
       {selectedSong && createPortal(
         <>
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm sm:hidden" onClick={() => setSelectedSong(null)} />
-          <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#111a12] border-l border-emerald-950/30 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-5 border-b border-emerald-950/30 flex justify-between items-center bg-[#0d140e] shrink-0">
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#121212] border-l border-emerald-950/30 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-5 border-b border-emerald-950/30 flex justify-between items-center bg-[#0e0e0e] shrink-0">
               <h2 className="text-lg font-black text-white truncate pr-4">{selectedSong.title}</h2>
               <button onClick={() => setSelectedSong(null)} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors shrink-0">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 flex-1 overflow-y-auto space-y-8 bg-[#111a12]/50">
+            <div className="p-6 flex-1 overflow-y-auto space-y-8 bg-[#121212]/50">
               
               {/* Thumbnail Upload */}
               <div className="space-y-3">
@@ -1909,7 +1909,7 @@ export function LibraryClient({
                     </label>
                   </div>
                 ) : (
-                  <label className="border-2 border-dashed border-emerald-950/40 hover:border-primary/50 bg-[#111a12] hover:bg-[#152017] rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 text-zinc-500 hover:text-zinc-300 group">
+                  <label className="border-2 border-dashed border-emerald-950/40 hover:border-primary/50 bg-[#121212] hover:bg-[#171717] rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 text-zinc-500 hover:text-zinc-300 group">
                     <div className="w-12 h-12 rounded-full bg-emerald-950/30 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
                       <Upload className="w-5 h-5 text-zinc-400 group-hover:text-primary" />
                     </div>

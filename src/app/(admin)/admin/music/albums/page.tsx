@@ -94,7 +94,7 @@ export default function AlbumsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <Library className="w-6 h-6 text-[#e3fe06]" />
+            <Library className="w-6 h-6 text-primary" />
             사용자 앨범 관리
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -110,15 +110,15 @@ export default function AlbumsPage() {
             placeholder="앨범 제목, 장르, 작성자 검색" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#091009] border border-[#242c24] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+            className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
       </div>
 
-      {/* 리스트 그리드 (브랜드 테마: bg-[#161d16], border-[#242c24]) */}
+      {/* 리스트 그리드 (브랜드 테마: bg-[#161616], border-[#232323]) */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-[#e3fe06] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -130,14 +130,14 @@ export default function AlbumsPage() {
               return (
                 <div 
                   key={album.id} 
-                  className={`bg-[#161d16] border rounded-xl flex flex-row items-stretch group shadow-sm transition-all duration-200 ${
+                  className={`bg-[#161616] border rounded-xl flex flex-row items-stretch group shadow-sm transition-all duration-200 ${
                     isUserBanned 
                       ? 'border-red-950/50 bg-red-950/5' 
-                      : 'border-[#242c24] hover:border-[#3d4a3d]'
+                      : 'border-[#232323] hover:border-[#292929]'
                   }`}
                 >
                   {/* 앨범 커버 (작은 사이즈) */}
-                  <div className="relative w-24 h-full min-h-[96px] shrink-0 bg-[#091009] border-r border-[#242c24] flex items-center justify-center overflow-hidden rounded-l-xl">
+                  <div className="relative w-24 h-full min-h-[96px] shrink-0 bg-[#0a0a0a] border-r border-[#232323] flex items-center justify-center overflow-hidden rounded-l-xl">
                     {album.cover_url ? (
                       <img 
                         src={album.cover_url} 
@@ -229,7 +229,7 @@ export default function AlbumsPage() {
               )
             })
           ) : (
-            <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-[#242c24] rounded-2xl bg-[#091009]/30">
+            <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-[#232323] rounded-2xl bg-[#0a0a0a]/30">
               검색 결과와 일치하는 앨범이 없습니다.
             </div>
           )}

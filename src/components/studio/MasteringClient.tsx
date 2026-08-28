@@ -714,7 +714,7 @@ export function MasteringClient() {
   const activeTrack = tracks.find(t => t.id === activeTrackId)
 
   return (
-    <div className="w-full pb-10 text-white font-sans selection:bg-[#e6ff00] selection:text-black space-y-8 animate-in fade-in duration-500">
+    <div className="w-full pb-10 text-white font-sans selection:bg-primary selection:text-black space-y-8 animate-in fade-in duration-500">
       
       {/* Hidden Audio Element */}
       <audio 
@@ -728,19 +728,19 @@ export function MasteringClient() {
 
       {/* 🚀 Sleek DAW Header & Presets Toolbar */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d0f12] via-[#14181f] to-[#0a0b0e] border border-white/10 p-6 lg:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-[#e3fe06]/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-primary/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/4" />
         
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e3fe06]/10 border border-[#e3fe06]/30 text-[#e3fe06] text-xs font-black tracking-wider uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black tracking-wider uppercase">
               <Zap className="w-3.5 h-3.5" />
               <span>Next-Gen Audio Engine</span>
             </div>
             <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
               {uiLanguage === 'KO' ? (
-                <>AI 음원 <span className="text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.4)]">마스터링 스튜디오</span></>
+                <>AI 음원 <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.4)]">마스터링 스튜디오</span></>
               ) : (
-                <>COOKIEMUSIC <span className="text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.4)]">MASTERING STUDIO</span></>
+                <>COOKIEMUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.4)]">MASTERING STUDIO</span></>
               )}
             </h1>
             <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-xl">
@@ -763,7 +763,7 @@ export function MasteringClient() {
                 onClick={() => applyCharacterPreset(p.key)}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   character === p.key 
-                    ? 'bg-[#e3fe06] text-black shadow-[0_0_10px_rgba(227,254,6,0.4)]' 
+                    ? 'bg-primary text-black shadow-[0_0_10px_rgba(255,45,143,0.4)]' 
                     : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
               >
@@ -790,7 +790,7 @@ export function MasteringClient() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Disc className="w-5 h-5 text-[#e3fe06]" />
+                <Disc className="w-5 h-5 text-primary" />
                 <h3 className="text-base font-extrabold text-white">음원 파일 트랙</h3>
               </div>
               <span className="text-xs font-bold text-zinc-400 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
@@ -807,8 +807,8 @@ export function MasteringClient() {
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all group relative overflow-hidden ${
                 isDragging 
-                  ? 'border-[#e3fe06] bg-[#e3fe06]/20 scale-[1.02] shadow-[0_0_20px_rgba(227,254,6,0.3)]' 
-                  : 'border-white/15 hover:border-[#e3fe06] bg-black/40 hover:bg-black/60'
+                  ? 'border-primary bg-primary/20 scale-[1.02] shadow-[0_0_20px_rgba(255,45,143,0.3)]' 
+                  : 'border-white/15 hover:border-primary bg-black/40 hover:bg-black/60'
               }`}
             >
               <input 
@@ -819,7 +819,7 @@ export function MasteringClient() {
                 multiple 
                 onChange={handleFileChange} 
               />
-              <Upload className="w-8 h-8 text-zinc-500 group-hover:text-[#e3fe06] mx-auto mb-2 transition-colors group-hover:scale-110" />
+              <Upload className="w-8 h-8 text-zinc-500 group-hover:text-primary mx-auto mb-2 transition-colors group-hover:scale-110" />
               <p className="text-xs font-extrabold text-zinc-200 group-hover:text-white">
                 음원 파일(.wav, .mp3)을 클릭하거나 드래그하세요
               </p>
@@ -839,12 +839,12 @@ export function MasteringClient() {
                     onClick={() => loadTrackToPlayer(t)}
                     className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                       activeTrackId === t.id 
-                        ? 'bg-[#e3fe06]/10 border-[#e3fe06]/50 text-white' 
+                        ? 'bg-primary/10 border-primary/50 text-white' 
                         : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.07] text-zinc-300'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <Music className={`w-4 h-4 shrink-0 ${activeTrackId === t.id ? 'text-[#e3fe06]' : 'text-zinc-500'}`} />
+                      <Music className={`w-4 h-4 shrink-0 ${activeTrackId === t.id ? 'text-primary' : 'text-zinc-500'}`} />
                       <span className="text-xs font-bold truncate">{t.name}</span>
                     </div>
 
@@ -854,7 +854,7 @@ export function MasteringClient() {
                           <button 
                             onClick={(e) => { e.stopPropagation(); downloadTrack(t, 'mp3'); }}
                             disabled={isConvertingMp3[t.id]}
-                            className="px-2 py-1 rounded-md bg-[#e3fe06] hover:bg-[#cbe304] text-black font-extrabold text-[10px] transition-all flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
+                            className="px-2 py-1 rounded-md bg-primary hover:bg-[#e51d75] text-black font-extrabold text-[10px] transition-all flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
                             title="MP3 (320kbps) 다운로드"
                           >
                             {isConvertingMp3[t.id] ? (
@@ -869,7 +869,7 @@ export function MasteringClient() {
                             className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-extrabold text-[10px] transition-all flex items-center gap-1 border border-white/10 cursor-pointer"
                             title="WAV (48kHz 무손실) 다운로드"
                           >
-                            <Download className="w-3 h-3 text-[#e3fe06]" />
+                            <Download className="w-3 h-3 text-primary" />
                             <span>WAV</span>
                           </button>
                         </>
@@ -893,7 +893,7 @@ export function MasteringClient() {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={togglePlay}
-                  className="w-12 h-12 rounded-2xl bg-[#e3fe06] hover:bg-[#cbe304] text-black font-extrabold flex items-center justify-center transition-transform active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(227,254,6,0.3)] shrink-0"
+                  className="w-12 h-12 rounded-2xl bg-primary hover:bg-[#e51d75] text-black font-extrabold flex items-center justify-center transition-transform active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(255,45,143,0.3)] shrink-0"
                 >
                   {isPlaying ? <Pause className="w-6 h-6 fill-black" /> : <Play className="w-6 h-6 fill-black ml-0.5" />}
                 </button>
@@ -901,7 +901,7 @@ export function MasteringClient() {
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between text-xs font-bold text-zinc-300">
                     <span className="truncate max-w-[180px]">{activeTrack.name}</span>
-                    <span className="font-mono text-[#e3fe06] text-[11px]">{formatTime(playbackTime)} / {formatTime(duration)}</span>
+                    <span className="font-mono text-primary text-[11px]">{formatTime(playbackTime)} / {formatTime(duration)}</span>
                   </div>
                   <input 
                     type="range" 
@@ -910,7 +910,7 @@ export function MasteringClient() {
                     step="0.1"
                     value={playbackTime}
                     onChange={handleSeek}
-                    className="w-full h-1.5 bg-black rounded-full accent-[#e3fe06] cursor-pointer"
+                    className="w-full h-1.5 bg-black rounded-full accent-primary cursor-pointer"
                   />
                 </div>
               </div>
@@ -922,7 +922,7 @@ export function MasteringClient() {
                   <button 
                     onClick={() => setAbToggle(true)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      abToggle ? 'bg-[#e3fe06] text-black shadow-md' : 'text-zinc-500 hover:text-white'
+                      abToggle ? 'bg-primary text-black shadow-md' : 'text-zinc-500 hover:text-white'
                     }`}
                   >
                     MASTERED 🟢
@@ -946,12 +946,12 @@ export function MasteringClient() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#e3fe06]" />
+                <Activity className="w-5 h-5 text-primary" />
                 <h3 className="text-base font-extrabold text-white">유통사 표준 LUFS 라우드니스 콘솔</h3>
               </div>
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">
                 <span>EBU R128</span>
-                <span className="text-[#e3fe06]">(-14 LUFS Target)</span>
+                <span className="text-primary">(-14 LUFS Target)</span>
               </div>
             </div>
 
@@ -959,7 +959,7 @@ export function MasteringClient() {
             <div className="bg-[#090a0d] border border-white/10 rounded-2xl p-5 space-y-4 shadow-inner">
               <div className="flex justify-between items-end border-b border-white/5 pb-3">
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Short-Term Loudness</span>
-                <span className="text-3xl lg:text-4xl font-black font-mono text-[#e3fe06] drop-shadow-[0_0_15px_rgba(227,254,6,0.5)]">
+                <span className="text-3xl lg:text-4xl font-black font-mono text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.5)]">
                   {lufsText}
                 </span>
               </div>
@@ -970,7 +970,7 @@ export function MasteringClient() {
                   <span className="absolute left-[0%] -translate-x-1/2">-60</span>
                   <span className="absolute left-[28%] -translate-x-1/2">-30</span>
                   <span className="absolute left-[48%] -translate-x-1/2">-20</span>
-                  <span className="absolute left-[68%] -translate-x-1/2 text-[#e3fe06] font-bold">-14 LUFS</span>
+                  <span className="absolute left-[68%] -translate-x-1/2 text-primary font-bold">-14 LUFS</span>
                   <span className="absolute left-[83%] -translate-x-1/2">-9</span>
                   <span className="absolute left-[100%] -translate-x-full text-red-500">0</span>
                 </div>
@@ -983,14 +983,14 @@ export function MasteringClient() {
                       background: 'linear-gradient(90deg, #4caf50 0%, #4caf50 60%, #ffeb3b 68%, #ff9800 83%, #f44336 90%, #f44336 100%)' 
                     }}
                   />
-                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-[#e3fe06] z-10 shadow-[0_0_8px_#e3fe06]" title="Target -14 LUFS / 0 LU" />
+                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-primary z-10 shadow-[0_0_8px_#ff2d8f]" title="Target -14 LUFS / 0 LU" />
                 </div>
 
                 <div className="relative w-full h-3 text-[9px] text-zinc-500 font-mono select-none">
                   <span className="absolute left-[0%] -translate-x-1/2">-46</span>
                   <span className="absolute left-[28%] -translate-x-1/2">-16</span>
                   <span className="absolute left-[48%] -translate-x-1/2">-6</span>
-                  <span className="absolute left-[68%] -translate-x-1/2 text-[#e3fe06] font-bold">0 LU</span>
+                  <span className="absolute left-[68%] -translate-x-1/2 text-primary font-bold">0 LU</span>
                   <span className="absolute left-[83%] -translate-x-1/2">+5</span>
                   <span className="absolute left-[100%] -translate-x-full text-red-500">+14</span>
                 </div>
@@ -1001,15 +1001,15 @@ export function MasteringClient() {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-black/40 border border-white/5 rounded-xl p-3">
                 <span className="text-[10px] font-bold text-zinc-500 block mb-1">DRIVE BOOST</span>
-                <span className="text-sm font-black font-mono text-[#e3fe06]">+{drive.toFixed(1)} dB</span>
+                <span className="text-sm font-black font-mono text-primary">+{drive.toFixed(1)} dB</span>
               </div>
               <div className="bg-black/40 border border-white/5 rounded-xl p-3">
                 <span className="text-[10px] font-bold text-zinc-500 block mb-1">DE-HARSH</span>
-                <span className="text-sm font-black font-mono text-[#e3fe06]">{tamer === 0 ? 'BYPASS' : `${tamer}%`}</span>
+                <span className="text-sm font-black font-mono text-primary">{tamer === 0 ? 'BYPASS' : `${tamer}%`}</span>
               </div>
               <div className="bg-black/40 border border-white/5 rounded-xl p-3">
                 <span className="text-[10px] font-bold text-zinc-500 block mb-1">STEREO WIDTH</span>
-                <span className="text-sm font-black font-mono text-[#e3fe06]">{Math.round(width * 100)}%</span>
+                <span className="text-sm font-black font-mono text-primary">{Math.round(width * 100)}%</span>
               </div>
             </div>
           </div>
@@ -1022,7 +1022,7 @@ export function MasteringClient() {
                 <button 
                   onClick={() => setExportFormat('mp3')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    exportFormat === 'mp3' ? 'bg-[#e3fe06] text-black shadow-md' : 'text-zinc-500 hover:text-white'
+                    exportFormat === 'mp3' ? 'bg-primary text-black shadow-md' : 'text-zinc-500 hover:text-white'
                   }`}
                 >
                   MP3 (320kbps) 🎵
@@ -1030,7 +1030,7 @@ export function MasteringClient() {
                 <button 
                   onClick={() => setExportFormat('wav')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    exportFormat === 'wav' ? 'bg-[#e3fe06] text-black shadow-md' : 'text-zinc-500 hover:text-white'
+                    exportFormat === 'wav' ? 'bg-primary text-black shadow-md' : 'text-zinc-500 hover:text-white'
                   }`}
                 >
                   WAV (무손실 48kHz) 💿
@@ -1041,7 +1041,7 @@ export function MasteringClient() {
             <button 
               onClick={processAllBatch}
               disabled={isProcessingBatch || tracks.length === 0}
-              className="w-full py-4 bg-[#e3fe06] hover:bg-[#cbe304] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(227,254,6,0.3)] hover:shadow-[0_0_30px_rgba(227,254,6,0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
+              className="w-full py-4 bg-primary hover:bg-[#e51d75] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(255,45,143,0.3)] hover:shadow-[0_0_30px_rgba(255,45,143,0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
             >
               {isProcessingBatch ? (
                 <>
@@ -1065,7 +1065,7 @@ export function MasteringClient() {
         {/* Module 1: Loudness & Noise Control (4 cols) */}
         <div className="lg:col-span-4 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 space-y-6 shadow-xl backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-[#e3fe06]" />
+            <Gauge className="w-5 h-5 text-primary" />
             <h3 className="text-base font-extrabold text-white">볼륨 & 노이즈 프로세서</h3>
           </div>
 
@@ -1073,7 +1073,7 @@ export function MasteringClient() {
           <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-white/5">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-zinc-300">Maximizer Drive</span>
-              <span className="text-[#e3fe06] font-mono font-black">{drive.toFixed(1)} dB</span>
+              <span className="text-primary font-mono font-black">{drive.toFixed(1)} dB</span>
             </div>
             <input 
               type="range" 
@@ -1082,11 +1082,11 @@ export function MasteringClient() {
               step="0.1" 
               value={drive} 
               onChange={(e) => setDrive(parseFloat(e.target.value))}
-              className="w-full h-2 bg-black rounded-full accent-[#e3fe06] cursor-pointer"
+              className="w-full h-2 bg-black rounded-full accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-zinc-500">
               <span>Original</span>
-              <span className="text-[#e3fe06]">Target 0 LU</span>
+              <span className="text-primary">Target 0 LU</span>
             </div>
           </div>
 
@@ -1094,7 +1094,7 @@ export function MasteringClient() {
           <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-white/5">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-zinc-300">Suno De-Harsh</span>
-              <span className="text-[#e3fe06] font-mono">{tamer === 0 ? 'Off' : `${tamer}%`}</span>
+              <span className="text-primary font-mono">{tamer === 0 ? 'Off' : `${tamer}%`}</span>
             </div>
             <input 
               type="range" 
@@ -1103,11 +1103,11 @@ export function MasteringClient() {
               step="1" 
               value={tamer} 
               onChange={(e) => setTamer(parseInt(e.target.value))}
-              className="w-full h-2 bg-black rounded-full accent-[#e3fe06] cursor-pointer"
+              className="w-full h-2 bg-black rounded-full accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-zinc-500">
               <span>Bypass</span>
-              <span className="text-[#e3fe06]">추천 (50%)</span>
+              <span className="text-primary">추천 (50%)</span>
               <span>Heavy Cut</span>
             </div>
           </div>
@@ -1116,7 +1116,7 @@ export function MasteringClient() {
           <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-white/5">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-zinc-300">Stereo Width Matrix</span>
-              <span className="text-[#e3fe06] font-mono">{Math.round(width * 100)}%</span>
+              <span className="text-primary font-mono">{Math.round(width * 100)}%</span>
             </div>
             <input 
               type="range" 
@@ -1125,7 +1125,7 @@ export function MasteringClient() {
               step="0.01" 
               value={width} 
               onChange={(e) => setWidth(parseFloat(e.target.value))}
-              className="w-full h-2 bg-black rounded-full accent-[#e3fe06] cursor-pointer"
+              className="w-full h-2 bg-black rounded-full accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-zinc-500">
               <span>Mono</span>
@@ -1139,7 +1139,7 @@ export function MasteringClient() {
         <div className="lg:col-span-8 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 lg:p-8 space-y-6 shadow-xl backdrop-blur-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-[#e3fe06]" />
+              <Sliders className="w-5 h-5 text-primary" />
               <h3 className="text-base font-extrabold text-white">프로페셔널 7밴드 Parametric EQ 콘솔</h3>
             </div>
             <span className="text-xs text-zinc-500 font-medium">수치 클릭 시 직접 입력 지원</span>
@@ -1180,7 +1180,7 @@ export function MasteringClient() {
                         setEq(prev => ({ ...prev, [b.key]: val }))
                         setCharacter('custom')
                       }}
-                      className="w-32 h-2 bg-zinc-900 rounded-full accent-[#e3fe06] cursor-pointer -rotate-90 origin-center absolute shadow-inner"
+                      className="w-32 h-2 bg-zinc-900 rounded-full accent-primary cursor-pointer -rotate-90 origin-center absolute shadow-inner"
                     />
                   </div>
 
@@ -1196,12 +1196,12 @@ export function MasteringClient() {
                       onChange={(e) => setEditingValue(e.target.value)}
                       onBlur={commitEditingEqBand}
                       onKeyDown={(e) => e.key === 'Enter' && commitEditingEqBand()}
-                      className="w-12 bg-black text-[#e3fe06] border border-[#e3fe06] rounded-lg text-xs font-mono font-bold text-center p-0.5 outline-none"
+                      className="w-12 bg-black text-primary border border-primary rounded-lg text-xs font-mono font-bold text-center p-0.5 outline-none"
                     />
                   ) : (
                     <span 
                       onClick={() => startEditingEqBand(b.key, currentVal)}
-                      className="text-[11px] font-mono font-bold text-[#e3fe06] cursor-pointer hover:bg-white/10 px-2 py-1 rounded-lg border border-white/10 transition-colors"
+                      className="text-[11px] font-mono font-bold text-primary cursor-pointer hover:bg-white/10 px-2 py-1 rounded-lg border border-white/10 transition-colors"
                       title="클릭하여 직접 수치 입력"
                     >
                       {currentVal > 0 ? `+${currentVal.toFixed(1)}` : currentVal.toFixed(1)}dB

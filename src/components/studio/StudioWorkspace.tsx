@@ -91,15 +91,15 @@ export function StudioWorkspace({
       <div className="flex flex-1 min-h-0 border-b border-[#1f1f2a]">
         
         {/* 1. Left Vertical Icon + Text Sidebar */}
-        <aside className="w-48 bg-[#090d0a] border-r border-[#1a231b] flex flex-col p-3 gap-1.5 shrink-0 z-10 select-none">
+        <aside className="w-48 bg-[#0a0a0a] border-r border-[#1a1a1a] flex flex-col p-3 gap-1.5 shrink-0 z-10 select-none">
           {/* 1. 음악 프롬프트 */}
           <button
             type="button"
             onClick={() => setCurrentTab('studio')}
             className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
               currentTab === 'studio' 
-                ? 'bg-[#e6ff00] text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151c15]'
+                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
             }`}
           >
             <Wand2 className="w-4 h-4 shrink-0" />
@@ -112,8 +112,8 @@ export function StudioWorkspace({
             onClick={() => setCurrentTab('suno')}
             className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
               currentTab === 'suno' 
-                ? 'bg-[#e6ff00] text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151c15]'
+                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
             }`}
           >
             <Music className="w-4 h-4 shrink-0" />
@@ -126,8 +126,8 @@ export function StudioWorkspace({
             onClick={() => setCurrentTab('library')}
             className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
               currentTab === 'library' 
-                ? 'bg-[#e6ff00] text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151c15]'
+                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
             }`}
           >
             <FolderOpen className="w-4 h-4 shrink-0" />
@@ -140,8 +140,8 @@ export function StudioWorkspace({
             onClick={() => setCurrentTab('cover')}
             className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
               currentTab === 'cover' 
-                ? 'bg-[#e6ff00] text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151c15]'
+                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
             }`}
           >
             <ImageIcon className="w-4 h-4 shrink-0" />
@@ -154,8 +154,8 @@ export function StudioWorkspace({
             onClick={() => setCurrentTab('mastering')}
             className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
               currentTab === 'mastering' 
-                ? 'bg-[#e6ff00] text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151c15]'
+                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
             }`}
           >
             <Sliders className="w-4 h-4 shrink-0" />

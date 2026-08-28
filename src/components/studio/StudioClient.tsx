@@ -1542,17 +1542,17 @@ export function StudioClient({ user }: StudioClientProps) {
 
             {currentTab === 'library' && (
               <div className="max-w-[1700px] mx-auto w-full space-y-5 pb-10">
-                <div className="flex items-center justify-between pb-3 border-b border-[#1e261f]">
+                <div className="flex items-center justify-between pb-3 border-b border-[#1e1e1e]">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-                      <HardDrive className="w-4 h-4 text-[#e6ff00]" />
+                      <HardDrive className="w-4 h-4 text-primary" />
                       <span>미디어 클립 보관함 ({history.length})</span>
                     </h3>
                     <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다.</p>
                   </div>
                   <button 
                     onClick={fetchSongHistory} 
-                    className="px-3.5 py-1.5 rounded-xl bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-[#e6ff00] transition-all cursor-pointer shadow-sm"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-primary transition-all cursor-pointer shadow-sm"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>새로고침</span>
@@ -1563,22 +1563,22 @@ export function StudioClient({ user }: StudioClientProps) {
                     <div
                       key={item.id}
                       onClick={() => setSelectedItem(item)}
-                      className="p-3.5 rounded-2xl bg-[#121612] hover:bg-[#181f18] border border-[#1e261f] hover:border-[#e6ff00]/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40"
+                      className="p-3.5 rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40"
                     >
-                      <div className="w-14 h-14 rounded-xl bg-[#090d0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a231b] relative">
+                      <div className="w-14 h-14 rounded-xl bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative">
                         {item.image_url ? (
                           <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <Music className="w-6 h-6 text-[#e6ff00]/60" />
+                          <Music className="w-6 h-6 text-primary/60" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-[#e6ff00]">{item.title || 'Untitled'}</h4>
+                        <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-primary">{item.title || 'Untitled'}</h4>
                         <p className="text-[11px] text-zinc-500 truncate mt-0.5 font-mono">{item.style || item.style_desc || 'AI Track'}</p>
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); playHistoryTrack(item); }}
-                        className="w-8 h-8 rounded-full bg-[#e6ff00] text-black flex items-center justify-center transition-all shadow-md shadow-yellow-950/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center transition-all shadow-md shadow-yellow-950/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 ml-0.5 fill-current text-black" />
                       </button>
@@ -1594,9 +1594,9 @@ export function StudioClient({ user }: StudioClientProps) {
                 {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
                 <div className="xl:col-span-3 space-y-4">
                   {/* AI 설정 */}
-                  <div className="bg-[#121612] border border-[#1e261f] p-4 rounded-2xl space-y-3 shadow-xl">
-                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
-                      <Settings className="w-3.5 h-3.5 text-[#e6ff00]" />
+                  <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
+                      <Settings className="w-3.5 h-3.5 text-primary" />
                       AI 설정
                     </h3>
                     <div className="space-y-1">
@@ -1604,7 +1604,7 @@ export function StudioClient({ user }: StudioClientProps) {
                       <select
                         value={settings.model}
                         onChange={(e) => setSettings({ ...settings, model: e.target.value })}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-primary/60"
                       >
                         {provider.models.map((model) => (
                           <option key={model} value={model}>{model}</option>
@@ -1614,9 +1614,9 @@ export function StudioClient({ user }: StudioClientProps) {
                   </div>
 
                   {/* 지침서 (가이드) */}
-                  <div className="bg-[#121612] border border-[#1e261f] p-4 rounded-2xl space-y-3.5 shadow-xl">
-                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
-                      <FileText className="w-3.5 h-3.5 text-[#e6ff00]" />
+                  <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3.5 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
+                      <FileText className="w-3.5 h-3.5 text-primary" />
                       지침서 (가이드)
                     </h3>
 
@@ -1628,8 +1628,8 @@ export function StudioClient({ user }: StudioClientProps) {
                             key={guide.id}
                             className={`p-2.5 rounded-xl border transition-all flex items-start justify-between gap-2 group ${
                               activeGuideIds.includes(guide.id)
-                                ? 'bg-[#e6ff00]/10 border-[#e6ff00]/40 text-[#e6ff00]'
-                                : 'bg-[#090d0a]/60 border-[#1a231b] text-zinc-400 hover:border-zinc-700'
+                                ? 'bg-primary/10 border-primary/40 text-primary'
+                                : 'bg-[#0a0a0a]/60 border-[#1a1a1a] text-zinc-400 hover:border-zinc-700'
                             }`}
                           >
                             <button
@@ -1641,7 +1641,7 @@ export function StudioClient({ user }: StudioClientProps) {
                               className="flex-1 text-left cursor-pointer"
                             >
                               <div className="flex items-center gap-1.5 font-bold text-xs">
-                                <Check className={`w-3.5 h-3.5 transition-all ${activeGuideIds.includes(guide.id) ? 'opacity-100 text-[#e6ff00]' : 'opacity-20'}`} />
+                                <Check className={`w-3.5 h-3.5 transition-all ${activeGuideIds.includes(guide.id) ? 'opacity-100 text-primary' : 'opacity-20'}`} />
                                 <span className="truncate">{guide.title}</span>
                               </div>
                               <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">{guide.body}</p>
@@ -1664,27 +1664,27 @@ export function StudioClient({ user }: StudioClientProps) {
                         placeholder="새 지침서 제목"
                         value={draftGuide.title}
                         onChange={(e) => setDraftGuide({ ...draftGuide, title: e.target.value })}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60"
                       />
                       <textarea
                         placeholder="작사 규칙, 금지어, 브랜드 톤, 구조 등을 입력"
                         rows={2}
                         value={draftGuide.body}
                         onChange={(e) => setDraftGuide({ ...draftGuide, body: e.target.value })}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-[#e6ff00]/60 custom-scrollbar"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-primary/60 custom-scrollbar"
                       />
                       <button
                         onClick={addGuide}
-                        className="w-full py-2.5 bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                        className="w-full py-2.5 bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
                       >
                         지침서 등록하기
                       </button>
                     </div>
 
                     {/* 문서 업로드 (PDF/TXT) */}
-                    <div className="pt-2 space-y-1.5 border-t border-[#1a231b]">
+                    <div className="pt-2 space-y-1.5 border-t border-[#1a1a1a]">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">문서 업로드 (PDF/TXT)</span>
-                      <div className="relative border border-dashed border-[#232d24] hover:border-[#e6ff00]/50 bg-[#090d0a]/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
+                      <div className="relative border border-dashed border-[#232323] hover:border-primary/50 bg-[#0a0a0a]/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
                         <input
                           type="file"
                           ref={fileInputRef}
@@ -1703,9 +1703,9 @@ export function StudioClient({ user }: StudioClientProps) {
 
                 {/* 2열: 중앙 패널 (곡 정보 및 프롬프트 설정) - 5칸 */}
                 <div className="xl:col-span-5 space-y-4">
-                  <div className="bg-[#121612] border border-[#1e261f] p-5 rounded-2xl space-y-4 shadow-xl">
-                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
-                      <Disc className="w-3.5 h-3.5 text-[#e6ff00]" />
+                  <div className="bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl space-y-4 shadow-xl">
+                    <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
+                      <Disc className="w-3.5 h-3.5 text-primary" />
                       곡 정보 및 프롬프트 설정
                     </h3>
 
@@ -1718,17 +1718,17 @@ export function StudioClient({ user }: StudioClientProps) {
                           placeholder="예: Neon City Lights"
                           value={form.title}
                           onChange={(e) => updateForm('title', e.target.value)}
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs font-bold text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs font-bold text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-zinc-400">대상 툴 (TARGET AI)</label>
-                        <div className="grid grid-cols-3 gap-1 bg-[#090d0a] p-1 rounded-xl border border-[#1a231b]">
+                        <div className="grid grid-cols-3 gap-1 bg-[#0a0a0a] p-1 rounded-xl border border-[#1a1a1a]">
                           <button
                             type="button"
                             onClick={() => updateForm('targetTool', 'Suno')}
-                            className={`py-2 text-xs font-extrabold rounded-lg transition-all ${form.targetTool.toLowerCase() === 'suno' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            className={`py-2 text-xs font-extrabold rounded-lg transition-all ${form.targetTool.toLowerCase() === 'suno' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
                           >
                             Suno
                           </button>
@@ -1755,18 +1755,18 @@ export function StudioClient({ user }: StudioClientProps) {
                     {/* 2. 곡 형태 */}
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-zinc-400">곡 유형 (SONG TYPE)</label>
-                      <div className="grid grid-cols-2 gap-1.5 bg-[#090d0a] p-1 rounded-xl border border-[#1a231b]">
+                      <div className="grid grid-cols-2 gap-1.5 bg-[#0a0a0a] p-1 rounded-xl border border-[#1a1a1a]">
                         <button
                           type="button"
                           onClick={() => updateForm('songType', 'vocal')}
-                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'vocal' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'vocal' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
                         >
                           가사 있는 곡
                         </button>
                         <button
                           type="button"
                           onClick={() => updateForm('songType', 'instrumental')}
-                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'instrumental' ? 'bg-[#e6ff00] text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'instrumental' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
                         >
                           가사 없는 연주곡 (BGM)
                         </button>
@@ -1780,7 +1780,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         <button
                           type="button"
                           onClick={() => { setGenreModalTarget('genre1'); setIsGenreModalOpen(true); }}
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
                         >
                           <span className="truncate">{form.genre1 || '케이팝'}</span>
                           <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
@@ -1791,7 +1791,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         <button
                           type="button"
                           onClick={() => { setGenreModalTarget('genre2'); setIsGenreModalOpen(true); }}
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-left text-zinc-200 flex items-center justify-between hover:border-zinc-500 cursor-pointer"
                         >
                           <span className="truncate">{form.genre2 || '없음'}</span>
                           <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
@@ -1800,10 +1800,10 @@ export function StudioClient({ user }: StudioClientProps) {
                     </div>
 
                     {/* 장르 비중 슬라이더 */}
-                    <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
+                    <div className="space-y-1.5 bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[10px] font-bold text-zinc-400">장르 비중</span>
-                        <span className="font-mono font-bold text-[#e6ff00] text-xs">{form.genreRatio || 70} : {100 - (form.genreRatio || 70)}</span>
+                        <span className="font-mono font-bold text-primary text-xs">{form.genreRatio || 70} : {100 - (form.genreRatio || 70)}</span>
                       </div>
                       <input
                         type="range"
@@ -1812,7 +1812,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         step="5"
                         value={form.genreRatio || 70}
                         onChange={(e) => updateForm('genreRatio', parseInt(e.target.value))}
-                        className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                        className="w-full h-1.5 bg-zinc-800 accent-primary rounded-lg cursor-pointer"
                       />
                     </div>
 
@@ -1824,7 +1824,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         placeholder="예: Korean city pop, synth pop, nostalgic, rainy, warm, cinematic"
                         value={form.styleDesc}
                         onChange={(e) => updateForm('styleDesc', e.target.value)}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar"
                       />
                     </div>
 
@@ -1834,7 +1834,7 @@ export function StudioClient({ user }: StudioClientProps) {
                       <select
                         value={form.songStructure || '대중적인 팝 (Verse-Chorus)'}
                         onChange={(e) => updateForm('songStructure', e.target.value)}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                       >
                         <option value="대중적인 팝 (Verse-Chorus)">대중적인 팝 (Verse-Chorus)</option>
                         <option value="EDM / 댄스 구조 (Build-up & Drop)">EDM / 댄스 구조 (Build-up & Drop)</option>
@@ -1850,7 +1850,7 @@ export function StudioClient({ user }: StudioClientProps) {
                       <select
                         value={form.musicLength || '3분'}
                         onChange={(e) => updateForm('musicLength', e.target.value)}
-                        className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                        className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                       >
                         <option value="1분">1분</option>
                         <option value="2분">2분</option>
@@ -1870,7 +1870,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.lyricDensity || '보통 (Medium)'}
                               onChange={(e) => updateForm('lyricDensity', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="적음 (Short)">적음 (Short)</option>
                               <option value="보통 (Medium)">보통 (Medium)</option>
@@ -1882,7 +1882,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.vocalTone || '밝고 쾌활한'}
                               onChange={(e) => updateForm('vocalTone', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="밝고 쾌활한">밝고 쾌활한</option>
                               <option value="부드럽고 감미로운">부드럽고 감미로운</option>
@@ -1900,7 +1900,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.vocalAge || '청소년'}
                               onChange={(e) => updateForm('vocalAge', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="청소년">청소년</option>
                               <option value="20대 청년">20대 청년</option>
@@ -1913,7 +1913,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.vocalGenderGroup || '여자'}
                               onChange={(e) => updateForm('vocalGenderGroup', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="여자">여자</option>
                               <option value="남자">남자</option>
@@ -1932,7 +1932,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.language1 || '한국어'}
                               onChange={(e) => updateForm('language1', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="한국어">한국어</option>
                               <option value="영어">영어</option>
@@ -1944,7 +1944,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             <select
                               value={form.language2 || '없음'}
                               onChange={(e) => updateForm('language2', e.target.value)}
-                              className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-[#e6ff00]/60"
+                              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
                               <option value="없음">없음</option>
                               <option value="영어">영어</option>
@@ -1955,10 +1955,10 @@ export function StudioClient({ user }: StudioClientProps) {
                         </div>
 
                         {/* 언어 비중 슬라이더 */}
-                        <div className="space-y-1.5 bg-[#090d0a] p-3 rounded-xl border border-[#1a231b]">
+                        <div className="space-y-1.5 bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-[10px] font-bold text-zinc-400">언어 비중</span>
-                            <span className="font-mono font-bold text-[#e6ff00] text-xs">{form.languageRatio || 70} : {100 - (form.languageRatio || 70)}</span>
+                            <span className="font-mono font-bold text-primary text-xs">{form.languageRatio || 70} : {100 - (form.languageRatio || 70)}</span>
                           </div>
                           <input
                             type="range"
@@ -1967,17 +1967,17 @@ export function StudioClient({ user }: StudioClientProps) {
                             step="5"
                             value={form.languageRatio || 70}
                             onChange={(e) => updateForm('languageRatio', parseInt(e.target.value))}
-                            className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                            className="w-full h-1.5 bg-zinc-800 accent-primary rounded-lg cursor-pointer"
                           />
                         </div>
                       </div>
                     )}
 
                     {/* 7. 템포 (BPM/TEMPO) */}
-                    <div className="space-y-2 bg-[#090d0a] p-3.5 rounded-xl border border-[#1a231b]">
+                    <div className="space-y-2 bg-[#0a0a0a] p-3.5 rounded-xl border border-[#1a1a1a]">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-zinc-400">템포 (BPM/TEMPO)</span>
-                        <span className="font-mono font-black text-[#e6ff00] text-xs">{form.tempo || 120} BPM</span>
+                        <span className="font-mono font-black text-primary text-xs">{form.tempo || 120} BPM</span>
                       </div>
                       <input
                         type="range"
@@ -1986,7 +1986,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         step="1"
                         value={form.tempo || 120}
                         onChange={(e) => updateForm('tempo', parseInt(e.target.value))}
-                        className="w-full h-1.5 bg-zinc-800 accent-[#e6ff00] rounded-lg cursor-pointer"
+                        className="w-full h-1.5 bg-zinc-800 accent-primary rounded-lg cursor-pointer"
                       />
                       <div className="flex justify-between text-[9px] text-zinc-500 font-semibold px-0.5">
                         <span>아주 느리게</span>
@@ -2009,7 +2009,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           placeholder="예: 코러스에 일렉기타 솔로 추가, 리버브 이펙트 강조"
                           value={form.extra}
                           onChange={(e) => updateForm('extra', e.target.value)}
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60"
                         />
                       </div>
 
@@ -2020,7 +2020,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           placeholder="예: lo-fi, noise, bad vocals (선택 사항)"
                           value={form.exclude}
                           onChange={(e) => updateForm('exclude', e.target.value)}
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#e6ff00]/60"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60"
                         />
                       </div>
                     </div>
@@ -2031,7 +2031,7 @@ export function StudioClient({ user }: StudioClientProps) {
                         type="button"
                         onClick={generate}
                         disabled={isGenerating}
-                        className="flex-1 py-3.5 bg-[#e6ff00] hover:bg-[#d4f900] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        className="flex-1 py-3.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <Sparkles className="w-4 h-4 fill-current text-black" />
                         <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)`}</span>
@@ -2071,7 +2071,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           })
                           setStatus('샘플 프롬프트와 가사가 로드되었습니다!')
                         }}
-                        className="py-3.5 px-4 bg-[#161c16] hover:bg-[#1f271f] border border-[#232d24] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                        className="py-3.5 px-4 bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] text-zinc-300 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap"
                       >
                         샘플 생성
                       </button>
@@ -2081,10 +2081,10 @@ export function StudioClient({ user }: StudioClientProps) {
 
                 {/* 3열: 우측 패널 (생성 결과 OUTPUT) - 가운데 패널과 아래쪽 높이 일치 */}
                 <div className="xl:col-span-4 h-full flex flex-col">
-                  <div className="bg-[#121612] border border-[#1e261f] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
+                  <div className="bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
                     <div className="space-y-3 flex-1 flex flex-col">
-                      <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[#e6ff00]">
-                        <FileText className="w-3.5 h-3.5 text-[#e6ff00]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
+                        <FileText className="w-3.5 h-3.5 text-primary" />
                         생성 결과 (OUTPUT)
                       </h3>
 
@@ -2095,7 +2095,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.prompt, 'style')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2106,7 +2106,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.prompt}
                           onChange={(e) => setResultParts(prev => ({ ...prev, prompt: e.target.value }))}
                           placeholder="여기에 음악 스타일 프롬프트가 생성됩니다."
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar"
                         />
                       </div>
 
@@ -2117,7 +2117,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.negativePrompt, 'meta')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2128,7 +2128,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.negativePrompt}
                           onChange={(e) => setResultParts(prev => ({ ...prev, negativePrompt: e.target.value }))}
                           placeholder="제외할 스타일 프롬프트가 여기에 생성됩니다."
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar"
                         />
                       </div>
 
@@ -2139,7 +2139,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.title, 'meta')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2150,7 +2150,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.title}
                           onChange={(e) => setResultParts(prev => ({ ...prev, title: e.target.value }))}
                           placeholder="곡 제목"
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-bold placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-bold placeholder-zinc-700 focus:outline-none focus:border-primary/60"
                         />
                       </div>
 
@@ -2161,7 +2161,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.lyrics, 'lyrics')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2172,7 +2172,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.lyrics}
                           onChange={(e) => setResultParts(prev => ({ ...prev, lyrics: e.target.value }))}
                           placeholder="섹션 태그가 포함된 가사가 여기에 표시됩니다. 직접 수정하며 최종 완성하세요."
-                          className="w-full flex-1 bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar leading-relaxed"
+                          className="w-full flex-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar leading-relaxed"
                         />
                       </div>
 
@@ -2183,7 +2183,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.structurePlan, 'meta')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2194,7 +2194,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.structurePlan}
                           onChange={(e) => setResultParts(prev => ({ ...prev, structurePlan: e.target.value }))}
                           placeholder="생성 시 곡의 총 마디 수와 BPM 배분표가 여기에 표시됩니다."
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar"
                         />
                       </div>
 
@@ -2205,7 +2205,7 @@ export function StudioClient({ user }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(resultParts.notes, 'meta')}
-                            className="text-zinc-500 hover:text-[#e6ff00] p-1 transition-all cursor-pointer"
+                            className="text-zinc-500 hover:text-primary p-1 transition-all cursor-pointer"
                             title="복사"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -2216,13 +2216,13 @@ export function StudioClient({ user }: StudioClientProps) {
                           value={resultParts.notes}
                           onChange={(e) => setResultParts(prev => ({ ...prev, notes: e.target.value }))}
                           placeholder="제작 메모 또는 AI의 추가 제안이 표시됩니다."
-                          className="w-full bg-[#090d0a] border border-[#1a231b] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-[#e6ff00]/60 resize-none custom-scrollbar"
+                          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-mono placeholder-zinc-700 focus:outline-none focus:border-primary/60 resize-none custom-scrollbar"
                         />
                       </div>
                     </div>
 
                     {/* 하단 액션 버튼 영역 (가운데 패널 바닥선과 정렬) */}
-                    <div className="space-y-2 pt-2 border-t border-[#1a231b]">
+                    <div className="space-y-2 pt-2 border-t border-[#1a1a1a]">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -2230,7 +2230,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             const full = composeGeneratedText(resultParts)
                             if (full) copyToClipboard(full, 'all')
                           }}
-                          className="py-3 px-3 rounded-xl bg-[#151c15] hover:bg-[#1f291f] border border-[#232d24] text-[#e6ff00] text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="py-3 px-3 rounded-xl bg-[#151515] hover:bg-[#1f1f1f] border border-[#232323] text-primary text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Copy className="w-3.5 h-3.5" />
                           <span>클립보드에 전체 복사</span>
@@ -2242,7 +2242,7 @@ export function StudioClient({ user }: StudioClientProps) {
                             setResultParts(EMPTY_RESULT)
                             setStatus('생성 결과를 비웠습니다.')
                           }}
-                          className="py-3 px-3 rounded-xl bg-[#151c15] hover:bg-[#1f291f] border border-[#232d24] text-zinc-400 hover:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="py-3 px-3 rounded-xl bg-[#151515] hover:bg-[#1f1f1f] border border-[#232323] text-zinc-400 hover:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>결과 지우기</span>
@@ -2253,9 +2253,9 @@ export function StudioClient({ user }: StudioClientProps) {
                       <button
                         type="button"
                         onClick={navigateToGenerate}
-                        className="w-full py-3 rounded-xl bg-[#0e140f] hover:bg-[#162017] border border-[#232d24] hover:border-[#e6ff00]/40 text-zinc-300 hover:text-[#e6ff00] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-black/40"
+                        className="w-full py-3 rounded-xl bg-[#0f0f0f] hover:bg-[#171717] border border-[#232323] hover:border-primary/40 text-zinc-300 hover:text-primary text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-black/40"
                       >
-                        <Music className="w-4 h-4 text-[#e6ff00]" />
+                        <Music className="w-4 h-4 text-primary" />
                         <span>음악 생성 스튜디오로 이동 ↗</span>
                       </button>
                     </div>

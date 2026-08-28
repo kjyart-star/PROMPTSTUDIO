@@ -96,7 +96,7 @@ export function ShareDialog({
             className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               copied 
                 ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                : 'bg-primary text-[#080d08] hover:bg-[#e3fe06] hover:scale-105 active:scale-95 shadow-lg shadow-primary/20'
+                : 'bg-primary text-[#090909] hover:bg-primary hover:scale-105 active:scale-95 shadow-lg shadow-primary/20'
             }`}
           >
             {copied ? (

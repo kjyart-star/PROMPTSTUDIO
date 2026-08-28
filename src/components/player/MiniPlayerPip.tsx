@@ -646,7 +646,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
 
         newPipWindow.document.documentElement.style.height = '100%';
         newPipWindow.document.documentElement.style.overflow = 'hidden';
-        newPipWindow.document.body.style.backgroundColor = '#0a0f0a';
+        newPipWindow.document.body.style.backgroundColor = '#0a0a0a';
         newPipWindow.document.body.style.color = '#ffffff';
         newPipWindow.document.body.style.margin = '0';
         newPipWindow.document.body.style.padding = '0';
@@ -756,7 +756,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
           >
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/[0.06] shrink-0">
               <span className="text-xs font-bold text-zinc-300">현재 재생 목록</span>
-              <span className="text-[10px] font-bold text-[#e3fe06] bg-[#e3fe06]/10 px-2.5 py-0.5 rounded-full border border-[#e3fe06]/20">
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
                 {queue.length}곡
               </span>
             </div>
@@ -772,7 +772,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
                     }}
                     className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all border shrink-0 ${
                       isCurrent
-                        ? 'bg-[#e3fe06]/10 border-[#e3fe06]/20 text-white font-bold'
+                        ? 'bg-primary/10 border-primary/20 text-white font-bold'
                         : 'bg-transparent border-transparent hover:bg-white/[0.03] text-zinc-300 hover:text-white'
                     }`}
                   >
@@ -780,7 +780,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
                       <img src={cover} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[11px] truncate ${isCurrent ? 'text-[#e3fe06]' : ''}`}>
+                      <p className={`text-[11px] truncate ${isCurrent ? 'text-primary' : ''}`}>
                         {track.title}
                       </p>
                       <p className="text-[9px] text-zinc-500 truncate mt-0.5">
@@ -788,7 +788,7 @@ export function MiniPlayerPip({ isOpen, onClose }: MiniPlayerPipProps) {
                       </p>
                     </div>
                     {isCurrent && (
-                      <div className="w-2 h-2 rounded-full bg-[#e3fe06] shadow-[0_0_8px_rgba(227,254,6,0.8)] shrink-0 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(255,45,143,0.8)] shrink-0 animate-pulse" />
                     )}
                   </div>
                 );

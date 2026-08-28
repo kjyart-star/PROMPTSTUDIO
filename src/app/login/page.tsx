@@ -158,7 +158,7 @@ function LoginContent() {
 
           <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.15] mb-5 tracking-tight">
             쿠키플레이 계정 하나로<br />
-            <span className="text-[#b6cc14]">만들고, 올리고, 즐깁니다</span>
+            <span className="text-primary">만들고, 올리고, 즐깁니다</span>
           </h1>
 
           <p className="text-[#dedede] text-sm leading-relaxed max-w-md">
@@ -292,7 +292,7 @@ function LoginContent() {
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
-                  className="text-white font-bold hover:text-[#b6cc14] hover:underline transition-colors cursor-pointer"
+                  className="text-white font-bold hover:text-primary hover:underline transition-colors cursor-pointer"
                 >
                   로그인하기
                 </button>
@@ -303,7 +303,7 @@ function LoginContent() {
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
-                  className="text-white font-bold hover:text-[#b6cc14] hover:underline transition-colors cursor-pointer"
+                  className="text-white font-bold hover:text-primary hover:underline transition-colors cursor-pointer"
                 >
                   무료 가입하기
                 </button>
@@ -324,7 +324,7 @@ function LoginContent() {
               href="https://cookieplay.app"
               target="_blank"
               rel="noreferrer noopener"
-              className="text-[11px] font-semibold text-[#a1a1a1] hover:text-[#b6cc14] transition-colors"
+              className="text-[11px] font-semibold text-[#a1a1a1] hover:text-primary transition-colors"
             >
               🍪 CookiePlay
             </a>
@@ -350,7 +350,7 @@ function Wordmark({ className = '', compact = false }: { className?: string; com
         className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} shrink-0 rounded-full object-cover`}
       />
       <span className={`${compact ? 'text-[16px]' : 'text-[24px]'} font-black tracking-tight leading-none`}>
-        <span className="text-[#b6cc14]">COOKIE</span>
+        <span className="cm-wordmark">COOKIE</span>
         <span className="text-white">PLAY</span>
       </span>
     </a>

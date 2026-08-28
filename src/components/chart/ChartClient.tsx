@@ -321,7 +321,7 @@ export function ChartClient({
     if (change === null) {
       if (isNew) {
         return (
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/10 border border-[#e3fe06]/20 text-primary">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary">
             NEW
           </span>
         )
@@ -377,7 +377,7 @@ export function ChartClient({
           {/* 음원 vs 아티스트 토글 */}
           <div className="flex bg-surface-container-low border border-outline-variant/20 p-1 rounded-xl shrink-0">
             <button
-              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#090909] shadow shadow-primary/10 cursor-pointer"
             >
               {uiLanguage === 'KO' ? '음원 차트' : uiLanguage === 'JA' ? 'トラックチャート' : 'Track Chart'}
             </button>
@@ -397,7 +397,7 @@ export function ChartClient({
                 onClick={() => handleTabChange(tab)}
                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer capitalize ${
                   periodType === tab
-                    ? 'bg-primary text-[#080d08] shadow shadow-primary/10'
+                    ? 'bg-primary text-[#090909] shadow shadow-primary/10'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
@@ -433,7 +433,7 @@ export function ChartClient({
           <button
             onClick={handlePlayAll}
             disabled={sortedItems.length === 0}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#080d08] hover:bg-[#e3fe06] font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-[#090909] hover:bg-primary font-bold text-xs hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/15 disabled:opacity-50 cursor-pointer shrink-0"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             {uiLanguage === 'KO' ? '1위부터 재생' : uiLanguage === 'JA' ? '1位から再生' : 'Play from Top 1'}
@@ -529,9 +529,9 @@ export function ChartClient({
                             }`}>
                               {isCurrent && isPlaying ? (
                                 <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                                 </div>
                               ) : (
                                 <Play className="w-5 h-5 fill-current text-white" />

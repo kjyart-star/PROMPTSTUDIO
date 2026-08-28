@@ -140,7 +140,7 @@ export default function TracksPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <Music className="w-6 h-6 text-[#e3fe06]" />
+            <Music className="w-6 h-6 text-primary" />
             사용자 트랙 & 음원 관리
           </h1>
           <p className="text-xs text-slate-400 mt-1">
@@ -156,7 +156,7 @@ export default function TracksPage() {
             placeholder="곡 제목, 프롬프트, 작성자 검색" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#091009] border border-[#242c24] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+            className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>
       </div>
@@ -164,14 +164,14 @@ export default function TracksPage() {
       {/* 트랙 목록 테이블 */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-[#e3fe06] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#242c24] bg-[#091009]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-[#232323] bg-[#0a0a0a]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   <th className="py-4 px-6 w-16">재생</th>
                   <th className="py-4 px-6 w-16">커버</th>
                   <th className="py-4 px-6">제목</th>
@@ -181,7 +181,7 @@ export default function TracksPage() {
                   <th className="py-4 px-6 w-48 text-right">관리</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#242c24] text-sm">
+              <tbody className="divide-y divide-[#232323] text-sm">
                 {filteredTracks.length > 0 ? (
                   filteredTracks.map((track) => {
                     const isUserBanned = track.profiles?.is_banned || false
@@ -191,7 +191,7 @@ export default function TracksPage() {
                     return (
                       <tr 
                         key={track.id} 
-                        className={`hover:bg-[#091009]/35 transition-all ${
+                        className={`hover:bg-[#0a0a0a]/35 transition-all ${
                           isUserBanned ? 'bg-red-950/10 border-l-2 border-l-red-500/50' : ''
                         }`}
                       >
@@ -201,8 +201,8 @@ export default function TracksPage() {
                             onClick={() => handlePlaySong(track)}
                             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                               isCurrentlyPlaying 
-                                ? 'bg-[#e3fe06] text-black shadow-md' 
-                                : 'bg-[#091009] border border-[#242c24] text-slate-400 hover:text-white hover:border-[#323d32]'
+                                ? 'bg-primary text-black shadow-md' 
+                                : 'bg-[#0a0a0a] border border-[#232323] text-slate-400 hover:text-white hover:border-[#303030]'
                             }`}
                           >
                             {isCurrentlyPlaying ? (
@@ -213,7 +213,7 @@ export default function TracksPage() {
                           </button>
                         </td>
                         <td className="py-4 px-6">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#242c24] border border-[#242c24] flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#232323] border border-[#232323] flex items-center justify-center shrink-0">
                             {track.image_url ? (
                               <img src={track.image_url} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -252,7 +252,7 @@ export default function TracksPage() {
                                 setSelectedTrack(track)
                                 setDetailModalOpen(true)
                               }}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#242c24] hover:bg-[#323d32] text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-[#242c24]"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#232323] hover:bg-[#303030] text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all border border-[#232323]"
                               title="가사 및 프롬프트 보기"
                             >
                               <FileText className="w-3.5 h-3.5" />
@@ -304,13 +304,13 @@ export default function TracksPage() {
 
       {/* 상세 정보 모달 */}
       {detailModalOpen && selectedTrack && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#091009]/70 backdrop-blur-sm">
-          <div className="bg-[#161d16] border border-[#242c24] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0a0a]/70 backdrop-blur-sm">
+          <div className="bg-[#161616] border border-[#232323] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#242c24] bg-[#091009]/20">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#232323] bg-[#0a0a0a]/20">
               <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
-                <Music className="w-5 h-5 text-[#e3fe06]" />
+                <Music className="w-5 h-5 text-primary" />
                 곡 상세 메타데이터 모니터링
               </h3>
               <button 
@@ -318,7 +318,7 @@ export default function TracksPage() {
                   setDetailModalOpen(false)
                   setSelectedTrack(null)
                 }} 
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#242c24] transition-colors"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#232323] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -328,8 +328,8 @@ export default function TracksPage() {
             <div className="p-6 space-y-5 overflow-y-auto flex-1 text-left">
               
               {/* 기본 정보 */}
-              <div className="flex items-start gap-4 p-4 rounded-xl bg-[#091009]/40 border border-[#242c24]/60">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#242c24] border border-[#242c24] shrink-0">
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-[#0a0a0a]/40 border border-[#232323]/60">
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#232323] border border-[#232323] shrink-0">
                   {selectedTrack.image_url ? (
                     <img src={selectedTrack.image_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -353,7 +353,7 @@ export default function TracksPage() {
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                   스타일 프롬프트 (Style / Genre Prompt)
                 </label>
-                <div className="w-full p-3.5 rounded-xl bg-[#091009] border border-[#242c24] text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full p-3.5 rounded-xl bg-[#0a0a0a] border border-[#232323] text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
                   {selectedTrack.prompt || '(지정된 스타일 프롬프트 없음)'}
                 </div>
               </div>
@@ -363,7 +363,7 @@ export default function TracksPage() {
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                   곡 가사 (Lyrics)
                 </label>
-                <div className="w-full p-4 rounded-xl bg-[#091009] border border-[#242c24] text-sm text-slate-200 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto font-mono">
+                <div className="w-full p-4 rounded-xl bg-[#0a0a0a] border border-[#232323] text-sm text-slate-200 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto font-mono">
                   {selectedTrack.lyrics || '(가사 없음 - 연주곡)'}
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function TracksPage() {
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                     제작 메모 및 설정 (Notes)
                   </label>
-                  <div className="w-full p-3.5 rounded-xl bg-[#091009] border border-[#242c24] text-sm text-slate-350 whitespace-pre-wrap leading-relaxed">
+                  <div className="w-full p-3.5 rounded-xl bg-[#0a0a0a] border border-[#232323] text-sm text-slate-350 whitespace-pre-wrap leading-relaxed">
                     {selectedTrack.notes}
                   </div>
                 </div>
@@ -383,14 +383,14 @@ export default function TracksPage() {
             </div>
 
             {/* Actions */}
-            <div className="p-4 bg-[#091009] border-t border-[#242c24] flex justify-end">
+            <div className="p-4 bg-[#0a0a0a] border-t border-[#232323] flex justify-end">
               <button
                 type="button"
                 onClick={() => {
                   setDetailModalOpen(false)
                   setSelectedTrack(null)
                 }}
-                className="px-5 py-2 rounded-xl bg-[#161d16] hover:bg-[#242c24] border border-[#242c24] text-slate-300 hover:text-white text-xs font-bold transition-all"
+                className="px-5 py-2 rounded-xl bg-[#161616] hover:bg-[#232323] border border-[#232323] text-slate-300 hover:text-white text-xs font-bold transition-all"
               >
                 닫기
               </button>

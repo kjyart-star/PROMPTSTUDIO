@@ -423,7 +423,7 @@ export function NowPlayingPanel() {
                             e.stopPropagation();
                             createPlaylistAndAddTrack();
                           }}
-                          className="w-full text-left px-3 py-2 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-[#e3fe06]"
+                          className="w-full text-left px-3 py-2 rounded hover:bg-white/10 hover:text-white flex items-center gap-2 cursor-pointer text-primary"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           {lang === 'KO' ? '새 플레이리스트' : 'New playlist'}
@@ -621,7 +621,7 @@ export function NowPlayingPanel() {
           {/* Lyrics Section */}
           <div className="rounded-2xl p-5 bg-[#121214] border border-outline-variant/5 flex flex-col gap-3 relative overflow-hidden shadow-lg group">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black tracking-widest text-[#e3fe06] uppercase">
+              <h4 className="text-xs font-black tracking-widest text-primary uppercase">
                 {lang === 'KO' ? '가사' : 'Lyrics'}
               </h4>
             </div>
@@ -644,7 +644,7 @@ export function NowPlayingPanel() {
             <Link 
               href={`/artists/${track.album?.artist?.slug || 'suno-ai'}`}
               onClick={() => setNowPlayingOpen(false)}
-              className="h-28 w-full relative overflow-hidden bg-gradient-to-b from-[#e3fe06]/10 to-transparent block hover:opacity-90 transition-opacity"
+              className="h-28 w-full relative overflow-hidden bg-gradient-to-b from-primary/10 to-transparent block hover:opacity-90 transition-opacity"
             >
               <img 
                 src={track.album?.cover_url || withBase('/default-album.png')} 
@@ -652,7 +652,7 @@ export function NowPlayingPanel() {
                 className="w-full h-full object-cover opacity-20 blur-[6px] scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#121214] via-transparent to-transparent" />
-              <span className="absolute top-4 left-4 text-[9px] font-black tracking-wider text-[#e3fe06] bg-[#e3fe06]/10 px-2 py-0.5 rounded border border-[#e3fe06]/20">
+              <span className="absolute top-4 left-4 text-[9px] font-black tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
                 {lang === 'KO' ? '아티스트 상세정보' : 'ARTIST DETAIL'}
               </span>
             </Link>
@@ -702,7 +702,7 @@ export function NowPlayingPanel() {
           {/* Credits Card ("크레딧") */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between px-1">
-              <h4 className="text-xs font-black tracking-widest text-[#e3fe06] uppercase">
+              <h4 className="text-xs font-black tracking-widest text-primary uppercase">
                 {lang === 'KO' ? '크레딧' : 'Credits'}
               </h4>
             </div>
@@ -724,7 +724,7 @@ export function NowPlayingPanel() {
                 </Link>
                 <button 
                   onClick={() => setIsFollowing(!isFollowing)}
-                  className="text-[10px] font-extrabold text-[#e3fe06] hover:underline px-2.5 py-1 rounded bg-[#e3fe06]/5 border border-[#e3fe06]/15 hover:bg-[#e3fe06]/10 shrink-0 transition-all cursor-pointer"
+                  className="text-[10px] font-extrabold text-primary hover:underline px-2.5 py-1 rounded bg-primary/5 border border-primary/15 hover:bg-primary/10 shrink-0 transition-all cursor-pointer"
                 >
                   {isFollowing ? (lang === 'KO' ? '팔로잉' : 'Following') : (lang === 'KO' ? '팔로우하기' : 'Follow')}
                 </button>
@@ -766,10 +766,10 @@ export function NowPlayingPanel() {
           {nextTrack && (
             <div className="flex flex-col gap-3 mt-2">
               <div className="flex items-center justify-between px-1">
-                <h4 className="text-xs font-black tracking-widest text-[#e3fe06] uppercase">
+                <h4 className="text-xs font-black tracking-widest text-primary uppercase">
                   {lang === 'KO' ? '다음 재생 항목' : 'Next Up'}
                 </h4>
-                <span className="text-[10px] font-extrabold text-[#e3fe06] cursor-pointer hover:underline flex items-center gap-1">
+                <span className="text-[10px] font-extrabold text-primary cursor-pointer hover:underline flex items-center gap-1">
                   <ListMusic className="w-3.5 h-3.5" />
                   {lang === 'KO' ? '재생목록 열기' : 'Queue'}
                 </span>
@@ -805,8 +805,8 @@ export function NowPlayingPanel() {
       {toast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 bg-[#18181a]/95 backdrop-blur-md px-5 py-3.5 rounded-xl border border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.6)] animate-in fade-in slide-in-from-top-4 duration-300">
           {toast.type === 'success' && (
-            <div className="bg-[#e3fe06]/10 p-1.5 rounded-lg border border-[#e3fe06]/20">
-              <Check className="w-4 h-4 text-[#e3fe06]" />
+            <div className="bg-primary/10 p-1.5 rounded-lg border border-primary/20">
+              <Check className="w-4 h-4 text-primary" />
             </div>
           )}
           {toast.type === 'error' && (
@@ -835,7 +835,7 @@ export function NowPlayingPanel() {
           {/* Modal Container */}
           <div className="relative w-[380px] bg-[#18181a] border border-zinc-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-6 flex flex-col gap-5 z-10">
             {/* Accent line */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#e3fe06] to-[#baff00]" />
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-primary" />
             
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-zinc-100 tracking-wider uppercase">
@@ -864,7 +864,7 @@ export function NowPlayingPanel() {
                     setPromptModal(null);
                   }
                 }}
-                className="w-full bg-[#242426] text-white border border-zinc-800 rounded-xl px-4 py-3 text-xs placeholder-zinc-500 focus:outline-none focus:border-[#e3fe06] transition-all"
+                className="w-full bg-[#242426] text-white border border-zinc-800 rounded-xl px-4 py-3 text-xs placeholder-zinc-500 focus:outline-none focus:border-primary transition-all"
               />
             </div>
             
@@ -880,7 +880,7 @@ export function NowPlayingPanel() {
                   promptModal.onConfirm(promptInputValue);
                   setPromptModal(null);
                 }}
-                className="bg-[#e3fe06] hover:bg-[#baff00] active:scale-95 text-black px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md"
+                className="bg-primary hover:bg-primary active:scale-95 text-black px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md"
               >
                 {lang === 'KO' ? '생성' : 'Create'}
               </button>

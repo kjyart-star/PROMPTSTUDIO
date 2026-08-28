@@ -27,7 +27,7 @@ type Status = { type: 'success' | 'error'; message: string } | null
 function StatusLine({ status }: { status: Status }) {
   if (!status) return null
   return status.type === 'success' ? (
-    <p className="flex items-center gap-1.5 text-[11px] text-[#b6cc14] mt-2">
+    <p className="flex items-center gap-1.5 text-[11px] text-primary mt-2">
       <Check className="w-3.5 h-3.5 shrink-0" strokeWidth={3} />
       {status.message}
     </p>
@@ -186,11 +186,11 @@ export default function AccountClient({ user }: Props) {
               className="h-7 w-7 shrink-0 rounded-full object-cover"
             />
             <span className="text-[18px] font-black tracking-tight leading-none">
-              <span className="text-[#b6cc14]">COOKIE</span>
+              <span className="cm-wordmark">COOKIE</span>
               <span className="text-white">PLAY</span>
             </span>
           </a>
-          <a href="/" className="flex items-center gap-1.5 text-[11px] font-semibold text-[#a1a1a1] hover:text-[#b6cc14] transition-colors">
+          <a href="/" className="flex items-center gap-1.5 text-[11px] font-semibold text-[#a1a1a1] hover:text-primary transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" />
             쿠키플레이 홈
           </a>

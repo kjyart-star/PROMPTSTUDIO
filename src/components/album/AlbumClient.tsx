@@ -260,7 +260,7 @@ export function AlbumClient({
         {/* 정보 텍스트 */}
         <div className="space-y-4 text-center md:text-left flex-1 min-w-0 z-10">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-extrabold tracking-widest text-[#e3fe06] uppercase border border-[#e3fe06]/30 px-2 py-0.5 rounded-full bg-[#e3fe06]/10">
+            <span className="text-[10px] font-extrabold tracking-widest text-primary uppercase border border-primary/30 px-2 py-0.5 rounded-full bg-primary/10">
               {album.release_type === 'playlist' ? 'PLAYLIST' : 'ALBUM'}
             </span>
           </div>
@@ -299,7 +299,7 @@ export function AlbumClient({
             <button
               onClick={handlePlayAll}
               disabled={tracks.length === 0}
-              className="px-6 py-2.5 rounded-full bg-primary hover:bg-[#e3fe06] text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               전체 재생

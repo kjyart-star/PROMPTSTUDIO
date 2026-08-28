@@ -306,7 +306,7 @@ export default function AdminGuidesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <FileText className="w-8 h-8 text-[#e3fe06]" />
+            <FileText className="w-8 h-8 text-primary" />
             공용 지침서 관리 (System Guidelines)
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -316,7 +316,7 @@ export default function AdminGuidesPage() {
         
         <button
           onClick={handleOpenCreate}
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#e3fe06] hover:bg-[#cce305] text-black font-semibold text-sm transition-all shadow-lg shadow-[#e3fe06]/20 shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-[#e51d75] text-black font-semibold text-sm transition-all shadow-lg shadow-primary/20 shrink-0"
         >
           <Plus className="w-4 h-4" />
           새 공용 지침 등록
@@ -325,9 +325,9 @@ export default function AdminGuidesPage() {
 
       {/* Form Section */}
       {isFormOpen && (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="flex items-center justify-between border-b border-[#242c24] pb-3">
-            <h2 className="text-lg font-bold text-[#e3fe06]">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between border-b border-[#232323] pb-3">
+            <h2 className="text-lg font-bold text-primary">
               {editingGuide ? '공용 지침서 수정' : '새 공용 지침서 등록'}
             </h2>
             <button 
@@ -340,14 +340,14 @@ export default function AdminGuidesPage() {
 
           <form onSubmit={handleSave} className="space-y-4">
             {/* File Upload Section */}
-            <div className="flex flex-col gap-4 bg-[#091009]/40 p-4 rounded-xl border border-[#242c24]">
+            <div className="flex flex-col gap-4 bg-[#0a0a0a]/40 p-4 rounded-xl border border-[#232323]">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold text-slate-300">지침서 문서 업로드 (PDF / TXT)</h4>
                   <p className="text-[10px] text-slate-500 leading-relaxed">지침서 파일을 업로드하면 파일명과 본문 텍스트가 자동으로 입력 폼에 채워집니다.</p>
                 </div>
-                <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] cursor-pointer transition-all text-xs font-semibold text-slate-300 shrink-0 select-none">
-                  <Upload className="w-4 h-4 text-[#e3fe06]" />
+                <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] cursor-pointer transition-all text-xs font-semibold text-slate-300 shrink-0 select-none">
+                  <Upload className="w-4 h-4 text-primary" />
                   {isParsing ? '파싱 진행 중...' : '문서 선택'}
                   <input
                     type="file"
@@ -362,9 +362,9 @@ export default function AdminGuidesPage() {
 
               {/* 업로드 상태 표시 */}
               {(selectedFile || (existingFileName && !isFileDeleted)) && (
-                <div className="flex items-center justify-between bg-[#091009] px-3 py-2 rounded-lg border border-[#242c24] text-xs">
+                <div className="flex items-center justify-between bg-[#0a0a0a] px-3 py-2 rounded-lg border border-[#232323] text-xs">
                   <div className="flex items-center gap-2 text-slate-300 truncate">
-                    <FileText className="w-4 h-4 text-[#e3fe06] shrink-0" />
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
                     <span className="truncate">{selectedFile ? selectedFile.name : existingFileName}</span>
                     <span className="text-[10px] text-slate-500">
                       {selectedFile ? '(신규 업로드 예정)' : '(기존 파일)'}
@@ -392,7 +392,7 @@ export default function AdminGuidesPage() {
                 placeholder="예: 수노ai 랩 작법 지침"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full bg-[#091009] border border-[#242c24] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+                className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
                 required
               />
             </div>
@@ -404,7 +404,7 @@ export default function AdminGuidesPage() {
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 rows={16}
-                className="w-full bg-[#091009] border border-[#242c24] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors font-mono leading-relaxed"
+                className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors font-mono leading-relaxed"
                 required
               />
             </div>
@@ -420,7 +420,7 @@ export default function AdminGuidesPage() {
               <button
                 type="submit"
                 disabled={actionLoading === 'save' || isParsing}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#e3fe06] hover:bg-[#cce305] text-black rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#e3fe06]/20 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-primary hover:bg-[#e51d75] text-black rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
               >
                 {actionLoading === 'save' ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -437,19 +437,19 @@ export default function AdminGuidesPage() {
       {/* List Section */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#e3fe06]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span className="text-sm text-slate-400 font-medium">지침서 데이터를 불러오는 중입니다...</span>
         </div>
       ) : guides.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {guides.map((guide) => (
-            <div key={guide.id} className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6 flex flex-col md:flex-row justify-between gap-6 hover:border-[#3d4a3d]/50 transition-all shadow-sm">
+            <div key={guide.id} className="bg-[#161616] border border-[#232323] rounded-2xl p-6 flex flex-col md:flex-row justify-between gap-6 hover:border-[#292929]/50 transition-all shadow-sm">
               <div className="space-y-3 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#e3fe06] shrink-0" />
+                  <FileText className="w-5 h-5 text-primary shrink-0" />
                   <h3 className="font-bold text-lg text-slate-200 truncate">{guide.title}</h3>
                 </div>
-                <div className="bg-[#091009]/60 border border-[#242c24] p-4 rounded-xl text-sm text-slate-350 leading-relaxed font-mono whitespace-pre-wrap max-h-[600px] overflow-y-auto scrollbar-thin">
+                <div className="bg-[#0a0a0a]/60 border border-[#232323] p-4 rounded-xl text-sm text-slate-350 leading-relaxed font-mono whitespace-pre-wrap max-h-[600px] overflow-y-auto scrollbar-thin">
                   {guide.body}
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 font-mono">
@@ -459,7 +459,7 @@ export default function AdminGuidesPage() {
                       href={guide.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#091009] border border-[#242c24] text-[#e3fe06] hover:text-[#cce305] hover:border-[#3d4a3d] transition-colors font-sans text-xs"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#0a0a0a] border border-[#232323] text-primary hover:text-[#e51d75] hover:border-[#292929] transition-colors font-sans text-xs"
                       title="원본 지침 파일 다운로드"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -494,7 +494,7 @@ export default function AdminGuidesPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl py-16 text-center text-slate-500 space-y-2">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl py-16 text-center text-slate-500 space-y-2">
           <AlertCircle className="w-10 h-10 text-slate-600 mx-auto" />
           <p className="font-medium text-sm">등록된 공용 지침서가 없습니다.</p>
           <p className="text-xs text-slate-600">상단의 [새 공용 지침 등록] 버튼을 클릭해 지침을 생성하세요.</p>
@@ -504,7 +504,7 @@ export default function AdminGuidesPage() {
       {/* --- Custom Confirm Modal --- */}
       {confirmModal && confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-[#161d16] border border-[#242c24] rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#161616] border border-[#232323] rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="p-5 pb-3 flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-red-400 shrink-0" />
@@ -518,7 +518,7 @@ export default function AdminGuidesPage() {
             </div>
             
             {/* Action Buttons */}
-            <div className="p-4 bg-[#091009] border-t border-[#242c24] flex justify-end gap-2">
+            <div className="p-4 bg-[#0a0a0a] border-t border-[#232323] flex justify-end gap-2">
               <button 
                 onClick={() => setConfirmModal(null)}
                 className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"

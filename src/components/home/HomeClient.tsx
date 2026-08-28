@@ -889,7 +889,7 @@ export function HomeClient({
     <div className="font-sans text-on-surface w-full">
       
       {/* Hero Banner (Edge-to-Edge) */}
-      <section className="-mx-[32px] -mt-[24px] relative h-[25vh] min-h-[220px] md:h-[30vh] overflow-hidden bg-[#0e150e] flex flex-col justify-end animate-fade-in">
+      <section className="-mx-[32px] -mt-[24px] relative h-[25vh] min-h-[220px] md:h-[30vh] overflow-hidden bg-[#0d0d0d] flex flex-col justify-end animate-fade-in">
         {/* Background Pop Artist Image */}
         <div className="absolute inset-0 select-none">
           {heroImages.map((src, index) => (
@@ -903,13 +903,13 @@ export function HomeClient({
             />
           ))}
           {/* Smooth gradients to blend image into the forest green-black background */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0e150e] via-[#0e150e]/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0e150e]/50 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d]/50 via-transparent to-transparent" />
         </div>
 
         {/* Content Container (Aligned with main contents below) */}
         <div className="max-w-7xl mx-auto w-full px-[32px] pb-6 md:pb-8 space-y-3 relative z-10 animate-fade-in-up animation-delay-75">
-          <span className="inline-flex items-center gap-1.5 text-[8px] font-extrabold bg-[#e3fe06]/10 border border-[#e3fe06]/20 text-primary px-3 py-1 rounded-full uppercase tracking-wider w-fit">
+          <span className="inline-flex items-center gap-1.5 text-[8px] font-extrabold bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full uppercase tracking-wider w-fit">
             <TrendingUp className="w-2.5 h-2.5" />
             Trending AI Hits
           </span>
@@ -922,7 +922,7 @@ export function HomeClient({
           <div className="pt-1">
             <Link
               href="/charts"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-[#080d08] hover:bg-[#e3fe06] font-black text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-[#090909] hover:bg-primary font-black text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
             >
               {uiLanguage === 'KO' ? '차트 순위 보러가기' : uiLanguage === 'JA' ? 'チャートランキングを見る' : 'View Chart Rankings'}
               <ChevronRight className="w-3.5 h-3.5 text-black stroke-[3px]" />
@@ -975,9 +975,9 @@ export function HomeClient({
                       <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-all ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
                           <div className="flex items-end justify-center gap-[2.5px] h-4 w-4">
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                           </div>
                         ) : (
                           <Play className="w-5 h-5 fill-current text-white ml-0.5" />
@@ -1123,7 +1123,7 @@ export function HomeClient({
               <div
                 key={track.id}
                 className={`w-full p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
-                  isCurrent ? 'bg-primary/10 border-primary/30' : 'bg-[#091009]/80 border-[#1a2c1a]/50 hover:border-primary/40 hover:bg-[#111c11]/85'
+                  isCurrent ? 'bg-primary/10 border-primary/30' : 'bg-[#0a0a0a]/80 border-[#1d1d1d]/50 hover:border-primary/40 hover:bg-[#131313]/85'
                 }`}
                 onClick={() => {
                   handlePlay(track, displayRecommendedTracks)
@@ -1148,12 +1148,12 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 bg-primary text-[#080d08] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
+                      <div className="w-8 h-8 bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
                         <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                       </div>
                     )}
@@ -1300,9 +1300,9 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                       </div>
                     ) : (
                       <button
@@ -1312,7 +1312,7 @@ export function HomeClient({
                           handlePlay(track, displayLatestTracks)
                           setNowPlayingOpen(true)
                         }}
-                        className="w-12 h-12 bg-primary hover:bg-[#e3fe06] text-[#080d08] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        className="w-12 h-12 bg-primary hover:bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         <Play className="w-5 h-5 fill-current ml-0.5" />
                       </button>
@@ -1329,7 +1329,7 @@ export function HomeClient({
                       }}
                       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                         userLikes.includes(track.id)
-                          ? 'bg-primary text-[#080d08]'
+                          ? 'bg-primary text-[#090909]'
                           : 'bg-black/60 hover:bg-black/80 text-white'
                       }`}
                       title="좋아요"

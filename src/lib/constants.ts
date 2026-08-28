@@ -32,7 +32,7 @@ export const GENRES: Genre[] = [
   { name: 'Latin', korean: '라틴', japanese: 'ラテン', color: 'bg-[#ff2a5f]', q: 'latin', image: withBase('/images/genres/genre_latin.png') },
   { name: 'Afrobeats', korean: '아프로비트', japanese: 'アフロビーツ', color: 'bg-[#1c1c1c]', q: 'afrobeats', image: 'https://images.unsplash.com/photo-1528605105345-5344ea20e269?auto=format&fit=crop&w=200&h=200&q=80' },
   { name: 'Shoegaze', korean: '슈게이징', japanese: 'シューゲイザー', color: 'bg-[#7c3aed]', q: 'shoegaze', image: 'https://images.unsplash.com/photo-1499914485622-a88fac536970?auto=format&fit=crop&w=200&h=200&q=80' },
-  { name: 'Experimental', korean: '실험 음악', japanese: '実験音楽', color: 'bg-[#65a30d]', q: 'experimental', image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=200&h=200&q=80' },
+  { name: 'Experimental', korean: '실험 음악', japanese: '実験音楽', color: 'bg-[#be185d]', q: 'experimental', image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=200&h=200&q=80' },
   { name: 'Alternative', korean: '얼터너티브', japanese: 'オルタナティヴ', color: 'bg-[#db2777]', q: 'alternative', image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=200&h=200&q=80' },
   { name: 'Folk', korean: '포크', japanese: 'フォーク', color: 'bg-[#0891b2]', q: 'folk', image: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=200&h=200&q=80' },
   { name: 'House', korean: '하우스', japanese: 'ハウス', color: 'bg-[#ea580c]', q: 'house', image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=200&h=200&q=80' },

@@ -492,7 +492,7 @@ export function PersistentPlayer() {
               >
                 <Repeat className="w-5 h-5" />
                 {repeatMode === 'one' && (
-                  <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-[#080d08] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center scale-75 border border-[#080d08]">
+                  <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-[#090909] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center scale-75 border border-[#090909]">
                     1
                   </span>
                 )}

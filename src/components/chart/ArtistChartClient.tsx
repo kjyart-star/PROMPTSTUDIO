@@ -148,7 +148,7 @@ export function ArtistChartClient({
               {uiLanguage === 'KO' ? '음원 차트' : uiLanguage === 'JA' ? 'トラックチャート' : 'Track Chart'}
             </Link>
             <button
-              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#080d08] shadow shadow-primary/10 cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 bg-primary text-[#090909] shadow shadow-primary/10 cursor-pointer"
             >
               {uiLanguage === 'KO' ? '아티스트 차트' : uiLanguage === 'JA' ? 'アーティストチャート' : 'Artist Chart'}
             </button>
@@ -168,7 +168,7 @@ export function ArtistChartClient({
                   }}
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer capitalize ${
                     currentType === tab
-                      ? 'bg-primary text-[#080d08] shadow shadow-primary/10'
+                      ? 'bg-primary text-[#090909] shadow shadow-primary/10'
                       : 'text-on-surface-variant hover:text-on-surface'
                   }`}
                 >

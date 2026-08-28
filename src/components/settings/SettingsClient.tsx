@@ -425,7 +425,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 if (userPlan === 'pro') {
                   planLabel = uiLanguage === 'KO' ? '프로 플랜' : uiLanguage === 'JA' ? 'プロプラン' : 'Pro Plan';
                   maxCredits = 2500;
-                  cardBg = 'from-[#121408] via-[#0d0f05] to-[#070708]';
+                  cardBg = 'from-[#161616] via-[#121212] to-[#070708]';
                   borderHighlight = 'border-primary/20';
                 } else if (userPlan === 'premier') {
                   planLabel = uiLanguage === 'KO' ? '프리미어 플랜' : uiLanguage === 'JA' ? 'プレミアプラン' : 'Premier Plan';
@@ -490,7 +490,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <div 
                           className={`h-full rounded-full transition-all duration-500 ${
                             userPlan === 'pro' 
-                              ? 'bg-gradient-to-r from-primary to-[#b8cd05]' 
+                              ? 'bg-gradient-to-r from-primary to-[#d4186b]' 
                               : userPlan === 'premier' 
                               ? 'bg-gradient-to-r from-primary to-[#49be67]' 
                               : 'bg-zinc-500'
@@ -540,11 +540,11 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <tr key={tx.id} className="hover:bg-surface-container/20">
                           <td className="p-3 text-zinc-400 font-mono">{tx.date}</td>
                           <td className="p-3 font-semibold">{tx.desc}</td>
-                          <td className={`p-3 text-right font-extrabold font-mono ${tx.type === 'charge' ? 'text-[#e3fe06]' : 'text-zinc-400'}`}>
+                          <td className={`p-3 text-right font-extrabold font-mono ${tx.type === 'charge' ? 'text-primary' : 'text-zinc-400'}`}>
                             {tx.amount}
                           </td>
                           <td className="p-3 text-center">
-                            <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#e3fe06]/10 border border-[#e3fe06]/25 text-[#e3fe06]">
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-primary/10 border border-primary/25 text-primary">
                               {uiLanguage === 'KO' ? '완료됨' : uiLanguage === 'JA' ? '完了' : 'Completed'}
                             </span>
                           </td>

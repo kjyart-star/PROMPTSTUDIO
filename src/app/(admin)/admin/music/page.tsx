@@ -57,14 +57,14 @@ export default async function AdminDashboardPage() {
   }
 
   const stats = [
-    { label: '등록 아티스트', value: artistsCount ?? 0, icon: Users, color: 'text-[#e3fe06]', bg: 'bg-[#e3fe06]/10' },
-    { label: '등록 앨범', value: albumsCount ?? 0, icon: Library, color: 'text-[#e3fe06]', bg: 'bg-[#e3fe06]/10' },
-    { label: '등록 트랙', value: tracksCount ?? 0, icon: Music, color: 'text-[#e3fe06]', bg: 'bg-[#e3fe06]/10' },
+    { label: '등록 아티스트', value: artistsCount ?? 0, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: '등록 앨범', value: albumsCount ?? 0, icon: Library, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: '등록 트랙', value: tracksCount ?? 0, icon: Music, color: 'text-primary', bg: 'bg-primary/10' },
     { label: '누적 재생 수', value: totalPlaysCount ?? 0, icon: Play, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ]
 
   return (
-    <div className="space-y-8 font-sans selection:bg-[#e3fe06]/30">
+    <div className="space-y-8 font-sans selection:bg-primary/30">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">대시보드</h1>
@@ -72,10 +72,10 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* 통계 카드 그리드 (브랜드 컬러 테마: bg-[#161d16], border-[#242c24]) */}
+      {/* 통계 카드 그리드 (브랜드 컬러 테마: bg-[#161616], border-[#232323]) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <div key={idx} className="bg-[#161d16] border border-[#242c24] p-6 rounded-2xl flex items-center justify-between shadow-sm">
+          <div key={idx} className="bg-[#161616] border border-[#232323] p-6 rounded-2xl flex items-center justify-between shadow-sm">
             <div className="space-y-1">
               <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">{stat.label}</span>
               <p className="text-3xl font-bold tracking-tight text-white">{stat.value.toLocaleString()}</p>
@@ -91,21 +91,21 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* 최근 등록된 앨범 */}
-        <div className="lg:col-span-2 bg-[#161d16] border border-[#242c24] rounded-2xl p-6 space-y-6">
+        <div className="lg:col-span-2 bg-[#161616] border border-[#232323] rounded-2xl p-6 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">최근 등록된 앨범</h2>
-            <Link href="/admin/music/albums" className="text-xs text-[#e3fe06] hover:underline flex items-center gap-1">
+            <Link href="/admin/music/albums" className="text-xs text-primary hover:underline flex items-center gap-1">
               전체 보기
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="divide-y divide-[#242c24]">
+          <div className="divide-y divide-[#232323]">
             {recentAlbums && recentAlbums.length > 0 ? (
               recentAlbums.map((album: any) => (
                 <div key={album.id} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 bg-[#091009] rounded-lg shrink-0 overflow-hidden flex items-center justify-center border border-[#242c24]">
+                    <div className="w-12 h-12 bg-[#0a0a0a] rounded-lg shrink-0 overflow-hidden flex items-center justify-center border border-[#232323]">
                       {album.cover_url ? (
                         <img src={album.cover_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -140,43 +140,43 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* 빠른 관리 메뉴 */}
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6 space-y-6">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl p-6 space-y-6">
           <h2 className="text-lg font-bold text-white">빠른 관리 메뉴</h2>
           
           <div className="space-y-3">
             <Link
               href="/admin/music/notices"
-              className="block p-4 bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] hover:bg-[#161d16] rounded-xl transition-all"
+              className="block p-4 bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] hover:bg-[#161616] rounded-xl transition-all"
             >
-              <p className="font-semibold text-sm text-[#e3fe06]">공지사항 관리</p>
+              <p className="font-semibold text-sm text-primary">공지사항 관리</p>
               <p className="text-xs text-slate-400 mt-1">사용자에게 표시되는 시스템 공지사항을 등록하고 수정합니다.</p>
             </Link>
             <Link
               href="/admin/music/credits"
-              className="block p-4 bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] hover:bg-[#161d16] rounded-xl transition-all"
+              className="block p-4 bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] hover:bg-[#161616] rounded-xl transition-all"
             >
-              <p className="font-semibold text-sm text-[#e3fe06]">사용자 크레딧 관리</p>
+              <p className="font-semibold text-sm text-primary">사용자 크레딧 관리</p>
               <p className="text-xs text-slate-400 mt-1">사용자의 보유 크레딧을 확인하고 지급/차감합니다.</p>
             </Link>
             <Link
               href="/admin/music/artists"
-              className="block p-4 bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] hover:bg-[#161d16] rounded-xl transition-all"
+              className="block p-4 bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] hover:bg-[#161616] rounded-xl transition-all"
             >
-              <p className="font-semibold text-sm text-[#e3fe06]">아티스트 & 회원 관리</p>
+              <p className="font-semibold text-sm text-primary">아티스트 & 회원 관리</p>
               <p className="text-xs text-slate-400 mt-1">회원을 모니터링하고 약관 위반 계정을 정지합니다.</p>
             </Link>
             <Link
               href="/admin/music/albums"
-              className="block p-4 bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] hover:bg-[#161d16] rounded-xl transition-all"
+              className="block p-4 bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] hover:bg-[#161616] rounded-xl transition-all"
             >
-              <p className="font-semibold text-sm text-[#e3fe06]">사용자 앨범 관리</p>
+              <p className="font-semibold text-sm text-primary">사용자 앨범 관리</p>
               <p className="text-xs text-slate-400 mt-1">사용자가 생성하고 배포한 플레이리스트를 가리거나 공개합니다.</p>
             </Link>
             <Link
               href="/admin/music/tracks"
-              className="block p-4 bg-[#091009] border border-[#242c24] hover:border-[#3d4a3d] hover:bg-[#161d16] rounded-xl transition-all"
+              className="block p-4 bg-[#0a0a0a] border border-[#232323] hover:border-[#292929] hover:bg-[#161616] rounded-xl transition-all"
             >
-              <p className="font-semibold text-sm text-[#e3fe06]">사용자 트랙 & 음원 관리</p>
+              <p className="font-semibold text-sm text-primary">사용자 트랙 & 음원 관리</p>
               <p className="text-xs text-slate-400 mt-1">음원 재생수, 가사, 프롬프트를 확인하고 유해 음원을 비공개 처리합니다.</p>
             </Link>
           </div>

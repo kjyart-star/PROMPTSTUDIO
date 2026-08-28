@@ -2196,7 +2196,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             }}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
               isLiked
-                ? 'bg-[#e3fe06] text-black font-extrabold'
+                ? 'bg-primary text-black font-extrabold'
                 : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
             }`}
             title="좋아요"
@@ -2369,9 +2369,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           >
             {isPlayingThis ? (
               <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1">
@@ -2449,7 +2449,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               }}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                 isLiked
-                  ? 'bg-[#e3fe06] text-black font-extrabold'
+                  ? 'bg-primary text-black font-extrabold'
                   : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
               }`}
               title="좋아요"
@@ -2523,7 +2523,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             <span>{tracksCount} {uiLanguage === 'KO' ? '곡' : uiLanguage === 'JA' ? '曲' : 'songs'}</span>
             <span className="text-zinc-600">•</span>
             <span className="flex items-center gap-1">
-              <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-[#e3fe06]' : 'text-zinc-500'}`} />
+              <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-primary' : 'text-zinc-500'}`} />
               <span>{isLiked ? 1 : 0}</span>
             </span>
           </p>
@@ -2691,7 +2691,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                       }
                     }}
                     disabled={selectedPlaylistTracks.length === 0}
-                    className="px-6 py-2.5 rounded-full bg-primary hover:bg-[#e3fe06] text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0"
+                    className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary text-[#0b0c0b] text-xs font-extrabold flex items-center gap-1.5 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-primary shrink-0"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" /> PLAY ALL
                   </button>
@@ -2700,7 +2700,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     onClick={() => handleAlbumLikeToggle(selectedPlaylist.id)}
                     className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
                       likedAlbums.includes(selectedPlaylist.id)
-                        ? 'border-[#e3fe06] bg-[#e3fe06]/10 text-[#e3fe06] hover:bg-[#e3fe06]/25'
+                        ? 'border-primary bg-primary/10 text-primary hover:bg-primary/25'
                         : 'border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white'
                     }`}
                     title="좋아요"
@@ -3367,9 +3367,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                                       {isPlayingThis && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                           <div className="flex items-end justify-center gap-[2px] h-3.5 w-3.5">
-                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                                           </div>
                                         </div>
                                       )}
@@ -3962,7 +3962,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     <button 
                       type="button"
                       onClick={handleAddChannel}
-                      className="px-5 py-2.5 text-sm font-bold bg-[#e3fe06] text-black hover:bg-[#d0ea04] rounded-xl transition-all"
+                      className="px-5 py-2.5 text-sm font-bold bg-primary text-black hover:bg-[#e51d75] rounded-xl transition-all"
                     >
                       {uiLanguage === 'KO' ? '생성하기' : uiLanguage === 'JA' ? '保存' : 'Save'}
                     </button>
@@ -4010,9 +4010,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                               >
                                 {isPlayingThis ? (
                                   <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                                   </div>
                                 ) : (
                                   <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
@@ -4252,9 +4252,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                               >
                                 {isPlayingThis ? (
                                   <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                                   </div>
                                 ) : (
                                   <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1 shadow-md">
@@ -4266,7 +4266,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                             <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                                <span className="text-[10px] font-extrabold text-[#e3fe06] bg-[#e3fe06]/10 border border-[#e3fe06]/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                                <span className="text-[10px] font-extrabold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded uppercase tracking-wider">
                                   FEATURED {index === 0 ? 'SINGLE' : 'TRACK'}
                                 </span>
                               </div>
@@ -4342,9 +4342,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                               >
                                 {isPlayingThis ? (
                                   <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
-                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(227,254,6,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                    <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                                   </div>
                                 ) : (
                                   <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
@@ -5356,7 +5356,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       {mounted && typeof window !== 'undefined' && document.body && toast && createPortal(
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] bg-[#121214]/90 backdrop-blur-md border border-zinc-800/80 text-sm font-bold text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-none">
           <div className={`w-2 h-2 rounded-full ${
-            toast.type === 'success' ? 'bg-[#e3fe06]' : toast.type === 'error' ? 'bg-red-500' : 'bg-primary'
+            toast.type === 'success' ? 'bg-primary' : toast.type === 'error' ? 'bg-red-500' : 'bg-primary'
           }`} />
           <span>{toast.message}</span>
         </div>,
@@ -5367,14 +5367,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       {selectedSong && mounted && typeof window !== 'undefined' && document.body && createPortal(
         <>
           <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm sm:hidden" onClick={() => setSelectedSong(null)} />
-          <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#111a12] border-l border-emerald-950/30 shadow-2xl z-[100] flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="p-5 border-b border-emerald-950/30 flex justify-between items-center bg-[#0d140e] shrink-0">
+          <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-[#121212] border-l border-emerald-950/30 shadow-2xl z-[100] flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-5 border-b border-emerald-950/30 flex justify-between items-center bg-[#0e0e0e] shrink-0">
               <h2 className="text-lg font-black text-white truncate pr-4">{selectedSong.title}</h2>
               <button onClick={() => setSelectedSong(null)} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors shrink-0">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 flex-1 overflow-y-auto space-y-8 bg-[#111a12]/50">
+            <div className="p-6 flex-1 overflow-y-auto space-y-8 bg-[#121212]/50">
               
               {/* Thumbnail Upload */}
               <div className="space-y-3">
@@ -5420,7 +5420,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     </label>
                   </div>
                 ) : (
-                  <label className="border-2 border-dashed border-emerald-950/40 hover:border-primary/50 bg-[#111a12] hover:bg-[#152017] rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 text-zinc-500 hover:text-zinc-300 group">
+                  <label className="border-2 border-dashed border-emerald-950/40 hover:border-primary/50 bg-[#121212] hover:bg-[#171717] rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 text-zinc-500 hover:text-zinc-300 group">
                     <div className="w-12 h-12 rounded-full bg-emerald-950/30 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
                       <Upload className="w-5 h-5 text-zinc-400 group-hover:text-primary" />
                     </div>

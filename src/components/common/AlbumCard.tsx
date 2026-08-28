@@ -130,7 +130,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
               onClick={handleLikeToggle}
               className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                 isLiked
-                  ? 'bg-primary text-[#080d08]'
+                  ? 'bg-primary text-[#090909]'
                   : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
               }`}
               title="앨범 좋아요"
@@ -170,7 +170,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
           {isDefaultCover ? (
             <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-black transition-transform duration-500 group-hover:scale-105">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500 scale-150"></div>
-              <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(227,254,6,0.5)] z-0 transform group-hover:scale-110 transition-transform duration-500" />
+              <Music className="w-10 h-10 text-primary filter drop-shadow-[0_0_15px_rgba(255,45,143,0.5)] z-0 transform group-hover:scale-110 transition-transform duration-500" />
             </div>
           ) : (
             <img 
@@ -192,7 +192,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
                onClick={handleLikeToggle}
                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                  isLiked
-                   ? 'bg-primary text-[#080d08]'
+                   ? 'bg-primary text-[#090909]'
                    : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
                }`}
              >
@@ -209,7 +209,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
     <div className="group relative">
       <Link
         href={`/albums/${album.slug || album.id}`}
-        className="bg-surface-container-low border border-outline-variant/10 hover:border-[#e3fe06]/30 hover:bg-white/[0.01] p-4 rounded-2xl flex flex-col justify-between group shadow-lg transition-all duration-300 cursor-pointer h-full"
+        className="bg-surface-container-low border border-outline-variant/10 hover:border-primary/30 hover:bg-white/[0.01] p-4 rounded-2xl flex flex-col justify-between group shadow-lg transition-all duration-300 cursor-pointer h-full"
       >
         <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-outline-variant/20">
           {album.cover_url ? (
@@ -228,7 +228,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
               onClick={handleLikeToggle}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                 isLiked
-                  ? 'bg-primary text-[#080d08]'
+                  ? 'bg-primary text-[#090909]'
                   : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
               }`}
               title="앨범 좋아요"

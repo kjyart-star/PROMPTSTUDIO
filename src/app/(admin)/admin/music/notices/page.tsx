@@ -149,7 +149,7 @@ export default function AdminNoticesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <Megaphone className="w-8 h-8 text-[#e3fe06]" />
+            <Megaphone className="w-8 h-8 text-primary" />
             공지사항 관리 (Announcements)
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -159,7 +159,7 @@ export default function AdminNoticesPage() {
         
         <button
           onClick={handleOpenCreate}
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#e3fe06] hover:bg-[#cce305] text-black font-semibold text-sm transition-all shadow-lg shadow-[#e3fe06]/20 shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-[#e51d75] text-black font-semibold text-sm transition-all shadow-lg shadow-primary/20 shrink-0"
         >
           <Plus className="w-4 h-4" />
           새 공지사항 등록
@@ -168,9 +168,9 @@ export default function AdminNoticesPage() {
 
       {/* Form Section */}
       {isFormOpen && (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="flex items-center justify-between border-b border-[#242c24] pb-3">
-            <h2 className="text-lg font-bold text-[#e3fe06]">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between border-b border-[#232323] pb-3">
+            <h2 className="text-lg font-bold text-primary">
               {editingNotice ? '공지사항 수정' : '새 공지사항 등록'}
             </h2>
             <button 
@@ -189,7 +189,7 @@ export default function AdminNoticesPage() {
                 placeholder="예: 2026년 5월 시스템 업데이트 안내"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full bg-[#091009] border border-[#242c24] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors"
+                className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors"
                 required
               />
             </div>
@@ -201,7 +201,7 @@ export default function AdminNoticesPage() {
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 rows={12}
-                className="w-full bg-[#091009] border border-[#242c24] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-[#e3fe06]/50 transition-colors leading-relaxed whitespace-pre-wrap"
+                className="w-full bg-[#0a0a0a] border border-[#232323] rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed whitespace-pre-wrap"
                 required
               />
             </div>
@@ -210,14 +210,14 @@ export default function AdminNoticesPage() {
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}
-                className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#091009] rounded-xl transition-all"
+                className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#0a0a0a] rounded-xl transition-all"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={actionLoading === 'save'}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#e3fe06] hover:bg-[#cce305] text-black rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#e3fe06]/20 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-primary hover:bg-[#e51d75] text-black rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
               >
                 {actionLoading === 'save' ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -234,19 +234,19 @@ export default function AdminNoticesPage() {
       {/* List Section */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#e3fe06]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span className="text-sm text-slate-400 font-medium">공지사항 데이터를 불러오는 중입니다...</span>
         </div>
       ) : notices.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {notices.map((notice) => (
-            <div key={notice.id} className="bg-[#161d16] border border-[#242c24] rounded-2xl p-6 flex flex-col md:flex-row justify-between gap-6 hover:border-[#3d4a3d]/50 transition-all shadow-sm">
+            <div key={notice.id} className="bg-[#161616] border border-[#232323] rounded-2xl p-6 flex flex-col md:flex-row justify-between gap-6 hover:border-[#292929]/50 transition-all shadow-sm">
               <div className="space-y-3 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 text-[#e3fe06] shrink-0" />
+                  <Megaphone className="w-5 h-5 text-primary shrink-0" />
                   <h3 className="font-bold text-lg text-slate-200 truncate">{notice.title}</h3>
                 </div>
-                <div className="bg-[#091009]/60 border border-[#242c24] p-4 rounded-xl text-sm text-slate-350 leading-relaxed whitespace-pre-wrap max-h-[300px] overflow-y-auto scrollbar-thin">
+                <div className="bg-[#0a0a0a]/60 border border-[#232323] p-4 rounded-xl text-sm text-slate-350 leading-relaxed whitespace-pre-wrap max-h-[300px] overflow-y-auto scrollbar-thin">
                   {notice.content}
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
@@ -257,7 +257,7 @@ export default function AdminNoticesPage() {
               <div className="flex md:flex-col justify-end gap-2 shrink-0">
                 <button
                   onClick={() => handleOpenEdit(notice)}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#091009] hover:bg-[#161d16] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-[#242c24]"
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0a0a0a] hover:bg-[#161616] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all border border-[#232323]"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   수정
@@ -279,7 +279,7 @@ export default function AdminNoticesPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-[#161d16] border border-[#242c24] rounded-2xl py-16 text-center text-slate-500 space-y-2">
+        <div className="bg-[#161616] border border-[#232323] rounded-2xl py-16 text-center text-slate-500 space-y-2">
           <AlertCircle className="w-10 h-10 text-slate-600 mx-auto" />
           <p className="font-medium text-sm">등록된 공지사항이 없습니다.</p>
           <p className="text-xs text-slate-600">상단의 [새 공지사항 등록] 버튼을 클릭해 작성해보세요.</p>
@@ -289,7 +289,7 @@ export default function AdminNoticesPage() {
       {/* Custom Confirm Modal */}
       {confirmModal && confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-[#161d16] border border-[#242c24] rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#161616] border border-[#232323] rounded-2xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5 pb-3 flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-red-400 shrink-0" />
               <h3 className="text-lg font-bold text-white">공지사항 삭제</h3>
@@ -300,10 +300,10 @@ export default function AdminNoticesPage() {
               이 작업은 되돌릴 수 없습니다.
             </div>
             
-            <div className="p-4 bg-[#091009] border-t border-[#242c24] flex justify-end gap-2">
+            <div className="p-4 bg-[#0a0a0a] border-t border-[#232323] flex justify-end gap-2">
               <button 
                 onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161d16] rounded-lg transition-all"
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161616] rounded-lg transition-all"
               >
                 취소
               </button>

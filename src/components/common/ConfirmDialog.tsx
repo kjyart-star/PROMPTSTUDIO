@@ -47,7 +47,7 @@ export function ConfirmDialog({
         className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
         onClick={onCancel}
       />
-      <div className="relative bg-[#0e150e] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fade-in-up z-10 flex flex-col gap-4">
+      <div className="relative bg-[#0d0d0d] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fade-in-up z-10 flex flex-col gap-4">
         <div>
           <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
           <p className="text-sm text-zinc-400 whitespace-pre-wrap leading-relaxed">{message}</p>
@@ -61,7 +61,7 @@ export function ConfirmDialog({
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-xl text-sm font-bold bg-primary text-[#080d08] hover:bg-[#e3fe06] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-sm font-bold bg-primary text-[#090909] hover:bg-primary hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
           >
             {confirmText}
           </button>
