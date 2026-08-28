@@ -533,14 +533,6 @@ export function PublicLayoutClient({
                 </button>
               </div>
 
-              {/* Settings Button */}
-              <Link 
-                href="/settings"
-                className="text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 p-[8px] rounded-full transition-all flex items-center justify-center cursor-pointer"
-              >
-                <Settings className="w-5 h-5" />
-              </Link>
-
               {/* User Dropdown */}
               <div className="relative flex items-center" ref={authDropdownRef}>
                 {user ? (

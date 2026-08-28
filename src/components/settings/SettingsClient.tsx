@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { User, Users, Check, Upload, ArrowLeft, Clock, Settings, CreditCard, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
+import { User, Users, Check, Upload, ArrowLeft, Settings, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { withBase } from '@/lib/basePath'
 
@@ -18,7 +18,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
   const searchParams = useSearchParams()
 
   // Tab & Section State
-  const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
+  const [activeSettingSection, setActiveSettingSection] = useState<'profile' | 'preferences'>('profile')
   
   // Data States
   const [profile, setProfile] = useState<{ 
@@ -33,14 +33,9 @@ export function SettingsClient({ user }: SettingsClientProps) {
     likes?: number,
     handle?: string
   } | null>(null)
-  const [userCredits, setUserCredits] = useState<number>(120)
-  const [transactions, setTransactions] = useState<any[]>([])
   const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
   const [autoplay, setAutoplay] = useState<boolean>(true)
-  const [userPlan, setUserPlan] = useState<string>('free')
-  const [billingCycle, setBillingCycle] = useState<string>('monthly')
-  const [planRenewalDate, setPlanRenewalDate] = useState<string>('')
 
   // Profile Edit fields
   const [editName, setEditName] = useState('')
@@ -76,7 +71,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
         setEditName(data.display_name || '')
         setEditAvatar(data.avatar_url || '')
         if (data.credits !== undefined && data.credits !== null) {
-          setUserCredits(data.credits)
           localStorage.setItem('user-credits', String(data.credits))
         }
       }
@@ -85,39 +79,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
     }
   }
 
-  const fetchTransactions = async () => {
-    try {
-      const res = await fetch('/api/credits/history')
-      if (res.ok) {
-        const data = await res.json()
-        const formattedTxs = data.transactions.map((tx: any) => ({
-          id: tx.id,
-          date: new Date(tx.created_at).toLocaleString('ko-KR', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', hour12: false
-          }).replace(/\. /g, '-').replace('.', ''),
-          type: tx.type,
-          desc: tx.description,
-          amount: tx.amount > 0 ? `+${tx.amount}` : String(tx.amount)
-        }))
-        setTransactions(formattedTxs)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-
-
   // Load configuration and data on mount
   useEffect(() => {
     fetchProfile()
-    fetchTransactions()
 
-    // Query param tab activation
+    // Query param tab activation (unknown/legacy sections fall back to profile)
     const section = searchParams.get('section')
-    if (section === 'profile' || section === 'preferences' || section === 'credits') {
-      setActiveSettingSection(section as any)
+    if (section === 'profile' || section === 'preferences') {
+      setActiveSettingSection(section)
     }
   }, [searchParams])
 
@@ -170,29 +139,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
   // Load Settings and Preferences
   useEffect(() => {
-    const savedPlan = localStorage.getItem('user-plan')
-    if (savedPlan) {
-      setUserPlan(savedPlan)
-    } else {
-      localStorage.setItem('user-plan', 'free')
-    }
-
-    const savedBilling = localStorage.getItem('user-plan-billing')
-    if (savedBilling) {
-      setBillingCycle(savedBilling)
-    }
-
-    const savedRenewal = localStorage.getItem('user-plan-renewal')
-    if (savedRenewal) {
-      setPlanRenewalDate(savedRenewal)
-    }
-
-    const savedCredits = localStorage.getItem('user-credits')
-    if (savedCredits !== null) {
-      setUserCredits(parseFloat(savedCredits))
-    }
-
-
     const savedLanguage = localStorage.getItem('language')?.toUpperCase()
     if (savedLanguage === 'KO' || savedLanguage === 'EN' || savedLanguage === 'JA') {
       setUiLanguage(savedLanguage)
@@ -254,14 +200,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
         console.error('SignOut error:', err)
       }
       window.location.href = withBase('/')
-    }
-  }
-
-  const handleCancelSubscription = () => {
-    if (confirm(uiLanguage === 'KO' ? '정말 구독을 취소하시겠습니까? 이번 달 결제 주기까지만 혜택이 유지됩니다.' : uiLanguage === 'JA' ? '本当にサブスクリプションをキャンセルしますか？請求サイクルの終了まで特典は有効です。' : 'Are you sure you want to cancel your subscription? Benefits will remain active until the end of your billing cycle.')) {
-      setUserPlan('free')
-      localStorage.setItem('user-plan', 'free')
-      showToast(uiLanguage === 'KO' ? '구독이 성공적으로 취소되었습니다.' : uiLanguage === 'JA' ? 'サブスクリプションが正常にキャンセルされました。' : 'Subscription successfully cancelled.', 'success')
     }
   }
 
@@ -373,7 +311,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
             {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            {uiLanguage === 'KO' ? '계정 정보, 크레딧 사용 내역 및 환경설정을 관리합니다.' : uiLanguage === 'JA' ? 'アカウント情報、クレジットの使用状況、設定を管理します。' : 'Manage account information, credit usage, and preferences.'}
+            {uiLanguage === 'KO' ? '계정 정보 및 환경설정을 관리합니다.' : uiLanguage === 'JA' ? 'アカウント情報と設定を管理します。' : 'Manage account information and preferences.'}
           </p>
         </div>
       </div>
@@ -382,13 +320,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Left Menu Section */}
         <div className="flex flex-col gap-1 md:col-span-1 text-left">
-          <button 
-            onClick={() => setActiveSettingSection('credits')}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'credits' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
-          >
-            <CreditCard className="w-4 h-4 shrink-0" />
-            <span>{uiLanguage === 'KO' ? '크레딧 관리' : uiLanguage === 'JA' ? 'クレジット管理' : 'Credit Management'}</span>
-          </button>
           <button 
             onClick={() => setActiveSettingSection('profile')}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${activeSettingSection === 'profile' ? 'bg-primary text-[#050a06] font-extrabold' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
@@ -408,155 +339,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
         {/* Right Content Section */}
         <div className="md:col-span-3 bg-background border border-outline-variant/10 p-6 md:p-8 rounded-3xl backdrop-blur-sm shadow-xl">
-          {activeSettingSection === 'credits' && (
-            <div className="flex flex-col gap-8 text-left">
-              <div>
-                <h3 className="text-lg font-bold text-on-surface tracking-tight mb-1 text-left">{uiLanguage === 'KO' ? '크레딧 관리' : uiLanguage === 'JA' ? 'クレジット管理' : 'Credit Management'}</h3>
-                <p className="text-xs text-on-surface-variant text-left">{uiLanguage === 'KO' ? '요금제 확인 및 크레딧 충전을 관리할 수 있습니다.' : uiLanguage === 'JA' ? 'プランの詳細を確認し、クレジットのチャージを管理します。' : 'Check plan details and manage credit top-ups.'}</p>
-              </div>
-
-              {/* Balance Card */}
-              {(() => {
-                let planLabel = uiLanguage === 'KO' ? '무료 요금제' : uiLanguage === 'JA' ? 'ベーシックプラン' : 'Basic Plan';
-                let maxCredits = 50;
-                let cardBg = 'from-[#121214] to-[#0d0d0f]';
-                let borderHighlight = 'border-outline-variant/20';
-
-                if (userPlan === 'pro') {
-                  planLabel = uiLanguage === 'KO' ? '프로 플랜' : uiLanguage === 'JA' ? 'プロプラン' : 'Pro Plan';
-                  maxCredits = 2500;
-                  cardBg = 'from-[#161616] via-[#121212] to-[#070708]';
-                  borderHighlight = 'border-primary/20';
-                } else if (userPlan === 'premier') {
-                  planLabel = uiLanguage === 'KO' ? '프리미어 플랜' : uiLanguage === 'JA' ? 'プレミアプラン' : 'Premier Plan';
-                  maxCredits = 10000;
-                  cardBg = 'from-[#0a150e] via-[#050a06] to-[#070708]';
-                  borderHighlight = 'border-primary/20';
-                }
-
-                const percentage = Math.min(100, Math.max(0, (userCredits / maxCredits) * 100));
-
-                return (
-                  <div className={`relative overflow-hidden rounded-3xl border ${borderHighlight} bg-gradient-to-br ${cardBg} p-6 shadow-xl flex flex-col gap-6`}>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-black px-2.5 py-0.5 rounded-full tracking-wide uppercase ${
-                            userPlan === 'pro' 
-                              ? 'bg-primary/10 text-primary border border-primary/20' 
-                              : userPlan === 'premier' 
-                              ? 'bg-primary/10 text-primary border border-primary/20' 
-                              : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                          }`}>
-                            {planLabel}
-                          </span>
-                          {userPlan !== 'free' && (
-                            <span className="text-[10px] text-zinc-400 font-bold">
-                              {billingCycle === 'yearly' 
-                                ? (uiLanguage === 'KO' ? '연간 결제' : uiLanguage === 'JA' ? '年額支払い' : 'Billed Annually')
-                                : (uiLanguage === 'KO' ? '월간 결제' : uiLanguage === 'JA' ? '月額支払い' : 'Billed Monthly')}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <span className="text-3xl font-black text-white tracking-tight mt-1">{userCredits} Credits</span>
-                      </div>
-
-                      <div className="flex flex-col md:flex-row gap-3 self-start md:self-auto w-full md:w-auto">
-                        {userPlan !== 'free' && (
-                          <button 
-                            onClick={handleCancelSubscription}
-                            className="px-5 py-3 rounded-2xl bg-black/40 border border-outline-variant/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 text-zinc-400 font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
-                          >
-                            {uiLanguage === 'KO' ? '구독 취소' : uiLanguage === 'JA' ? 'サブスクリプションをキャンセル' : 'Cancel Subscription'}
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => router.push('/pricing')}
-                          className="px-5 py-3 rounded-2xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md w-full md:w-auto"
-                        >
-                          {uiLanguage === 'KO' ? '요금제 관리 및 충전' : uiLanguage === 'JA' ? 'プランの管理とチャージ' : 'Manage Plans & Recharge'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400">
-                        <span>{uiLanguage === 'KO' ? '사용 가능한 크레딧' : uiLanguage === 'JA' ? '利用可能なクレジット' : 'Available Credits'}</span>
-                        <span>{userCredits.toLocaleString()} / {maxCredits.toLocaleString()}</span>
-                      </div>
-                      <div className="w-full h-2 bg-zinc-800/80 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            userPlan === 'pro' 
-                              ? 'bg-gradient-to-r from-primary to-[#d4186b]' 
-                              : userPlan === 'premier' 
-                              ? 'bg-gradient-to-r from-primary to-[#49be67]' 
-                              : 'bg-zinc-500'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Renewal details */}
-                    {userPlan !== 'free' && planRenewalDate && (
-                      <div className="text-[11px] font-semibold text-zinc-400 mt-1 border-t border-zinc-800/40 pt-3">
-                        {uiLanguage === 'KO' 
-                          ? `다음 갱신 및 충전 예정일: ${planRenewalDate}` 
-                          : uiLanguage === 'JA' ? `次回の更新およびクレジット補充日: ${planRenewalDate}` : `Next renewal & credit refill date: ${planRenewalDate}`}
-                      </div>
-                    )}
-                    {userPlan === 'free' && (
-                      <div className="text-[11px] font-semibold text-zinc-500 mt-1 border-t border-zinc-800/40 pt-3">
-                        {uiLanguage === 'KO'
-                          ? '구독 시 고성능 모델 액세스, 상업적 권한 획득 및 최대 10,000 크레딧을 매달 받을 수 있습니다.'
-                          : uiLanguage === 'JA' ? '購読して高度なモデルへのアクセス、商用利用権、毎月最大10,000クレジットを獲得してください。' : 'Subscribe to get access to advanced models, commercial rights, and up to 10,000 monthly credits.'}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* Transaction History */}
-              <div>
-                <h4 className="text-sm font-bold text-on-surface mb-3 flex items-center gap-1.5 text-left">
-                  <Clock className="w-4 h-4 text-zinc-400" />
-                  <span>{uiLanguage === 'KO' ? '최근 거래 내역' : uiLanguage === 'JA' ? '最近の取引' : 'Recent Transactions'}</span>
-                </h4>
-                <div className="overflow-x-auto rounded-2xl border border-outline-variant/10">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-surface-container/40 text-on-surface-variant font-bold border-b border-outline-variant/10">
-                        <th className="p-3">{uiLanguage === 'KO' ? '거래 일시' : uiLanguage === 'JA' ? '日付' : 'Date'}</th>
-                        <th className="p-3">{uiLanguage === 'KO' ? '상세 내용' : uiLanguage === 'JA' ? '説明' : 'Description'}</th>
-                        <th className="p-3 text-right">{uiLanguage === 'KO' ? '금액' : uiLanguage === 'JA' ? '金額' : 'Amount'}</th>
-                        <th className="p-3 text-center">{uiLanguage === 'KO' ? '상태' : uiLanguage === 'JA' ? 'ステータス' : 'Status'}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-outline-variant/10 text-on-surface">
-                      {transactions.map((tx) => (
-                        <tr key={tx.id} className="hover:bg-surface-container/20">
-                          <td className="p-3 text-zinc-400 font-mono">{tx.date}</td>
-                          <td className="p-3 font-semibold">{tx.desc}</td>
-                          <td className={`p-3 text-right font-extrabold font-mono ${tx.type === 'charge' ? 'text-primary' : 'text-zinc-400'}`}>
-                            {tx.amount}
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-primary/10 border border-primary/25 text-primary">
-                              {uiLanguage === 'KO' ? '완료됨' : uiLanguage === 'JA' ? '完了' : 'Completed'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeSettingSection === 'profile' && (
             <div className="flex flex-col gap-6 text-left">
               <div>
