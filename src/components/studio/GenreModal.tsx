@@ -85,7 +85,7 @@ export function GenreModal({ isOpen, onClose, onSelect, title, selectedGenre, ui
                       onClick={() => onSelect(genre)}
                       className={`py-2.5 px-3 text-xs font-bold rounded-lg border transition-all text-left truncate ${
                         selectedGenre === genre
-                          ? 'bg-primary/10 border-primary/50 text-primary shadow-[0_0_10px_rgba(255,45,143,0.1)]'
+                          ? 'bg-primary/10 border-primary/50 text-primary shadow-[0_0_10px_rgba(var(--cm-brand-rgb),0.1)]'
                           : 'bg-surface-container border-outline-variant/10 text-zinc-400 hover:bg-surface-container-high hover:border-outline-variant/30 hover:text-zinc-200'
                       }`}
                     >

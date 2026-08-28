@@ -109,7 +109,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
           </div>
           <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
             <span>AI 가사 생성기</span>
-            <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.3)]">(Dual Version A & B)</span>
+            <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.3)]">(Dual Version A & B)</span>
           </h1>
           <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-3xl leading-relaxed">
             단 하나의 테마, 스토리, 훅(Hook)으로부터 <strong className="text-zinc-200">대중적 훅 중심의 Version A</strong>와 <strong className="text-zinc-200">감성적 은유 중심의 Version B</strong>를 동시에 생성하여 가장 완벽한 가사를 선택할 수 있습니다.

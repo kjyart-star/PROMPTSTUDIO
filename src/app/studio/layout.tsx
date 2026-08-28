@@ -12,7 +12,7 @@ export default function StudioRootLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-[#07090e] text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
+    <div className="cm-studio min-h-screen bg-[#07090e] text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
       <SuiteBar active="studio" />
       {children}
     </div>

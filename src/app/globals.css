@@ -11,6 +11,7 @@
   /* ─── 쿠키플레이 스위트 브랜드 토큰 — 브랜드 변경은 여기 한 곳만 고친다 ─── */
   --cm-brand: #ff2d8f;          /* 단색 대표색(아이콘·보더·포커스링·진행바) */
   --cm-brand-dim: #e51d75;      /* 눌림·보조 */
+  --cm-brand-rgb: 255, 45, 143; /* 글로우(rgba) 전용 채널 */
   --cm-brand-orange: #ff7a1a;
   --cm-brand-violet: #a855f7;
   --cm-brand-gradient: linear-gradient(100deg, #ff7a1a 0%, #ff2d8f 48%, #a855f7 100%);
@@ -46,6 +47,38 @@
   --color-on-primary: #0d0d0d;
   
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─── 스튜디오 스코프 강조색 ───────────────────────────────────────────────
+   쿠키뮤직 스튜디오는 쿠키플레이 스위트 보라(허브 --brand #8251f6)를 쓰고,
+   핑크(:root 의 --cm-brand)는 쿠키뮤직 스트리밍 전용으로 남긴다.
+   브랜드색은 최종 로고 확정 전까지 임시 — 바꿀 때는 이 블록만 고친다.
+   워드마크 그라디언트(--cm-brand-gradient)는 재정의하지 않는다 — 스위트 바 COOKIEPLAY 는 원래 그라디언트 유지. */
+.cm-studio {
+  --cm-studio-accent: #8251f6;
+  --cm-studio-accent-dim: #6f3fe0;
+  --cm-studio-accent-rgb: 130, 81, 246;
+
+  --cm-brand: var(--cm-studio-accent);
+  --cm-brand-dim: var(--cm-studio-accent-dim);
+  --cm-brand-rgb: var(--cm-studio-accent-rgb);
+  /* --cm-brand-gradient 는 재정의하지 않는다 — 보라 그라디언트는 .cm-wordmark-studio 에만 건다. */
+
+  --color-primary: var(--cm-studio-accent);
+  --color-primary-fixed: var(--cm-studio-accent);
+  --color-primary-fixed-dim: var(--cm-studio-accent-dim);
+  --color-primary-container: var(--cm-studio-accent);
+  --color-on-primary: #ffffff;
+
+  /* 스튜디오 헤더 락업 전용 그라디언트 — 보라 한 덩어리로 읽히게.
+     상단 스위트 바 COOKIEPLAY 워드마크는 :root 의 --cm-brand-gradient 를 계속 쓴다. */
+  --cm-studio-gradient: linear-gradient(100deg, #b98cff 0%, #8251f6 48%, #6f3fe0 100%);
+}
+
+/* 스튜디오 헤더 락업: .cm-wordmark 와 함께 붙여 그라디언트만 보라로 바꾼다 */
+.cm-wordmark-studio {
+  --cm-brand: var(--cm-studio-accent);
+  --cm-brand-gradient: var(--cm-studio-gradient);
 }
 
 body {

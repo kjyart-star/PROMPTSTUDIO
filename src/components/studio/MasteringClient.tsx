@@ -738,9 +738,9 @@ export function MasteringClient() {
             </div>
             <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
               {uiLanguage === 'KO' ? (
-                <>AI 음원 <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.4)]">마스터링 스튜디오</span></>
+                <>AI 음원 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">마스터링 스튜디오</span></>
               ) : (
-                <>COOKIEMUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.4)]">MASTERING STUDIO</span></>
+                <>COOKIEMUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">MASTERING STUDIO</span></>
               )}
             </h1>
             <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-xl">
@@ -763,7 +763,7 @@ export function MasteringClient() {
                 onClick={() => applyCharacterPreset(p.key)}
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   character === p.key 
-                    ? 'bg-primary text-black shadow-[0_0_10px_rgba(255,45,143,0.4)]' 
+                    ? 'bg-primary text-black shadow-[0_0_10px_rgba(var(--cm-brand-rgb),0.4)]' 
                     : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
               >
@@ -807,7 +807,7 @@ export function MasteringClient() {
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all group relative overflow-hidden ${
                 isDragging 
-                  ? 'border-primary bg-primary/20 scale-[1.02] shadow-[0_0_20px_rgba(255,45,143,0.3)]' 
+                  ? 'border-primary bg-primary/20 scale-[1.02] shadow-[0_0_20px_rgba(var(--cm-brand-rgb),0.3)]' 
                   : 'border-white/15 hover:border-primary bg-black/40 hover:bg-black/60'
               }`}
             >
@@ -854,7 +854,7 @@ export function MasteringClient() {
                           <button 
                             onClick={(e) => { e.stopPropagation(); downloadTrack(t, 'mp3'); }}
                             disabled={isConvertingMp3[t.id]}
-                            className="px-2 py-1 rounded-md bg-primary hover:bg-[#e51d75] text-black font-extrabold text-[10px] transition-all flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
+                            className="px-2 py-1 rounded-md bg-primary hover:bg-[var(--cm-brand-dim)] text-black font-extrabold text-[10px] transition-all flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
                             title="MP3 (320kbps) 다운로드"
                           >
                             {isConvertingMp3[t.id] ? (
@@ -893,7 +893,7 @@ export function MasteringClient() {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={togglePlay}
-                  className="w-12 h-12 rounded-2xl bg-primary hover:bg-[#e51d75] text-black font-extrabold flex items-center justify-center transition-transform active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(255,45,143,0.3)] shrink-0"
+                  className="w-12 h-12 rounded-2xl bg-primary hover:bg-[var(--cm-brand-dim)] text-black font-extrabold flex items-center justify-center transition-transform active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.3)] shrink-0"
                 >
                   {isPlaying ? <Pause className="w-6 h-6 fill-black" /> : <Play className="w-6 h-6 fill-black ml-0.5" />}
                 </button>
@@ -959,7 +959,7 @@ export function MasteringClient() {
             <div className="bg-[#090a0d] border border-white/10 rounded-2xl p-5 space-y-4 shadow-inner">
               <div className="flex justify-between items-end border-b border-white/5 pb-3">
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Short-Term Loudness</span>
-                <span className="text-3xl lg:text-4xl font-black font-mono text-primary drop-shadow-[0_0_15px_rgba(255,45,143,0.5)]">
+                <span className="text-3xl lg:text-4xl font-black font-mono text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.5)]">
                   {lufsText}
                 </span>
               </div>
@@ -983,7 +983,7 @@ export function MasteringClient() {
                       background: 'linear-gradient(90deg, #4caf50 0%, #4caf50 60%, #ffeb3b 68%, #ff9800 83%, #f44336 90%, #f44336 100%)' 
                     }}
                   />
-                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-primary z-10 shadow-[0_0_8px_#ff2d8f]" title="Target -14 LUFS / 0 LU" />
+                  <div className="absolute top-0 left-[68%] w-0.5 h-full bg-primary z-10 shadow-[0_0_8px_var(--cm-brand)]" title="Target -14 LUFS / 0 LU" />
                 </div>
 
                 <div className="relative w-full h-3 text-[9px] text-zinc-500 font-mono select-none">
@@ -1041,7 +1041,7 @@ export function MasteringClient() {
             <button 
               onClick={processAllBatch}
               disabled={isProcessingBatch || tracks.length === 0}
-              className="w-full py-4 bg-primary hover:bg-[#e51d75] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(255,45,143,0.3)] hover:shadow-[0_0_30px_rgba(255,45,143,0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
+              className="w-full py-4 bg-primary hover:bg-[var(--cm-brand-dim)] text-black font-black text-sm lg:text-base rounded-2xl transition-all shadow-[0_0_20px_rgba(var(--cm-brand-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--cm-brand-rgb),0.5)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer uppercase"
             >
               {isProcessingBatch ? (
                 <>
