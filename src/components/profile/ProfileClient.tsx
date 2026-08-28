@@ -317,7 +317,7 @@ function FolderTreeNode({ node, selectedPlaylist, setSelectedPlaylist, expandedF
           {isMenuOpen && menuCoords && typeof window !== 'undefined' && require('react-dom').createPortal(
             <div 
               ref={dropdownRef}
-              className="fixed w-36 bg-white border border-gray-200 rounded shadow-xl z-[9999] text-sm font-medium overflow-hidden text-black"
+              className="fixed w-36 bg-white border border-gray-200 rounded shadow-xl z-[9999] text-sm font-medium overflow-hidden text-black animate-dropdown-in"
               style={{ top: menuCoords.top, right: menuCoords.right }}
             >
               <button 
@@ -2940,7 +2940,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         {/* Dropdown Menu */}
                         {openPlaylistTrackMenuId === track.id && (
                           <div 
-                            className="absolute right-0 top-8 w-48 bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl py-1 z-50 overflow-hidden"
+                            className="absolute right-0 top-8 w-48 bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl py-1 z-50 overflow-hidden animate-dropdown-in"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button

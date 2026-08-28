@@ -159,7 +159,7 @@ export function TrackDropdown({
         <div 
           ref={menuRef}
           style={menuStyle}
-          className="bg-[#282828] w-56 border border-zinc-800 rounded-lg shadow-2xl p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-in fade-in zoom-in-95 duration-100"
+          className="bg-[#282828] w-56 border border-zinc-800 rounded-lg shadow-2xl p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-dropdown-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 플레이리스트에 추가하기 (Trigger sub-menu on hover) */}
@@ -183,7 +183,7 @@ export function TrackDropdown({
             {/* Submenu: Playlist List (Absolute Position next to the main dropdown) */}
             {showSubmenu && (
               <div 
-                className="absolute right-[224px] top-0 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-[60] p-1.5 flex flex-col gap-1 text-xs font-bold text-zinc-200"
+                className="absolute right-[224px] top-0 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-[60] p-1.5 flex flex-col gap-1 text-xs font-bold text-zinc-200 animate-dropdown-in"
               >
                 {/* Search playlist */}
                 <div className="relative px-1 py-1">

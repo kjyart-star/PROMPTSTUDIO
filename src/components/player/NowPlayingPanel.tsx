@@ -418,7 +418,7 @@ export function NowPlayingPanel() {
               {showDropdown && (
                 <div 
                   ref={dropdownRef}
-                  className="absolute right-0 top-full mt-2 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-50 p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-in fade-in slide-in-from-top-2 duration-100"
+                  className="absolute right-0 top-full mt-2 w-56 bg-[#282828] border border-zinc-800 rounded-lg shadow-2xl z-50 p-1 flex flex-col text-xs font-bold text-zinc-200 select-none animate-dropdown-in"
                 >
                   {/* 플레이리스트에 추가하기 (Trigger sub-menu on hover) */}
                   <div 

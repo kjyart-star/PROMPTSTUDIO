@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Home, Library, Trophy, Bell, Shield, LogOut, 
   Trash2, Globe, ChevronDown, Check, ChevronLeft, ChevronRight, User,
-  Search, Settings, Heart, ListMusic, CreditCard, Music, Disc, Sparkles
+  Search, Settings, Heart, ListMusic, Music, Disc, Sparkles
 } from 'lucide-react'
 import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
@@ -569,7 +569,7 @@ export function PublicLayoutClient({
 
                 {/* User Dropdown Menu */}
                 {isAuthMenuOpen && user && (
-                  <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-outline-variant/15 bg-surface-container-highest/95 p-3 shadow-2xl backdrop-blur-xl z-[100] ring-1 ring-white/5">
+                  <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl border border-outline-variant/15 bg-surface-container-highest/95 p-3 shadow-2xl backdrop-blur-xl z-[100] ring-1 ring-white/5 animate-dropdown-in">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-3 border-b border-outline-variant/10 pb-4 mb-2 px-2 pt-1">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-high border-2 border-primary overflow-hidden">
@@ -615,15 +615,6 @@ export function PublicLayoutClient({
                         >
                           <Settings className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
                           {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
-                        </Link>
-
-                        <Link 
-                          href="/pricing" 
-                          onClick={() => setIsAuthMenuOpen(false)}
-                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-white/[0.05] rounded-xl transition-all group text-left cursor-pointer"
-                        >
-                          <CreditCard className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-                          {uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットをチャージ' : 'Recharge Credits'}
                         </Link>
 
                         <button 

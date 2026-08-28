@@ -1209,7 +1209,7 @@ export function LibraryClient({
                               {/* Dropdown Menu */}
                               {openPlaylistTrackMenuId === track.id && (
                                 <div 
-                                  className="absolute right-0 top-8 w-48 bg-[#121212] border border-emerald-950/40 rounded-xl shadow-xl py-1.5 z-50 overflow-hidden text-left"
+                                  className="absolute right-0 top-8 w-48 bg-[#121212] border border-emerald-950/40 rounded-xl shadow-xl py-1.5 z-50 overflow-hidden text-left animate-dropdown-in"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   {!activePlaylist.isSystem && (
