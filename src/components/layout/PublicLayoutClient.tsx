@@ -237,13 +237,13 @@ export function PublicLayoutClient({
           <div className="flex justify-center">
             {/* 마크 + 워드마크 락업 (세로) — 마크는 public/images/cookiemusic-mark.png */}
             <Link href="/" className="select-none flex flex-col items-center gap-1.5">
-              {/* 배경을 지운 전신 캐릭터 — 원형 크롭을 하면 팔다리가 잘려서
-                  contain 으로 통째로 보여 준다(대표 2026-08-29: "캐릭터만, 다른 것 빼고") */}
+              {/* 스케이트보드 마스코트 — 네온 링·불꽃까지 한 장의 그림이라
+                  잘라내지 않고 통째로 보여 준다(대표 2026-08-29 지정) */}
               <img
                 src={withBase('/images/cookiemusic-mark.png')}
                 alt=""
                 aria-hidden="true"
-                className="h-24 w-24 shrink-0 object-contain"
+                className="h-24 w-24 shrink-0 rounded-2xl object-contain"
               />
               <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
             </Link>
