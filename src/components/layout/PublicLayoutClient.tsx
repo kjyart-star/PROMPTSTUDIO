@@ -244,6 +244,8 @@ export function PublicLayoutClient({
                 className="h-20 w-20 shrink-0 rounded-full object-cover"
               />
               <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
+              {/* 대표 지시(2026-08-29): 캐릭터 아래에 「쿠키뮤직」 텍스트 */}
+              <span className="text-[13px] font-bold tracking-[0.02em] leading-none text-white/70">쿠키뮤직</span>
             </Link>
           </div>
 
