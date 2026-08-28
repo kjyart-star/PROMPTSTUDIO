@@ -344,7 +344,7 @@ export function NowPlayingPanel() {
   return (
     <>
       <aside 
-        className="fixed right-0 top-0 h-[calc(100vh-96px)] w-[360px] z-40 bg-background border-l border-outline-variant/10 flex flex-col shadow-2xl overflow-visible animate-slide-in-right"
+        className="fixed right-0 top-10 h-[calc(100vh-136px)] w-[360px] z-40 bg-background border-l border-outline-variant/10 flex flex-col shadow-2xl overflow-visible animate-slide-in-right"
         style={{
           boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
         }}

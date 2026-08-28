@@ -13,6 +13,7 @@ import { PersistentPlayer } from '@/components/player/PersistentPlayer'
 import { NowPlayingPanel } from '@/components/player/NowPlayingPanel'
 import { usePlayerStore } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
+import { SuiteBar } from '@/components/layout/SuiteBar'
 
 interface PublicLayoutClientProps {
   children: React.ReactNode
@@ -238,18 +239,28 @@ export function PublicLayoutClient({
 
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md selection:bg-primary selection:text-on-primary">
+      {/* 스위트 공통 상단 바 — 아래 고정/스티키 요소는 전부 이 40px 만큼 내려간다 */}
+      <SuiteBar active="music" />
       
       {/* Shell: Side Navigation (Desktop Only) */}
       {/* 아래 패딩은 고정 플레이어(h-24) 높이만큼 비운다 — 안 그러면 사이드바 맨 아래가 가린다 */}
-      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-screen w-64 border-r border-outline-variant/10 fixed left-0 top-0 z-50 justify-between ${
+      <aside className={`hidden md:flex flex-col pt-[24px] pb-[112px] px-[16px] h-[calc(100vh-40px)] w-64 border-r border-outline-variant/10 fixed left-0 top-10 z-50 justify-between ${
         activeTab === 'home' ? 'bg-surface' : 'bg-surface-container-low'
       }`}>
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
             {/* 워드마크는 타이포로 둔다 — 쿠키뮤직 전용 로고 이미지가 아직 없다 */}
-            <Link href="/" className="select-none flex flex-col items-center gap-0.5">
-              <span className="cm-wordmark text-[22px] font-black tracking-tight leading-none">쿠키뮤직</span>
-              <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-on-surface-variant">COOKIEMUSIC</span>
+            <Link href="/" className="select-none flex items-center gap-2">
+              <img
+                src={withBase('/images/cookiemusic-mark.png')}
+                alt=""
+                aria-hidden="true"
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
+                <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-on-surface-variant">쿠키뮤직</span>
+              </span>
             </Link>
           </div>
 
@@ -433,7 +444,7 @@ export function PublicLayoutClient({
         
         {/* Shell: Top Navigation */}
         {/* Shell: Top Navigation */}
-        <header className="w-full h-16 z-40 bg-surface/80 backdrop-blur-xl sticky top-0 border-b border-outline-variant/10">
+        <header className="w-full h-16 z-40 bg-surface/80 backdrop-blur-xl sticky top-10 border-b border-outline-variant/10">
           <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-[32px]">
             <div className="flex items-center gap-[16px] flex-1">
               <div className="hidden md:flex gap-[8px]">

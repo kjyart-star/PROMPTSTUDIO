@@ -47,7 +47,7 @@ export default async function AdminLayout({
           <aside className="w-64 bg-[#161616] border-r border-[#232323] shrink-0 hidden md:flex flex-col">
             <div className="h-16 flex items-center justify-center border-b border-[#232323]">
               <Link href="/admin/music" className="select-none flex flex-col items-center">
-                <span className="cm-wordmark text-[19px] font-black tracking-tight leading-none">쿠키뮤직</span>
+                <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
                 <span className="text-[9px] font-bold tracking-[0.28em] leading-none text-white/45 mt-1">ADMIN</span>
               </Link>
             </div>
@@ -91,7 +91,7 @@ export default async function AdminLayout({
             <header className="h-16 border-b border-[#232323] bg-[#0d0d0d]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
               <div className="md:hidden flex items-center gap-2">
                 <Link href="/admin/music" className="select-none flex items-center">
-                  <span className="cm-wordmark text-[15px] font-black tracking-tight leading-none">쿠키뮤직</span>
+                  <span className="cm-wordmark text-[14px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
                   <span className="text-[9px] font-bold tracking-[0.24em] leading-none text-white/45 ml-2">ADMIN</span>
                 </Link>
               </div>
