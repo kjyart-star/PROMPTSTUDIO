@@ -236,14 +236,14 @@ export function PublicLayoutClient({
         <div className="flex flex-col gap-[48px]">
           <div className="flex justify-center">
             {/* 마크 + 워드마크 락업 (세로) — 마크는 public/images/cookiemusic-mark.png */}
-            <Link href="/" className="select-none flex flex-col items-center">
-              {/* 그림 안쪽에 여백이 이미 있어서, 음수 마진으로 글씨를 당겨 붙인다
-                  — 대표 지시(2026-08-29): "캐릭터랑 밑에 텍스트랑 조금만 더 가깝게" */}
+            <Link href="/" className="select-none flex flex-col items-center gap-1.5">
+              {/* 배경을 지운 전신 캐릭터 — 원형 크롭을 하면 팔다리가 잘려서
+                  contain 으로 통째로 보여 준다(대표 2026-08-29: "캐릭터만, 다른 것 빼고") */}
               <img
                 src={withBase('/images/cookiemusic-mark.png')}
                 alt=""
                 aria-hidden="true"
-                className="-mb-4 h-20 w-20 shrink-0 rounded-full object-cover"
+                className="h-24 w-24 shrink-0 object-contain"
               />
               <span className="cm-wordmark text-[18px] font-black tracking-[-0.02em] leading-none">COOKIEMUSIC</span>
             </Link>
