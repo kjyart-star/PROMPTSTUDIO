@@ -152,61 +152,68 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
   };
 
   // 트랙 변경 시 src 변경 + 자동 재생
+  /*
+   * 새로 재생할 때 항상 재서명을 먼저 기다리게 했더니(await 후 src/load/play)
+   * 브라우저의 "제스처와 동기적으로 이어진 play() 만 자동재생 허용" 규칙을
+   * 깨서 일반 재생까지 자주 끊기고 재생/정지가 빠르게 반복됐다(대표 보고
+   * 2026-08-30). 그래서 기존처럼 http 로 시작하는 URL은 기다리지 않고 바로
+   * 재생을 시도하는 걸 되살리고, 그 시도가 실패했을 때만(만료된 서명
+   * URL이었을 가능성) raw_file_url 로 딱 한 번 다시 서명해 재시도한다 —
+   * 정상 케이스는 예전처럼 즉시 재생되고, 오래된 캐시만 재시도를 탄다.
+   */
+  const resignedRef = useRef(false);
+
   useEffect(() => {
     if (!audioRef.current || !currentTrack) return;
-    
+    resignedRef.current = false;
+
     let isCurrent = true;
+    const play = (u: string) => {
+      if (!isCurrent || !audioRef.current) return;
+      audioRef.current.src = u;
+      audioRef.current.load();
+      if (isPlaying) {
+        audioRef.current.play().catch((err) => {
+          console.error('Autoplay blocked:', err);
+          void retryWithFreshSign();
+        });
+      }
+    };
+
+    const retryWithFreshSign = async () => {
+      if (resignedRef.current || !currentTrack.raw_file_url || !isCurrent) {
+        if (!currentTrack.raw_file_url) {
+          _setIsPlaying(false);
+          showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
+        }
+        return;
+      }
+      resignedRef.current = true;
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.storage
+          .from('tracks')
+          .createSignedUrl(currentTrack.raw_file_url, 3600);
+        if (error) throw error;
+        if (data?.signedUrl) play(data.signedUrl);
+      } catch (e) {
+        console.error('Error re-signing URL in player:', e);
+        _setIsPlaying(false);
+        showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
+      }
+    };
+
     const loadAndPlay = async () => {
       let url = currentTrack.file_url;
 
-      // raw_file_url이 있으면 캐시된 file_url이 만료된 서명 URL일 수 있으므로
-      // (큐 자동재생 포함) 재생 전 항상 새로 서명한다.
-      if (currentTrack.raw_file_url) {
-        try {
-          const supabase = createClient();
-          const { data, error } = await supabase.storage
-            .from('tracks')
-            .createSignedUrl(currentTrack.raw_file_url, 3600);
-          if (error) throw error;
-          if (data?.signedUrl) {
-            url = data.signedUrl;
-          }
-        } catch (e) {
-          console.error('Error signing URL in player:', e);
-        }
-
-        if (isCurrent && audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.load();
-          if (isPlaying) {
-            audioRef.current.play().catch((err) => {
-              console.error('Autoplay after sign blocked:', err);
-              _setIsPlaying(false);
-              showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
-            });
-          }
-        }
-        return;
-      }
-
-      // raw_file_url이 없는 옛 캐시 항목은 기존 로직대로 처리한다.
-      // If absolute HTTP/HTTPS URL, load and play synchronously
-      // to bypass strict browser autoplay/async microtask block rules
+      // 절대 http(s) URL이면 기다리지 않고 곧장 재생 — 이용자 클릭과
+      // 동기적으로 이어져야 자동재생이 막히지 않는다.
       if (url && url.startsWith('http')) {
-        if (isCurrent && audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.load();
-          if (isPlaying) {
-            audioRef.current.play().catch((err) => {
-              console.error('Direct autoplay blocked:', err);
-              _setIsPlaying(false);
-              showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
-            });
-          }
-        }
+        play(url);
         return;
       }
 
+      // 스토리지 경로 그대로면(옛 캐시 등) 서명부터 한다.
       if (url) {
         try {
           const supabase = createClient();
@@ -214,25 +221,13 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
             .from('tracks')
             .createSignedUrl(url, 3600);
           if (error) throw error;
-          if (data?.signedUrl) {
-            url = data.signedUrl;
-          }
+          if (data?.signedUrl) url = data.signedUrl;
         } catch (e) {
           console.error('Error signing URL in player:', e);
         }
       }
-      
-      if (isCurrent && audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current.load();
-        if (isPlaying) {
-          audioRef.current.play().catch((err) => {
-            console.error('Autoplay after sign blocked:', err);
-            _setIsPlaying(false);
-            showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
-          });
-        }
-      }
+
+      play(url);
     };
 
     loadAndPlay();
