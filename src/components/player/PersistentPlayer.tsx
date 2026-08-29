@@ -30,6 +30,13 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
   const [isLiked, setIsLiked] = useState(false);
   const [isPipOpen, setIsPipOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const playbackErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showPlaybackError = (message: string) => {
+    setPlaybackError(message);
+    if (playbackErrorTimerRef.current) clearTimeout(playbackErrorTimerRef.current);
+    playbackErrorTimerRef.current = setTimeout(() => setPlaybackError(null), 2500);
+  };
 
   const queueRef = useRef<HTMLDivElement>(null);
 
@@ -152,6 +159,37 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
     const loadAndPlay = async () => {
       let url = currentTrack.file_url;
 
+      // raw_file_url이 있으면 캐시된 file_url이 만료된 서명 URL일 수 있으므로
+      // (큐 자동재생 포함) 재생 전 항상 새로 서명한다.
+      if (currentTrack.raw_file_url) {
+        try {
+          const supabase = createClient();
+          const { data, error } = await supabase.storage
+            .from('tracks')
+            .createSignedUrl(currentTrack.raw_file_url, 3600);
+          if (error) throw error;
+          if (data?.signedUrl) {
+            url = data.signedUrl;
+          }
+        } catch (e) {
+          console.error('Error signing URL in player:', e);
+        }
+
+        if (isCurrent && audioRef.current) {
+          audioRef.current.src = url;
+          audioRef.current.load();
+          if (isPlaying) {
+            audioRef.current.play().catch((err) => {
+              console.error('Autoplay after sign blocked:', err);
+              _setIsPlaying(false);
+              showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
+            });
+          }
+        }
+        return;
+      }
+
+      // raw_file_url이 없는 옛 캐시 항목은 기존 로직대로 처리한다.
       // If absolute HTTP/HTTPS URL, load and play synchronously
       // to bypass strict browser autoplay/async microtask block rules
       if (url && url.startsWith('http')) {
@@ -162,6 +200,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
             audioRef.current.play().catch((err) => {
               console.error('Direct autoplay blocked:', err);
               _setIsPlaying(false);
+              showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
             });
           }
         }
@@ -190,6 +229,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
           audioRef.current.play().catch((err) => {
             console.error('Autoplay after sign blocked:', err);
             _setIsPlaying(false);
+            showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
           });
         }
       }
@@ -325,6 +365,10 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
         ref={audioRef}
         onPlay={() => _setIsPlaying(true)}
         onPause={() => _setIsPlaying(false)}
+        onError={() => {
+          _setIsPlaying(false);
+          showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
+        }}
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           _setProgress(el.currentTime, el.duration || 0);
@@ -619,6 +663,13 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
           </button>
         </div>
       </footer>
+
+      {/* 재생 실패 토스트 */}
+      {playbackError && (
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 bg-[#18181b] border border-outline-variant/10 text-on-surface text-[12px] font-black rounded-lg shadow-xl">
+          <span role="status">{playbackError}</span>
+        </div>
+      )}
 
       {/* Mini Player PiP Window */}
       <MiniPlayerPip isOpen={isPipOpen} onClose={() => setIsPipOpen(false)} />
