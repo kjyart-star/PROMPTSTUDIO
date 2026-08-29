@@ -173,6 +173,28 @@ export function NowPlayingPanel() {
     </div>
   );
 
+  /* 최근 재생에 남은 서명 주소는 1시간이면 만료된다 — 원본 경로가 있으면 항상 새로 서명해서 튼다 */
+  const handlePlayRecent = async (t: Track, list: Track[]) => {
+    if (!t.raw_file_url) {
+      playTrack(t, list);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.storage
+        .from('tracks')
+        .createSignedUrl(t.raw_file_url, 3600);
+
+      if (error) throw error;
+
+      playTrack({ ...t, file_url: data.signedUrl, raw_file_url: t.raw_file_url }, list);
+    } catch (err) {
+      console.error(err);
+      alert('음원 재생에 실패했습니다.');
+    }
+  };
+
   /* 곡 미선택 — 대기열이 있으면 대기열, 없으면 최근 재생, 그것도 없으면 빈 문구 */
   if (!currentTrack) {
     const list = queue.length > 0 ? queue : recent;
@@ -202,7 +224,7 @@ export function NowPlayingPanel() {
                 {list.map((t) => (
                   <button
                     key={t.id}
-                    onClick={() => playTrack(t, list)}
+                    onClick={() => handlePlayRecent(t, list)}
                     className="group flex items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.05] cursor-pointer"
                   >
                     <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-surface-container">

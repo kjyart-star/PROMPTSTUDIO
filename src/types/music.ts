@@ -46,6 +46,8 @@ export interface Track {
   title: string;
   duration_sec: number | null;
   file_url: string;
+  /** file_url 이 서명 URL로 교체되기 전의 원본 스토리지 경로. 최근 재생 캐시에서 재서명하는 데 쓴다. */
+  raw_file_url?: string;
   file_size: number | null;
   waveform_data: any | null;
   lyrics: string | null;

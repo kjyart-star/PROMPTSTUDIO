@@ -544,7 +544,8 @@ export function LibraryClient({
 
       const signedTrack: Track = {
         ...track,
-        file_url: data.signedUrl
+        file_url: data.signedUrl,
+        raw_file_url: track.file_url
       }
       playTrack(signedTrack, list)
       setNowPlayingOpen(true)

@@ -220,6 +220,7 @@ export function AlbumClient({
       const signedTrack: Track = {
         ...track,
         file_url: data.signedUrl,
+        raw_file_url: track.file_url,
         album: album
       }
 

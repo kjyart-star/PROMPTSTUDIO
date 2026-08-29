@@ -269,7 +269,8 @@ export function ChartClient({
 
       const signedTrack: Track = {
         ...track,
-        file_url: data.signedUrl
+        file_url: data.signedUrl,
+        raw_file_url: track.file_url
       }
 
       // 차트 전체 트랙을 큐에 삽입
