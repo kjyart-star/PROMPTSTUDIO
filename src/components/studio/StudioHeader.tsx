@@ -70,7 +70,8 @@ export function StudioHeader({
   }
 
   return (
-    <header className="w-full h-14 bg-[#0b0b0b] border-b border-[#1b1b1b] flex items-center justify-between px-4 text-zinc-300 select-none z-50 shrink-0">
+    /* 헤더도 하나의 판이다 — 스트리밍 사이드바와 같은 값(모서리 8px, 1px 보더, 12px 여백) */
+    <header className="h-14 bg-surface-container-low border border-outline-variant rounded-lg mx-3 mt-3 flex items-center justify-between px-4 text-zinc-300 select-none z-50 shrink-0">
       {/* Left: Brand Name */}
       <div className="flex items-center gap-3">
         <Link

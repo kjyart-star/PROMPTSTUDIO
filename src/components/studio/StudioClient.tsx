@@ -1575,7 +1575,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const modelCost = getModelCreditCost(settings.model)
 
   return (
-    <div className="bg-[#0a0a0e] text-zinc-200 min-h-screen font-sans flex flex-col overflow-hidden">
+    /* 배경은 레이아웃의 바닥색을 비춘다 — 판은 StudioHeader 와 StudioWorkspace 가 그린다 */
+    <div className="text-zinc-200 min-h-screen md:min-h-0 md:flex-1 font-sans flex flex-col overflow-hidden">
       {/* Studio Header */}
       <StudioHeader
         currentTab={currentTab}
@@ -1594,7 +1595,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         user={user}
         history={history}
         childrenLeft={
-          <div className="w-full h-full p-6 pb-32 overflow-y-auto custom-scrollbar">
+          /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
+          <div className="w-full p-6 pb-8">
             {currentTab === 'suno' && (
               <div className="max-w-[1700px] mx-auto w-full">
                 <GenerateClient

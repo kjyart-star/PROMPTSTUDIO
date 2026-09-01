@@ -13,7 +13,10 @@ export default function StudioRootLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="cm-studio min-h-screen bg-[#07090e] text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
+    /* 셸은 쿠키뮤직 스트리밍(/music)과 같은 「둥근 판」 언어를 쓴다 —
+       바닥(surface-container-lowest)이 판보다 어둡고, 판은 모서리 8px·1px 보더·
+       12px 간격. 화면은 고정하고 스크롤은 판 안쪽에서만 일어난다. */
+    <div className="cm-studio min-h-screen md:h-screen md:min-h-0 md:overflow-hidden bg-surface-container-lowest text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
       <SuiteBar active="studio" />
       {children}
       {/* 하단 재생 바 — 쿠키뮤직 스트리밍과 같은 플레이어를 그대로 쓴다.
