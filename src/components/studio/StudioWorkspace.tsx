@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, Maximize2, 
   RotateCcw, Undo2, Redo2, Scissors, Trash2, Plus, Magnet, 
@@ -37,17 +37,6 @@ export function StudioWorkspace({
   const [volume, setVolume] = useState(0.8)
   const [zoomLevel, setZoomLevel] = useState(50)
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '9:16'>('16:9')
-  const [selectedTrack, setSelectedTrack] = useState<any>(currentTrack || history[0] || null)
-
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  useEffect(() => {
-    if (currentTrack) {
-      setSelectedTrack(currentTrack)
-    } else if (history.length > 0 && !selectedTrack) {
-      setSelectedTrack(history[0])
-    }
-  }, [currentTrack, history])
 
   const formatTimecode = (secs: number) => {
     const m = Math.floor(secs / 60)
@@ -57,35 +46,15 @@ export function StudioWorkspace({
   }
 
   const togglePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
-        setIsPlaying(false)
-      } else {
-        audioRef.current.play().catch(() => {})
-        setIsPlaying(true)
-      }
-    } else {
-      setIsPlaying(!isPlaying)
-    }
+    setIsPlaying(!isPlaying)
   }
 
   return (
     <div className="flex flex-col h-[calc(100vh-48px)] w-full bg-[#0a0a0e] text-zinc-300 select-none overflow-hidden font-sans">
-      {/* Audio element for real playback if track has url */}
-      {selectedTrack?.audio_url && (
-        <audio
-          ref={audioRef}
-          src={selectedTrack.audio_url}
-          onTimeUpdate={() => {
-            if (audioRef.current) {
-              setCurrentTime(audioRef.current.currentTime)
-              setDuration(audioRef.current.duration || 180)
-            }
-          }}
-          onEnded={() => setIsPlaying(false)}
-        />
-      )}
+      {/* 오디오 엘리먼트는 여기에 두지 않는다 — 스튜디오의 곡 재생은 레이아웃의
+          PersistentPlayer 하나가 전담한다. 예전엔 history[0].audio_url 을 물고 있는
+          숨은 <audio> 가 여기 있었는데, 재생 버튼이 붙어 있지 않아 소리는 안 나면서
+          같은 파일만 한 번 더 받아 갔고 이중 재생 소지로 남아 있었다. */}
 
       {/* Main Top Area: Left Rail + Left Tool Pane + Center Preview Canvas + Right Inspector */}
       <div className="flex flex-1 min-h-0 border-b border-[#1f1f2a]">
