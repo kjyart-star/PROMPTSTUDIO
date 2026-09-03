@@ -50,7 +50,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // 3. Initialize admin client with the service role key to bypass storage RLS
+    // 3. Published tracks are served from R2 through the CDN worker (public, free egress,
+    //    HTTP Range streaming). The key is stored verbatim in audio_url, so the worker URL is
+    //    just base + key. Absolute audio_url values (e.g. cdn.apipass.dev) and unpublished
+    //    drafts are not on R2 — those fall through to Supabase signing below.
+    const r2Base = process.env.NEXT_PUBLIC_R2_PUBLIC_BASE
+    if (r2Base && trackData?.is_published && !/^https?:\/\//i.test(filePath)) {
+      return NextResponse.json({
+        signedUrl: `${r2Base.replace(/\/+$/, '')}/${filePath.split('/').map(encodeURIComponent).join('/')}`,
+      })
+    }
+
+    // 4. Initialize admin client with the service role key to bypass storage RLS
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     const adminSupabase = createAdminClient(supabaseUrl, supabaseKey)

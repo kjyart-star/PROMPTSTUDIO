@@ -1,0 +1,16 @@
+# cookiemusic-cdn — R2 에 복사된 음원을 공개 스트리밍으로 내보내는 워커.
+#
+# cookieplay.app 은 Vercel DNS 를 쓰기 때문에 R2 커스텀 도메인을 붙일 수 없다.
+# 그래서 DNS 를 건드리지 않고 workers.dev 로 공개 URL·무료 egress·Range 를 얻는다.
+#
+# 배포는 반드시 --config 를 넘길 것:
+#   npx wrangler deploy --config workers/music-cdn/wrangler.toml
+
+name = "cookiemusic-cdn"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "TRACKS"
+bucket_name = "cookiemusic-tracks"
