@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { withBase } from '../basePath'
 import { browserCookieDomain } from './cookieDomain'
 
 export function createClient() {
@@ -18,7 +19,10 @@ export function createClient() {
     if (bucket === 'tracks') {
       bucketInstance.createSignedUrl = async (path: string, expiresIn: number, options?: any) => {
         try {
-          const res = await fetch(`/api/tracks/signed-url?file_path=${encodeURIComponent(path)}`)
+          // 멀티존이라 basePath 를 손으로 붙여야 한다. `/api/...` 로 보내면 허브가 받아
+          // SPA 문서를 돌려주고, res.json() 이 터져 아래 폴백으로 샌다 — 그 폴백은
+          // 비로그인 사용자에게 막혀 있어(RLS) 게스트 재생이 통째로 죽는다.
+          const res = await fetch(withBase(`/api/tracks/signed-url?file_path=${encodeURIComponent(path)}`))
           if (res.ok) {
             const data = await res.json()
             return { data: { signedUrl: data.signedUrl }, error: null }

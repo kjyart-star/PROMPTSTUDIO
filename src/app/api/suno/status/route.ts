@@ -1,9 +1,38 @@
 import { NextResponse } from 'next/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
 const API_KEY = process.env.APIPASS_API_KEY
 
-async function uploadToStorage(supabase: any, url: string, bucketName: string, filePath: string): Promise<string> {
+/**
+ * 스토리지 쓰기 전용 클라이언트.
+ *
+ * 생성 결과는 `tracks`(비공개) 버킷에 넣는데, 그 버킷은 관리자만 쓰도록 정책이 걸려 있어
+ * 사용자 세션 클라이언트로는 업로드가 막힌다. 서버에서만 도는 경로이므로 서비스 키를 쓴다.
+ */
+function storageClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  return createAdminClient(url, key)
+}
+
+/**
+ * 외부 CDN 의 결과물을 우리 스토리지로 옮긴다.
+ *
+ * `mode: 'path'` 는 비공개 `tracks` 버킷용이라 **경로만** 돌려준다 — 재생은
+ * `/api/tracks/signed-url` 이 서명해서 내보낸다(업로드 경로와 같은 규칙).
+ * `mode: 'publicUrl'` 는 공개 버킷(커버 이미지)용이다.
+ *
+ * 실패하면 원본 URL 을 그대로 돌려주되 **에러를 삼키지 않고 남긴다** — 예전에는 존재하지도
+ * 않는 버킷(`audio_uploads`)에 올리려다 조용히 실패해서, 음원이 계속 외부 CDN 을 가리켰다.
+ */
+async function uploadToStorage(
+  supabase: any,
+  url: string,
+  bucketName: string,
+  filePath: string,
+  mode: 'path' | 'publicUrl' = 'publicUrl'
+): Promise<string> {
   if (!url) return ''
   try {
     const res = await fetch(url)
@@ -26,6 +55,8 @@ async function uploadToStorage(supabase: any, url: string, bucketName: string, f
       console.error(`Failed to upload ${filePath} to ${bucketName}:`, error)
       return url
     }
+
+    if (mode === 'path') return filePath
 
     const { data: { publicUrl } } = supabase.storage
       .from(bucketName)
@@ -103,15 +134,16 @@ export async function GET(request: Request) {
              })
           }
 
-          // Upload first variation to our own storage (under user's ID folder to comply with policies)
+          // 생성 결과를 우리 스토리지로 옮긴다 — 외부 CDN 링크가 사라져도 곡이 남게.
+          const storage = storageClient()
           let finalAudioUrl = mockAudioUrl
           let finalImageUrl = mockImageUrl
 
           if (mockAudioUrl) {
-            finalAudioUrl = await uploadToStorage(supabase, mockAudioUrl, 'audio_uploads', `${user.id}/suno_audio/${historyId}.mp3`)
+            finalAudioUrl = await uploadToStorage(storage, mockAudioUrl, 'tracks', `audio/${historyId}.mp3`, 'path')
           }
           if (mockImageUrl) {
-            finalImageUrl = await uploadToStorage(supabase, mockImageUrl, 'audio_uploads', `${user.id}/suno_covers/${historyId}.png`)
+            finalImageUrl = await uploadToStorage(storage, mockImageUrl, 'avatars', `suno_covers/${user.id}/${historyId}.png`)
           }
 
           if (resultsArr.length > 0) {
@@ -141,9 +173,9 @@ export async function GET(request: Request) {
               const extraImage = resultsArr[i]?.image_url || ''
               if (extraAudio) {
                 const extraId = crypto.randomUUID()
-                const finalExtraAudio = await uploadToStorage(supabase, extraAudio, 'audio_uploads', `${user.id}/suno_audio/${extraId}.mp3`)
+                const finalExtraAudio = await uploadToStorage(storage, extraAudio, 'tracks', `audio/${extraId}.mp3`, 'path')
                 const finalExtraImage = extraImage 
-                  ? await uploadToStorage(supabase, extraImage, 'audio_uploads', `${user.id}/suno_covers/${extraId}.png`) 
+                  ? await uploadToStorage(storage, extraImage, 'avatars', `suno_covers/${user.id}/${extraId}.png`) 
                   : ''
 
                 resultsArr[i].audio_url = finalExtraAudio
