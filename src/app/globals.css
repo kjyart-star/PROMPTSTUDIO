@@ -16,6 +16,11 @@
   --cm-brand-violet: #a855f7;
   --cm-brand-gradient: linear-gradient(100deg, #ff7a1a 0%, #ff2d8f 48%, #a855f7 100%);
 
+  /* 스튜디오 강조색(보라). .cm-studio 바깥에서도 참조해야 해서 여기 둔다 — 실제 적용은 .cm-studio 에서. */
+  --cm-studio-accent: #8251f6;
+  --cm-studio-accent-dim: #6f3fe0;
+  --cm-studio-accent-rgb: 130, 81, 246;
+
   --background: #0d0d0d;
   --foreground: #e4e4e4;
 }
@@ -55,10 +60,6 @@
    브랜드색은 최종 로고 확정 전까지 임시 — 바꿀 때는 이 블록만 고친다.
    워드마크 그라디언트(--cm-brand-gradient)는 재정의하지 않는다 — 스위트 바 COOKIEPLAY 는 원래 그라디언트 유지. */
 .cm-studio {
-  --cm-studio-accent: #8251f6;
-  --cm-studio-accent-dim: #6f3fe0;
-  --cm-studio-accent-rgb: 130, 81, 246;
-
   --cm-brand: var(--cm-studio-accent);
   --cm-brand-dim: var(--cm-studio-accent-dim);
   --cm-brand-rgb: var(--cm-studio-accent-rgb);
@@ -102,8 +103,17 @@ body {
   border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #ff2d8f;
+/* 스크롤바도 그 화면의 강조색을 따른다 — 스튜디오에선 보라, 스트리밍에선 핑크.
+   하드코딩하면 스튜디오에서 핑크 막대가 남는다 (대표 지시 2026-09-05). */
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background: var(--cm-brand);
+}
+
+/* 페이지(html) 스크롤바는 .cm-studio 바깥이라 위 규칙의 var 가 핑크로 풀린다 — 따로 잡아 준다. */
+html:has(.cm-studio) ::-webkit-scrollbar-thumb:hover,
+html:has(.cm-studio) ::-webkit-scrollbar-thumb:active {
+  background: var(--cm-studio-accent);
 }
 
 .glass-panel {

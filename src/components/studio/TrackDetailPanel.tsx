@@ -23,6 +23,13 @@ interface TrackDetailPanelProps {
 const t = (lang: string, ko: string, ja: string, en: string) =>
   lang === 'KO' ? ko : lang === 'JA' ? ja : en
 
+/** 저장된 엔진 값을 사람이 읽는 이름으로 — 모르는 값은 그대로 보여 준다. */
+const ENGINE_NAMES: Record<string, string> = {
+  suno: 'Suno',
+  udio: 'Udio',
+  musicfx: 'MusicFX'
+}
+
 /** [Verse 1] 같은 섹션 머리말은 굵게 떼어 보여 준다. */
 function LyricsBody({ lyrics }: { lyrics: string }) {
   return (
@@ -122,6 +129,23 @@ export function TrackDetailPanel({
         uiLanguage === 'KO' ? 'ko-KR' : uiLanguage === 'JA' ? 'ja-JP' : 'en-US'
       )
     : ''
+
+  /* 생성 메타 — 곡에 실제로 남아 있는 값만 줄로 만든다.
+     엔진·버전은 「음악 생성」에서 만든 곡에만 저장돼 있어, 없으면 그 줄을 아예 그리지 않는다. */
+  const engineKey = typeof track.form?.modelProvider === 'string' ? track.form.modelProvider.trim() : ''
+  const engineName = engineKey ? (ENGINE_NAMES[engineKey.toLowerCase()] || engineKey) : ''
+  const modelVersion = typeof track.form?.modelVersion === 'string' ? track.form.modelVersion.trim().toUpperCase() : ''
+
+  const metaRows: { key: string; label: string; value: string }[] = []
+  if (engineName) {
+    metaRows.push({ key: 'engine', label: t(uiLanguage, '생성 엔진', '生成エンジン', 'Made with'), value: engineName })
+  }
+  if (modelVersion) {
+    metaRows.push({ key: 'model', label: t(uiLanguage, '모델 버전', 'モデルバージョン', 'Model version'), value: modelVersion })
+  }
+  if (createdAt) {
+    metaRows.push({ key: 'created', label: t(uiLanguage, '만든 날짜', '作成日', 'Created'), value: createdAt })
+  }
 
   const handleCopy = async (kind: 'style' | 'lyrics', text: string) => {
     if (!text) return
@@ -244,6 +268,23 @@ export function TrackDetailPanel({
           <Wand2 className="w-3.5 h-3.5" />
           {t(uiLanguage, '이 설정으로 다시 만들기', 'この設定で作り直す', 'Rebuild with these settings')}
         </button>
+
+        {/* 정보 카드 — 무엇으로 만들었는지. 남아 있는 값이 하나도 없으면 카드째 생략한다. */}
+        {metaRows.length > 0 && (
+          <section className="rounded-xl bg-surface-container-lowest border border-outline-variant p-3 space-y-2">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+              {t(uiLanguage, '정보', '情報', 'Info')}
+            </h4>
+            <dl className="space-y-1.5">
+              {metaRows.map(row => (
+                <div key={row.key} className="flex items-start justify-between gap-3">
+                  <dt className="text-[10px] text-zinc-500 shrink-0 pt-px">{row.label}</dt>
+                  <dd className="text-[11px] font-bold text-zinc-200 text-right break-words">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         {/* 5. 스타일(프롬프트) 카드 */}
         <section className="rounded-xl bg-surface-container-lowest border border-outline-variant p-3 space-y-2">
