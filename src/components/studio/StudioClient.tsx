@@ -911,10 +911,46 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
+  const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
+
   const confirmDelete = async () => {
     if (!deleteConfirmId) return
     await deleteHistoryItem(deleteConfirmId)
     setDeleteConfirmId(null)
+  }
+
+  /** 보관함 카드 액션 — 「음악 생성」 탭과 같은 PUT /api/song-history/{id} 를 그대로 쓴다 */
+  const updateHistoryItem = async (id: string, payload: Record<string, any>) => {
+    try {
+      const res = await fetch(`/api/song-history/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) await fetchSongHistory()
+    } catch (err) {
+      console.error('Failed to update song history:', err)
+    }
+  }
+
+  /** 다운로드는 비로그인(로컬 보관함)에서도 되어야 한다 */
+  const downloadHistoryTrack = (item: any) => {
+    const url = item.audio_url || item.stream_url || item.url
+    if (!url) return
+    const filename = item.title || 'Untitled'
+    try {
+      let proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
+      if (item.image_url) proxyUrl += `&image=${encodeURIComponent(item.image_url)}`
+      const a = document.createElement('a')
+      a.href = proxyUrl
+      a.download = `${filename}.mp3`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (e) {
+      console.error(e)
+      window.open(url, '_blank')
+    }
   }
 
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
@@ -1736,28 +1772,139 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   {history.map((item) => {
                     const isSmall = libraryViewSize === 'small'
                     const isLarge = libraryViewSize === 'large'
-                    const btnClass = isSmall ? 'w-6 h-6' : isLarge ? 'w-9 h-9' : 'w-8 h-8'
+                    const btnClass = isSmall ? 'w-6 h-6' : isLarge ? 'w-9 h-9' : 'w-7 h-7'
                     const iconClass = isSmall ? 'w-3 h-3' : isLarge ? 'w-4 h-4' : 'w-3.5 h-3.5'
-                    const actions = (
+                    const baseBtn = `${btnClass} rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center transition-all motion-reduce:transition-none shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`
+                    const playlistTitle = playlists.find((p) => p.id === item.playlist_id)?.title
+                    const setPlaylist = (playlistId: string | null) => {
+                      setLibraryPlaylistMenuId(null)
+                      updateHistoryItem(item.id, { playlist_id: playlistId })
+                    }
+                    /* 관리 액션 — 되돌리기·공개·플레이리스트·삭제 */
+                    const manageActions = (
                       <>
                         <button
                           onClick={() => { openHistoryItem(item, 'all'); setCurrentTab('studio'); }}
                           title={uiLanguage === 'KO' ? '프롬프트로 되돌리기' : uiLanguage === 'JA' ? 'プロンプトに戻す' : 'Restore to prompt'}
-                          className={`${btnClass} rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all motion-reduce:transition-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
+                          className={`${baseBtn} text-zinc-400 hover:text-primary hover:border-primary/40`}
                         >
                           <Wand2 className={iconClass} />
                         </button>
+                        {user && (
+                          <button
+                            onClick={() => {
+                              if (item.is_published) {
+                                updateHistoryItem(item.id, { is_published: false })
+                              } else {
+                                // 공개는 장르·채널을 골라야 한다 — 「음악 생성」 탭에서 마무리한다
+                                setCurrentTab('suno')
+                              }
+                            }}
+                            title={item.is_published
+                              ? (uiLanguage === 'KO' ? '비공개로 설정' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private')
+                              : (uiLanguage === 'KO' ? '공개하기 — 음악 생성 탭에서 마무리합니다' : uiLanguage === 'JA' ? '公開する — 音楽生成タブで設定します' : 'Publish — finish in the Generate tab')}
+                            className={`${baseBtn} ${item.is_published ? 'text-emerald-400 border-emerald-500/40' : 'text-zinc-400 hover:text-zinc-100 hover:border-zinc-600'}`}
+                          >
+                            <Globe className={iconClass} />
+                          </button>
+                        )}
+                        {user && (
+                          <div className="relative">
+                            <button
+                              onClick={() => setLibraryPlaylistMenuId(libraryPlaylistMenuId === item.id ? null : item.id)}
+                              title={playlistTitle
+                                ? (uiLanguage === 'KO' ? `플레이리스트: ${playlistTitle}` : uiLanguage === 'JA' ? `プレイリスト: ${playlistTitle}` : `Playlist: ${playlistTitle}`)
+                                : (uiLanguage === 'KO' ? '플레이리스트 지정' : uiLanguage === 'JA' ? 'プレイリストを選択' : 'Add to playlist')}
+                              className={`${baseBtn} ${item.playlist_id ? 'text-primary border-primary/40' : 'text-zinc-400 hover:text-primary hover:border-primary/40'}`}
+                            >
+                              <FolderPlus className={iconClass} />
+                            </button>
+
+                            {libraryPlaylistMenuId === item.id && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setLibraryPlaylistMenuId(null)} />
+                                <div className={`absolute right-0 w-48 bg-[#18181c] border border-zinc-800 rounded-xl shadow-2xl p-2 z-50 text-left ${isLarge ? 'bottom-full mb-2' : 'mt-2'}`}>
+                                  <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider px-2 py-1 border-b border-zinc-900">
+                                    {uiLanguage === 'KO' ? '플레이리스트 선택' : uiLanguage === 'JA' ? 'プレイリストを選択' : 'Select Playlist'}
+                                  </p>
+                                  <div className="max-h-40 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
+                                    <button
+                                      onClick={() => setPlaylist(null)}
+                                      className="w-full text-left px-2 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[10px] font-bold cursor-pointer"
+                                    >
+                                      <span>{uiLanguage === 'KO' ? '플레이리스트 해제' : uiLanguage === 'JA' ? 'プレイリストから削除' : 'Remove from Playlist'}</span>
+                                      {!item.playlist_id && <Check className="w-3 h-3 text-primary" />}
+                                    </button>
+
+                                    {playlists.filter((p) => parsePlaylistDescription(p.description).type === 'album').length > 0 && (
+                                      <div className="px-2 py-1 text-[8px] font-black tracking-widest text-primary uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
+                                        {uiLanguage === 'KO' ? '내 앨범' : uiLanguage === 'JA' ? 'アルバム' : 'Albums'}
+                                      </div>
+                                    )}
+                                    {playlists.filter((p) => parsePlaylistDescription(p.description).type === 'album').map((playlist) => (
+                                      <button
+                                        key={playlist.id}
+                                        onClick={() => setPlaylist(playlist.id)}
+                                        className="w-full text-left px-2 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[10px] font-bold cursor-pointer"
+                                      >
+                                        <span className="truncate">{playlist.title}</span>
+                                        {item.playlist_id === playlist.id && <Check className="w-3 h-3 text-primary shrink-0" />}
+                                      </button>
+                                    ))}
+
+                                    {playlists.filter((p) => parsePlaylistDescription(p.description).type === 'playlist').length > 0 && (
+                                      <div className="px-2 py-1 text-[8px] font-black tracking-widest text-zinc-400 uppercase bg-white/[0.01] border-y border-white/[0.03] select-none my-1">
+                                        {uiLanguage === 'KO' ? '나만의 플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlists'}
+                                      </div>
+                                    )}
+                                    {playlists.filter((p) => parsePlaylistDescription(p.description).type === 'playlist').map((playlist) => (
+                                      <button
+                                        key={playlist.id}
+                                        onClick={() => setPlaylist(playlist.id)}
+                                        className="w-full text-left px-2 py-1.5 hover:bg-white/[0.03] text-zinc-400 hover:text-white rounded-lg transition-colors flex items-center justify-between text-[10px] font-bold cursor-pointer"
+                                      >
+                                        <span className="truncate">{playlist.title}</span>
+                                        {item.playlist_id === playlist.id && <Check className="w-3 h-3 text-primary shrink-0" />}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                         <button
                           onClick={() => setDeleteConfirmId(item.id)}
                           title={uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除' : 'Delete'}
-                          className={`${btnClass} rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition-all motion-reduce:transition-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60`}
+                          className={`${baseBtn} text-zinc-400 hover:text-red-400 hover:border-red-500/40 focus-visible:ring-red-500/60`}
                         >
                           <Trash2 className={iconClass} />
+                        </button>
+                      </>
+                    )
+                    /* 재생 액션 — 좋아요·다운로드·재생. 「크게」에선 이 셋만 커버 위에 얹는다 */
+                    const playbackActions = (
+                      <>
+                        {user && (
+                          <button
+                            onClick={() => updateHistoryItem(item.id, { liked: !item.liked })}
+                            title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
+                            className={`${baseBtn} ${item.liked ? 'text-primary border-primary/40' : 'text-zinc-400 hover:text-primary hover:border-primary/40'}`}
+                          >
+                            <Heart className={`${iconClass} ${item.liked ? 'fill-current' : ''}`} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => downloadHistoryTrack(item)}
+                          title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
+                          className={`${baseBtn} text-zinc-400 hover:text-primary hover:border-primary/40`}
+                        >
+                          <Download className={iconClass} />
                         </button>
                         <button
                           onClick={() => playHistoryTrack(item)}
                           title={uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}
-                          className={`${btnClass} rounded-full bg-primary text-black flex items-center justify-center transition-all motion-reduce:transition-none shadow-md shadow-black/40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
+                          className={`${btnClass} rounded-full bg-primary text-black flex items-center justify-center transition-all motion-reduce:transition-none shadow-md shadow-black/40 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
                         >
                           {currentTrack?.id === item.id && isPlaying
                             ? <Pause className={`${iconClass} fill-current text-black`} />
@@ -1785,7 +1932,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             ? 'rounded-2xl p-3 flex flex-col gap-2.5'
                             : isSmall
                               ? 'rounded-lg px-2.5 py-1.5 flex items-center gap-3'
-                              : 'rounded-xl p-2.5 flex items-center gap-3'
+                              : 'rounded-xl p-2.5 flex flex-wrap items-center gap-3'
                         }`}
                       >
                         <div
@@ -1801,14 +1948,15 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           {isLarge && (
                             <div
                               /* 타블렛엔 hover 가 없다 — 포인터가 없는 기기에선 항상 보인다 */
-                              className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 py-2 bg-black/70 opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none"
+                              className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 py-2 bg-black/60"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {actions}
+                              {playbackActions}
                             </div>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        {/* 「중간」은 제목이 한 글자로 짜부라지지 않게 최소 폭을 준다 — 자리가 모자라면 액션이 아랫줄로 접힌다 */}
+                        <div className={`flex-1 ${isSmall || isLarge ? 'min-w-0' : 'min-w-[7rem]'}`}>
                           <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}</h4>
                           {!isSmall && (
                             <p className="text-zinc-500 truncate mt-0.5 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
@@ -1817,9 +1965,24 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         {isSmall && (
                           <p className="hidden md:block shrink-0 w-48 truncate text-zinc-500 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
                         )}
-                        {!isLarge && (
-                          <div className="flex items-center shrink-0 gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            {actions}
+                        {/* 「크게」는 커버 위에 재생 액션만 얹고, 관리 액션은 카드 아래 한 줄로 내린다 —
+                            7개를 오버레이에 다 넣으면 넘친다(대표 지시 2026-09-05). */}
+                        {isLarge && (
+                          <div className="flex items-center justify-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                            {manageActions}
+                          </div>
+                        )}
+                        {isSmall && (
+                          <div className="flex items-center shrink-0 gap-1" onClick={(e) => e.stopPropagation()}>
+                            {manageActions}
+                            {playbackActions}
+                          </div>
+                        )}
+                        {/* 「중간」은 카드 폭이 좁다 — 관리·재생 두 줄로 나눠 넘치지 않게 한다 */}
+                        {!isSmall && !isLarge && (
+                          <div className="flex flex-col items-end shrink-0 gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1">{manageActions}</div>
+                            <div className="flex items-center gap-1">{playbackActions}</div>
                           </div>
                         )}
                       </div>
