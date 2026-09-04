@@ -19,8 +19,8 @@ const SERVICES = [
   { key: 'cut', label: '쿠키컷', href: suiteHref('/editor') },
   { key: 'pix', label: '쿠키픽스', href: suiteHref('/cookiepix/app') },
   { key: 'illust', label: '쿠키일러스트', href: suiteHref('/cookieillust/app') },
+  { key: 'studio', label: '쿠키뮤직 스튜디오', href: `${BASE_PATH}/studio` },
   { key: 'music', label: '쿠키뮤직', href: BASE_PATH },
-  { key: 'studio', label: '스튜디오', href: `${BASE_PATH}/studio` },
   { key: 'chat', label: '쿠키챗', href: suiteHref('/cookiechat') },
   { key: 'photo', label: '쿠키포토스튜디오', href: suiteHref('/photo') },
 ] as const
