@@ -508,10 +508,10 @@ const LIBRARY_VIEW_ICONS: Record<LibraryViewSize, LucideIcon> = {
  * 비슷하게 커 보인다 — 「작게」인데 크게 나온다는 지적의 원인이었다(대표 2026-09-05).
  */
 const LIBRARY_GRID_CLASS: Record<LibraryViewSize, string> = {
-  // 세 크기는 「썸네일이 얼마나 크냐」다 — 카드 모양은 하나, 열 수만 달라진다.
-  small: 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-11 gap-2',
-  medium: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3.5',
-  large: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5',
+  // 파인더의 세 보기 방식 그대로 — 작게=세부 리스트, 중간=작은 아이콘 목록, 크게=아이콘 그리드.
+  small: 'grid-cols-1 gap-1.5',
+  medium: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3',
+  large: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4',
 }
 
 const readJson = (key: string, fallback: any) => {
@@ -1777,35 +1777,51 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             playHistoryTrack(item)
                           }
                         }}
-                        /* 세 크기가 같은 모양이어야 한다 — 예전엔 「작게」만 커버가 카드를 꽉 채우는
-                           타일이고 중간·크게는 작은 썸네일 가로형이라, 작게가 제일 커 보였다
-                           (대표 지시 2026-09-05). 이제 모양은 하나, 크기만 달라진다. */
-                        className={`rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all motion-reduce:transition-none cursor-pointer group shadow-lg shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 flex flex-col ${
-                          isSmall ? 'p-2 gap-1.5' : isLarge ? 'p-4 gap-3' : 'p-3 gap-2'
+                        /* 파인더 기준이다(대표 지시 2026-09-05).
+                           크게=아이콘 그리드(커버 위·이름 아래), 중간=작은 아이콘 목록,
+                           작게=세부 리스트 한 줄. 「작게」가 제일 조밀해야 한다. */
+                        className={`bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all motion-reduce:transition-none cursor-pointer group shadow-lg shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                          isLarge
+                            ? 'rounded-2xl p-3 flex flex-col gap-2.5'
+                            : isSmall
+                              ? 'rounded-lg px-2.5 py-1.5 flex items-center gap-3'
+                              : 'rounded-xl p-2.5 flex items-center gap-3'
                         }`}
                       >
-                        <div className="bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative w-full aspect-square rounded-xl">
+                        <div
+                          className={`bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative ${
+                            isLarge ? 'w-full aspect-square rounded-xl' : isSmall ? 'w-9 h-9 rounded-md' : 'w-14 h-14 rounded-lg'
+                          }`}
+                        >
                           {item.image_url ? (
                             <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Music className={`text-primary/60 ${isSmall ? 'w-5 h-5' : isLarge ? 'w-8 h-8' : 'w-6 h-6'}`} />
+                            <Music className={`text-primary/60 ${isLarge ? 'w-8 h-8' : isSmall ? 'w-4 h-4' : 'w-6 h-6'}`} />
                           )}
-                          <div
-                            /* 타블렛엔 hover 가 없다 — 포인터가 없는 기기에선 항상 보인다 */
-                            className={`absolute inset-x-0 bottom-0 flex items-center justify-center bg-black/70 opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none ${
-                              isSmall ? 'gap-1 py-1' : isLarge ? 'gap-2 py-2' : 'gap-1.5 py-1.5'
-                            }`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          {isLarge && (
+                            <div
+                              /* 타블렛엔 hover 가 없다 — 포인터가 없는 기기에선 항상 보인다 */
+                              className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 py-2 bg-black/70 opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {actions}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}</h4>
+                          {!isSmall && (
+                            <p className="text-zinc-500 truncate mt-0.5 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
+                          )}
+                        </div>
+                        {isSmall && (
+                          <p className="hidden md:block shrink-0 w-48 truncate text-zinc-500 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
+                        )}
+                        {!isLarge && (
+                          <div className="flex items-center shrink-0 gap-1.5" onClick={(e) => e.stopPropagation()}>
                             {actions}
                           </div>
-                        </div>
-                        <div className="min-w-0 w-full">
-                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isSmall ? 'text-[11px]' : isLarge ? 'text-sm' : 'text-xs'}`}>{item.title || 'Untitled'}</h4>
-                          {!isSmall && (
-                            <p className={`text-zinc-500 truncate mt-0.5 font-mono ${isLarge ? 'text-xs' : 'text-[11px]'}`}>{item.style || item.style_desc || 'AI Track'}</p>
-                          )}
-                        </div>
+                        )}
                       </div>
                     )
                   })}
