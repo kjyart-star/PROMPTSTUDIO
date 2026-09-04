@@ -590,82 +590,100 @@ export function HomeClient({
             </Link>
           </div>
 
-          <div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {sortedTracks.slice(0, 10).map((track, idx) => {
               const isCurrent = currentTrack?.id === track.id
               const playCount = track.play_count || 0;
+              const isLiked = userLikes.includes(track.id)
               return (
-                <div key={track.id} className={`py-3 flex items-center justify-between group hover:bg-white/[0.05] px-3.5 rounded-xl border-b border-outline-variant/40 last:border-b-0 transition-all duration-200 ${isCurrent ? 'bg-primary/15' : ''}`}>
-                  <div className="flex items-center gap-4 min-w-0">
-                    <span className="font-mono text-xs font-bold text-on-surface-variant/50 w-4 text-center">
-                      {idx + 1}
-                    </span>
+                <div key={track.id} className="flex flex-col justify-between group transition-all duration-300">
+                  <div className={`relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border transition-colors ${isCurrent ? 'border-primary/50' : 'border-white/5'}`}>
                     <button
                       onClick={() => {
                         handlePlay(track, sortedTracks)
                         setNowPlayingOpen(true)
                       }}
-                      className="w-14 h-14 bg-surface-container-lowest border border-outline-variant/10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden relative cursor-pointer"
+                      className="block w-full h-full cursor-pointer z-10"
                     >
                       {track.album?.cover_url ? (
-                        <img src={track.album.cover_url} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={track.album.cover_url}
+                          alt={track.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+                        />
                       ) : (
-                        <Music className="w-5 h-5 text-on-surface-variant/40" />
+                        <Music className="w-8 h-8 text-on-surface-variant/40 mx-auto" />
                       )}
-                      <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-all ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
-                          <div className="flex items-end justify-center gap-[2.5px] h-4 w-4">
+                          <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
                             <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                             <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                             <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
                           </div>
                         ) : (
-                          <Play className="w-5 h-5 fill-current text-white ml-0.5" />
+                          <div className="w-9 h-9 bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all">
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          </div>
                         )}
                       </div>
                     </button>
-                    <div className="min-w-0">
-                      <p 
-                        onClick={() => {
-                          handlePlay(track, sortedTracks)
-                          setNowPlayingOpen(true)
+
+                    {/* Badge top-left */}
+                    <span className="absolute top-2.5 left-2.5 text-[9px] font-black px-2 py-0.5 rounded bg-primary text-[#070709] tracking-wider scale-95 z-20 shadow-md">
+                      {idx + 1}위
+                    </span>
+
+                    {/* Floating Circular Heart + More Button */}
+                    <div className={`absolute top-2.5 right-2.5 z-20 flex flex-col items-center gap-1.5 transition-all duration-300 group-hover:opacity-100 focus-within:opacity-100 ${isLiked ? 'opacity-100' : 'opacity-0'}`}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleLikeToggle(track.id)
                         }}
-                        className={`font-bold text-xs truncate transition-colors cursor-pointer hover:underline ${isCurrent ? 'text-primary' : 'text-on-surface group-hover:text-white'}`}
+                        aria-pressed={isLiked}
+                        title="좋아요"
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
+                          isLiked
+                            ? 'bg-primary text-[#090909]'
+                            : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
+                        }`}
                       >
+                        <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                      </button>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-black/60 hover:bg-black/85 border border-white/10 shadow-lg">
+                        <TrackDropdown
+                          track={track}
+                          myPlaylists={myPlaylists}
+                          userLikes={userLikes}
+                          uiLanguage={uiLanguage}
+                          onLikeToggle={handleLikeToggle}
+                          onSaveToPlaylist={handleSaveToPlaylist}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Text Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end pt-8 z-10 pointer-events-none">
+                      <p className={`font-bold text-xs truncate ${isCurrent ? 'text-primary' : 'text-white'}`}>
                         {track.title}
                       </p>
-                      <p className="text-[10px] text-on-surface-variant truncate mt-0.5 font-medium">{track.album?.artist?.name}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 shrink-0">
-                    <span className="text-[11px] font-mono text-on-surface-variant w-16 text-right">
-                      {playCount.toLocaleString()}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleLikeToggle(track.id)
-                      }}
-                      className={`inline-flex items-center gap-1.5 p-2 rounded-lg hover:bg-white/[0.04] transition-all text-xs font-bold cursor-pointer ${
-                        userLikes.includes(track.id) ? 'text-primary' : 'text-on-surface-variant/60 hover:text-primary'
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${userLikes.includes(track.id) ? 'fill-current' : ''}`} />
-                      <span className="font-mono w-8 text-left">{track.like_count || 0}</span>
-                    </button>
-                    <div className="text-xs text-on-surface-variant w-12 text-right tabular-nums">
-                      <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
-                    </div>
-                    <div className="flex items-center justify-center gap-1 ml-2">
-                      <TrackDropdown
-                        track={track}
-                        myPlaylists={myPlaylists}
-                        userLikes={userLikes}
-                        uiLanguage={uiLanguage}
-                        onLikeToggle={handleLikeToggle}
-                        onSaveToPlaylist={handleSaveToPlaylist}
-                      />
+                      <p className="text-[10px] text-zinc-300 truncate mt-0.5 font-medium">{track.album?.artist?.name}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-semibold mt-1 font-mono">
+                        <span className="flex items-center gap-0.5">
+                          <Play className="w-2.5 h-2.5 text-zinc-300 fill-current" />
+                          {playCount.toLocaleString()}
+                        </span>
+                        <span className="text-zinc-500">•</span>
+                        <span className="flex items-center gap-0.5">
+                          <Heart className={`w-2.5 h-2.5 ${isLiked ? 'fill-current text-primary' : 'text-zinc-300'}`} />
+                          {track.like_count || 0}
+                        </span>
+                        <span className="text-zinc-500">•</span>
+                        <span className="tabular-nums">
+                          <AudioDuration url={track.file_url} defaultSec={track.duration_sec} />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
