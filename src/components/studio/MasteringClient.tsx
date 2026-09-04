@@ -782,7 +782,7 @@ export function MasteringClient() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Card: File Queue & Player (5 cols) */}
-        <div className="lg:col-span-5 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 shadow-xl backdrop-blur-md flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-5 cm-panel-console bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 shadow-xl backdrop-blur-md flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -938,7 +938,7 @@ export function MasteringClient() {
         </div>
 
         {/* Right Card: LUFS Workstation Display (7 cols) */}
-        <div className="lg:col-span-7 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 lg:p-8 shadow-xl backdrop-blur-md flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-7 cm-panel-console bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 lg:p-8 shadow-xl backdrop-blur-md flex flex-col justify-between space-y-6">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1059,7 +1059,7 @@ export function MasteringClient() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Module 1: Loudness & Noise Control (4 cols) */}
-        <div className="lg:col-span-4 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 space-y-6 shadow-xl backdrop-blur-md">
+        <div className="lg:col-span-4 cm-panel-console bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 space-y-6 shadow-xl backdrop-blur-md">
           <div className="flex items-center gap-2">
             <Gauge className="w-5 h-5 text-primary" />
             <h3 className="text-base font-extrabold text-white">볼륨 & 노이즈 프로세서</h3>
@@ -1132,7 +1132,7 @@ export function MasteringClient() {
         </div>
 
         {/* Module 2: Pro 7-Band Graphic EQ Fader Console (8 cols) */}
-        <div className="lg:col-span-8 bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 lg:p-8 space-y-6 shadow-xl backdrop-blur-md">
+        <div className="lg:col-span-8 cm-panel-console bg-[#0f1115]/90 border border-white/10 rounded-3xl p-6 lg:p-8 space-y-6 shadow-xl backdrop-blur-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sliders className="w-5 h-5 text-primary" />

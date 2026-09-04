@@ -101,7 +101,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
   return (
     <div className="w-full pb-12 space-y-6">
       {/* 🚀 Top Lyrical Assistant Hero Banner (musicmake.ai 스타일) */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#111111] border border-[#1e1e1e] p-6 lg:p-8 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl cm-panel-console bg-[#111111] border border-[#1e1e1e] p-6 lg:p-8 shadow-2xl">
         <div className="relative z-10 space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black tracking-wider uppercase">
             <Sparkles className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
       </div>
 
       {/* 🎯 Main Input Card */}
-      <div className="bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl space-y-5">
+      <div className="cm-panel-console bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl space-y-5">
         <div className="flex justify-between items-center border-b border-[#1e1e1e] pb-3">
           <h2 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
             <Lightbulb className="w-4 h-4 text-primary" />

@@ -637,3 +637,18 @@ textarea:focus {
     radial-gradient(60% 120% at 82% 0%, rgba(var(--cm-brand-rgb), 0.10), transparent 70%),
     radial-gradient(45% 100% at 8% 115%, rgba(var(--cm-brand-rgb), 0.07), transparent 70%);
 }
+
+/* 패널 카드 콘솔 질감 — 아웃보드 장비 패널처럼 "있는 듯 없는 듯".
+   글자·수치 가독성이 최우선이라 대비를 최대한 낮춘다(대표 지시 2026-09-05).
+   배경색은 각 카드가 갖고 있고 여기서는 background-image 만 겹친다. */
+.cm-panel-console {
+  background-image:
+    /* 1. 좌상단에서 오는 아주 약한 조명 하이라이트 */
+    radial-gradient(120% 85% at 12% 0%, rgba(255, 255, 255, 0.032), transparent 62%),
+    /* 2. 위→아래 베벨 — 위가 살짝 밝고 아래로 갈수록 어두워진다 */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 20%, rgba(0, 0, 0, 0.1) 100%),
+    /* 3. 패널 립 — 아래 가장자리 얇은 밝은 선 한 줄 */
+    linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px),
+    /* 4. 미세한 세로 브러시드 메탈 결 */
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 3px);
+}
