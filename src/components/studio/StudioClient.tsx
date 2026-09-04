@@ -503,10 +503,14 @@ const LIBRARY_VIEW_ICONS: Record<LibraryViewSize, LucideIcon> = {
   large: Rows3,
 }
 
+/**
+ * 보기 크기별 열 수. 넓은 화면 단계(xl·2xl)를 빼면 1024px 위에서는 세 크기가 모두
+ * 비슷하게 커 보인다 — 「작게」인데 크게 나온다는 지적의 원인이었다(대표 2026-09-05).
+ */
 const LIBRARY_GRID_CLASS: Record<LibraryViewSize, string> = {
-  small: 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5',
-  medium: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4',
-  large: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5',
+  small: 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2.5',
+  medium: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4',
+  large: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5',
 }
 
 const readJson = (key: string, fallback: any) => {
