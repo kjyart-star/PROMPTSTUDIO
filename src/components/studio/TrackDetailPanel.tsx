@@ -57,6 +57,41 @@ export function TrackDetailPanel({
   const [copied, setCopied] = useState<'style' | 'lyrics' | null>(null)
   const [styleExpanded, setStyleExpanded] = useState(false)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const asideRef = useRef<HTMLElement | null>(null)
+  const [paneHeight, setPaneHeight] = useState<number | null>(null)
+
+  /* 패널 높이는 화면(100vh)이 아니라 스크롤을 맡는 「판」에 맞춘다.
+     판은 상단 바·헤더·재생 바를 뺀 만큼만 높은데 100vh-13rem 은 그보다 커서
+     (실측: 판 670px, 카드 692px, 시작 위치가 판 위에서 24px 아래) 패널 아래쪽이
+     판 밖으로 밀려났다. 그래서 가사 끝을 보려면 패널이 아니라 판 전체를 스크롤해야 했다. */
+  useEffect(() => {
+    const row = asideRef.current?.parentElement
+    if (!row) return
+
+    let pane: HTMLElement | null = null
+    for (let n = row.parentElement; n; n = n.parentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(n).overflowY)) {
+        pane = n
+        break
+      }
+    }
+    // 스크롤 판을 못 찾으면 클래스의 100vh 계산을 그대로 쓴다.
+    if (!pane) return
+
+    const scroller = pane
+    const measure = () => {
+      // row 는 sticky 가 아니라서 판 안에서의 위치가 스크롤과 무관하게 일정하다.
+      const offset =
+        row.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
+      setPaneHeight(Math.max(0, Math.round(scroller.clientHeight - offset)))
+    }
+    measure()
+
+    const ro = new ResizeObserver(measure)
+    ro.observe(scroller)
+    return () => ro.disconnect()
+    // 곡이 없을 때는 이 컴포넌트가 null 을 그리므로 잴 DOM 이 없다 — 패널이 실제로 뜰 때 잰다.
+  }, [track?.id])
 
   // 곡이 바뀌면 스타일 펼침 상태를 처음으로 되돌린다.
   useEffect(() => {
@@ -134,7 +169,8 @@ export function TrackDetailPanel({
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-4 pb-5 space-y-4">
+      {/* overscroll-contain: 가사 끝까지 굴려도 그 힘이 뒤쪽 판으로 넘어가지 않는다 */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar px-4 pb-5 space-y-4">
         {/* 1. 커버 */}
         <div className="flex justify-center">
           {track.image_url ? (
@@ -258,6 +294,7 @@ export function TrackDetailPanel({
       {/* 폭에는 전환을 걸지 않는다 — 접힘/펼침이 서로 다른 하위 트리라, 전환을 걸면
           접힌 레일이 원래 폭에 붙잡혀 자리를 안 비운다(실측). 등장 효과는 안쪽에서 준다. */}
       <aside
+        ref={asideRef}
         className={`hidden lg:block shrink-0 self-start sticky top-0 ${
           collapsed ? 'w-9' : 'w-[21rem]'
         }`}
@@ -285,7 +322,9 @@ export function TrackDetailPanel({
             </button>
             <div
               key={track?.id ?? 'panel'}
-              className="h-[calc(100vh-13rem)] min-h-[26rem] rounded-2xl bg-[#111111] border border-outline-variant shadow-xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-6 duration-300 ease-out motion-reduce:animate-none"
+              /* 아래 100vh 계산은 판을 재기 전 첫 프레임용 대비값이다 — 실측이 끝나면 덮인다. */
+              style={paneHeight != null ? { height: paneHeight } : undefined}
+              className="h-[calc(100vh-13rem)] min-h-[26rem] rounded-2xl bg-[#111111] border border-outline-variant shadow-xl flex flex-col overflow-hidden animate-panel-in"
             >
               {body}
             </div>
@@ -299,7 +338,7 @@ export function TrackDetailPanel({
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
         />
-        <div className="absolute inset-x-0 bottom-24 max-h-[calc(85vh-6rem)] rounded-t-2xl bg-[#111111] border-t border-outline-variant shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-200 motion-reduce:animate-none">
+        <div className="absolute inset-x-0 bottom-24 max-h-[calc(85vh-6rem)] rounded-t-2xl bg-[#111111] border-t border-outline-variant shadow-2xl flex flex-col animate-sheet-in">
           <div className="flex justify-center pt-2 shrink-0">
             <div className="w-10 h-1 rounded-full bg-zinc-700" />
           </div>

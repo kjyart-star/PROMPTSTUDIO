@@ -250,6 +250,29 @@ textarea:focus {
   transform-origin: bottom;
 }
 
+/* 곡 상세 패널 등장 — 이 프로젝트엔 tailwindcss-animate 가 없어 `animate-in` 계열
+   클래스가 아무 규칙도 만들지 않는다(빌드 CSS 확인). 그래서 직접 만든다. */
+@keyframes panelIn {
+  from { opacity: 0; transform: translateX(1.75rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-panel-in {
+  animation: panelIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-sheet-in {
+  animation: sheetIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-panel-in,
+  .animate-sheet-in { animation: none; }
+}
+
 /* ---------------------------------------------------- Pop-up Player Style */
 .pip-player {
   display: flex;

@@ -509,7 +509,8 @@ const LIBRARY_VIEW_ICONS: Record<LibraryViewSize, LucideIcon> = {
  */
 const LIBRARY_GRID_CLASS: Record<LibraryViewSize, string> = {
   small: 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2.5',
-  medium: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4',
+  // 중간은 가로형 카드(썸네일+제목)라 6열이면 제목이 「Neon …」으로 잘린다 — 5열까지만.
+  medium: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4',
   large: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5',
 }
 
