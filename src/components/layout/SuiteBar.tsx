@@ -21,6 +21,7 @@ const SERVICES = [
   { key: 'illust', label: '쿠키일러스트', href: suiteHref('/cookieillust/app') },
   { key: 'music', label: '쿠키뮤직', href: BASE_PATH },
   { key: 'studio', label: '스튜디오', href: `${BASE_PATH}/studio` },
+  { key: 'chat', label: '쿠키챗', href: suiteHref('/cookiechat') },
   { key: 'photo', label: '쿠키포토스튜디오', href: suiteHref('/photo') },
 ] as const
 
