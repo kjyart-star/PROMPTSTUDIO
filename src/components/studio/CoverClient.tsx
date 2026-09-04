@@ -6,6 +6,7 @@ import { Music, Disc, Upload, Play, Pause, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
+import { StudioHero } from './StudioHero'
 
 interface CoverClientProps {
   user: any
@@ -264,10 +265,31 @@ export function CoverClient({ user }: CoverClientProps) {
 
   return (
     <div className="w-full pb-10 space-y-6">
-      <h1 className="text-xl sm:text-2xl font-black text-zinc-100 flex items-center gap-2.5 uppercase tracking-wide">
-        <Music className="w-6 h-6 text-primary shrink-0" />
-        {uiLanguage === 'KO' ? 'AI 커버 스튜디오' : uiLanguage === 'JA' ? 'AIカバースタジオ' : 'AI Cover Studio'}
-      </h1>
+      <StudioHero
+        badge={
+          <>
+            <Music className="w-3.5 h-3.5" />
+            <span>Audio-to-Audio Cover</span>
+          </>
+        }
+        title={
+          uiLanguage === 'KO' ? (
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">커버 스튜디오</span></>
+          ) : uiLanguage === 'JA' ? (
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">カバースタジオ</span></>
+          ) : (
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">COVER STUDIO</span></>
+          )
+        }
+        desc={
+          uiLanguage === 'KO'
+            ? '가지고 있는 음원(MP3·WAV, 최대 50MB)을 올리고 스타일을 지정하면 그 곡을 다른 색으로 다시 부릅니다.'
+            : uiLanguage === 'JA'
+            ? '手持ちの音源（MP3・WAV、最大50MB）をアップロードしてスタイルを指定すると、その曲を別の色で歌い直します。'
+            : 'Upload a track you already have (MP3 / WAV, up to 50MB), set a style, and hear it re-sung in a different voice.'
+        }
+        bg="/studio/hero-cover.webp"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Input Data (6칸) */}

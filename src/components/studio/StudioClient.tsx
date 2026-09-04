@@ -13,6 +13,7 @@ import { GenerateClient } from './GenerateClient'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
+import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
 import { withBase } from '@/lib/basePath'
 
@@ -467,7 +468,7 @@ const INITIAL_FORM = {
   language2: '없음',
   languageRatio: 70,
   vocalTone: '밝고 쾌활한',
-  vocalAge: '청소년',
+  vocalAge: '10대',
   vocalGenderGroup: '여자',
   tempo: 120,
   targetTool: 'Suno',
@@ -1662,14 +1663,31 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
             {currentTab === 'library' && (
               <div className="max-w-[1700px] mx-auto w-full space-y-5 pb-10">
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1e1e1e]">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-                      <HardDrive className="w-4 h-4 text-primary" />
-                      <span>미디어 클립 보관함 ({history.length})</span>
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다. * 카드 클릭 시 재생 · 지팡이 아이콘으로 프롬프트 되돌리기</p>
-                  </div>
+                <StudioHero
+                  badge={
+                    <>
+                      <HardDrive className="w-3.5 h-3.5" />
+                      <span>Media Library</span>
+                    </>
+                  }
+                  title={
+                    uiLanguage === 'KO' ? (
+                      <>미디어 클립 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">보관함</span> ({history.length})</>
+                    ) : uiLanguage === 'JA' ? (
+                      <>メディアクリップ <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">ライブラリ</span> ({history.length})</>
+                    ) : (
+                      <>MEDIA CLIP <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">LIBRARY</span> ({history.length})</>
+                    )
+                  }
+                  desc={
+                    uiLanguage === 'KO'
+                      ? '만들어 둔 AI 오디오 트랙과 프로젝트 에셋입니다. 카드를 누르면 재생되고, 지팡이 아이콘으로 그때 쓴 프롬프트를 되돌립니다.'
+                      : uiLanguage === 'JA'
+                      ? '生成したAIオーディオトラックとプロジェクトアセットです。カードを押すと再生され、杖アイコンで当時のプロンプトに戻せます。'
+                      : 'Every AI audio track and project asset you have made. Click a card to play it, or use the wand icon to restore the prompt behind it.'
+                  }
+                  bg="/studio/hero-library.webp"
+                >
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     <div
                       role="group"
@@ -1708,7 +1726,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       <span>새로고침</span>
                     </button>
                   </div>
-                </div>
+                </StudioHero>
                 <div className={`grid ${LIBRARY_GRID_CLASS[libraryViewSize]}`}>
                   {history.map((item) => {
                     const isSmall = libraryViewSize === 'small'
@@ -1797,7 +1815,36 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
             {currentTab === 'studio' && (
               <div className="max-w-[1700px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-5 pb-10">
-                
+
+                {/* 히어로 — 그리드 한 줄을 통째로 쓴다 */}
+                <div className="xl:col-span-12">
+                  <StudioHero
+                    badge={
+                      <>
+                        <Wand2 className="w-3.5 h-3.5" />
+                        <span>Lyrics &amp; Prompt Engine</span>
+                      </>
+                    }
+                    title={
+                      uiLanguage === 'KO' ? (
+                        <>음악 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">프롬프트 스튜디오</span></>
+                      ) : uiLanguage === 'JA' ? (
+                        <>音楽 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">プロンプトスタジオ</span></>
+                      ) : (
+                        <>MUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">PROMPT STUDIO</span></>
+                      )
+                    }
+                    desc={
+                      uiLanguage === 'KO'
+                        ? '곡 제목과 장르·분위기를 정하고 지침서를 얹으면 섹션 태그가 들어간 가사와 스타일·제외 프롬프트를 함께 만듭니다.'
+                        : uiLanguage === 'JA'
+                        ? '曲名とジャンル・雰囲気を決めてガイドラインを重ねると、セクションタグ入りの歌詞とスタイル・除外プロンプトをまとめて作ります。'
+                        : 'Set a title, genres and mood, layer on your guidelines, and get section-tagged lyrics with matching style and exclude prompts.'
+                    }
+                    bg="/studio/hero-prompt.webp"
+                  />
+                </div>
+
                 {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
                 <div className="xl:col-span-3 space-y-4">
                   {/* AI 설정 ([임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고) */}
@@ -2107,11 +2154,11 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           <div className="space-y-1">
                             <label className="text-[10px] font-bold text-zinc-400">보컬 나이</label>
                             <select
-                              value={form.vocalAge || '청소년'}
+                              value={form.vocalAge || '10대'}
                               onChange={(e) => updateForm('vocalAge', e.target.value)}
                               className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
                             >
-                              <option value="청소년">청소년</option>
+                              <option value="10대">10대</option>
                               <option value="20대 청년">20대 청년</option>
                               <option value="30-40대 성인">30-40대 성인</option>
                               <option value="중후한 노년">중후한 노년</option>

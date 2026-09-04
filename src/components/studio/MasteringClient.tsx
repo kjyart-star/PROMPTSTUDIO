@@ -8,6 +8,7 @@ import {
   Zap, Layers, Radio, Disc, Music, ArrowUpRight
 } from 'lucide-react'
 import { audioBufferToWav, makeSoftClipCurve } from '@/lib/audioUtils'
+import { StudioHero } from './StudioHero'
 
 interface Track {
   id: string
@@ -727,27 +728,23 @@ export function MasteringClient() {
       />
 
       {/* 🚀 Sleek DAW Header & Presets Toolbar */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d0f12] via-[#14181f] to-[#0a0b0e] border border-white/10 p-6 lg:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-primary/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/4" />
-        
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black tracking-wider uppercase">
-              <Zap className="w-3.5 h-3.5" />
-              <span>Next-Gen Audio Engine</span>
-            </div>
-            <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-              {uiLanguage === 'KO' ? (
-                <>AI 음원 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">마스터링 스튜디오</span></>
-              ) : (
-                <>COOKIEMUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">MASTERING STUDIO</span></>
-              )}
-            </h1>
-            <p className="text-xs lg:text-sm text-zinc-400 font-medium max-w-xl">
-              Web Audio API 기반 48kHz 실시간 7밴드 Parametric EQ, Maximizer, De-Harsh 및 LUFS 라우드니스 프로세서
-            </p>
-          </div>
-
+      <StudioHero
+        badge={
+          <>
+            <Zap className="w-3.5 h-3.5" />
+            <span>Next-Gen Audio Engine</span>
+          </>
+        }
+        title={
+          uiLanguage === 'KO' ? (
+            <>AI 음원 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">마스터링 스튜디오</span></>
+          ) : (
+            <>COOKIEMUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">MASTERING STUDIO</span></>
+          )
+        }
+        desc="Web Audio API 기반 48kHz 실시간 7밴드 Parametric EQ, Maximizer, De-Harsh 및 LUFS 라우드니스 프로세서"
+        bg="/studio/hero-console.webp"
+      >
           {/* Preset Buttons */}
           <div className="flex flex-wrap items-center gap-2 bg-black/60 backdrop-blur-xl p-2 rounded-2xl border border-white/10">
             {[
@@ -779,8 +776,7 @@ export function MasteringClient() {
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      </div>
+      </StudioHero>
 
       {/* 🎛️ Upper Grid: Track Source & LUFS Workstation Console */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

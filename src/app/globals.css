@@ -604,3 +604,36 @@ textarea:focus {
 .cm-brand-gradient {
   background-image: var(--cm-brand-gradient);
 }
+
+/* ─── 스튜디오 히어로 배경 — 음악 스튜디오 콘솔 느낌을 CSS 로만 그린다 ───
+   사진을 쓰지 않는다. 텍스트 가독성이 최우선이라 무늬는 아주 낮은 대비로 깔고,
+   마스크로 왼쪽(제목이 앉는 자리)에서는 거의 사라지게 한다. 애니메이션은 없다. */
+.cm-studio-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    /* 1. 파형 스트립 — 카드 아래쪽 띠에만 */
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.055) 0 2px, transparent 2px 8px),
+    /* 2. 믹서 채널 스트립(세로 페이더 슬롯) */
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 64px),
+    /* 3. EQ dB 눈금(가로) */
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 26px),
+    /* 4. 레벨 미터 LED 점 */
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 2px);
+  background-size: 100% 40px, 64px 100%, 100% 26px, 16px 16px;
+  background-position: 0 100%, 0 0, 0 0, 0 0;
+  background-repeat: repeat-x, repeat, repeat, repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.9) 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+/* 강조색 글로우 한 겹 — 색은 브랜드 토큰만 쓴다 */
+.cm-studio-hero-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(60% 120% at 82% 0%, rgba(var(--cm-brand-rgb), 0.10), transparent 70%),
+    radial-gradient(45% 100% at 8% 115%, rgba(var(--cm-brand-rgb), 0.07), transparent 70%);
+}
