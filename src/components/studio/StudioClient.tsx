@@ -15,6 +15,7 @@ import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
 import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
+import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
 
 const durationCache: Record<string, number> = {}
@@ -913,6 +914,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
 
+  /* 보관함 우측 상세 패널 — 「음악 생성」 탭과 같은 TrackDetailPanel 을 쓴다 */
+  const [libraryDetailId, setLibraryDetailId] = useState<string | null>(null)
+  const [libraryDetailCollapsed, setLibraryDetailCollapsed] = useState(false)
+
   const confirmDelete = async () => {
     if (!deleteConfirmId) return
     await deleteHistoryItem(deleteConfirmId)
@@ -1653,6 +1658,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
   const provider = PROVIDERS.openai
   const modelCost = getModelCreditCost(settings.model)
+  const libraryDetailTrack = libraryDetailId ? history.find((h: any) => h.id === libraryDetailId) || null : null
 
   return (
     /* 배경은 레이아웃의 바닥색을 비춘다 — 판은 StudioHeader 와 StudioWorkspace 가 그린다 */
@@ -1703,7 +1709,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
             )}
 
             {currentTab === 'library' && (
-              <div className="max-w-[1700px] mx-auto w-full space-y-5 pb-10">
+              <div className="max-w-[1700px] mx-auto w-full flex items-start gap-4">
+              <div className="flex-1 min-w-0 space-y-5 pb-10">
                 <StudioHero
                   badge={
                     <>
@@ -1722,10 +1729,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   }
                   desc={
                     uiLanguage === 'KO'
-                      ? '만들어 둔 AI 오디오 트랙과 프로젝트 에셋입니다. 카드를 누르면 재생되고, 지팡이 아이콘으로 그때 쓴 프롬프트를 되돌립니다.'
+                      ? '만들어 둔 AI 오디오 트랙과 프로젝트 에셋입니다. 카드를 누르면 오른쪽에 프롬프트와 가사가 열리고, 재생은 카드의 재생 버튼으로 합니다.'
                       : uiLanguage === 'JA'
-                      ? '生成したAIオーディオトラックとプロジェクトアセットです。カードを押すと再生され、杖アイコンで当時のプロンプトに戻せます。'
-                      : 'Every AI audio track and project asset you have made. Click a card to play it, or use the wand icon to restore the prompt behind it.'
+                      ? '生成したAIオーディオトラックとプロジェクトアセットです。カードを押すと右側にプロンプトと歌詞が開き、再生はカードの再生ボタンで行います。'
+                      : 'Every AI audio track and project asset you have made. Click a card to open its prompt and lyrics on the right; use the play button to listen.'
                   }
                   bg="/studio/hero-library.webp"
                 >
@@ -1917,11 +1924,12 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         key={item.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => playHistoryTrack(item)}
+                        /* 카드 클릭은 상세 패널 열기 — 재생은 카드/패널의 재생 버튼이 맡는다 */
+                        onClick={() => setLibraryDetailId(item.id)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
-                            playHistoryTrack(item)
+                            setLibraryDetailId(item.id)
                           }
                         }}
                         /* 파인더 기준이다(대표 지시 2026-09-05).
@@ -1944,6 +1952,18 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Music className={`text-primary/60 ${isLarge ? 'w-8 h-8' : isSmall ? 'w-4 h-4' : 'w-6 h-6'}`} />
+                          )}
+                          {currentTrack?.id === item.id && isPlaying && (
+                            <span
+                              aria-hidden
+                              className={`absolute inset-0 flex items-end justify-center bg-black/60 ${
+                                isLarge ? 'gap-[3px] pb-[38%]' : isSmall ? 'gap-[1.5px] pb-3' : 'gap-[2px] pb-4'
+                              }`}
+                            >
+                              <span className={`bg-primary rounded-sm animate-eq-1 motion-reduce:animate-none ${isLarge ? 'w-[5px] h-8' : isSmall ? 'w-[2px] h-2.5' : 'w-[3px] h-4'}`} />
+                              <span className={`bg-primary rounded-sm animate-eq-2 motion-reduce:animate-none ${isLarge ? 'w-[5px] h-8' : isSmall ? 'w-[2px] h-2.5' : 'w-[3px] h-4'}`} />
+                              <span className={`bg-primary rounded-sm animate-eq-3 motion-reduce:animate-none ${isLarge ? 'w-[5px] h-8' : isSmall ? 'w-[2px] h-2.5' : 'w-[3px] h-4'}`} />
+                            </span>
                           )}
                           {isLarge && (
                             <div
@@ -1989,6 +2009,30 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     )
                   })}
                 </div>
+              </div>
+
+              <TrackDetailPanel
+                track={libraryDetailTrack}
+                collapsed={libraryDetailCollapsed}
+                onToggleCollapse={() => setLibraryDetailCollapsed(v => !v)}
+                onClose={() => setLibraryDetailId(null)}
+                uiLanguage={uiLanguage}
+                isPlaying={!!libraryDetailTrack && currentTrack?.id === libraryDetailTrack.id && isPlaying}
+                onPlayToggle={() => libraryDetailTrack && playHistoryTrack(libraryDetailTrack)}
+                /* 좋아요는 서버 보관함(로그인)에서만 뜻이 있다 — 로컬 보관함에선 아무 일도 하지 않는다 */
+                onLikeToggle={() => {
+                  if (user && libraryDetailTrack) updateHistoryItem(libraryDetailTrack.id, { liked: !libraryDetailTrack.liked })
+                }}
+                onDownload={() => libraryDetailTrack && downloadHistoryTrack(libraryDetailTrack)}
+                onLoadIntoForm={() => {
+                  if (!libraryDetailTrack) return
+                  openHistoryItem(libraryDetailTrack, 'all')
+                  setCurrentTab('studio')
+                }}
+                durationSlot={
+                  libraryDetailTrack?.audio_url ? <AudioDuration url={libraryDetailTrack.audio_url} /> : null
+                }
+              />
               </div>
             )}
 
