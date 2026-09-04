@@ -7,6 +7,8 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
+import { TrackDetailPanel } from './TrackDetailPanel'
+import { StudioHero } from './StudioHero'
 
 interface GenerateClientProps {
   user: any
@@ -91,6 +93,8 @@ export function GenerateClient({
   const [uiLanguage, setUiLanguage] = useState('KO')
   const [userCredits, setUserCredits] = useState<number>(120)
   const [profile, setProfile] = useState<any>(null)
+  const [detailTrackId, setDetailTrackId] = useState<string | null>(null)
+  const [detailCollapsed, setDetailCollapsed] = useState(false)
 
   const [generateForm, setGenerateForm] = useState({
     modelProvider: 'suno',
@@ -465,6 +469,7 @@ export function GenerateClient({
   // 행 전체 클릭·원형 버튼이 함께 쓰는 재생 동작
   const playListTrack = (track: any) => {
     if (!track?.audio_url) return
+    setDetailTrackId(track.id)
     if (currentTrack?.id === track.id) {
       togglePlay()
       return
@@ -520,6 +525,29 @@ export function GenerateClient({
         title: track.title?.replace(/\s\(v\d+\)$/, '') || ''
       }))
     }
+  }
+
+  // 상세 패널 접힘 상태는 브라우저에 남겨 둔다.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('studio-detail-collapsed') === '1') {
+        setDetailCollapsed(true)
+      }
+    } catch (e) {
+      console.error('Failed to read detail panel state:', e)
+    }
+  }, [])
+
+  const toggleDetailCollapsed = () => {
+    setDetailCollapsed(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem('studio-detail-collapsed', next ? '1' : '0')
+      } catch (e) {
+        console.error('Failed to save detail panel state:', e)
+      }
+      return next
+    })
   }
 
   useEffect(() => {
@@ -637,13 +665,36 @@ export function GenerateClient({
     .filter((item: any) => item.status === 'completed' && item.audio_url && item.form?.source !== 'upload')
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
   const topCompletedSongs = completedSongs.slice(0, 30)
+  const detailTrack = detailTrackId ? historyList.find((h: any) => h.id === detailTrackId) || null : null
 
   return (
-    <div className="w-full pb-10 space-y-6">
-      <h1 className="text-xl sm:text-2xl font-black text-zinc-100 flex items-center gap-2.5 uppercase tracking-wide">
-        <Disc className="w-6 h-6 text-primary shrink-0" />
-        {uiLanguage === 'KO' ? '음악 생성 인터페이스' : uiLanguage === 'JA' ? '음악 생성 인터페이스' : 'Music Generation Interface'}
-      </h1>
+    <div className="w-full pb-10 flex items-start gap-4">
+      <div className="flex-1 min-w-0 space-y-6">
+      <StudioHero
+        badge={
+          <>
+            <Disc className="w-3.5 h-3.5" />
+            <span>Suno V4 / V5 Engine</span>
+          </>
+        }
+        title={
+          uiLanguage === 'KO' ? (
+            <>음악 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">생성 인터페이스</span></>
+          ) : uiLanguage === 'JA' ? (
+            <>音楽 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">生成インターフェース</span></>
+          ) : (
+            <>MUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">GENERATION</span></>
+          )
+        }
+        desc={
+          uiLanguage === 'KO'
+            ? '가사와 스타일 프롬프트를 넣고 Suno 모델 버전·인스트루멘탈 여부를 골라 음원을 만듭니다.'
+            : uiLanguage === 'JA'
+            ? '歌詞とスタイルプロンプトを入力し、Sunoのモデルバージョンやインストゥルメンタル設定を選んで音源を生成します。'
+            : 'Feed lyrics and a style prompt, pick the Suno model version and instrumental mode, then render the track.'
+        }
+        bg="/studio/hero-gen.webp"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Input Settings (5칸 또는 6칸) */}
@@ -1170,6 +1221,21 @@ export function GenerateClient({
           </div>
         </div>
       </div>
+      </div>
+
+      <TrackDetailPanel
+        track={detailTrack}
+        collapsed={detailCollapsed}
+        onToggleCollapse={toggleDetailCollapsed}
+        onClose={() => setDetailTrackId(null)}
+        uiLanguage={uiLanguage}
+        isPlaying={!!detailTrack && currentTrack?.id === detailTrack.id && isPlaying}
+        onPlayToggle={() => detailTrack && playListTrack(detailTrack)}
+        onLikeToggle={() => detailTrack && handleLikeToggle(detailTrack)}
+        onDownload={() => detailTrack && handleDownloadTrack(detailTrack.audio_url, detailTrack.title, detailTrack.image_url)}
+        onLoadIntoForm={() => detailTrack && handleSelectTrack(detailTrack)}
+        durationSlot={detailTrack?.audio_url ? <AudioDuration url={detailTrack.audio_url} /> : null}
+      />
 
       {publishConfirmItem && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
