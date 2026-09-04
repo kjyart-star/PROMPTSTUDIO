@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users, Library, HardDrive } from 'lucide-react'
+import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users, Library, HardDrive, Grid3X3, LayoutGrid, Rows3, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -482,6 +482,30 @@ const STORAGE_KEYS = {
   supabase: 'songprompt-supabase-v1',
   localHistory: 'songprompt-local-history-v1',
   deletedDummyItems: 'songprompt-deleted-dummy-v1',
+  libraryViewSize: 'songprompt-library-view-size-v1',
+}
+
+// 보관함 보기 크기 (작게 · 중간 · 크게)
+type LibraryViewSize = 'small' | 'medium' | 'large'
+
+const LIBRARY_VIEW_SIZES: LibraryViewSize[] = ['small', 'medium', 'large']
+
+const LIBRARY_VIEW_LABELS: Record<LibraryViewSize, { KO: string; JA: string; EN: string }> = {
+  small: { KO: '작게', JA: '小さく', EN: 'Small' },
+  medium: { KO: '중간', JA: '標準', EN: 'Medium' },
+  large: { KO: '크게', JA: '大きく', EN: 'Large' },
+}
+
+const LIBRARY_VIEW_ICONS: Record<LibraryViewSize, LucideIcon> = {
+  small: Grid3X3,
+  medium: LayoutGrid,
+  large: Rows3,
+}
+
+const LIBRARY_GRID_CLASS: Record<LibraryViewSize, string> = {
+  small: 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5',
+  medium: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4',
+  large: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5',
 }
 
 const readJson = (key: string, fallback: any) => {
@@ -879,6 +903,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [playlists, setPlaylists] = useState<any[]>([])
   const [userCredits, setUserCredits] = useState<number>(120)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const confirmDelete = async () => {
     if (!deleteConfirmId) return
@@ -999,11 +1024,24 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
   }
 
+  const changeLibraryViewSize = (size: LibraryViewSize) => {
+    setLibraryViewSize(size)
+    try {
+      writeJson(STORAGE_KEYS.libraryViewSize, size)
+    } catch {
+      // 저장 실패해도 이번 세션 동안은 선택이 유지된다
+    }
+  }
+
   // 로컬 스토리지 데이터 로드 (언어 및 기본 설정만)
   useEffect(() => {
     if (typeof window === 'undefined') return
     const storedLang = localStorage.getItem('language') || navigator.language || ''
     setUiLanguage(storedLang.toLowerCase().startsWith('ko') ? 'KO' : storedLang.toLowerCase().startsWith('ja') ? 'JA' : 'EN')
+
+    // 보관함 보기 크기 복원 (없거나 못 읽으면 '중간')
+    const savedViewSize = readJson(STORAGE_KEYS.libraryViewSize, null)
+    if (LIBRARY_VIEW_SIZES.includes(savedViewSize)) setLibraryViewSize(savedViewSize)
 
     const savedSettings = readJson(STORAGE_KEYS.settings, null)
     if (savedSettings) {
@@ -1624,75 +1662,135 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
             {currentTab === 'library' && (
               <div className="max-w-[1700px] mx-auto w-full space-y-5 pb-10">
-                <div className="flex items-center justify-between pb-3 border-b border-[#1e1e1e]">
-                  <div>
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1e1e1e]">
+                  <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 flex items-center gap-2">
                       <HardDrive className="w-4 h-4 text-primary" />
                       <span>미디어 클립 보관함 ({history.length})</span>
                     </h3>
                     <p className="text-xs text-zinc-500 mt-0.5">생성된 AI 오디오 트랙 및 프로젝트 에셋 목록입니다. * 카드 클릭 시 재생 · 지팡이 아이콘으로 프롬프트 되돌리기</p>
                   </div>
-                  <button 
-                    onClick={fetchSongHistory} 
-                    className="px-3.5 py-1.5 rounded-xl bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-primary transition-all cursor-pointer shadow-sm"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>새로고침</span>
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {history.map((item) => (
+                  <div className="flex flex-wrap items-center justify-end gap-2">
                     <div
-                      key={item.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => playHistoryTrack(item)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          playHistoryTrack(item)
-                        }
-                      }}
-                      className="p-3.5 rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all cursor-pointer flex items-center gap-3.5 group shadow-lg shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                      role="group"
+                      aria-label={uiLanguage === 'KO' ? '보기 크기' : uiLanguage === 'JA' ? '表示サイズ' : 'View size'}
+                      className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[#0f0f0f] border border-[#232323] shadow-sm"
                     >
-                      <div className="w-14 h-14 rounded-xl bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Music className="w-6 h-6 text-primary/60" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-primary">{item.title || 'Untitled'}</h4>
-                        <p className="text-[11px] text-zinc-500 truncate mt-0.5 font-mono">{item.style || item.style_desc || 'AI Track'}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {LIBRARY_VIEW_SIZES.map((size) => {
+                        const Icon = LIBRARY_VIEW_ICONS[size]
+                        const label = LIBRARY_VIEW_LABELS[size][uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN']
+                        const active = libraryViewSize === size
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => changeLibraryViewSize(size)}
+                            aria-pressed={active}
+                            aria-label={label}
+                            title={label}
+                            className={`px-2 sm:px-3 py-1.5 rounded-[10px] text-xs font-bold flex items-center gap-1.5 transition-all motion-reduce:transition-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                              active
+                                ? 'bg-primary/15 text-primary border border-primary/40'
+                                : 'border border-transparent text-zinc-400 hover:text-zinc-100 hover:bg-[#1a1a1a]'
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <button
+                      onClick={fetchSongHistory}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] text-xs font-bold flex items-center gap-1.5 text-zinc-300 hover:text-primary transition-all cursor-pointer shadow-sm"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>새로고침</span>
+                    </button>
+                  </div>
+                </div>
+                <div className={`grid ${LIBRARY_GRID_CLASS[libraryViewSize]}`}>
+                  {history.map((item) => {
+                    const isSmall = libraryViewSize === 'small'
+                    const isLarge = libraryViewSize === 'large'
+                    const btnClass = isSmall ? 'w-6 h-6' : isLarge ? 'w-9 h-9' : 'w-8 h-8'
+                    const iconClass = isSmall ? 'w-3 h-3' : isLarge ? 'w-4 h-4' : 'w-3.5 h-3.5'
+                    const actions = (
+                      <>
                         <button
                           onClick={() => { openHistoryItem(item, 'all'); setCurrentTab('studio'); }}
                           title={uiLanguage === 'KO' ? '프롬프트로 되돌리기' : uiLanguage === 'JA' ? 'プロンプトに戻す' : 'Restore to prompt'}
-                          className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                          className={`${btnClass} rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all motion-reduce:transition-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
                         >
-                          <Wand2 className="w-3.5 h-3.5" />
+                          <Wand2 className={iconClass} />
                         </button>
                         <button
                           onClick={() => setDeleteConfirmId(item.id)}
                           title={uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除' : 'Delete'}
-                          className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                          className={`${btnClass} rounded-full bg-[#1a1a1a] border border-[#262626] text-zinc-400 hover:text-red-400 hover:border-red-500/40 flex items-center justify-center transition-all motion-reduce:transition-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className={iconClass} />
                         </button>
                         <button
                           onClick={() => playHistoryTrack(item)}
                           title={uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}
-                          className="w-8 h-8 rounded-full bg-primary text-black flex items-center justify-center transition-all shadow-md shadow-black/40 opacity-0 group-hover:opacity-100 shrink-0 cursor-pointer"
+                          className={`${btnClass} rounded-full bg-primary text-black flex items-center justify-center transition-all motion-reduce:transition-none shadow-md shadow-black/40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
                         >
                           {currentTrack?.id === item.id && isPlaying
-                            ? <Pause className="w-3.5 h-3.5 fill-current text-black" />
-                            : <Play className="w-3.5 h-3.5 ml-0.5 fill-current text-black" />}
+                            ? <Pause className={`${iconClass} fill-current text-black`} />
+                            : <Play className={`${iconClass} ml-0.5 fill-current text-black`} />}
                         </button>
+                      </>
+                    )
+                    return (
+                      <div
+                        key={item.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => playHistoryTrack(item)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            playHistoryTrack(item)
+                          }
+                        }}
+                        className={`rounded-2xl bg-[#111111] hover:bg-[#181818] border border-[#1e1e1e] hover:border-primary/50 transition-all motion-reduce:transition-none cursor-pointer group shadow-lg shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                          isSmall ? 'p-2 flex flex-col gap-2' : isLarge ? 'p-5 flex items-center gap-4' : 'p-3.5 flex items-center gap-3.5'
+                        }`}
+                      >
+                        <div
+                          className={`bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative ${
+                            isSmall ? 'w-full aspect-square rounded-xl' : isLarge ? 'w-20 h-20 rounded-2xl' : 'w-14 h-14 rounded-xl'
+                          }`}
+                        >
+                          {item.image_url ? (
+                            <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Music className={`text-primary/60 ${isLarge ? 'w-8 h-8' : 'w-6 h-6'}`} />
+                          )}
+                          {isSmall && (
+                            <div
+                              className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 py-1 bg-black/70 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity motion-reduce:transition-none"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {actions}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 w-full">
+                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isSmall ? 'text-[11px]' : isLarge ? 'text-sm' : 'text-xs'}`}>{item.title || 'Untitled'}</h4>
+                          {!isSmall && (
+                            <p className={`text-zinc-500 truncate mt-0.5 font-mono ${isLarge ? 'text-xs' : 'text-[11px]'}`}>{item.style || item.style_desc || 'AI Track'}</p>
+                          )}
+                        </div>
+                        {!isSmall && (
+                          <div className={`flex items-center shrink-0 ${isLarge ? 'gap-2' : 'gap-1.5'}`} onClick={(e) => e.stopPropagation()}>
+                            {actions}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
