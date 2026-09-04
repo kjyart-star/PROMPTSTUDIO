@@ -630,8 +630,8 @@ export function HomeClient({
                     </button>
 
                     {/* Badge top-left */}
-                    <span className="absolute top-2.5 left-2.5 text-[9px] font-black px-2 py-0.5 rounded bg-primary text-[#070709] tracking-wider scale-95 z-20 shadow-md">
-                      {idx + 1}위
+                    <span className="absolute top-2.5 left-2.5 text-[15px] leading-none font-black px-2 py-1 rounded bg-primary text-[#070709] tracking-tight z-20 shadow-md tabular-nums">
+                      {idx + 1}
                     </span>
 
                     {/* Floating Circular Heart + More Button */}
