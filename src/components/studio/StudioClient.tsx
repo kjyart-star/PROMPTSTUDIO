@@ -1849,7 +1849,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 <div className="xl:col-span-3 space-y-4 xl:flex xl:flex-col">
                   {/* AI 설정 ([임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고) */}
                   {canUseAi && (
-                    <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
+                    <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
                       <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
                         <Settings className="w-3.5 h-3.5 text-primary" />
                         AI 설정
@@ -1869,8 +1869,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     </div>
                   )}
 
-                  {/* 지침서 (가이드) */}
-                  <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3.5 shadow-xl">
+                  {/* 지침서 (가이드) — 왼쪽 칼럼의 마지막 카드라 남는 높이를 여기서 받는다.
+                      카드가 안 늘어나면 그 아래가 빈 배경으로 남는다(대표 지시 2026-09-05). */}
+                  <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3.5 shadow-xl xl:flex-1 xl:flex xl:flex-col xl:min-h-0">
                     <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
                       <FileText className="w-3.5 h-3.5 text-primary" />
                       지침서 (가이드)
@@ -1967,7 +1968,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
                 {/* 2열: 중앙 패널 (곡 정보 및 프롬프트 설정) - 5칸 */}
                 <div className="xl:col-span-5 space-y-4">
-                  <div className="bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl space-y-4 shadow-xl">
+                  <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl space-y-4 shadow-xl">
                     <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
                       <Disc className="w-3.5 h-3.5 text-primary" />
                       곡 정보 및 프롬프트 설정
@@ -2355,7 +2356,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
                 {/* 3열: 우측 패널 (생성 결과 OUTPUT) - 가운데 패널과 아래쪽 높이 일치 */}
                 <div className="xl:col-span-4 h-full flex flex-col">
-                  <div className="bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
+                  <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
                     <div className="space-y-3 flex-1 flex flex-col">
                       <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
                         <FileText className="w-3.5 h-3.5 text-primary" />
