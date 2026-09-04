@@ -1001,13 +1001,26 @@ export function GenerateClient({
                             : 'bg-black/25 border-zinc-800/40 hover:bg-white/[0.02] hover:border-zinc-700/50'
                         }`}
                       >
-                        {track.image_url ? (
-                          <img src={track.image_url} alt="Cover" className="w-11 h-11 rounded-lg object-cover shadow-md shrink-0" />
-                        ) : (
-                          <div className="w-11 h-11 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 shrink-0">
-                            <Music className="w-5 h-5 text-zinc-700" />
-                          </div>
-                        )}
+                        {/* 재생 중이면 썸네일 위에 이퀄라이저가 뜬다 — 홈 카드와 같은 표시(대표 지시 2026-09-05) */}
+                        <div className="relative w-11 h-11 shrink-0">
+                          {track.image_url ? (
+                            <img src={track.image_url} alt="Cover" className="w-11 h-11 rounded-lg object-cover shadow-md" />
+                          ) : (
+                            <div className="w-11 h-11 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                              <Music className="w-5 h-5 text-zinc-700" />
+                            </div>
+                          )}
+                          {isCurrentPlaying && (
+                            <span
+                              aria-hidden
+                              className="absolute inset-0 rounded-lg bg-black/60 flex items-end justify-center gap-[2.5px] pb-3"
+                            >
+                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-1 motion-reduce:animate-none" />
+                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-2 motion-reduce:animate-none" />
+                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-3 motion-reduce:animate-none" />
+                            </span>
+                          )}
+                        </div>
                         
                         <div className="min-w-0 flex-1 text-left">
                           <p className={`text-xs font-bold truncate group-hover/item:text-primary transition-colors ${
