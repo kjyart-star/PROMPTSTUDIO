@@ -322,8 +322,10 @@ export function TrackDetailPanel({
             </button>
             <div
               key={track?.id ?? 'panel'}
-              /* 아래 100vh 계산은 판을 재기 전 첫 프레임용 대비값이다 — 실측이 끝나면 덮인다. */
-              style={paneHeight != null ? { height: paneHeight } : undefined}
+              /* 아래 100vh·26rem 은 판을 재기 전 첫 프레임용 대비값이다 — 실측이 끝나면 덮인다.
+                 minHeight 까지 같이 덮어야 한다: 창이 낮으면 26rem 바닥값이 실측 높이를
+                 밀어내 패널이 다시 판 밖으로 나갔다(1280x650 에서 판 420 · 카드 416 실측). */
+              style={paneHeight != null ? { height: paneHeight, minHeight: paneHeight } : undefined}
               className="h-[calc(100vh-13rem)] min-h-[26rem] rounded-2xl bg-[#111111] border border-outline-variant shadow-xl flex flex-col overflow-hidden animate-panel-in"
             >
               {body}
