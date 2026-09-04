@@ -1729,10 +1729,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   }
                   desc={
                     uiLanguage === 'KO'
-                      ? '만들어 둔 AI 오디오 트랙과 프로젝트 에셋입니다. 카드를 누르면 오른쪽에 프롬프트와 가사가 열리고, 재생은 카드의 재생 버튼으로 합니다.'
+                      ? '만들어 둔 AI 오디오 트랙과 프로젝트 에셋입니다. 카드를 누르면 곡이 재생되면서 오른쪽에 프롬프트와 가사가 열립니다.'
                       : uiLanguage === 'JA'
-                      ? '生成したAIオーディオトラックとプロジェクトアセットです。カードを押すと右側にプロンプトと歌詞が開き、再生はカードの再生ボタンで行います。'
-                      : 'Every AI audio track and project asset you have made. Click a card to open its prompt and lyrics on the right; use the play button to listen.'
+                      ? '生成したAIオーディオトラックとプロジェクトアセットです。カードを押すと再生され、右側にプロンプトと歌詞が開きます。'
+                      : 'Every AI audio track and project asset you have made. Click a card to play it and open its prompt and lyrics on the right.'
                   }
                   bg="/studio/hero-library.webp"
                 >
@@ -1924,11 +1924,12 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         key={item.id}
                         role="button"
                         tabIndex={0}
-                        /* 카드 클릭은 상세 패널 열기 — 재생은 카드/패널의 재생 버튼이 맡는다 */
-                        onClick={() => setLibraryDetailId(item.id)}
+                        /* 카드 클릭 = 재생 + 오른쪽 상세 패널 열기 (대표 지시 2026-09-05) */
+                        onClick={() => { playHistoryTrack(item); setLibraryDetailId(item.id) }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
+                            playHistoryTrack(item)
                             setLibraryDetailId(item.id)
                           }
                         }}
