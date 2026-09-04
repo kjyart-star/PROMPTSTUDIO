@@ -255,9 +255,10 @@ export function TrackDetailPanel({
   return (
     <>
       {/* 데스크톱: 오른쪽 고정 칼럼 */}
-      {/* 폭 변화(접기/펼치기)는 부드럽게, 처음 열릴 때는 오른쪽에서 미끄러져 들어온다 */}
+      {/* 폭에는 전환을 걸지 않는다 — 접힘/펼침이 서로 다른 하위 트리라, 전환을 걸면
+          접힌 레일이 원래 폭에 붙잡혀 자리를 안 비운다(실측). 등장 효과는 안쪽에서 준다. */}
       <aside
-        className={`hidden lg:block shrink-0 self-start sticky top-0 overflow-hidden transition-[width] duration-300 ease-out motion-reduce:transition-none ${
+        className={`hidden lg:block shrink-0 self-start sticky top-0 ${
           collapsed ? 'w-9' : 'w-[21rem]'
         }`}
       >

@@ -1846,7 +1846,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 </div>
 
                 {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
-                <div className="xl:col-span-3 space-y-4">
+                <div className="xl:col-span-3 space-y-4 xl:flex xl:flex-col">
                   {/* AI 설정 ([임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고) */}
                   {canUseAi && (
                     <div className="bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
@@ -1937,10 +1937,11 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       </button>
                     </div>
 
-                    {/* 문서 업로드 (PDF/TXT) */}
-                    <div className="pt-2 space-y-1.5 border-t border-[#1a1a1a]">
+                    {/* 문서 업로드 (PDF/TXT) — 왼쪽 칼럼이 가운데보다 짧아 아래가 비어 보이던 자리라,
+                        이 영역이 남는 높이를 가져가 칸을 채운다(대표 지시 2026-09-05). */}
+                    <div className="pt-2 space-y-1.5 border-t border-[#1a1a1a] xl:flex-1 xl:flex xl:flex-col xl:min-h-0">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">문서 업로드 (PDF/TXT)</span>
-                      <div className="relative border border-dashed border-[#232323] hover:border-primary/50 bg-[#0a0a0a]/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
+                      <div className="relative border border-dashed border-[#232323] hover:border-primary/50 bg-[#0a0a0a]/60 rounded-xl p-4 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all xl:flex-1 xl:min-h-[160px]">
                         <input
                           type="file"
                           ref={fileInputRef}
@@ -1951,6 +1952,13 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         <Upload className="w-4 h-4 text-zinc-500 mb-1" />
                         <span className="text-[10px] text-zinc-500 text-center">
                           {isParsing ? '문서 읽는 중...' : '드래그하거나 클릭하여 파일 선택'}
+                        </span>
+                        <span className="text-[10px] text-zinc-600 text-center leading-relaxed max-w-[22ch]">
+                          {uiLanguage === 'KO'
+                            ? '작사 규칙이나 참고 자료를 올리면 프롬프트에 반영됩니다'
+                            : uiLanguage === 'JA'
+                              ? '作詞ルールや参考資料をアップロードするとプロンプトに反映されます'
+                              : 'Upload lyric rules or references to fold them into the prompt'}
                         </span>
                       </div>
                     </div>
