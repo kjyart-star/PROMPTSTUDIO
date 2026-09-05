@@ -31,6 +31,8 @@ const HREF_BY_ID: Record<string, string> = {
   cookiepix: suiteHref('/cookiepix/app'),
   cookieillust: suiteHref('/cookieillust/app'),
   cookiemusicstudio: `${BASE_PATH}/studio`,
+  /* 준비 중이라 만드는 화면이 없다 — 쿠키챗과 같이 소개 페이지로 보낸다 */
+  cookiedream: suiteHref('/cookiedream'),
   cookiemusic: BASE_PATH,
   cookiechat: suiteHref('/cookiechat'),
   cookiephotostudio: suiteHref('/photo'),
@@ -42,6 +44,7 @@ export type SuiteServiceId =
   | 'cookiepix'
   | 'cookieillust'
   | 'cookiemusicstudio'
+  | 'cookiedream'
   | 'cookiemusic'
   | 'cookiechat'
   | 'cookiephotostudio'
