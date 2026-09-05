@@ -14,8 +14,6 @@ interface StudioHeaderProps {
   currentTab: string
   setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering') => void
   uiLanguage: string
-  /** 스위트 공용 지갑 잔액. 아직 못 읽었으면 null 이고, 그때는 숫자를 그리지 않는다. */
-  userCredits?: number | null
   user?: any
   projectTitle?: string
   setProjectTitle?: (title: string) => void
@@ -25,7 +23,6 @@ export function StudioHeader({
   currentTab,
   setCurrentTab,
   uiLanguage,
-  userCredits = null,
   user = null,
   projectTitle = 'CookieMusic Studio Project',
   setProjectTitle
@@ -108,18 +105,7 @@ export function StudioHeader({
           </button>
         </div>
 
-        {/* Credits — 크레딧을 실제로 쓰는 곳은 스튜디오다. 클릭하면 충전으로 */}
-        {user && (
-          <Link
-            href="/pricing"
-            title={uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットをチャージ' : 'Recharge Credits'}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#131313] hover:bg-[#1b1b1b] border border-[#1f1f1f] hover:border-primary/40 text-xs transition-all cursor-pointer"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-zinc-400 font-medium">크레딧</span>
-            <span className="font-mono font-black text-primary">{userCredits === null ? '···' : `${userCredits.toLocaleString()}P`}</span>
-          </Link>
-        )}
+        {/* 크레딧 자리는 스위트 상단 바의 알약 하나다(대표 2026-09-06) — 여기서는 그리지 않는다 */}
 
         {/* User profile / Login */}
         {!user ? (

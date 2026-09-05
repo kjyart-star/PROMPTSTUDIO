@@ -245,12 +245,12 @@ export function PublicLayoutClient({
 
   return (
     <div className="min-h-screen bg-background md:h-screen md:min-h-0 md:overflow-hidden md:flex md:flex-col md:bg-surface-container-lowest text-on-background font-body-md selection:bg-primary selection:text-on-primary">
-      {/* 스위트 공통 상단 바 — 아래 고정/스티키 요소는 전부 이 40px 만큼 내려간다 */}
-      <SuiteBar active="music" />
+      {/* 스위트 공통 상단 바 — 아래 고정/스티키 요소는 전부 이 높이(md 64px)만큼 내려간다 */}
+      <SuiteBar active="cookiemusic" />
       
       {/* Shell: Side Navigation (Desktop Only) */}
       {/* 아래 패딩은 고정 플레이어(h-24) 높이만큼 비운다 — 안 그러면 사이드바 맨 아래가 가린다 */}
-      <aside className="hidden md:flex flex-col pt-[24px] pb-[24px] px-[16px] h-[calc(100vh-160px)] w-64 rounded-lg border border-outline-variant bg-surface-container-low fixed left-3 top-[52px] z-50 justify-between overflow-y-auto custom-scrollbar">
+      <aside className="hidden md:flex flex-col pt-[24px] pb-[24px] px-[16px] h-[calc(100vh-184px)] w-64 rounded-lg border border-outline-variant bg-surface-container-low fixed left-3 top-[76px] z-50 justify-between overflow-y-auto custom-scrollbar">
         <div className="flex flex-col gap-[24px]">
           <div className="flex justify-center">
             {/* 캐릭터와 아치 글씨가 한 장으로 그려진 로고(대표 2026-08-29:

@@ -1652,7 +1652,6 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         uiLanguage={uiLanguage}
-        userCredits={creditBalance}
         user={user}
       />
 

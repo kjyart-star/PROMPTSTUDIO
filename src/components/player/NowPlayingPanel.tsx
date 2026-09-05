@@ -157,7 +157,7 @@ export function NowPlayingPanel() {
 
   if (!isNowPlayingOpen) return edgeHandle;
 
-  const panelClass = "fixed right-3 top-[52px] h-[calc(100vh-160px)] w-[360px] z-40 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col shadow-2xl animate-slide-in-right";
+  const panelClass = "fixed right-3 top-[76px] h-[calc(100vh-184px)] w-[360px] z-40 bg-surface-container-low border border-outline-variant rounded-lg flex flex-col shadow-2xl animate-slide-in-right";
   const panelHeader = (
     <div className="flex items-center justify-between px-5 py-4 border-b border-[#282828] bg-surface-container-low/65 sticky top-0 z-10 backdrop-blur-md relative rounded-t-lg">
       <h2 className="text-sm font-bold text-on-surface truncate pr-4">

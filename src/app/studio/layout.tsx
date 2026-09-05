@@ -17,7 +17,7 @@ export default function StudioRootLayout({
        바닥(surface-container-lowest)이 판보다 어둡고, 판은 모서리 8px·1px 보더·
        12px 간격. 화면은 고정하고 스크롤은 판 안쪽에서만 일어난다. */
     <div className="cm-studio min-h-screen md:h-screen md:min-h-0 md:overflow-hidden bg-surface-container-lowest text-zinc-100 flex flex-col selection:bg-purple-500 selection:text-white">
-      <SuiteBar active="studio" />
+      <SuiteBar active="cookiemusicstudio" />
       {children}
       {/* 하단 재생 바 — 쿠키뮤직 스트리밍과 같은 플레이어를 그대로 쓴다.
           playerStore 는 모듈 싱글턴이라 스튜디오의 재생 버튼이 이미 이 스토어를 물고 있었고,
