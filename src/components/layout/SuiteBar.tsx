@@ -28,7 +28,7 @@ import { SuiteAccountBadge } from './SuiteAccountBadge'
 /** 서비스 id → 이 저장소에서의 주소. 목록·순서는 `services.ts` 가 정한다. */
 const HREF_BY_ID: Record<string, string> = {
   /* 자리만 세운 서비스라 볼 화면이 없다 — 쿠키드림과 같이 소개 페이지로 보낸다 */
-  cookietv: suiteHref('/cookietv'),
+  cookiemovie: suiteHref('/cookiemovie'),
   cookiecut: suiteHref('/editor'),
   cookiepix: suiteHref('/cookiepix/app'),
   cookieillust: suiteHref('/cookieillust/app'),
@@ -42,7 +42,7 @@ const HREF_BY_ID: Record<string, string> = {
 
 /** COOKIELAB 제품 id 를 그대로 쓴다 — 공지(announcement)의 scope 값이 이 id 라 종이 그대로 걸러낸다. */
 export type SuiteServiceId =
-  | 'cookietv'
+  | 'cookiemovie'
   | 'cookiecut'
   | 'cookiepix'
   | 'cookieillust'
