@@ -384,16 +384,6 @@ export function PricingClient({ user }: PricingClientProps) {
               <span className="text-[10px] text-zinc-400">약 100곡 생성 가능</span>
             </div>
             <div className="mt-6">
-              <div className="text-[10px] text-zinc-500 font-semibold space-y-1 mb-3">
-                <div className="flex justify-between px-1">
-                  <span>원가 (Cost):</span>
-                  <span>$5.00</span>
-                </div>
-                <div className="flex justify-between px-1">
-                  <span>마진 (Margin):</span>
-                  <span className="text-primary">60%</span>
-                </div>
-              </div>
               <span className="block text-2xl font-black text-white mb-4">$8.00</span>
               <button 
                 onClick={() => handleBuyExtraCredits(500)}
@@ -415,16 +405,6 @@ export function PricingClient({ user }: PricingClientProps) {
               <span className="text-[10px] text-zinc-400">약 200곡 생성 가능</span>
             </div>
             <div className="mt-6">
-              <div className="text-[10px] text-zinc-500 font-semibold space-y-1 mb-3">
-                <div className="flex justify-between px-1">
-                  <span>원가 (Cost):</span>
-                  <span>$10.00</span>
-                </div>
-                <div className="flex justify-between px-1">
-                  <span>마진 (Margin):</span>
-                  <span className="text-primary">60%</span>
-                </div>
-              </div>
               <span className="block text-2xl font-black text-white mb-4">$16.00</span>
               <button 
                 onClick={() => handleBuyExtraCredits(1000)}
@@ -443,16 +423,6 @@ export function PricingClient({ user }: PricingClientProps) {
               <span className="text-[10px] text-zinc-400">약 400곡 생성 가능</span>
             </div>
             <div className="mt-6">
-              <div className="text-[10px] text-zinc-500 font-semibold space-y-1 mb-3">
-                <div className="flex justify-between px-1">
-                  <span>원가 (Cost):</span>
-                  <span>$20.00</span>
-                </div>
-                <div className="flex justify-between px-1">
-                  <span>마진 (Margin):</span>
-                  <span className="text-primary">60%</span>
-                </div>
-              </div>
               <span className="block text-2xl font-black text-white mb-4">$32.00</span>
               <button 
                 onClick={() => handleBuyExtraCredits(2000)}
