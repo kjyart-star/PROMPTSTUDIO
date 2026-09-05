@@ -845,7 +845,30 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
 
-  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering'>('studio')
+  /*
+   * 쿼리 파라미터는 mount effect 가 아니라 **첫 렌더**에서 반영한다.
+   *
+   * 이 페이지는 page.tsx 의 `<Suspense>` 안에서 스트리밍으로 늦게 도착하는데, 그렇게
+   * 뒤늦게 채워진 경계는 사용자가 실제로 클릭하기 전까지 하이드레이트되지 않는다
+   * (2026-09-06 실측: 15초를 기다려도 fiber 가 dehydrated 상태로 남고 버튼에
+   * react props 가 붙지 않는다). 즉 하드 내비게이션에서는 아래 useEffect 들이
+   * 아예 돌지 않아 `?tab=`·`?title=`·`?style=` 이 통째로 무시됐다.
+   * 초깃값으로 넣으면 서버 렌더 HTML 자체가 이미 맞는 탭·입력값을 담는다.
+   */
+  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering'>(() => {
+    // title/style/prompt 가 오면 아래 effect 와 같은 규칙으로 음악 프롬프트 탭이 이긴다
+    if (searchParams.get('title') || searchParams.get('style') || searchParams.get('prompt')) return 'studio'
+    if (
+      tabParam === 'library' ||
+      tabParam === 'studio' ||
+      tabParam === 'cover' ||
+      tabParam === 'suno' ||
+      tabParam === 'mastering'
+    ) {
+      return tabParam
+    }
+    return 'studio'
+  })
 
   useEffect(() => {
     if (
@@ -877,7 +900,19 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   
-  const [form, setForm] = useState(INITIAL_FORM)
+  // 위 currentTab 과 같은 이유로 쿼리 파라미터를 첫 렌더에서 바로 채운다
+  const [form, setForm] = useState(() => {
+    const title = searchParams.get('title')
+    const style = searchParams.get('style')
+    const prompt = searchParams.get('prompt')
+    if (!title && !style && !prompt) return INITIAL_FORM
+    return {
+      ...INITIAL_FORM,
+      title: title || INITIAL_FORM.title,
+      styleDesc: style || INITIAL_FORM.styleDesc,
+      extra: prompt ? `Remix prompt: ${prompt}` : INITIAL_FORM.extra,
+    }
+  })
   const [settings, setSettings] = useState({
     provider: 'openai',
     model: PROVIDERS.openai.models[0],
