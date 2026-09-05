@@ -25,7 +25,7 @@ export interface SuiteService {
   /** COOKIELAB `products.ts` 의 Product.id. 공지(announcement) 의 scope 도 이 id 를 쓴다. */
   id: string
   name: string
-  /** 층 짧은 표기('4F' · '3F' · '2F' · '1F' · 'B1') */
+  /** 층 짧은 표기('5F' · '4F' · '3F' · '2F' · '1F' · 'B1') */
   floor: string
   status: SuiteStatus
 }
@@ -45,8 +45,14 @@ export interface SuiteService {
  * **소개 페이지**로 가므로 갈 데가 없지 않다. 목록에서 빼면 세 저장소의 상단 메뉴가
  * 서로 달라진다 — 이 파일이 있는 이유가 그것이다(대표 2026-09-06: "상단메뉴 마지막
  * 이미지처럼 공통으로 되어 있어야 함").
+ *
+ * 쿠키TV(5F)도 같은 이유로 목록에 둔다 — 아직 **자리뿐**이지만(대표 2026-09-06:
+ * "5층에 자리만 넣어줘 … AI 영화, 드라마, 숏드라마 등을 올리고 보는 장소"),
+ * 준비 중인 서비스를 저장소마다 넣었다 뺐다 하면 메뉴가 갈라진다. 쿠키드림과 같이
+ * 소개 페이지로 보내고 「준비 중」 배지가 상태를 말한다.
  */
 export const SUITE_SERVICES: SuiteService[] = [
+  { id: 'cookietv', name: '쿠키TV', floor: '5F', status: 'preview' },
   { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', floor: '4F', status: 'beta' },
   { id: 'cookiedream', name: '쿠키드림', floor: '4F', status: 'preview' },
   { id: 'cookiecut', name: '쿠키컷', floor: '3F', status: 'stable' },
