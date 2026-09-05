@@ -70,9 +70,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
         setProfile(data)
         setEditName(data.display_name || '')
         setEditAvatar(data.avatar_url || '')
-        if (data.credits !== undefined && data.credits !== null) {
-          localStorage.setItem('user-credits', String(data.credits))
-        }
       }
     } catch (e) {
       console.error(e)

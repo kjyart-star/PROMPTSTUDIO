@@ -6,6 +6,7 @@ import { Music, Disc, Upload, Play, Pause, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
+import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { StudioHero } from './StudioHero'
 
 interface CoverClientProps {
@@ -23,7 +24,8 @@ export function CoverClient({ user }: CoverClientProps) {
   const [pollingTaskId, setPollingTaskId] = useState<string | null>(null)
   const [activeAudioList, setActiveAudioList] = useState<any[]>([])
   const [status, setStatus] = useState('대기 중')
-  const [userCredits, setUserCredits] = useState<number>(120)
+  /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
+  const { setBalance: setCreditBalance } = useSuiteCredits(user)
   const [uiLanguage, setUiLanguage] = useState<string>('KO')
 
   useEffect(() => {
@@ -42,14 +44,7 @@ export function CoverClient({ user }: CoverClientProps) {
         setUiLanguage(e.detail.toUpperCase())
       }
       window.addEventListener('languageChange', handleLangChange)
-      
-      const savedCredits = localStorage.getItem('user-credits')
-      if (savedCredits !== null) {
-        setUserCredits(parseFloat(savedCredits))
-      } else {
-        localStorage.setItem('user-credits', '120')
-        setUserCredits(120)
-      }
+
       return () => window.removeEventListener('languageChange', handleLangChange)
     }
   }, [])
@@ -202,57 +197,35 @@ export function CoverClient({ user }: CoverClientProps) {
       return
     }
 
-    // Check credits (10 credits)
-    const savedCredits = localStorage.getItem('user-credits')
-    const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
-    if (currentCredits < 10) {
-      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 10 크레딧)' : uiLanguage === 'JA' ? 'クレジットが不足しています。(10クレジット必要)' : 'Insufficient credits. (Requires 10 credits)')
-      return
-    }
-    
     setIsMusicGenerating(true)
     setStatus(uiLanguage === 'KO' ? 'Apipass 서버로 커버 생성 요청을 전송했습니다.' : uiLanguage === 'JA' ? 'Apipassにカバー生成リクエストを送信しました。' : 'Sent cover generation request to Apipass.')
     
     try {
-      const res = await fetch('/api/suno/cover/generate', {
+      const res = await fetch(withBase('/api/suno/cover/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           audioUrl: uploadedFileUrl,
+          requestId: crypto.randomUUID(),
           ...generateForm 
         })
       })
       
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       
       if (res.ok && data.taskId) {
         setPollingTaskId(data.taskId)
-
-        // Deduct credits and save transaction!
-        const nextCredits = Math.round(currentCredits - 10)
-        localStorage.setItem('user-credits', String(nextCredits))
-        setUserCredits(nextCredits)
-
-        const savedTx = localStorage.getItem('user-transactions')
-        let txList = []
-        if (savedTx) {
-          try {
-            txList = JSON.parse(savedTx)
-          } catch (e) {
-            console.error(e)
-          }
-        }
-        const newTx = {
-          id: 'tx-' + Date.now(),
-          date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-          type: 'use',
-          desc: uiLanguage === 'KO' ? 'AI 커버 생성 (-10)' : uiLanguage === 'JA' ? 'AIカバー生成 (-10)' : 'AI Cover Generation (-10)',
-          amount: '-10',
-          status: 'Completed'
-        }
-        localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
+        if (typeof data.balance === 'number') setCreditBalance(data.balance)
       } else {
-        alert(`요청 실패: ${data.error || '알 수 없는 오류'}`)
+        if (res.status === 401) {
+          alert(uiLanguage === 'KO' ? '로그인이 필요합니다.' : uiLanguage === 'JA' ? 'ログインが必要です。' : 'Please sign in.')
+        } else if (res.status === 402) {
+          const have = Number(data.balance ?? 0)
+          const need = Number(data.required ?? 0)
+          alert(uiLanguage === 'KO' ? `크레딧이 ${need - have}크레딧 부족합니다 (보유 ${have} · 필요 ${need})` : uiLanguage === 'JA' ? `クレジットが ${need - have} 不足しています (保有 ${have} ・ 必要 ${need})` : `You need ${need - have} more credits (balance ${have} · required ${need})`)
+        } else {
+          alert(`요청 실패: ${data.error || '알 수 없는 오류'}`)
+        }
         setIsMusicGenerating(false)
         setStatus(uiLanguage === 'KO' ? '요청 실패' : uiLanguage === 'JA' ? 'リクエスト失敗' : 'Request failed')
       }

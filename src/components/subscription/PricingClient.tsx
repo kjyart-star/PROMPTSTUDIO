@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, ArrowLeft, Plus } from 'lucide-react'
+import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 
 interface PricingClientProps {
   user: any
@@ -11,10 +12,11 @@ interface PricingClientProps {
 export function PricingClient({ user }: PricingClientProps) {
   const router = useRouter()
   const [isAnnual, setIsAnnual] = useState(false)
-  const [userCredits, setUserCredits] = useState<number>(120)
   const [currentPlan, setCurrentPlan] = useState<string>('free')
-  const [transactions, setTransactions] = useState<any[]>([])
   const [uiLanguage, setUiLanguage] = useState<string>('KO')
+  const [notice, setNotice] = useState<string>('')
+  /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
+  const { balance: creditBalance } = useSuiteCredits(user)
   
   // Load current subscription states from localStorage
   useEffect(() => {
@@ -25,98 +27,31 @@ export function PricingClient({ user }: PricingClientProps) {
       localStorage.setItem('user-plan', 'free')
     }
 
-    const savedCredits = localStorage.getItem('user-credits')
-    if (savedCredits !== null) {
-      setUserCredits(parseFloat(savedCredits))
-    } else {
-      localStorage.setItem('user-credits', '120')
-    }
-
-    const savedTx = localStorage.getItem('user-transactions')
-    if (savedTx) {
-      try {
-        setTransactions(JSON.parse(savedTx))
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
     const savedLang = localStorage.getItem('uiLanguage')
     if (savedLang) {
       setUiLanguage(savedLang)
     }
   }, [])
 
-  const handleSubscribe = (plan: 'pro' | 'premier' | 'payg_30' | 'payg_60') => {
+  /** 결제·충전은 아직 열리지 않았다. 가짜로 크레딧을 더하지 않는다. */
+  const showComingSoon = () => {
     if (!user) {
       router.push('/login')
       return
     }
-
-    let planCredits = 0
-    let planName = ''
-    if (plan === 'pro') { planCredits = 2500; planName = 'Pro Plan' }
-    else if (plan === 'premier') { planCredits = 10000; planName = 'Premier Plan' }
-    else if (plan === 'payg_30') { planCredits = 6800; planName = 'Pay-As-You-Go ($30)' }
-    else if (plan === 'payg_60') { planCredits = 14300; planName = 'Pay-As-You-Go ($60)' }
-
-    const newCredits = planCredits
-
-    localStorage.setItem('user-plan', plan)
-    localStorage.setItem('user-credits', String(newCredits))
-    localStorage.setItem('user-plan-billing', isAnnual ? 'yearly' : 'monthly')
-    
-    // Calculate renewal date
-    const now = new Date()
-    const renewalDate = new Date(now.setMonth(now.getMonth() + 1))
-    const renewalStr = `${renewalDate.getFullYear()}-${String(renewalDate.getMonth() + 1).padStart(2, '0')}-${String(renewalDate.getDate()).padStart(2, '0')}`
-    localStorage.setItem('user-plan-renewal', renewalStr)
-
-    // Add transaction log
-    const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')} ${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
-    const newTx = {
-      id: `tx-${Date.now()}`,
-      date: dateStr,
-      type: 'charge',
-      desc: `Subscribed to ${planName} (${isAnnual ? 'Billed Annually' : 'Billed Monthly'})`,
-      amount: `+${planCredits}`,
-      status: 'Completed'
-    }
-    const nextTx = [newTx, ...transactions]
-    localStorage.setItem('user-transactions', JSON.stringify(nextTx))
-
-    // Redirect to settings credits page
-    router.push('/settings?section=credits')
+    setNotice(uiLanguage === 'KO'
+      ? '크레딧 충전은 준비 중입니다. 곧 열립니다.'
+      : uiLanguage === 'JA'
+        ? 'クレジットのチャージは準備中です。まもなく公開します。'
+        : 'Credit top-up is coming soon.')
   }
 
-  const handleBuyExtraCredits = (amount: number) => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
+  const handleSubscribe = (_plan: 'pro' | 'premier' | 'payg_30' | 'payg_60') => {
+    showComingSoon()
+  }
 
-    const nextCredits = userCredits + amount
-    localStorage.setItem('user-credits', String(nextCredits))
-
-    const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')} ${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
-    const prices: Record<number, string> = {
-      500: '$8.00',
-      1000: '$16.00',
-      2000: '$32.00'
-    }
-    const priceStr = prices[amount] || 'N/A'
-    const newTx = {
-      id: `tx-${Date.now()}`,
-      date: dateStr,
-      type: 'charge',
-      desc: `Purchased Extra Credits (+${amount}) - ${priceStr}`,
-      amount: `+${amount}`,
-      status: 'Completed'
-    }
-    const nextTx = [newTx, ...transactions]
-    localStorage.setItem('user-transactions', JSON.stringify(nextTx))
-
-    router.push('/settings?section=credits')
+  const handleBuyExtraCredits = (_amount: number) => {
+    showComingSoon()
   }
 
   const proFeatures = [
@@ -200,9 +135,17 @@ export function PricingClient({ user }: PricingClientProps) {
               {uiLanguage === 'KO' ? '현재 보유 크레딧' : uiLanguage === 'JA' ? '利用可能なクレジット' : 'Available Credits'}
             </span>
             <span className="text-sm font-black text-white">
-              {userCredits.toLocaleString()} {uiLanguage === 'KO' ? '크레딧' : uiLanguage === 'JA' ? 'クレジット' : 'Credits'}
+              {creditBalance === null
+                ? '···'
+                : `${creditBalance.toLocaleString()} ${uiLanguage === 'KO' ? '크레딧' : uiLanguage === 'JA' ? 'クレジット' : 'Credits'}`}
             </span>
           </div>
+        </div>
+      )}
+
+      {notice && (
+        <div className="max-w-md mx-auto -mt-8 mb-12 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-center text-xs font-bold text-primary">
+          {notice}
         </div>
       )}
 

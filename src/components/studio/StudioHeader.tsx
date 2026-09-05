@@ -14,7 +14,8 @@ interface StudioHeaderProps {
   currentTab: string
   setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering') => void
   uiLanguage: string
-  userCredits?: number
+  /** 스위트 공용 지갑 잔액. 아직 못 읽었으면 null 이고, 그때는 숫자를 그리지 않는다. */
+  userCredits?: number | null
   user?: any
   projectTitle?: string
   setProjectTitle?: (title: string) => void
@@ -24,7 +25,7 @@ export function StudioHeader({
   currentTab,
   setCurrentTab,
   uiLanguage,
-  userCredits = 0,
+  userCredits = null,
   user = null,
   projectTitle = 'CookieMusic Studio Project',
   setProjectTitle
@@ -116,7 +117,7 @@ export function StudioHeader({
           >
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-zinc-400 font-medium">크레딧</span>
-            <span className="font-mono font-black text-primary">{userCredits.toLocaleString()}P</span>
+            <span className="font-mono font-black text-primary">{userCredits === null ? '···' : `${userCredits.toLocaleString()}P`}</span>
           </Link>
         )}
 

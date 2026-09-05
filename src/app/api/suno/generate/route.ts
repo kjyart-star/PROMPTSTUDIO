@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
+import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
 
 const API_KEY = process.env.APIPASS_API_KEY
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(request: Request) {
   try {
@@ -21,24 +24,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 차단 사용자 및 크레딧 검증
-    let profile: { is_banned?: boolean; credits?: number } | null = null
+    // 차단 사용자 검증 (크레딧은 스위트 공용 지갑이 본다 — profiles.credits 는 더 이상 쓰지 않는다)
+    let profile: { is_banned?: boolean } | null = null
     const { data: fetchProfile, error: profileErr } = await supabase
       .from('profiles')
-      .select('is_banned, credits')
+      .select('is_banned')
       .eq('id', user.id)
       .single()
 
     if (profileErr && profileErr.code === '42703') {
-      // is_banned 컬럼이 없을 경우 credits만 조회하여 대체
-      const { data: fallbackProfile } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single()
-      if (fallbackProfile) {
-        profile = { is_banned: false, credits: fallbackProfile.credits }
-      }
+      // is_banned 컬럼이 없을 경우 정상(false)으로 간주
+      profile = { is_banned: false }
     } else {
       profile = fetchProfile
     }
@@ -47,29 +43,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Banned account. Please contact support.' }, { status: 403 })
     }
 
-    if ((profile?.credits ?? 0) < 10) {
-      return NextResponse.json({ error: 'Insufficient credits. Please recharge.' }, { status: 403 })
-    }
-
     const body = await request.json()
-    const { 
-      historyId, 
-      prompt, 
-      style, 
-      title, 
-      modelVersion, 
-      customMode, 
-      instrumentalOnly, 
-      vocalGender, 
-      negativeTags, 
-      styleWeight, 
-      weirdness, 
-      audioWeight 
+    const {
+      historyId,
+      prompt,
+      style,
+      title,
+      modelVersion,
+      customMode,
+      instrumentalOnly,
+      vocalGender,
+      negativeTags,
+      styleWeight,
+      weirdness,
+      audioWeight
     } = body
 
     if (!historyId) {
       return NextResponse.json({ error: 'historyId is required' }, { status: 400 })
     }
+
+    // 같은 클릭이 두 번 닿아도 한 번만 빠지게 — 클라이언트가 보낸 UUID 를 멱등키에 쓴다
+    const requestId = typeof body.requestId === 'string' && UUID_RE.test(body.requestId)
+      ? body.requestId
+      : crypto.randomUUID()
+
+    // 크레딧 선차감. Apipass 가 실패하면 아래에서 되돌린다.
+    const spend = await spendCredits({
+      action: 'music.generate',
+      idempotencyKey: `music.generate:${user.id}:${requestId}`,
+      ref: historyId || requestId,
+      reason: '음악 생성',
+    })
+    if (!spend.ok) return creditErrorResponse(spend)
 
     const upperModelVersion = (modelVersion || 'V5').toUpperCase()
 
@@ -87,51 +93,26 @@ export async function POST(request: Request) {
       }
     }
 
-    const response = await fetch("https://api.apipass.dev/api/v1/jobs/createTask", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify(payload)
-    })
-
-    const data = await response.json()
+    let response: Response
+    let data: any
+    try {
+      response = await fetch("https://api.apipass.dev/api/v1/jobs/createTask", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify(payload)
+      })
+      data = await response.json()
+    } catch (apiErr) {
+      await refundCredits(spend.ledgerId, 'apipass 실패')
+      console.error('Apipass request failed:', apiErr)
+      return NextResponse.json({ error: 'Apipass API Error' }, { status: 400 })
+    }
 
     if (response.ok && data.code === 200) {
       const taskId = data.data.taskId
-
-      // 크레딧 10 차감 및 히스토리 기록
-      const { error: rpcError } = await supabase.rpc('record_credit_transaction', {
-        p_user_id: user.id,
-        p_amount: -10,
-        p_type: 'use',
-        p_description: '음악 생성 (-10)'
-      })
-
-      if (rpcError) {
-        console.warn('record_credit_transaction RPC failed, falling back to direct credit update:', rpcError.message)
-        // Fallback: Direct credit update using service role client to bypass RLS safely
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        if (serviceRoleKey && supabaseUrl) {
-          const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-          const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
-          const { data: pData } = await adminSupabase
-            .from('profiles')
-            .select('credits')
-            .eq('id', user.id)
-            .single()
-          if (pData) {
-            const currentCredits = pData.credits !== null && pData.credits !== undefined ? pData.credits : 120
-            const newCredits = Math.max(0, currentCredits - 10)
-            await adminSupabase
-              .from('profiles')
-              .update({ credits: newCredits })
-              .eq('id', user.id)
-          }
-        }
-      }
 
       // Update DB with task ID and status
       const { error } = await supabase
@@ -148,8 +129,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
 
-      return NextResponse.json({ taskId, status: 'processing' })
+      return NextResponse.json({ taskId, status: 'processing', balance: spend.balance })
     } else {
+      await refundCredits(spend.ledgerId, 'apipass 실패')
       console.error('Apipass API Error:', data)
       return NextResponse.json({ error: data.message || 'Apipass API Error' }, { status: 400 })
     }

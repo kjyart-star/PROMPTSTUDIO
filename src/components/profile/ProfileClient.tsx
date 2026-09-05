@@ -446,7 +446,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   
   // Settings States
   const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
-  const [userCredits, setUserCredits] = useState<number>(120)
+  /* 잔액은 스위트 공용 지갑(워커 원장)에만 있다 — 이 화면은 잔액을 그리지 않는다 */
   const [transactions, setTransactions] = useState<any[]>([])
   const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
@@ -1129,10 +1129,6 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         setProfile(data)
         setEditName(data.display_name || '')
         setEditAvatar(data.avatar_url || '')
-        if (data.credits !== undefined && data.credits !== null) {
-          setUserCredits(data.credits)
-          localStorage.setItem('user-credits', String(data.credits))
-        }
       }
     } catch (e) { console.error(e) }
   }
@@ -1369,13 +1365,6 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       setPlanRenewalDate(savedRenewal)
     }
 
-    const savedCredits = localStorage.getItem('user-credits')
-    if (savedCredits !== null) {
-      setUserCredits(parseFloat(savedCredits))
-    } else {
-      localStorage.setItem('user-credits', '120')
-    }
-
     const savedTx = localStorage.getItem('user-transactions')
     if (savedTx) {
       try {
@@ -1383,14 +1372,6 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
       } catch (e) {
         console.error(e)
       }
-    } else {
-      const defaultTx = [
-        { id: 'tx-1', date: '2026-05-28 10:15', type: 'charge', desc: 'Credit Top-up (+100)', amount: '+100', status: 'Completed' },
-        { id: 'tx-2', date: '2026-05-27 15:40', type: 'use', desc: 'Song Generation (-10)', amount: '-10', status: 'Completed' },
-        { id: 'tx-3', date: '2026-05-26 11:22', type: 'use', desc: 'Stem Extraction (-5)', amount: '-5', status: 'Completed' },
-      ]
-      setTransactions(defaultTx)
-      localStorage.setItem('user-transactions', JSON.stringify(defaultTx))
     }
 
     const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | 'JA' | null
@@ -1436,26 +1417,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : uiLanguage === 'JA' ? `自動再生: ${val ? 'オン' : 'オフ'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
   }
 
-  const handleChargeCredits = (amount: number) => {
-    const nextCredits = userCredits + amount
-    setUserCredits(nextCredits)
-    localStorage.setItem('user-credits', String(nextCredits))
-
-    const now = new Date()
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    
-    const newTx = {
-      id: `tx-${Date.now()}`,
-      date: dateStr,
-      type: 'charge',
-      desc: uiLanguage === 'KO' ? `크레딧 충전 (+${amount})` : uiLanguage === 'JA' ? `クレジットチャージ (+${amount})` : `Credit Top-up (+${amount})`,
-      amount: `+${amount}`,
-      status: 'Completed'
-    }
-    const nextTx = [newTx, ...transactions]
-    setTransactions(nextTx)
-    localStorage.setItem('user-transactions', JSON.stringify(nextTx))
-    showToast(uiLanguage === 'KO' ? `${amount} 크레딧이 충전되었습니다!` : uiLanguage === 'JA' ? `${amount} クレジットが正常にチャージされました！` : `${amount} credits successfully charged!`, 'success')
+  /** 결제·충전은 아직 열리지 않았다. 가짜로 크레딧을 더하지 않는다. */
+  const handleChargeCredits = (_amount: number) => {
+    showToast(uiLanguage === 'KO'
+      ? '크레딧 충전은 준비 중입니다. 곧 열립니다.'
+      : uiLanguage === 'JA'
+        ? 'クレジットのチャージは準備中です。まもなく公開します。'
+        : 'Credit top-up is coming soon.', 'info')
   }
 
   const handleAlbumLikeToggle = (albumId: string) => {

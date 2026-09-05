@@ -17,6 +17,8 @@ import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
+import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
+import type { CreditAction } from '@/lib/credits/suite'
 
 const durationCache: Record<string, number> = {}
 
@@ -67,16 +69,6 @@ const PROVIDERS = {
     models: ['gpt-4o-mini', 'gpt-4o', 'o3-mini'],
     keyLabel: 'OpenAI API Key',
   },
-}
-
-const MODEL_CREDIT_COSTS: Record<string, number> = {
-  'gpt-4o-mini': 1,
-  'o3-mini': 3,
-  'gpt-4o': 5,
-}
-
-const getModelCreditCost = (model: string): number => {
-  return MODEL_CREDIT_COSTS[model] || 2
 }
 
 const DEFAULT_GUIDES = [
@@ -908,7 +900,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null)
   const [history, setHistory] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
-  const [userCredits, setUserCredits] = useState<number>(120)
+  /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
+  const { balance: creditBalance, prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
@@ -991,22 +984,6 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
     playTrack(trackToPlay as any, [trackToPlay] as any[])
   }
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const updateCredits = () => {
-      const saved = localStorage.getItem('user-credits')
-      if (saved !== null) {
-        setUserCredits(parseFloat(saved))
-      } else {
-        localStorage.setItem('user-credits', '120')
-        setUserCredits(120)
-      }
-    }
-    updateCredits()
-    const interval = setInterval(updateCredits, 2000)
-    return () => clearInterval(interval)
-  }, [])
 
   const supabase = createClient()
   const options = useMemo(() => getOptions(uiLanguage), [uiLanguage])
@@ -1429,15 +1406,6 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   }
 
   const generate = async () => {
-    // Check credits
-    const modelCost = getModelCreditCost(settings.model)
-    const savedCredits = localStorage.getItem('user-credits')
-    const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
-    if (currentCredits < modelCost) {
-      alert(uiLanguage === 'KO' ? `크레딧이 부족합니다. (필요: ${modelCost} 크레딧)` : uiLanguage === 'JA' ? `クレジットが不足しています。( ${modelCost} クレジット必要)` : `Insufficient credits. (Requires ${modelCost} credits)`)
-      return
-    }
-
     const promptObj = buildInstructionPrompt(form, guideText)
     setIsGenerating(true)
     setStatus(t.statusGenerating)
@@ -1446,8 +1414,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         generateSample()
         return
       }
-      
-      const response = await fetch('/api/generate-prompt', {
+
+      const response = await fetch(withBase('/api/generate-prompt'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1455,43 +1423,33 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         body: JSON.stringify({
           system: promptObj.system,
           user: promptObj.user,
-          model: settings.model
+          model: settings.model,
+          requestId: crypto.randomUUID()
         })
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({}))
+        if (response.status === 401) {
+          alert(uiLanguage === 'KO' ? '로그인이 필요합니다.' : uiLanguage === 'JA' ? 'ログインが必要です。' : 'Please sign in.')
+          setStatus(t.statusError)
+          return
+        }
+        if (response.status === 402) {
+          const have = Number(errorData.balance ?? 0)
+          const need = Number(errorData.required ?? 0)
+          alert(uiLanguage === 'KO' ? `크레딧이 ${need - have}크레딧 부족합니다 (보유 ${have} · 필요 ${need})` : uiLanguage === 'JA' ? `クレジットが ${need - have} 不足しています (保有 ${have} ・ 必要 ${need})` : `You need ${need - have} more credits (balance ${have} · required ${need})`)
+          setStatus(t.statusError)
+          return
+        }
         throw new Error(errorData.error || (uiLanguage === 'KO' ? '프롬프트 생성 실패' : uiLanguage === 'JA' ? 'プロンプトの生成に失敗しました' : 'Failed to generate prompt'))
       }
 
       const data = await response.json()
+      if (typeof data.balance === 'number') setCreditBalance(data.balance)
       const nextResult = data.text || ''
       const textToSave = nextResult.trim() || makeFallback(form, guideText)
       const parsedParts = parseGeneratedText(textToSave)
-
-      // Deduct credits and save transaction!
-      const currentCredits = parseFloat(localStorage.getItem('user-credits') || '120')
-      const nextCredits = Number((currentCredits - modelCost).toFixed(1))
-      localStorage.setItem('user-credits', String(nextCredits))
-
-      const savedTx = localStorage.getItem('user-transactions')
-      let txList = []
-      if (savedTx) {
-        try {
-          txList = JSON.parse(savedTx)
-        } catch (e) {
-          console.error(e)
-        }
-      }
-      const newTx = {
-        id: 'tx-' + Date.now(),
-        date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        type: 'use',
-        desc: uiLanguage === 'KO' ? `가사 및 프롬프트 생성 (-${modelCost})` : uiLanguage === 'JA' ? `歌詞 & プロンプト生成 (-${modelCost})` : `Lyrics & Prompt Generation (-${modelCost})`,
-        amount: `-${modelCost}`,
-        status: 'Completed'
-      }
-      localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
 
       setResultParts(parsedParts)
       setStatus(`${PROVIDERS.openai.name} ${t.statusGenerated}`)
@@ -1657,7 +1615,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   }
 
   const provider = PROVIDERS.openai
-  const modelCost = getModelCreditCost(settings.model)
+  const modelCost = creditPrices[`studio.prompt.${settings.model}` as CreditAction]
   const libraryDetailTrack = libraryDetailId ? history.find((h: any) => h.id === libraryDetailId) || null : null
 
   return (
@@ -1668,7 +1626,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         uiLanguage={uiLanguage}
-        userCredits={userCredits}
+        userCredits={creditBalance}
         user={user}
       />
 
@@ -1677,7 +1635,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         uiLanguage={uiLanguage}
-        userCredits={userCredits}
+        userCredits={creditBalance ?? 0}
         user={user}
         history={history}
         childrenLeft={
@@ -2532,7 +2490,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         className="flex-1 py-3.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <Sparkles className="w-4 h-4 fill-current text-black" />
-                        <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS (${modelCost} 크레딧)`}</span>
+                        <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS${modelCost !== undefined ? ` (${modelCost} 크레딧)` : ''}`}</span>
                       </button>
 
                       <button

@@ -7,6 +7,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
+import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
 
@@ -91,7 +92,8 @@ export function GenerateClient({
   const [publishedLink, setPublishedLink] = useState<{ title: string; href: string } | null>(null)
   const [status, setStatus] = useState('대기 중')
   const [uiLanguage, setUiLanguage] = useState('KO')
-  const [userCredits, setUserCredits] = useState<number>(120)
+  /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
+  const { setBalance: setCreditBalance } = useSuiteCredits(user)
   const [profile, setProfile] = useState<any>(null)
   const [detailTrackId, setDetailTrackId] = useState<string | null>(null)
   const [detailCollapsed, setDetailCollapsed] = useState(false)
@@ -167,14 +169,7 @@ export function GenerateClient({
         setUiLanguage(e.detail.toUpperCase())
       }
       window.addEventListener('languageChange', handleLangChange)
-      
-      const savedCredits = localStorage.getItem('user-credits')
-      if (savedCredits !== null) {
-        setUserCredits(parseFloat(savedCredits))
-      } else {
-        localStorage.setItem('user-credits', '120')
-        setUserCredits(120)
-      }
+
       return () => window.removeEventListener('languageChange', handleLangChange)
     }
   }, [])
@@ -365,13 +360,6 @@ export function GenerateClient({
       return
     }
 
-    const savedCredits = localStorage.getItem('user-credits')
-    const currentCredits = savedCredits !== null ? parseFloat(savedCredits) : 120
-    if (currentCredits < 10) {
-      alert(uiLanguage === 'KO' ? '크레딧이 부족합니다. (필요: 10 크레딧)' : uiLanguage === 'JA' ? 'クレジットが不足しています。(10クレジット必要)' : 'Insufficient credits. (Requires 10 credits)')
-      return
-    }
-
     setIsMusicGenerating(true)
     setStatus('Suno 서버로 생성 요청을 전송했습니다.')
 
@@ -406,36 +394,14 @@ export function GenerateClient({
     }
 
     try {
-      const res = await fetch('/api/music/generate', {
+      const res = await fetch(withBase('/api/music/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ historyId: activeHistoryId, ...generateForm })
+        body: JSON.stringify({ historyId: activeHistoryId, requestId: crypto.randomUUID(), ...generateForm })
       })
       if (res.ok) {
         const data = await res.json()
-
-        const nextCredits = Math.round(currentCredits - 10)
-        localStorage.setItem('user-credits', String(nextCredits))
-        setUserCredits(nextCredits)
-
-        const savedTx = localStorage.getItem('user-transactions')
-        let txList = []
-        if (savedTx) {
-          try {
-            txList = JSON.parse(savedTx)
-          } catch (e) {
-            console.error(e)
-          }
-        }
-        const newTx = {
-          id: 'tx-' + Date.now(),
-          date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-          type: 'use',
-          desc: uiLanguage === 'KO' ? '음악 생성 (-10)' : uiLanguage === 'JA' ? '曲生成 (-10)' : 'Music Generation (-10)',
-          amount: '-10',
-          status: 'Completed'
-        }
-        localStorage.setItem('user-transactions', JSON.stringify([newTx, ...txList]))
+        if (typeof data.balance === 'number') setCreditBalance(data.balance)
 
         const newTask = {
           id: activeHistoryId,
@@ -451,7 +417,16 @@ export function GenerateClient({
         url.searchParams.set('historyId', activeHistoryId)
         window.history.replaceState({}, '', url.toString())
       } else {
-        alert("음악 생성 요청 실패")
+        const errorData = await res.json().catch(() => ({}))
+        if (res.status === 401) {
+          alert(uiLanguage === 'KO' ? '로그인이 필요합니다.' : uiLanguage === 'JA' ? 'ログインが必要です。' : 'Please sign in.')
+        } else if (res.status === 402) {
+          const have = Number(errorData.balance ?? 0)
+          const need = Number(errorData.required ?? 0)
+          alert(uiLanguage === 'KO' ? `크레딧이 ${need - have}크레딧 부족합니다 (보유 ${have} · 필요 ${need})` : uiLanguage === 'JA' ? `クレジットが ${need - have} 不足しています (保有 ${have} ・ 必要 ${need})` : `You need ${need - have} more credits (balance ${have} · required ${need})`)
+        } else {
+          alert("음악 생성 요청 실패")
+        }
         if (activeHistoryId) {
           await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
         }
