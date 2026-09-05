@@ -1,438 +1,80 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Coins } from 'lucide-react'
+import { suiteHref } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
+
+/**
+ * 뮤직에는 자체 요금제가 없다 — 가격·충전 화면은 쿠키플레이 `/pricing` 한 곳뿐이다
+ * (대표 지시 2026-09-06). 예전 주소(`/music/pricing`)를 북마크했거나 옛 링크로 들어온
+ * 사람이 빈 화면을 보지 않도록 얇은 안내만 남긴다.
+ *
+ * 잔액은 스위트 공용 지갑(워커 원장) 값 하나뿐이라 그대로 보여 준다. 플랜 이름은
+ * 쓰지 않는다 — 뮤직이 쥐고 있던 「무료 플랜」류는 우리 요금제 체계와 다르다.
+ */
 
 interface PricingClientProps {
   user: any
 }
 
+/** 요금 안내는 이 앱이 아니라 쿠키플레이가 그리는 화면이다 — basePath 를 붙이지 않는다. */
+const PRICING_HREF = suiteHref('/pricing')
+
 export function PricingClient({ user }: PricingClientProps) {
   const router = useRouter()
-  const [isAnnual, setIsAnnual] = useState(false)
-  const [currentPlan, setCurrentPlan] = useState<string>('free')
   const [uiLanguage, setUiLanguage] = useState<string>('KO')
-  const [notice, setNotice] = useState<string>('')
-  /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
   const { balance: creditBalance } = useSuiteCredits(user)
-  
-  // Load current subscription states from localStorage
-  useEffect(() => {
-    const savedPlan = localStorage.getItem('user-plan')
-    if (savedPlan) {
-      setCurrentPlan(savedPlan)
-    } else {
-      localStorage.setItem('user-plan', 'free')
-    }
 
+  useEffect(() => {
     const savedLang = localStorage.getItem('uiLanguage')
-    if (savedLang) {
-      setUiLanguage(savedLang)
-    }
+    if (savedLang) setUiLanguage(savedLang)
   }, [])
 
-  /** 결제·충전은 아직 열리지 않았다. 가짜로 크레딧을 더하지 않는다. */
-  const showComingSoon = () => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
-    setNotice(uiLanguage === 'KO'
-      ? '크레딧 충전은 준비 중입니다. 곧 열립니다.'
-      : uiLanguage === 'JA'
-        ? 'クレジットのチャージは準備中です。まもなく公開します。'
-        : 'Credit top-up is coming soon.')
-  }
-
-  const handleSubscribe = (_plan: 'pro' | 'premier' | 'payg_30' | 'payg_60') => {
-    showComingSoon()
-  }
-
-  const handleBuyExtraCredits = (_amount: number) => {
-    showComingSoon()
-  }
-
-  const proFeatures = [
-    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스하세요.',
-    '2,500 크레딧(최대 500곡), 매월 갱신',
-    '새로 제작된 노래에 대한 상업적 이용 권한',
-    '스탠다드 기능 + 프로 기능',
-    '기존 곡에 새로운 보컬이나 악기 연주를 추가하세요',
-    '새로운 기능에 대한 조기 액세스',
-    '추가 크레딧 구매 기능',
-    '우선 재생 대기열, 최대 6곡 동시 생성'
-  ]
-
-  const premierFeatures = [
-    '쿠키뮤직 스튜디오 이용 안내',
-    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스하세요.',
-    '10,000 크레딧(최대 2,000곡), 매월 갱신',
-    '새로 제작된 노래에 대한 상업적 이용 권한',
-    '스탠다드 기능 + 프로 기능',
-    '기존 곡에 새로운 보컬이나 악기 연주를 추가하세요',
-    '새로운 기능에 대한 조기 액세스',
-    '추가 크레딧 구매 기능',
-    '우선 재생 대기열, 최대 6곡 동시 생성'
-  ]
-
-  const payAsYouGoFeatures = [
-    '30달러부터 자유롭게 결제',
-    '결제일로부터 6개월간 크레딧 유효',
-    '사용한 만큼만 크레딧 소모',
-    '일반 구독 대비 약 10% 할증',
-    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스',
-    '상업적 이용 권한 포함',
-    '스탠다드 기능 + 프로 기능'
-  ]
-
-  const payAsYouGo60Features = [
-    '60달러 대용량 종량제',
-    '결제일로부터 6개월간 크레딧 유효',
-    '사용한 만큼만 크레딧 소모',
-    '기본 종량제 대비 약 5% 추가 할인',
-    '최고 수준의 개인 맞춤형 5 버전 모델에 액세스',
-    '상업적 이용 권한 포함',
-    '스탠다드 기능 + 프로 기능'
-  ]
+  const t = (ko: string, ja: string, en: string) =>
+    uiLanguage === 'KO' ? ko : uiLanguage === 'JA' ? ja : en
 
   return (
-    <div className="min-h-screen bg-background text-white py-12 px-6 sm:px-12 md:px-24">
-      {/* Back to Profile */}
-      <button 
-        onClick={() => router.back()} 
-        className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition-colors mb-8 cursor-pointer"
+    <div className="min-h-screen bg-background text-white px-6 py-12 sm:px-12">
+      <button
+        onClick={() => router.back()}
+        className="mb-12 flex cursor-pointer items-center gap-2 text-xs font-bold text-zinc-400 transition-colors hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" /> 뒤로 가기
+        <ArrowLeft className="h-4 w-4" /> {t('뒤로 가기', '戻る', 'Back')}
       </button>
 
-      {/* Hero Header */}
-      <div className="text-center max-w-2xl mx-auto mb-8">
-        <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-3 bg-clip-text text-white">
-          쿠키뮤직 요금제를 관리하세요
+      <div className="mx-auto max-w-md text-center">
+        <h1 className="mb-3 text-2xl font-black tracking-tight md:text-3xl">
+          {t('요금 안내는 쿠키플레이에서', '料金案内はクッキープレイで', 'Pricing lives on CookiePlay')}
         </h1>
-        <p className="text-sm md:text-base text-zinc-400 font-medium">
-          본인의 필요에 가장 적합한 요금제를 선택하세요.
+        <p className="text-sm font-medium leading-relaxed text-zinc-400">
+          {t(
+            '요금제와 크레딧 충전은 쿠키플레이 한 곳에서 관리합니다. 크레딧은 쿠키뮤직을 포함한 모든 서비스에서 함께 씁니다.',
+            'プランとクレジットのチャージはクッキープレイでまとめて管理します。クレジットは全サービス共通です。',
+            'Plans and credit top-ups are handled on CookiePlay. Your credits are shared across every service.'
+          )}
         </p>
-      </div>
 
-      {user && (
-        <div className="max-w-md mx-auto mb-12 bg-[#121214] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
-          <div className="flex flex-col text-left">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              {uiLanguage === 'KO' ? '현재 요금제' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan'}
-            </span>
-            <span className="text-sm font-black text-primary capitalize">
-              {currentPlan === 'free' ? (uiLanguage === 'KO' ? '무료 플랜' : uiLanguage === 'JA' ? '無料プラン' : 'Free Plan') : 
-               currentPlan === 'pro' ? (uiLanguage === 'KO' ? '프로 플랜' : uiLanguage === 'JA' ? 'プロプラン' : 'Pro Plan') : 
-               (uiLanguage === 'KO' ? '프리미어 플랜' : uiLanguage === 'JA' ? 'プレミアプラン' : 'Premier Plan')}
-            </span>
-          </div>
-          <div className="h-8 w-[1px] bg-zinc-800"></div>
-          <div className="flex flex-col text-right">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              {uiLanguage === 'KO' ? '현재 보유 크레딧' : uiLanguage === 'JA' ? '利用可能なクレジット' : 'Available Credits'}
+        {user && (
+          <div className="mt-10 flex items-center justify-center gap-2.5 rounded-2xl border border-zinc-800 bg-[#121214] px-5 py-4 shadow-lg">
+            <Coins className="h-4 w-4 shrink-0 text-primary" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {t('현재 보유 크레딧', '利用可能なクレジット', 'Available credits')}
             </span>
             <span className="text-sm font-black text-white">
-              {creditBalance === null
-                ? '···'
-                : `${creditBalance.toLocaleString()} ${uiLanguage === 'KO' ? '크레딧' : uiLanguage === 'JA' ? 'クレジット' : 'Credits'}`}
+              {creditBalance === null ? '···' : creditBalance.toLocaleString('ko-KR')}
             </span>
           </div>
-        </div>
-      )}
+        )}
 
-      {notice && (
-        <div className="max-w-md mx-auto -mt-8 mb-12 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-center text-xs font-bold text-primary">
-          {notice}
-        </div>
-      )}
-
-      {/* Monthly / Annual Toggle */}
-      <div className="flex items-center justify-center gap-4 mb-16">
-        <span className={`text-sm font-bold transition-all ${!isAnnual ? 'text-white' : 'text-zinc-500'}`}>월간 간행물</span>
-        <button 
-          onClick={() => setIsAnnual(!isAnnual)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAnnual ? 'bg-primary animate-none' : 'bg-zinc-800'}`}
+        <a
+          href={PRICING_HREF}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-black text-black transition-all hover:bg-primary/90"
         >
-          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAnnual ? 'translate-x-5' : 'translate-x-0'}`} />
-        </button>
-        <span className={`text-sm font-bold transition-all ${isAnnual ? 'text-primary' : 'text-zinc-500'} flex items-center gap-1.5`}>
-          연간
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary text-black">20% 할인</span>
-        </span>
-      </div>
-
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-20 px-4 xl:px-0">
-        {/* Pro Plan Card */}
-        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
-          {/* Top highlight */}
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-pink-500 to-rose-500"></div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-extrabold text-white">프로 플랜</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-pink-500/10 border border-pink-500/35 text-pink-400 uppercase tracking-wide">
-                가장 인기 있는
-              </span>
-            </div>
-            
-            <p className="text-xs text-zinc-400 font-medium mb-6">
-              최고의 모델과 편집 도구를 이용할 수 있습니다.
-            </p>
-
-            <div className="flex items-baseline gap-1 mb-8">
-              <span className="text-4xl font-black text-white tracking-tight">
-                {isAnnual ? '8달러' : '10달러'}
-              </span>
-              <span className="text-xs font-bold text-zinc-400">/월</span>
-              {isAnnual && (
-                <span className="text-[10px] font-semibold text-zinc-500 block ml-2">연간 결제시 할인적용 (세금 별도)</span>
-              )}
-            </div>
-
-            <button 
-              onClick={() => handleSubscribe('pro')}
-              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                currentPlan === 'pro' 
-                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
-                  : 'bg-white hover:bg-zinc-100 text-black hover:shadow-lg'
-              }`}
-              disabled={currentPlan === 'pro'}
-            >
-              {currentPlan === 'pro' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중 (2,500 크레딧)' : uiLanguage === 'JA' ? '現在のプラン (2,500 クレジット)' : 'Current Plan (2,500 Credits)') 
-                : (uiLanguage === 'KO' ? '구독하기 (2,500 크레딧 충전)' : uiLanguage === 'JA' ? '購読 (+2,500 クレジット)' : 'Subscribe (+2,500 Credits)')}
-            </button>
-
-            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
-              {proFeatures.map((feat, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="leading-relaxed text-left">{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Premier Plan Card */}
-        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
-          {/* Top highlight */}
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary to-[#49be67]"></div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-extrabold text-white">프리미어 플랜</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-primary/10 border border-primary/35 text-primary uppercase tracking-wide">
-                최고의 가성비
-              </span>
-            </div>
-            
-            <p className="text-xs text-zinc-400 font-medium mb-6">
-              최대 크레딧과 모든 기능 잠금 해제.
-            </p>
-
-            <div className="flex items-baseline gap-1 mb-8">
-              <span className="text-4xl font-black text-white tracking-tight">
-                {isAnnual ? '24달러' : '30달러'}
-              </span>
-              <span className="text-xs font-bold text-zinc-400">/월</span>
-              {isAnnual && (
-                <span className="text-[10px] font-semibold text-zinc-500 block ml-2">연간 결제시 할인적용 (세금 별도)</span>
-              )}
-            </div>
-
-            <button 
-              onClick={() => handleSubscribe('premier')}
-              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                currentPlan === 'premier' 
-                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
-                  : 'bg-primary hover:bg-primary/95 text-black hover:shadow-lg'
-              }`}
-              disabled={currentPlan === 'premier'}
-            >
-              {currentPlan === 'premier' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중 (10,000 크레딧)' : uiLanguage === 'JA' ? '現在のプラン (10,000 クレジット)' : 'Current Plan (10,000 Credits)') 
-                : (uiLanguage === 'KO' ? '구독하기 (10,000 크레딧 충전)' : uiLanguage === 'JA' ? '購読 (+10,000 クレジット)' : 'Subscribe (+10,000 Credits)')}
-            </button>
-
-            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
-              {premierFeatures.map((feat, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="leading-relaxed text-left">{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Pay-As-You-Go (종량제) Card */}
-        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
-          {/* Top highlight */}
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-cyan-400"></div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-extrabold text-white">종량제 크레딧</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/10 border border-blue-500/35 text-blue-400 uppercase tracking-wide">
-                쓴 만큼만 소모
-              </span>
-            </div>
-            
-            <p className="text-xs text-zinc-400 font-medium mb-6">
-              정기결제 없이 필요한 만큼만 구매해 사용하세요. (6개월 유효)
-            </p>
-
-            <div className="flex items-baseline gap-1 mb-8">
-              <span className="text-4xl font-black text-white tracking-tight">
-                30달러
-              </span>
-              <span className="text-xs font-bold text-zinc-400">부터</span>
-            </div>
-
-            <button 
-              onClick={() => handleSubscribe('payg_30')}
-              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                currentPlan === 'payg_30' 
-                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
-                  : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-lg border border-white/20'
-              }`}
-              disabled={currentPlan === 'payg_30'}
-            >
-              {currentPlan === 'payg_30' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan') 
-                : (uiLanguage === 'KO' ? '충전하기 (6,800 크레딧)' : uiLanguage === 'JA' ? 'チャージ (6,800 クレジット)' : 'Recharge (6,800 Credits)')}
-            </button>
-
-            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
-              {payAsYouGoFeatures.map((feat, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="leading-relaxed text-left">{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Pay-As-You-Go ($60) Card */}
-        <div className="relative rounded-3xl bg-[#121214] border border-zinc-800 p-8 flex flex-col justify-between hover:border-zinc-700/80 transition-all hover:scale-[1.01] shadow-2xl overflow-hidden group">
-          {/* Top highlight */}
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-purple-500 to-indigo-400"></div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-extrabold text-white">종량제 대용량</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/10 border border-purple-500/35 text-purple-400 uppercase tracking-wide">
-                5% 추가 할인
-              </span>
-            </div>
-            
-            <p className="text-xs text-zinc-400 font-medium mb-6">
-              더 많은 크레딧을 합리적인 가격에 구매해 사용하세요. (6개월 유효)
-            </p>
-
-            <div className="flex items-baseline gap-1 mb-8">
-              <span className="text-4xl font-black text-white tracking-tight">
-                60달러
-              </span>
-            </div>
-
-            <button 
-              onClick={() => handleSubscribe('payg_60')}
-              className={`w-full py-3.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                currentPlan === 'payg_60' 
-                  ? 'bg-zinc-800 text-zinc-500 cursor-default border border-zinc-700' 
-                  : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-lg border border-white/20'
-              }`}
-              disabled={currentPlan === 'payg_60'}
-            >
-              {currentPlan === 'payg_60' 
-                ? (uiLanguage === 'KO' ? '현재 구독 중' : uiLanguage === 'JA' ? '現在のプラン' : 'Current Plan') 
-                : (uiLanguage === 'KO' ? '충전하기 (14,300 크레딧)' : uiLanguage === 'JA' ? 'チャージ (14,300 クレジット)' : 'Recharge (14,300 Credits)')}
-            </button>
-
-            <div className="mt-8 pt-8 border-t border-zinc-800 flex flex-col gap-3">
-              {payAsYouGo60Features.map((feat, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 font-medium">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="leading-relaxed text-left">{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Extra Credits Recharge Section */}
-      <div className="max-w-5xl mx-auto border-t border-zinc-800 pt-16">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-extrabold tracking-tight mb-2">추가 크레딧 충전</h2>
-          <p className="text-xs text-zinc-400">구독 중인 상태에서 추가 크레딧을 개별적으로 충전할 수 있습니다.</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Card 1 */}
-          <div className="bg-[#121214] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-all flex flex-col justify-between text-center relative overflow-hidden group shadow-lg">
-            <div className="flex flex-col gap-1.5 items-center">
-              <Plus className="w-5 h-5 text-primary" />
-              <span className="text-lg font-black text-white">500 Credits</span>
-              <span className="text-[10px] text-zinc-400">약 100곡 생성 가능</span>
-            </div>
-            <div className="mt-6">
-              <span className="block text-2xl font-black text-white mb-4">$8.00</span>
-              <button 
-                onClick={() => handleBuyExtraCredits(500)}
-                className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '500 크레딧 충전하기' : uiLanguage === 'JA' ? '500 クレジットをチャージ' : 'Recharge 500 Credits'}
-              </button>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-[#121214] border border-primary/20 rounded-2xl p-6 hover:border-zinc-800 transition-all flex flex-col justify-between text-center relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[8px] font-black bg-primary text-black uppercase tracking-wider">
-              Best
-            </div>
-            <div className="flex flex-col gap-1.5 items-center">
-              <Plus className="w-5 h-5 text-primary" />
-              <span className="text-lg font-black text-white">1,000 Credits</span>
-              <span className="text-[10px] text-zinc-400">약 200곡 생성 가능</span>
-            </div>
-            <div className="mt-6">
-              <span className="block text-2xl font-black text-white mb-4">$16.00</span>
-              <button 
-                onClick={() => handleBuyExtraCredits(1000)}
-                className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-black font-extrabold text-xs transition-all cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '1,000 크레딧 충전하기' : uiLanguage === 'JA' ? '1,000 クレジットをチャージ' : 'Recharge 1,000 Credits'}
-              </button>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="bg-[#121214] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-700 transition-all flex flex-col justify-between text-center relative overflow-hidden group shadow-lg">
-            <div className="flex flex-col gap-1.5 items-center">
-              <Plus className="w-5 h-5 text-primary" />
-              <span className="text-lg font-black text-white">2,000 Credits</span>
-              <span className="text-[10px] text-zinc-400">약 400곡 생성 가능</span>
-            </div>
-            <div className="mt-6">
-              <span className="block text-2xl font-black text-white mb-4">$32.00</span>
-              <button 
-                onClick={() => handleBuyExtraCredits(2000)}
-                className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-black font-extrabold text-xs transition-all cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '2,000 크레딧 충전하기' : uiLanguage === 'JA' ? '2,000 クレジットをチャージ' : 'Recharge 2,000 Credits'}
-              </button>
-            </div>
-          </div>
-        </div>
+          {t('쿠키플레이 요금 안내 열기', 'クッキープレイの料金案内へ', 'Open CookiePlay pricing')}
+          <ArrowUpRight className="h-4 w-4" />
+        </a>
       </div>
     </div>
   )

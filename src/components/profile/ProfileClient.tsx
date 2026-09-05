@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPortal } from 'react-dom'
-import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, CreditCard, Sliders, Music, ListMusic, Download, Search, Loader2 } from 'lucide-react'
+import { User, Users, Globe, Lock, Play, Pause, Edit2, X, Check, Upload, Folder, Plus, ArrowLeft, Trash2, Info, Pencil, Clock, Heart, MoreHorizontal, ChevronRight, Settings, Sliders, Music, ListMusic, Download, Search, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -446,14 +446,10 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   
   // Settings States
   const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
-  /* 잔액은 스위트 공용 지갑(워커 원장)에만 있다 — 이 화면은 잔액을 그리지 않는다 */
-  const [transactions, setTransactions] = useState<any[]>([])
+  /* 잔액은 스위트 공용 지갑(워커 원장)에만 있다 — 이 화면은 잔액도 요금제도 그리지 않는다 */
   const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
   const [autoplay, setAutoplay] = useState<boolean>(true)
-  const [userPlan, setUserPlan] = useState<string>('free')
-  const [billingCycle, setBillingCycle] = useState<string>('monthly')
-  const [planRenewalDate, setPlanRenewalDate] = useState<string>('')
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [profile, setProfile] = useState<{ 
     display_name?: string, 
@@ -1348,32 +1344,6 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
   // Load Settings and Preferences
   useEffect(() => {
-    const savedPlan = localStorage.getItem('user-plan')
-    if (savedPlan) {
-      setUserPlan(savedPlan)
-    } else {
-      localStorage.setItem('user-plan', 'free')
-    }
-
-    const savedBilling = localStorage.getItem('user-plan-billing')
-    if (savedBilling) {
-      setBillingCycle(savedBilling)
-    }
-
-    const savedRenewal = localStorage.getItem('user-plan-renewal')
-    if (savedRenewal) {
-      setPlanRenewalDate(savedRenewal)
-    }
-
-    const savedTx = localStorage.getItem('user-transactions')
-    if (savedTx) {
-      try {
-        setTransactions(JSON.parse(savedTx))
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
     const savedLanguage = localStorage.getItem('language') as 'KO' | 'EN' | 'JA' | null
     if (savedLanguage === 'KO' || savedLanguage === 'EN' || savedLanguage === 'JA') {
       setUiLanguage(savedLanguage)
@@ -1415,15 +1385,6 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
     setAutoplay(val)
     localStorage.setItem('pref-autoplay', String(val))
     showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : uiLanguage === 'JA' ? `自動再生: ${val ? 'オン' : 'オフ'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
-  }
-
-  /** 결제·충전은 아직 열리지 않았다. 가짜로 크레딧을 더하지 않는다. */
-  const handleChargeCredits = (_amount: number) => {
-    showToast(uiLanguage === 'KO'
-      ? '크레딧 충전은 준비 중입니다. 곧 열립니다.'
-      : uiLanguage === 'JA'
-        ? 'クレジットのチャージは準備中です。まもなく公開します。'
-        : 'Credit top-up is coming soon.', 'info')
   }
 
   const handleAlbumLikeToggle = (albumId: string) => {

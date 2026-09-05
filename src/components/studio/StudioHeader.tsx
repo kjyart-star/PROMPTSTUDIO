@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { withBase } from '@/lib/basePath'
+import { suiteHref, withBase } from '@/lib/basePath'
 import { createClient } from '@/lib/supabase/client'
 import { 
   Zap, ArrowLeft, 
@@ -140,14 +140,15 @@ export function StudioHeader({
                     <Settings className="w-4 h-4" />
                     {uiLanguage === 'KO' ? '설정 및 관리' : uiLanguage === 'JA' ? '設定と管理' : 'Settings & Management'}
                   </Link>
-                  <Link
-                    href="/pricing"
+                  {/* 충전은 쿠키플레이 요금 안내 한 곳뿐이다 — 다른 오리진이라 Link 가 아니라 a 로 나간다 */}
+                  <a
+                    href={suiteHref('/pricing')}
                     onClick={() => setIsAuthMenuOpen(false)}
                     className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] rounded-xl transition-all cursor-pointer"
                   >
                     <CreditCard className="w-4 h-4" />
                     {uiLanguage === 'KO' ? '크레딧 충전' : uiLanguage === 'JA' ? 'クレジットをチャージ' : 'Recharge Credits'}
-                  </Link>
+                  </a>
                   <button
                     onClick={handleSignOut}
                     className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] rounded-xl transition-all text-left cursor-pointer"
