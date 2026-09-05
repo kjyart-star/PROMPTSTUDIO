@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles, Wand2, Copy, Check, Music, Disc, ArrowRight, RefreshCw, FileText, Lightbulb, Layers } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { withBase } from '@/lib/basePath'
+import { fetchSystemGuides, composeGuideText } from '@/lib/studio/systemGuides'
 
 interface LyricsClientProps {
   user: any
   onSendToGenerate?: (data: { prompt: string; style: string; title: string }) => void
+  /** 스튜디오에서 이미 합쳐 둔 지침서. 없으면 기본 지침서만 직접 받아 쓴다. */
+  guideText?: string
 }
 
 const INSPIRATION_CHIPS = [
@@ -18,8 +22,23 @@ const INSPIRATION_CHIPS = [
   { label: '⚡ 폭발적인 페스티벌 EDM 훅', theme: '오늘 밤 모든 고민을 던져버리고 음악에 몸을 맡겨 끝없이 뛰어노는 클럽 페스티벌 사운드', genre: 'EDM / Dance', mood: '신나고 에너제틱한 (Energetic)' }
 ]
 
-export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
+export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClientProps) {
   const router = useRouter()
+
+  // 부모가 지침서를 넘겨주지 않으면 기본(공용) 지침서만 스스로 받아 온다.
+  const [fallbackGuideText, setFallbackGuideText] = useState('')
+  useEffect(() => {
+    if (guideText !== undefined) return
+    let alive = true
+    fetchSystemGuides()
+      .then(({ guides }) => {
+        if (alive) setFallbackGuideText(composeGuideText(guides, [], 7000).text)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [guideText])
 
   const [theme, setTheme] = useState('')
   const [genre, setGenre] = useState('K-Pop')
@@ -46,10 +65,10 @@ export function LyricsClient({ user, onSendToGenerate }: LyricsClientProps) {
 
     setIsGenerating(true)
     try {
-      const res = await fetch('/api/generate-lyrics', {
+      const res = await fetch(withBase('/api/generate-lyrics'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme, genre, mood, language })
+        body: JSON.stringify({ theme, genre, mood, language, guideText: guideText ?? fallbackGuideText })
       })
 
       const data = await res.json()

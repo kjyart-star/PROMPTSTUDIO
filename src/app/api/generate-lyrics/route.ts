@@ -18,8 +18,12 @@ export async function POST(request: Request) {
       mood = '감성적인 (Emotional)', 
       language = '한국어', 
       structure = 'Standard (Verse-Chorus-Bridge)',
-      model = 'gpt-4o-mini' 
+      model = 'gpt-4o-mini',
+      guideText = ''
     } = body
+
+    // 지침서는 길이만 자른다 — 길다고 가사 생성을 거절하지는 않는다.
+    const guides = typeof guideText === 'string' ? guideText.slice(0, 8000) : ''
 
     if (!theme || typeof theme !== 'string') {
       return NextResponse.json({ error: '주제 또는 스토리를 입력해주세요.' }, { status: 400 })
@@ -64,7 +68,11 @@ Respond ONLY with valid JSON matching this schema:
     "stylePrompt": "English Suno style prompt, tags, instruments, BPM",
     "lyrics": "Full structured lyrics with section tags"
   }
-}`
+}${guides ? `
+
+아래 내용은 설정된 지침서 규정입니다. 가사·스타일 프롬프트 생성 시 어떠한 예외도 없이 최우선으로 준수하십시오:
+---
+${guides}` : ''}`
 
     const userContent = `Theme/Story/Hook: ${theme}
 Genre: ${genre}

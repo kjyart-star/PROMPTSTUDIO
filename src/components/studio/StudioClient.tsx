@@ -19,6 +19,7 @@ import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
+import { fetchSystemGuides, composeGuideText, type SystemGuide } from '@/lib/studio/systemGuides'
 
 const durationCache: Record<string, number> = {}
 
@@ -884,6 +885,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   })
   
   const [guides, setGuides] = useState<any[]>([])
+  // 기본(공용) 지침서 — 관리자단에서 내려오고, 사용자가 끄고 켤 수 없다.
+  const [systemGuides, setSystemGuides] = useState<SystemGuide[]>([])
+  const [systemGuidesStale, setSystemGuidesStale] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [activeGuideIds, setActiveGuideIds] = useState<string[]>(['suno-clear', 'hook-first'])
   const [draftGuide, setDraftGuide] = useState({ title: '', body: '' })
@@ -990,6 +994,15 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
   // Load guidelines (both system and user guidelines)
   const fetchGuidelines = async (currentUser: any) => {
+    // 기본 지침서는 로그인과 무관하게 늘 적용된다. 사용자 지침서 로딩과 서로 막지 않도록 따로 감싼다.
+    try {
+      const system = await fetchSystemGuides()
+      setSystemGuides(system.guides)
+      setSystemGuidesStale(system.stale)
+    } catch (e) {
+      console.error(e)
+    }
+
     try {
       // 1. Fetch user guides if logged in
       let userGuides: any[] = []
@@ -1261,10 +1274,23 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
   }, [activeGuideIds, user])
 
-  const guideText = useMemo(() => {
+  // `/api/generate-prompt` 는 system 이 8000자를 넘으면 거절한다. 지침서 외 래퍼 문구가
+  // 차지하는 길이를 실제로 재서 남는 만큼만 지침서에 준다.
+  const { text: guideText, truncated: guideTruncated } = useMemo(() => {
+    const MAX_SYSTEM_LEN = 8000
+    const overhead = buildInstructionPrompt(form, 'X').system.length - 1
+    let budget = MAX_SYSTEM_LEN - overhead - 50
     const activeLocal = guides.filter((g) => activeGuideIds.includes(g.id))
-    return activeLocal.map((g) => `## ${g.title}\n${g.body}`).join('\n\n')
-  }, [guides, activeGuideIds])
+    let result = composeGuideText(systemGuides, activeLocal, budget)
+    // 지침서 내용에 따라 래퍼가 더 붙는 경우(랩 키워드 블록 등)가 있어 실제 길이로 한 번 더 확인한다.
+    for (let i = 0; i < 3 && result.text && budget > 0; i++) {
+      const actual = buildInstructionPrompt(form, result.text).system.length
+      if (actual <= MAX_SYSTEM_LEN) break
+      budget -= actual - MAX_SYSTEM_LEN + 50
+      result = composeGuideText(systemGuides, activeLocal, budget)
+    }
+    return result
+  }, [systemGuides, guides, activeGuideIds, form])
 
   const updateForm = (key: string, value: any) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -2059,10 +2085,52 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       지침서 (가이드)
                     </h3>
 
-                    {/* 지침서 목록 */}
-                    {guides.length > 0 && (
-                      <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
-                        {guides.map((guide) => (
+                    {/* 지침서 목록 — 기본(관리자)과 내 것을 한 스크롤 영역에 나눠 담는다 */}
+                    {(systemGuides.length > 0 || guides.length > 0) && (
+                      <div className="space-y-3 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                        {systemGuides.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                {uiLanguage === 'KO' ? '기본 지침서' : uiLanguage === 'JA' ? '基本ガイドライン' : 'Default guidelines'}
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-primary/40 text-primary">
+                                {uiLanguage === 'KO' ? '관리자' : uiLanguage === 'JA' ? '管理者' : 'Admin'}
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-primary/40 text-primary">
+                                {uiLanguage === 'KO' ? '항상 적용' : uiLanguage === 'JA' ? '常に適用' : 'Always on'}
+                              </span>
+                            </div>
+                            {systemGuides.map((guide) => (
+                              <div
+                                key={guide.id}
+                                className="p-2.5 rounded-xl border bg-primary/10 border-primary/40 text-primary"
+                              >
+                                <div className="flex items-center gap-1.5 font-bold text-xs">
+                                  <Check className="w-3.5 h-3.5 text-primary" />
+                                  <span className="truncate">{guide.title}</span>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">{guide.body}</p>
+                              </div>
+                            ))}
+                            {systemGuidesStale && (
+                              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                                {uiLanguage === 'KO'
+                                  ? '최신 기본 지침서를 받지 못해 이전에 받아 둔 사본을 씁니다'
+                                  : uiLanguage === 'JA'
+                                  ? '最新の基本ガイドラインを取得できず、以前の控えを使っています'
+                                  : "Couldn't refresh the default guidelines, using the last saved copy"}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {guides.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                              {uiLanguage === 'KO' ? '내 지침서' : uiLanguage === 'JA' ? 'マイガイドライン' : 'My guidelines'}
+                            </span>
+                            {guides.map((guide) => (
                           <div
                             key={guide.id}
                             className={`p-2.5 rounded-xl border transition-all flex items-start justify-between gap-2 group ${
@@ -2093,7 +2161,19 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             </button>
                           </div>
                         ))}
+                          </div>
+                        )}
                       </div>
+                    )}
+
+                    {guideTruncated && (
+                      <p className="text-[10px] text-amber-400/90 leading-relaxed">
+                        {uiLanguage === 'KO'
+                          ? '지침서가 길어 일부만 적용됩니다 (내 지침서부터 줄여서 넣습니다)'
+                          : uiLanguage === 'JA'
+                          ? 'ガイドラインが長いため一部のみ適用されます (マイガイドラインから順に省きます)'
+                          : 'Your guidelines are too long, so only part of them apply (my guidelines are trimmed first)'}
+                      </p>
                     )}
 
                     {/* 지침서 등록 폼 */}

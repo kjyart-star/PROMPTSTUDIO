@@ -312,6 +312,9 @@ export default function AdminGuidesPage() {
           <p className="text-sm text-slate-400 mt-1">
             AI 음악 프롬프트 및 가사 생성 시 전체 사용자에게 공통으로 최우선 적용될 시스템 지침서들을 제어합니다.
           </p>
+          <p className="mt-3 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+            지침서 관리는 쿠키플레이 관리자단으로 옮겨졌습니다. 스튜디오는 이제 그쪽 지침서를 읽습니다.
+          </p>
         </div>
         
         <button
