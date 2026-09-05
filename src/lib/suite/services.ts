@@ -25,11 +25,25 @@ export interface SuiteService {
   /** COOKIELAB `products.ts` 의 Product.id. 공지(announcement) 의 scope 도 이 id 를 쓴다. */
   id: string
   name: string
-  /** 층 짧은 표기('3F' · '2F' · '1F' · 'B1') */
+  /** 층 짧은 표기('4F' · '3F' · '2F' · '1F' · 'B1') */
   floor: string
   status: SuiteStatus
 }
 
+/*
+ * 4F(준비 중)는 이 목록에 없다 — 층은 생겼지만 일부러 비워 둔다.
+ *
+ * 쿠키드림이 4층에 있다(COOKIELAB `floors.ts`). 대표 지시로 3층에서 올라간 것으로,
+ * 기획부터 다시 하는 서비스다(2026-09-06: "이것은 아직 기획단계라고 말했는데 왜 만듦?",
+ * "일단 이것 4층으로 올려줘", "다시 기획해서 만들어야 함").
+ *
+ * 이 파일은 **다른 서비스(쿠키뮤직 · 쿠키포토스튜디오)의 상단 메뉴**를 그린다. 쿠키챗이
+ * `preview` 인데도 여기 있는 것은 대표가 스위트 메뉴 3곳에 올리라고 따로 지시했기
+ * 때문이다(2026-09-05). 쿠키드림에는 그런 지시가 없고, 오히려 대표가 노출을 되돌린
+ * 쪽이다 — 진입도 막아 두었다(`appPath: null`). 눌러도 갈 데가 없는 이름을 남의
+ * 서비스 상단 메뉴에까지 띄우면 없는 서비스를 있는 것처럼 파는 셈이라 넣지 않는다.
+ * 기획이 확정되어 진입이 열리는 날 이 자리에 한 줄을 더한다.
+ */
 export const SUITE_SERVICES: SuiteService[] = [
   { id: 'cookiecut', name: '쿠키컷', floor: '3F', status: 'stable' },
   { id: 'cookiepix', name: '쿠키픽스', floor: '3F', status: 'stable' },
