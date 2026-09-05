@@ -31,24 +31,27 @@ export interface SuiteService {
 }
 
 /*
- * 층이 2026-09-06 에 두 번 바뀌었다 — 정본은 COOKIELAB `floors.ts` 다.
- *  ① 기획부터 다시 하는 것을 올려 둘 자리로 「작업실2」가 새로 생겼고(쿠키드림),
- *  ② 이어 대표가 **"3층을 4층으로 올리고 4층을 3층으로 올리자"** 고 해서 주 작업실이
- *     꼭대기(4F)로 가고 준비 중인 작업실2 가 그 아래(3F)로 내려왔다.
- * 그래서 쿠키컷 · 쿠키픽스 · 쿠키일러스트 · 쿠키뮤직 스튜디오가 3F 가 아니라 **4F** 다.
+ * **순서는 층 순서다(고층이 먼저).** COOKIELAB `floors.ts` 의 `productsByFloor()` 가
+ * 정본이고, 이 배열은 그 결과를 그대로 옮겨 적은 것이다. 층을 고치면 순서도 같이
+ * 바뀌므로 두 곳을 따로 관리하지 않는다(대표 2026-09-06: "메뉴 순서도 모두 교체 되어야함").
  *
- * 쿠키드림은 `preview`(「준비 중」)로 넣는다. 만드는 화면 진입은 COOKIELAB 에서 막아
- * 두었지만(`appPath: null` — 그 화면은 진짜 생성 API 를 불러 크레딧을 쓴다), 이 메뉴의
- * href 는 쿠키챗과 같이 **소개 페이지**로 가므로 갈 데가 없지 않다. 목록에서 빼면 3층이
- * 통째로 사라져 세 저장소의 상단 메뉴가 서로 달라진다 — 이 파일이 있는 이유가 그것이다
- * (대표 2026-09-06: "상단메뉴 마지막 이미지처럼 공통으로 되어 있어야 함").
+ * 층 갈래는 **손으로 고치는 도구(3F 작업실)** 와 **AI 로 만드는 도구(4F AI작업실)** 다
+ * (대표 2026-09-06: "3층을 작업실로 3개 넣고 지금 3층 뮤직스튜디오를 4층으로 AI작업실로
+ * 넣으면 좋을듯. 4층에 2개 들어가는 거임").
+ *
+ * 쿠키드림은 4F 에 `preview`(「준비 중」)로 있다 — 아직 기획 단계라 자리만 두고 기획을
+ * 다시 하는 중이다. 만드는 화면 진입은 COOKIELAB 에서 막아 두었지만(`appPath: null` —
+ * 그 화면은 진짜 생성 API 를 불러 크레딧을 쓴다), 이 메뉴의 href 는 쿠키챗과 같이
+ * **소개 페이지**로 가므로 갈 데가 없지 않다. 목록에서 빼면 세 저장소의 상단 메뉴가
+ * 서로 달라진다 — 이 파일이 있는 이유가 그것이다(대표 2026-09-06: "상단메뉴 마지막
+ * 이미지처럼 공통으로 되어 있어야 함").
  */
 export const SUITE_SERVICES: SuiteService[] = [
-  { id: 'cookiecut', name: '쿠키컷', floor: '4F', status: 'stable' },
-  { id: 'cookiepix', name: '쿠키픽스', floor: '4F', status: 'stable' },
-  { id: 'cookieillust', name: '쿠키일러스트', floor: '4F', status: 'beta' },
   { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', floor: '4F', status: 'beta' },
-  { id: 'cookiedream', name: '쿠키드림', floor: '3F', status: 'preview' },
+  { id: 'cookiedream', name: '쿠키드림', floor: '4F', status: 'preview' },
+  { id: 'cookiecut', name: '쿠키컷', floor: '3F', status: 'stable' },
+  { id: 'cookiepix', name: '쿠키픽스', floor: '3F', status: 'stable' },
+  { id: 'cookieillust', name: '쿠키일러스트', floor: '3F', status: 'beta' },
   { id: 'cookiemusic', name: '쿠키뮤직', floor: '2F', status: 'beta' },
   { id: 'cookiechat', name: '쿠키챗', floor: '1F', status: 'preview' },
   { id: 'cookiephotostudio', name: '쿠키포토스튜디오', floor: 'B1', status: 'beta' },
