@@ -78,6 +78,8 @@ export async function spendCredits(params: {
   const token = await accessToken()
   if (!token) return { ok: false, kind: 'unauthorized' }
 
+  // 표시용 기본값. 실제 차감액은 워커의 단가표(credit_prices)가 정한다 —
+  // 사용자 토큰으로 amount 를 실어 보내면 워커가 400 으로 거부한다(2026-09-05 워커 변경).
   const amount = CREDIT_PRICES[params.action]
 
   let res: Response
@@ -91,7 +93,6 @@ export async function spendCredits(params: {
       body: JSON.stringify({
         serviceId: SERVICE_ID,
         action: params.action,
-        amount,
         idempotencyKey: params.idempotencyKey,
         reason: params.reason ?? null,
         ref: params.ref ?? null,
@@ -104,11 +105,12 @@ export async function spendCredits(params: {
   const body = await readJson(res)
 
   if (res.ok) {
+    // 단가 0 인 action 은 원장 없이 통과한다(ledger: null, charged: 0) — 그것도 성공이다.
     const ledgerId = body?.ledger?.id
-    if (typeof ledgerId !== 'string') {
+    if (typeof ledgerId !== 'string' && body?.ledger !== null) {
       return { ok: false, kind: 'unavailable', message: UNAVAILABLE_MESSAGE }
     }
-    return { ok: true, ledgerId, balance: Number(body?.balance ?? 0) }
+    return { ok: true, ledgerId: typeof ledgerId === 'string' ? ledgerId : '', balance: Number(body?.balance ?? 0) }
   }
 
   if (res.status === 401) return { ok: false, kind: 'unauthorized' }
