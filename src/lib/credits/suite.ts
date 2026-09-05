@@ -20,16 +20,22 @@ export const SUITE_API_BASE = (
 export const SERVICE_ID = 'cookiemusic'
 
 /**
- * [임시] 단가표. 클라이언트가 보내는 amount 는 믿지 않고 서버가 이 표로 채운다.
- * 워커가 credit_prices 로 단가를 정하게 되면 amount 를 빼고 action 만 보낸다.
+ * **표시용** 단가표. 실제 차감액은 워커의 `credit_prices` 가 정한다 —
+ * 사용자 토큰으로는 amount 를 실어 보낼 수 없어서(워커가 400) 이 표는 화면 문구에만 쓴다.
+ *
+ * **단위는 밀리크레딧**이다(1 크레딧 = 1,000). 2000 = 2 크레딧, 500 = 0.5 크레딧.
+ * 값은 COOKIELAB `docs/pricing-seed-2026-09.json` · `0013_millicredits_bbanana.sql` 과 같다.
+ *
+ * 프롬프트·가사(기본)가 0 인 이유 — 낱개 원가가 0.1 크레딧에도 못 미쳐 따로 팔 수 없다.
+ * 그 원가를 음악 생성 단가가 흡수하고 차감을 없앴다(무료).
  */
 export const CREDIT_PRICES = {
-  'music.generate': 10,
-  'music.cover': 10,
-  'studio.prompt.gpt-4o-mini': 1,
-  // o3-mini 는 generate-prompt 가 gpt-4o-mini 로 내려보내므로 화면 표시도 실제 차감과 같은 1 로 맞춘다
-  'studio.prompt.o3-mini': 1,
-  'studio.prompt.gpt-4o': 5,
+  'music.generate': 2000,
+  'music.cover': 2000,
+  'studio.prompt.gpt-4o-mini': 0,
+  // o3-mini 는 generate-prompt 가 gpt-4o-mini 로 내려보내므로 화면 표시도 실제 차감과 같이 0 이다
+  'studio.prompt.o3-mini': 0,
+  'studio.prompt.gpt-4o': 500,
 } as const
 
 export type CreditAction = keyof typeof CREDIT_PRICES

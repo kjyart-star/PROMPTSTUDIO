@@ -19,6 +19,7 @@ import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
+import { formatCredits } from '@/lib/credits/format'
 import { fetchSystemGuides, composeGuideText, type SystemGuide } from '@/lib/studio/systemGuides'
 
 const durationCache: Record<string, number> = {}
@@ -2604,7 +2605,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         className="flex-1 py-3.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                       >
                         <Sparkles className="w-4 h-4 fill-current text-black" />
-                        <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS${modelCost !== undefined ? ` (${modelCost} 크레딧)` : ''}`}</span>
+                        <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS${modelCost ? ` (${formatCredits(modelCost)} 크레딧)` : ''}`}</span>
                       </button>
 
                       <button

@@ -8,6 +8,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { StudioHero } from './StudioHero'
+import { formatCredits } from '@/lib/credits/format'
 
 interface CoverClientProps {
   user: any
@@ -222,7 +223,9 @@ export function CoverClient({ user }: CoverClientProps) {
         } else if (res.status === 402) {
           const have = Number(data.balance ?? 0)
           const need = Number(data.required ?? 0)
-          alert(uiLanguage === 'KO' ? `크레딧이 ${need - have}크레딧 부족합니다 (보유 ${have} · 필요 ${need})` : uiLanguage === 'JA' ? `クレジットが ${need - have} 不足しています (保有 ${have} ・ 必要 ${need})` : `You need ${need - have} more credits (balance ${have} · required ${need})`)
+          /* 서버가 주는 수는 밀리크레딧이다 — 사람에게는 크레딧으로 보여 준다 */
+          const short = formatCredits(need - have)
+          alert(uiLanguage === 'KO' ? `크레딧이 ${short}크레딧 부족합니다 (보유 ${formatCredits(have)} · 필요 ${formatCredits(need)})` : uiLanguage === 'JA' ? `クレジットが ${short} 不足しています (保有 ${formatCredits(have)} ・ 必要 ${formatCredits(need)})` : `You need ${short} more credits (balance ${formatCredits(have)} · required ${formatCredits(need)})`)
         } else {
           alert(`요청 실패: ${data.error || '알 수 없는 오류'}`)
         }

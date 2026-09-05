@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Coins } from 'lucide-react'
 import { suiteHref, withBase } from '@/lib/basePath'
+import { compactCredits, formatCredits } from '@/lib/credits/format'
 
 /**
  * 스위트 공통 크레딧 알약 — 상단 바의 크레딧 자리는 하나다(대표 지시 2026-09-06).
@@ -14,17 +15,6 @@ import { suiteHref, withBase } from '@/lib/basePath'
  * 색·모양은 쿠키플레이 기준 바(COOKIELAB `SuiteShell` 의 CREDIT_PILL)와 같다.
  * 이 저장소에는 그쪽 CSS 토큰이 없어서 다크 테마 값을 리터럴로 적는다.
  */
-
-/** 바는 좁다 — 3.7k 처럼 줄여 쓰고, 정확한 값은 툴팁·계정 화면에서 본다. */
-function compactCredits(n: number): string {
-  if (n < 10_000) return n.toLocaleString('ko-KR')
-  if (n < 1_000_000) {
-    const k = n / 1000
-    return `${k < 100 ? k.toFixed(1).replace(/\.0$/, '') : Math.round(k)}k`
-  }
-  const m = n / 1_000_000
-  return `${m < 100 ? m.toFixed(1).replace(/\.0$/, '') : Math.round(m)}M`
-}
 
 /** 알약은 상태가 바뀌어도 같은 모양이다 — 자리가 하나라 흔들릴 곳이 없다 */
 const CREDIT_PILL =
@@ -95,7 +85,7 @@ export function SuiteCreditPill() {
     )
   }
 
-  const label = `내 크레딧 ${balance.toLocaleString('ko-KR')} — 충전하기`
+  const label = `내 크레딧 ${formatCredits(balance)} — 충전하기`
   return (
     <a href={PRICING_HREF} title={label} aria-label={label} className={CREDIT_PILL}>
       <Coins className="h-3.5 w-3.5 shrink-0" aria-hidden />

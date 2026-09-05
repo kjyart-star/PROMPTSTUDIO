@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowUpRight, Coins } from 'lucide-react'
 import { suiteHref } from '@/lib/basePath'
+import { formatCredits } from '@/lib/credits/format'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 
 /**
@@ -63,7 +64,7 @@ export function PricingClient({ user }: PricingClientProps) {
               {t('현재 보유 크레딧', '利用可能なクレジット', 'Available credits')}
             </span>
             <span className="text-sm font-black text-white">
-              {creditBalance === null ? '···' : creditBalance.toLocaleString('ko-KR')}
+              {creditBalance === null ? '···' : formatCredits(creditBalance)}
             </span>
           </div>
         )}
