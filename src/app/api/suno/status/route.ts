@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { apipassKey } from '@/lib/suite/provider'
+import { getSunoStatus } from '@/lib/suno/channel'
 
 /**
  * 스토리지 쓰기 전용 클라이언트.
@@ -70,12 +70,6 @@ async function uploadToStorage(
 
 export async function GET(request: Request) {
   try {
-    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
-    const API_KEY = await apipassKey()
-    if (!API_KEY) {
-      return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
-    }
-
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -91,134 +85,119 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'taskId and historyId are required' }, { status: 400 })
     }
 
-    const response = await fetch(`https://api.apipass.dev/api/v1/jobs/recordInfo?taskId=${taskId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`
+    // 접수한 그 채널에만 묻는다 — 작업 id 의 접두사가 길을 정한다.
+    // 접두사가 없는 id 는 2채널 이전에 만들어진 것이라 APIPASS 로 간다.
+    const outcome = await getSunoStatus(taskId)
+
+    if (!outcome.ok) {
+      return NextResponse.json({ error: outcome.message }, { status: 400 })
+    }
+
+    if (outcome.state === 'succeeded') {
+      // Extract the first generated audio and image
+      const resultsArr = outcome.results
+      const mockAudioUrl = resultsArr[0]?.audio_url || ''
+      const mockImageUrl = resultsArr[0]?.image_url || ''
+
+      // Get the original history item to copy its metadata for extra variations
+      const { data: originalItem } = await supabase
+        .from('song_history')
+        .select('*')
+        .eq('id', historyId)
+        .eq('user_id', user.id)
+        .single()
+
+      // If already completed, bypass DB updates to prevent duplicate variation entries
+      if (originalItem && originalItem.status === 'completed') {
+        return NextResponse.json({
+          status: 'completed',
+          audio_url: originalItem.audio_url,
+          image_url: originalItem.image_url,
+          results: resultsArr
+        })
       }
-    })
 
-    const data = await response.json()
+      // 생성 결과를 우리 스토리지로 옮긴다 — 외부 CDN 링크가 사라져도 곡이 남게.
+      const storage = storageClient()
+      let finalAudioUrl = mockAudioUrl
+      let finalImageUrl = mockImageUrl
 
-    if (response.ok && data.code === 200) {
-       const state = data.data.state // queuing, generating, success, fail
-        if (state === 'success') {
-          // Extract the first generated audio and image
-          const results = data.data.resultJson?.data
-          let mockAudioUrl = ''
-          let mockImageUrl = ''
-          if (Array.isArray(results) && results.length > 0) {
-             mockAudioUrl = results[0]?.audio_url || ''
-             mockImageUrl = results[0]?.image_url || ''
-          } else if (results) {
-             mockAudioUrl = results.audio_url || ''
-             mockImageUrl = results.image_url || ''
-          }
+      if (mockAudioUrl) {
+        finalAudioUrl = await uploadToStorage(storage, mockAudioUrl, 'tracks', `audio/${historyId}.mp3`, 'path')
+      }
+      if (mockImageUrl) {
+        finalImageUrl = await uploadToStorage(storage, mockImageUrl, 'avatars', `suno_covers/${user.id}/${historyId}.png`)
+      }
 
-          // Get the original history item to copy its metadata for extra variations
-          const { data: originalItem } = await supabase
-            .from('song_history')
-            .select('*')
-            .eq('id', historyId)
-            .eq('user_id', user.id)
-            .single()
+      if (resultsArr.length > 0) {
+        resultsArr[0].audio_url = finalAudioUrl
+        resultsArr[0].image_url = finalImageUrl
+      }
 
-          const resultsArr = Array.isArray(results) ? results : [results].filter(Boolean)
+      // Update the first variation (original row)
+      const { error } = await supabase
+        .from('song_history')
+        .update({
+          status: 'completed',
+          audio_url: finalAudioUrl,
+          image_url: finalImageUrl
+        })
+        .eq('id', historyId)
+        .eq('user_id', user.id)
 
-          // If already completed, bypass DB updates to prevent duplicate variation entries
-          if (originalItem && originalItem.status === 'completed') {
-             return NextResponse.json({
-               status: 'completed',
-               audio_url: originalItem.audio_url,
-               image_url: originalItem.image_url,
-               results: resultsArr
-             })
-          }
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
 
-          // 생성 결과를 우리 스토리지로 옮긴다 — 외부 CDN 링크가 사라져도 곡이 남게.
-          const storage = storageClient()
-          let finalAudioUrl = mockAudioUrl
-          let finalImageUrl = mockImageUrl
+      // If there are multiple variations (Suno normally generates 2 tracks), insert them as separate entries
+      if (resultsArr.length > 1 && originalItem) {
+        for (let i = 1; i < resultsArr.length; i++) {
+          const extraAudio = resultsArr[i]?.audio_url || ''
+          const extraImage = resultsArr[i]?.image_url || ''
+          if (extraAudio) {
+            const extraId = crypto.randomUUID()
+            const finalExtraAudio = await uploadToStorage(storage, extraAudio, 'tracks', `audio/${extraId}.mp3`, 'path')
+            const finalExtraImage = extraImage
+              ? await uploadToStorage(storage, extraImage, 'avatars', `suno_covers/${user.id}/${extraId}.png`)
+              : ''
 
-          if (mockAudioUrl) {
-            finalAudioUrl = await uploadToStorage(storage, mockAudioUrl, 'tracks', `audio/${historyId}.mp3`, 'path')
-          }
-          if (mockImageUrl) {
-            finalImageUrl = await uploadToStorage(storage, mockImageUrl, 'avatars', `suno_covers/${user.id}/${historyId}.png`)
-          }
+            resultsArr[i].audio_url = finalExtraAudio
+            resultsArr[i].image_url = finalExtraImage
 
-          if (resultsArr.length > 0) {
-            resultsArr[0].audio_url = finalAudioUrl
-            resultsArr[0].image_url = finalImageUrl
-          }
-
-          // Update the first variation (original row)
-          const { error } = await supabase
-            .from('song_history')
-            .update({
+            await supabase.from('song_history').insert({
+              user_id: user.id,
+              title: originalItem.title + ` (v${i + 1})`,
+              prompt: originalItem.prompt || '',
+              lyrics: originalItem.lyrics || '',
+              notes: originalItem.notes || '',
+              form: originalItem.form || {},
+              suno_task_id: taskId,
               status: 'completed',
-              audio_url: finalAudioUrl,
-              image_url: finalImageUrl
+              audio_url: finalExtraAudio,
+              image_url: finalExtraImage,
+              is_published: false
             })
-            .eq('id', historyId)
-            .eq('user_id', user.id)
-
-          if (error) {
-             return NextResponse.json({ error: error.message }, { status: 500 })
           }
+        }
+      }
 
-          // If there are multiple variations (Suno normally generates 2 tracks), insert them as separate entries
-          if (resultsArr.length > 1 && originalItem) {
-            for (let i = 1; i < resultsArr.length; i++) {
-              const extraAudio = resultsArr[i]?.audio_url || ''
-              const extraImage = resultsArr[i]?.image_url || ''
-              if (extraAudio) {
-                const extraId = crypto.randomUUID()
-                const finalExtraAudio = await uploadToStorage(storage, extraAudio, 'tracks', `audio/${extraId}.mp3`, 'path')
-                const finalExtraImage = extraImage 
-                  ? await uploadToStorage(storage, extraImage, 'avatars', `suno_covers/${user.id}/${extraId}.png`) 
-                  : ''
+      return NextResponse.json({
+        status: 'completed',
+        audio_url: finalAudioUrl,
+        image_url: finalImageUrl,
+        results: resultsArr
+      })
+    } else if (outcome.state === 'failed') {
+      // Update database row to failed to avoid being stuck in processing
+      await supabase
+        .from('song_history')
+        .update({ status: 'failed' })
+        .eq('id', historyId)
+        .eq('user_id', user.id)
 
-                resultsArr[i].audio_url = finalExtraAudio
-                resultsArr[i].image_url = finalExtraImage
-
-                await supabase.from('song_history').insert({
-                  user_id: user.id,
-                  title: originalItem.title + ` (v${i + 1})`,
-                  prompt: originalItem.prompt || '',
-                  lyrics: originalItem.lyrics || '',
-                  notes: originalItem.notes || '',
-                  form: originalItem.form || {},
-                  suno_task_id: taskId,
-                  status: 'completed',
-                  audio_url: finalExtraAudio,
-                  image_url: finalExtraImage,
-                  is_published: false
-                })
-              }
-            }
-          }
-
-          return NextResponse.json({
-            status: 'completed',
-            audio_url: finalAudioUrl,
-            image_url: finalImageUrl,
-            results: resultsArr
-          })
-       } else if (state === 'fail') {
-          // Update database row to failed to avoid being stuck in processing
-          await supabase
-            .from('song_history')
-            .update({ status: 'failed' })
-            .eq('id', historyId)
-            .eq('user_id', user.id)
-
-          return NextResponse.json({ status: 'failed', message: data.data.failMsg })
-       } else {
-          return NextResponse.json({ status: 'processing', state: state })
-       }
+      return NextResponse.json({ status: 'failed', message: outcome.message })
     } else {
-       return NextResponse.json({ error: data.message || 'Apipass API Error' }, { status: 400 })
+      return NextResponse.json({ status: 'processing', state: outcome.message })
     }
   } catch (err: any) {
     console.error('API GET suno/status error:', err)

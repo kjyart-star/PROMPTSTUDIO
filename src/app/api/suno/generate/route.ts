@@ -2,19 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
-import { APIPASS_COST_USD_PER_SONG, apipassKey, reportProviderUsage } from '@/lib/suite/provider'
+import { SUNO_COST_USD_PER_SONG, reportProviderUsage } from '@/lib/suite/provider'
+import { createSunoTask } from '@/lib/suno/channel'
 import { clampSunoWeight, normalizeSunoModelVersion, normalizeVocalGender } from '@/lib/suno/versions'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(request: Request) {
   try {
-    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
-    const API_KEY = await apipassKey()
-    if (!API_KEY) {
-      return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
-    }
-
     // [임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고
     const gate = await requireAiAccess('suno/generate')
     if (!gate.ok) return gate.response
@@ -70,7 +65,7 @@ export async function POST(request: Request) {
       ? body.requestId
       : crypto.randomUUID()
 
-    // 크레딧 선차감. Apipass 가 실패하면 아래에서 되돌린다.
+    // 크레딧 선차감. 접수가 실패하면 아래에서 되돌린다.
     const spend = await spendCredits({
       action: 'music.generate',
       idempotencyKey: `music.generate:${user.id}:${requestId}`,
@@ -81,82 +76,55 @@ export async function POST(request: Request) {
 
     const upperModelVersion = normalizeSunoModelVersion(modelVersion)
 
-    // Prepare Apipass API payload — 필드 이름·값 범위는 APIPASS 문서를 따른다
-    // (https://apipass.dev/model/suno/suno_generate). 문서에 없는 필드는 보내지 않는다.
-    const input: Record<string, unknown> = {
-      model_version: upperModelVersion,
-      prompt: prompt || "",
+    // 어느 채널로 나갈지는 채널 층이 정한다(APIPASS 먼저, 안 되면 kie.ai).
+    const outcome = await createSunoTask('generate', {
+      modelVersion: upperModelVersion,
+      prompt: prompt || '',
+      style: style || '',
+      title: title || '',
       customMode: customMode ?? true,
       instrumental: instrumentalOnly || false,
-      style: style || "",
-      title: title || "",
+      vocalGender: normalizeVocalGender(vocalGender),
+      negativeTags: typeof negativeTags === 'string' && negativeTags.trim() ? negativeTags.trim() : undefined,
       styleWeight: clampSunoWeight(styleWeight, 0.5),
       weirdnessConstraint: clampSunoWeight(weirdness, 0.3),
-      audioWeight: clampSunoWeight(audioWeight, 0.5)
+      audioWeight: clampSunoWeight(audioWeight, 0.5),
+    })
+
+    if (!outcome.ok) {
+      await refundCredits(spend.ledgerId, 'suno 접수 실패')
+      return NextResponse.json({ error: outcome.message }, { status: 400 })
     }
 
-    const gender = normalizeVocalGender(vocalGender)
-    if (gender) input.vocalGender = gender
+    const taskId = outcome.taskRef
 
-    if (typeof negativeTags === 'string' && negativeTags.trim()) {
-      input.negativeTags = negativeTags.trim()
-    }
+    // 공급사에 나간 돈을 관리자단 「사용 금액」에 합류시킨다. 작업이 접수된 시점에
+    // 공급사 크레딧이 빠지므로 여기서 한 번만 보낸다(taskId 로 중복이 걸러진다).
+    void reportProviderUsage({
+      providerId: outcome.channel,
+      action: 'music.generate',
+      model: `suno-${upperModelVersion.toLowerCase()}`,
+      ref: taskId,
+      userId: user.id,
+      costUsd: SUNO_COST_USD_PER_SONG[outcome.channel],
+    })
 
-    const payload = { model: "suno/generate", input }
-
-    let response: Response
-    let data: any
-    try {
-      response = await fetch("https://api.apipass.dev/api/v1/jobs/createTask", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify(payload)
+    // Update DB with task ID and status
+    const { error } = await supabase
+      .from('song_history')
+      .update({
+        suno_task_id: taskId,
+        status: 'processing'
       })
-      data = await response.json()
-    } catch (apiErr) {
-      await refundCredits(spend.ledgerId, 'apipass 실패')
-      console.error('Apipass request failed:', apiErr)
-      return NextResponse.json({ error: 'Apipass API Error' }, { status: 400 })
+      .eq('id', historyId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error updating task ID:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    if (response.ok && data.code === 200) {
-      const taskId = data.data.taskId
-
-      // 공급사에 나간 돈을 관리자단 「사용 금액」에 합류시킨다. 작업이 접수된 시점에
-      // APIPASS 크레딧이 빠지므로 여기서 한 번만 보낸다(taskId 로 중복이 걸러진다).
-      void reportProviderUsage({
-        providerId: 'apipass',
-        action: 'music.generate',
-        model: `suno-${upperModelVersion.toLowerCase()}`,
-        ref: taskId,
-        userId: user.id,
-        costUsd: APIPASS_COST_USD_PER_SONG,
-      })
-
-      // Update DB with task ID and status
-      const { error } = await supabase
-        .from('song_history')
-        .update({
-          suno_task_id: taskId,
-          status: 'processing'
-        })
-        .eq('id', historyId)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Error updating task ID:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-
-      return NextResponse.json({ taskId, status: 'processing', balance: spend.balance })
-    } else {
-      await refundCredits(spend.ledgerId, 'apipass 실패')
-      console.error('Apipass API Error:', data)
-      return NextResponse.json({ error: data.message || 'Apipass API Error' }, { status: 400 })
-    }
+    return NextResponse.json({ taskId, status: 'processing', balance: spend.balance })
   } catch (err: any) {
     console.error('API POST suno/generate error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

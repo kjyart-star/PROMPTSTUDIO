@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { apipassKey } from '@/lib/suite/provider'
+import { getSunoStatus } from '@/lib/suno/channel'
 
 export async function GET(request: Request) {
   try {
@@ -10,38 +10,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
-    const API_KEY = await apipassKey()
-    if (!API_KEY) {
-      return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
-    }
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get('taskId')
 
     if (!taskId) return NextResponse.json({ error: 'taskId required' }, { status: 400 })
 
-    const response = await fetch(`https://api.apipass.dev/api/v1/jobs/recordInfo?taskId=${taskId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`
-      }
-    })
+    // 접수한 그 채널에만 묻는다 — 작업 id 의 접두사가 길을 정한다.
+    const outcome = await getSunoStatus(taskId)
 
-    const data = await response.json()
-
-    if (response.ok && data.code === 200) {
-       const state = data.data.state // queuing, generating, success, fail
-       if (state === 'success') {
-          // You could also save the result to Supabase song_history here
-          return NextResponse.json({ status: 'completed', results: data.data.resultJson?.data })
-       } else if (state === 'fail') {
-          return NextResponse.json({ status: 'failed', message: data.data.failMsg })
-       } else {
-          return NextResponse.json({ status: 'processing' })
-       }
-    } else {
-       return NextResponse.json({ error: data.message || 'Apipass API Error' }, { status: 400 })
+    if (!outcome.ok) {
+      return NextResponse.json({ error: outcome.message }, { status: 400 })
     }
+
+    if (outcome.state === 'succeeded') {
+      // You could also save the result to Supabase song_history here
+      return NextResponse.json({ status: 'completed', results: outcome.results })
+    }
+    if (outcome.state === 'failed') {
+      return NextResponse.json({ status: 'failed', message: outcome.message })
+    }
+    return NextResponse.json({ status: 'processing' })
   } catch (err: any) {
     console.error('Cover Status Error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
