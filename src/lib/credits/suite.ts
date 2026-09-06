@@ -5,6 +5,12 @@
  * 뮤직 앱은 더 이상 자기 지갑(profiles.credits)이나 localStorage 를 쓰지 않는다 —
  * 지갑은 스위트 전체에 하나뿐이고, 원장은 워커의 D1 에만 있다.
  *
+ * 잔액·차감액은 전부 **밀리크레딧**이다(1 크레딧 = 1,000). 워커의 응답 필드는
+ * 2026-09-07 부터 `balanceMilli`·`chargedMilli`·`requiredMilli` 로 이름에 단위를 달았고,
+ * 옛 이름(`balance`·`charged`·`required`)도 한 릴리스 동안 같이 내려온다.
+ * 여기서는 **새 이름을 먼저 보고 없으면 옛 이름**을 읽는다 — 두 저장소의 배포 순서가
+ * 어긋나도 잔액이 0 으로 보이지 않게.
+ *
  *   POST {base}/v1/credits/spend   선차감 (Bearer = 사용자 토큰)
  *   POST {base}/v1/credits/refund  환불   (X-Service-Token = 서비스 토큰)
  *   GET  {base}/v1/me              잔액 조회
@@ -116,7 +122,13 @@ export async function spendCredits(params: {
     if (typeof ledgerId !== 'string' && body?.ledger !== null) {
       return { ok: false, kind: 'unavailable', message: UNAVAILABLE_MESSAGE }
     }
-    return { ok: true, ledgerId: typeof ledgerId === 'string' ? ledgerId : '', balance: Number(body?.balance ?? 0) }
+    /* 워커가 2026-09-07 부터 `balanceMilli` 로 내려 준다. 옛 이름(`balance`)도
+       한 릴리스 동안 같이 오므로 새 이름을 먼저 보고, 없으면 옛 이름으로 떨어진다. */
+    return {
+      ok: true,
+      ledgerId: typeof ledgerId === 'string' ? ledgerId : '',
+      balance: Number(body?.balanceMilli ?? body?.balance ?? 0),
+    }
   }
 
   if (res.status === 401) return { ok: false, kind: 'unauthorized' }
@@ -125,8 +137,8 @@ export async function spendCredits(params: {
     return {
       ok: false,
       kind: 'insufficient',
-      balance: Number(err.balance ?? 0),
-      required: Number(err.required ?? amount),
+      balance: Number(err.balanceMilli ?? err.balance ?? 0),
+      required: Number(err.requiredMilli ?? err.required ?? amount),
     }
   }
 
@@ -181,7 +193,7 @@ export async function getSuiteBalance(): Promise<BalanceResult> {
     if (res.status === 401) return { ok: false, kind: 'unauthorized' }
     if (!res.ok) return { ok: false, kind: 'unavailable' }
     const body = await readJson(res)
-    return { ok: true, balance: Number(body?.wallet?.balance ?? 0) }
+    return { ok: true, balance: Number(body?.wallet?.balanceMilli ?? body?.wallet?.balance ?? 0) }
   } catch {
     return { ok: false, kind: 'unavailable' }
   }
