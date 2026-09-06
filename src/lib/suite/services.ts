@@ -1,11 +1,11 @@
 /**
- * 쿠키플레이 스위트 상단 메뉴 목록 — 순서 · 이름 · 층 표기 · 상태.
+ * 쿠키플레이 스위트 상단 메뉴 목록 — 층 · 순서 · 이름 · 상태.
  *
  * **이 파일은 사본이다. 정본은 COOKIELAB 저장소의
- * `src/lib/products.ts`(PRODUCTS 의 순서 · name · status) 와
- * `src/lib/floors.ts`(층 표기) 다.** 서비스가 늘거나 층이 바뀌면 정본을 먼저 고치고
- * 이 파일을 같은 값으로 맞춘다. 세 저장소(COOKIELAB · suno-prompt · IDFY)의 상단
- * 메뉴가 한 곳에서 나온 것처럼 보여야 한다는 대표 지시(2026-09-06: "상단메뉴
+ * `src/lib/products.ts`(PRODUCTS 의 name · status) 와
+ * `src/lib/floors.ts`(FLOOR_DEFS — 층 정의) 다.** 서비스가 늘거나 층이 바뀌면 정본을
+ * 먼저 고치고 이 파일을 같은 값으로 맞춘다. 세 저장소(COOKIELAB · suno-prompt · IDFY)의
+ * 상단 메뉴가 한 곳에서 나온 것처럼 보여야 한다는 대표 지시(2026-09-06: "상단메뉴
  * 마지막 이미지처럼 공통으로 되어 있어야 함")에 대한 답이다.
  *
  * 주소(href)는 여기 두지 않는다 — 저장소마다 basePath · 오리진이 달라서 각 앱의
@@ -25,19 +25,14 @@ export interface SuiteService {
   /** COOKIELAB `products.ts` 의 Product.id. 공지(announcement) 의 scope 도 이 id 를 쓴다. */
   id: string
   name: string
-  /** 층 짧은 표기('5F' · '4F' · '3F' · '2F' · '1F' · 'B1') */
-  floor: string
   status: SuiteStatus
 }
 
 /*
- * **순서는 층 순서다(고층이 먼저).** COOKIELAB `floors.ts` 의 `productsByFloor()` 가
- * 정본이고, 이 배열은 그 결과를 그대로 옮겨 적은 것이다. 층을 고치면 순서도 같이
- * 바뀌므로 두 곳을 따로 관리하지 않는다(대표 2026-09-06: "메뉴 순서도 모두 교체 되어야함").
- *
- * 층 갈래는 **손으로 고치는 도구(3F 작업실)** 와 **AI 로 만드는 도구(4F AI작업실)** 다
- * (대표 2026-09-06: "3층을 작업실로 3개 넣고 지금 3층 뮤직스튜디오를 4층으로 AI작업실로
- * 넣으면 좋을듯. 4층에 2개 들어가는 거임").
+ * **층·순서는 아래 `SUITE_FLOORS` 가 정한다.** 이 배열은 서비스의 이름 · 상태만 들고
+ * 있고, 어느 층에 몇 번째로 놓일지는 `suiteNavFloors()` 가 층 정의에서 읽는다. 같은
+ * 값을 두 곳에 두면 반드시 갈라지므로 층은 한 곳에만 적는다(대표 2026-09-06: "메뉴
+ * 순서도 모두 교체 되어야함" — 3층과 4층을 맞바꾼 뒤에도 메뉴가 옛 순서인 채였다).
  *
  * 쿠키드림은 4F 에 `preview`(「준비 중」)로 있다 — 아직 기획 단계라 자리만 두고 기획을
  * 다시 하는 중이다. 만드는 화면 진입은 COOKIELAB 에서 막아 두었지만(`appPath: null` —
@@ -55,23 +50,112 @@ export interface SuiteService {
  * 뺐다 하면 메뉴가 갈라지니 소개 페이지로 보내고 「준비 중」 배지가 상태를 말한다.
  */
 export const SUITE_SERVICES: SuiteService[] = [
-  { id: 'cookiemovie', name: '쿠키영화관', floor: '5F', status: 'preview' },
-  { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', floor: '4F', status: 'beta' },
-  { id: 'cookiedream', name: '쿠키드림', floor: '4F', status: 'preview' },
-  { id: 'cookiecut', name: '쿠키컷', floor: '3F', status: 'stable' },
-  { id: 'cookiepix', name: '쿠키픽스', floor: '3F', status: 'stable' },
-  { id: 'cookieillust', name: '쿠키일러스트', floor: '3F', status: 'beta' },
-  { id: 'cookiemusic', name: '쿠키뮤직', floor: '2F', status: 'beta' },
-  { id: 'cookiechat', name: '쿠키챗', floor: '1F', status: 'preview' },
-  { id: 'cookiephotostudio', name: '쿠키포토스튜디오', floor: 'B1', status: 'beta' },
+  { id: 'cookiemovie', name: '쿠키영화관', status: 'preview' },
+  { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', status: 'beta' },
+  { id: 'cookiedream', name: '쿠키드림', status: 'preview' },
+  { id: 'cookiecut', name: '쿠키컷', status: 'stable' },
+  { id: 'cookiepix', name: '쿠키픽스', status: 'stable' },
+  { id: 'cookieillust', name: '쿠키일러스트', status: 'beta' },
+  { id: 'cookiemusic', name: '쿠키뮤직', status: 'beta' },
+  { id: 'cookiechat', name: '쿠키챗', status: 'preview' },
+  { id: 'cookiephotostudio', name: '쿠키포토스튜디오', status: 'beta' },
 ]
 
+/** 정본 COOKIELAB `floors.ts` 의 `FloorDef` 와 같은 모양. */
+export interface SuiteFloor {
+  /** 화면에 보일 묶음 표기, 예: 'B1 · 포토 스튜디오' */
+  label: string
+  /** SUITE_SERVICES 의 id 참조. 1개 또는 여러 개(3층은 3개). */
+  productIds: string[]
+}
+
 /**
- * 앞 항목과 층이 같으면 undefined — 같은 층이 이어질 때 "3F" 가 줄줄이 찍히면 오히려
- * 산만하다(COOKIELAB `SuiteShell` 과 같은 규칙).
+ * 쿠키플레이타운 — 서비스를 "건물" 컨셉으로 묶는 층 정의.
+ * 낮은 층 → 높은 층 순서로 적는다(지하가 먼저) — 실제 건물 순서를 그대로
+ * 따라야 나중에 층을 추가할 때 "몇 번째에 끼워 넣어야 하지" 고민 없이 맨 뒤에
+ * 한 줄만 붙이면 된다. 화면에는 이 순서를 뒤집어(`suiteNavFloors()`) 고층이
+ * 왼쪽에 오게 보여준다.
+ *
+ * **정본은 COOKIELAB `src/lib/floors.ts` 의 `FLOOR_DEFS` 다** — 여섯 줄과 주석을
+ * 그대로 옮겨 적은 것이다. 정본을 고치면 이 파일도 같이 맞춘다.
  */
-export function floorPrefix(index: number): string | undefined {
-  const cur = SUITE_SERVICES[index]
-  const prev = index > 0 ? SUITE_SERVICES[index - 1] : undefined
-  return prev && prev.floor === cur.floor ? undefined : cur.floor
+export const SUITE_FLOORS: SuiteFloor[] = [
+  { label: 'B1 · 포토 스튜디오', productIds: ['cookiephotostudio'] },
+  { label: '1F · 쿠키챗', productIds: ['cookiechat'] },
+  { label: '2F · 쿠키뮤직', productIds: ['cookiemusic'] },
+  /*
+   * 3층은 **손으로 고치는 도구**, 4층은 **AI 로 만드는 도구**로 나눈다
+   * (대표 2026-09-06: "3층을 작업실로 3개 넣고 지금 3층 뮤직스튜디오를 4층으로
+   * AI작업실로 넣으면 좋을듯. 4층에 2개 들어가는 거임").
+   * 쿠키드림은 아직 기획 단계라 4층에 자리만 두고 기획을 다시 한다.
+   */
+  { label: '3F · 작업실', productIds: ['cookiecut', 'cookiepix', 'cookieillust'] },
+  { label: '4F · AI작업실', productIds: ['cookiemusicstudio', 'cookiedream'] },
+  /*
+   * 5층은 만든 영상이 가서 머무는 자리다. 처음엔 「쿠키TV」로 넣었다가 바로
+   * 「쿠키무비」로 바꿨다(대표 지시 2026-09-06: "TV보다는 무비가 좋을 듯" /
+   * "아니 영화로 넣어"). 숏드라마를 이 층에 끼워 넣지 마라 — 그건 나중에 TV 를
+   * 따로 만드는 쪽이다("숏드라마는 나중에 TV를 따로 하는 게 좋을 듯").
+   * 같은 날 한글 이름만 다시 「쿠키영화관」으로 바꿨다(대표 지시 2026-09-06: "쿠키무비를
+   * 쿠키영화관으로. 한글은 이렇게 수정") — 라틴 워드마크 `CookieMovie` · id · 경로는 그대로다.
+   * 지금은 **자리뿐**이라 쿠키영화관은 `preview` 이고 진입 경로가 없다. 방향은 문을
+   * 열 때 정해지므로("나중에 활성화되면 구체적으로 방향이 나올 것임") 문구를
+   * 부풀리지 않는다. 2층 · 1층처럼 층 이름이 곧 서비스 이름이다.
+   */
+  { label: '5F · 쿠키영화관', productIds: ['cookiemovie'] },
+]
+
+/** 상단 메뉴 한 칸 = 층 하나. items 가 둘 이상이면 접힌 메뉴, 하나면 바로 링크. */
+export interface SuiteNavFloor {
+  /** '4F' — label 앞부분 */
+  short: string
+  /** 'AI작업실' — label 뒷부분. 층에 없는 서비스는 제 이름 */
+  name: string
+  items: SuiteService[]
+}
+
+/**
+ * 상단 메뉴가 그릴 층 목록 — 층 순서 그대로(고층이 왼쪽). `label` 을 ' · ' 로 나눠
+ * short/name 을 얻는다. 층에 없는 서비스는 빠뜨리지 않고 제 이름을 층 이름 삼아 뒤에
+ * 붙인다 — 아홉 서비스 중 하나라도 메뉴에서 사라지면 그 서비스로 갈 길이 없어진다.
+ *
+ * 메뉴가 아홉 칸에서 여섯 칸으로 줄고 층이 접힌 이유는 대표 지시다(2026-09-06:
+ * "4층은 AI작업실로 하고, 마우스 올리면 아래로 쿠키뮤직 스튜디오·쿠키드림 이런 식으로
+ * 나오게 해줘", "3층은 3가지"). 아홉 칸이면 1600px 아래에서 계속 넘쳐 메뉴 위치가
+ * 흔들렸다("오른쪽 정렬하니 메뉴 위치가 계속 바뀜").
+ */
+export const suiteNavFloors = (): SuiteNavFloor[] => {
+  const floors = [...SUITE_FLOORS]
+    .reverse()
+    .map((f) => {
+      const [short, name] = f.label.split(' · ')
+      return {
+        short,
+        name,
+        items: f.productIds
+          .map((id) => SUITE_SERVICES.find((s) => s.id === id))
+          .filter((s): s is SuiteService => Boolean(s)),
+      }
+    })
+    /* 한 서비스도 못 찾은 층은 그릴 것이 없다 — 빈 칸을 만들지 않는다. */
+    .filter((f) => f.items.length > 0)
+  const seen = new Set(floors.flatMap((f) => f.items.map((s) => s.id)))
+  return [
+    ...floors,
+    ...SUITE_SERVICES.filter((s) => !seen.has(s.id)).map((s) => ({
+      short: '',
+      name: s.name,
+      items: [s],
+    })),
+  ]
+}
+
+/**
+ * 서비스 id → 층 짧은 표기('3F', '2F', 'B1'). `label` 이 'B1 · 포토 스튜디오'처럼
+ * "짧은 표기 · 이름" 형식이라 따로 저장하지 않고 `label` 에서 뽑아 쓴다 — 값이
+ * 둘로 갈라져 있으면 나중에 하나만 고치는 실수가 생기기 쉽다.
+ */
+export const suiteFloorShort = (id: string): string | undefined => {
+  const floor = SUITE_FLOORS.find((f) => f.productIds.includes(id))
+  return floor?.label.split(' · ')[0]
 }
