@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const API_KEY = process.env.APIPASS_API_KEY
+import { apipassKey } from '@/lib/suite/provider'
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +10,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
+    const API_KEY = await apipassKey()
     if (!API_KEY) {
       return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
     }

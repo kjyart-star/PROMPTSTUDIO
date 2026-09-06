@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
-
-const API_KEY = process.env.APIPASS_API_KEY
+import { APIPASS_COST_USD_PER_SONG, apipassKey, reportProviderUsage } from '@/lib/suite/provider'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(request: Request) {
   try {
+    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
+    const API_KEY = await apipassKey()
     if (!API_KEY) {
       return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
     }
@@ -113,6 +114,17 @@ export async function POST(request: Request) {
 
     if (response.ok && data.code === 200) {
       const taskId = data.data.taskId
+
+      // 공급사에 나간 돈을 관리자단 「사용 금액」에 합류시킨다. 작업이 접수된 시점에
+      // APIPASS 크레딧이 빠지므로 여기서 한 번만 보낸다(taskId 로 중복이 걸러진다).
+      void reportProviderUsage({
+        providerId: 'apipass',
+        action: 'music.generate',
+        model: `suno-${upperModelVersion.toLowerCase()}`,
+        ref: taskId,
+        userId: user.id,
+        costUsd: APIPASS_COST_USD_PER_SONG,
+      })
 
       // Update DB with task ID and status
       const { error } = await supabase

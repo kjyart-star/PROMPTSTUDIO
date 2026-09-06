@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
-
-const API_KEY = process.env.APIPASS_API_KEY
+import { APIPASS_COST_USD_PER_SONG, apipassKey, reportProviderUsage } from '@/lib/suite/provider'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(request: Request) {
   try {
+    // 환경변수가 먼저, 없으면 쿠키플레이 관리 화면에 저장해 둔 키
+    const API_KEY = await apipassKey()
     if (!API_KEY) {
       return NextResponse.json({ error: 'Server API key configuration missing' }, { status: 500 })
     }
@@ -100,6 +101,15 @@ export async function POST(request: Request) {
     }
 
     if (response.ok && data.code === 200) {
+       // 공급사에 나간 돈을 관리자단 「사용 금액」에 합류시킨다(taskId 로 중복이 걸러진다).
+       void reportProviderUsage({
+         providerId: 'apipass',
+         action: 'music.cover',
+         model: `suno-${String(body.modelVersion ?? 'v5').toLowerCase()}`,
+         ref: data.data.taskId,
+         userId: user.id,
+         costUsd: APIPASS_COST_USD_PER_SONG,
+       })
        // Typically we would save this to Supabase song_history here
        // but for simplicity, we just return the taskId to the client
        return NextResponse.json({ taskId: data.data.taskId, balance: spend.balance })
