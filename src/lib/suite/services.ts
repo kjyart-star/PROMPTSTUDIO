@@ -25,6 +25,14 @@ export interface SuiteService {
   /** COOKIELAB `products.ts` 의 Product.id. 공지(announcement) 의 scope 도 이 id 를 쓴다. */
   id: string
   name: string
+  /**
+   * 라틴 워드마크. 메뉴 행 머리의 약자 칸이 여기서 파생된다('CookieMusic Studio' → 'CMS').
+   * 제품마다 아이콘 세트를 따로 만들지 않으려고 이름에서 뽑아 쓴다 — 서비스가 늘어도
+   * 여기 한 줄이면 행 머리가 채워진다.
+   */
+  latin: string
+  /** 메뉴 행의 한 줄 설명. COOKIELAB `products.ts` 의 `Product.role` 과 같은 값. */
+  role: string
   status: SuiteStatus
 }
 
@@ -33,6 +41,10 @@ export interface SuiteService {
  * 있고, 어느 층에 몇 번째로 놓일지는 `suiteNavFloors()` 가 층 정의에서 읽는다. 같은
  * 값을 두 곳에 두면 반드시 갈라지므로 층은 한 곳에만 적는다(대표 2026-09-06: "메뉴
  * 순서도 모두 교체 되어야함" — 3층과 4층을 맞바꾼 뒤에도 메뉴가 옛 순서인 채였다).
+ *
+ * `latin` · `role` 은 접힌 층 메뉴의 행을 그리는 데 쓴다 — 약자 칸(latin 에서 파생)과
+ * 이름 아래 한 줄 설명(role). 쿠키포토 「서비스」 메가메뉴의 결을 따르라는 대표 지시
+ * (2026-09-06: "포토 참고.")에 맞춘 것이고, 값은 정본 `products.ts` 와 같아야 한다.
  *
  * 쿠키드림은 4F 에 `preview`(「준비 중」)로 있다 — 아직 기획 단계라 자리만 두고 기획을
  * 다시 하는 중이다. 만드는 화면 진입은 COOKIELAB 에서 막아 두었지만(`appPath: null` —
@@ -50,15 +62,27 @@ export interface SuiteService {
  * 뺐다 하면 메뉴가 갈라지니 소개 페이지로 보내고 「준비 중」 배지가 상태를 말한다.
  */
 export const SUITE_SERVICES: SuiteService[] = [
-  { id: 'cookiemovie', name: '쿠키영화관', status: 'preview' },
-  { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', status: 'beta' },
-  { id: 'cookiedream', name: '쿠키드림', status: 'preview' },
-  { id: 'cookiecut', name: '쿠키컷', status: 'stable' },
-  { id: 'cookiepix', name: '쿠키픽스', status: 'stable' },
-  { id: 'cookieillust', name: '쿠키일러스트', status: 'beta' },
-  { id: 'cookiemusic', name: '쿠키뮤직', status: 'beta' },
-  { id: 'cookiechat', name: '쿠키챗', status: 'preview' },
-  { id: 'cookiephotostudio', name: '쿠키포토스튜디오', status: 'beta' },
+  { id: 'cookiemovie', name: '쿠키영화관', latin: 'CookieMovie', role: 'AI 영화', status: 'preview' },
+  {
+    id: 'cookiemusicstudio',
+    name: '쿠키뮤직 스튜디오',
+    latin: 'CookieMusic Studio',
+    role: 'AI 음악 제작',
+    status: 'beta',
+  },
+  { id: 'cookiedream', name: '쿠키드림', latin: 'CookieDream', role: 'AI 이미지 생성', status: 'preview' },
+  { id: 'cookiecut', name: '쿠키컷', latin: 'CookieCut', role: '영상 편집', status: 'stable' },
+  { id: 'cookiepix', name: '쿠키픽스', latin: 'CookiePix', role: '이미지 편집', status: 'stable' },
+  { id: 'cookieillust', name: '쿠키일러스트', latin: 'CookieIllust', role: '벡터 드로잉', status: 'beta' },
+  { id: 'cookiemusic', name: '쿠키뮤직', latin: 'CookieMusic', role: 'AI 음악', status: 'beta' },
+  { id: 'cookiechat', name: '쿠키챗', latin: 'CookieChat', role: 'AI 캐릭터 대화', status: 'preview' },
+  {
+    id: 'cookiephotostudio',
+    name: '쿠키포토스튜디오',
+    latin: 'CookiePhoto Studio',
+    role: 'AI 헤드샷 · 프로필 세트',
+    status: 'beta',
+  },
 ]
 
 /** 정본 COOKIELAB `floors.ts` 의 `FloorDef` 와 같은 모양. */
