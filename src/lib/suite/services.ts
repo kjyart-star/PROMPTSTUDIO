@@ -46,14 +46,16 @@ export interface SuiteService {
  * 서로 달라진다 — 이 파일이 있는 이유가 그것이다(대표 2026-09-06: "상단메뉴 마지막
  * 이미지처럼 공통으로 되어 있어야 함").
  *
- * 쿠키무비(5F)도 같은 이유로 목록에 둔다 — 아직 **자리뿐**이고(대표 2026-09-06
+ * 쿠키영화관(5F)도 같은 이유로 목록에 둔다 — 아직 **자리뿐**이고(대표 2026-09-06
  * "아니 영화로 넣어", "큰 의미는 지금 없음"), 이름은 처음 「쿠키TV」였다가 대표
- * 지시로 「쿠키무비」가 됐다("TV보다는 무비가 좋을 듯"). **숏드라마는 나중에 TV를
+ * 지시로 「쿠키무비」가 됐다가("TV보다는 무비가 좋을 듯") 같은 날 한글 이름만 다시
+ * 「쿠키영화관」으로 바뀌었다("쿠키무비를 쿠키영화관으로. 한글은 이렇게 수정" — 라틴
+ * 워드마크 · id · 경로는 그대로). **숏드라마는 나중에 TV를
  * 따로 하므로 여기에 끼워 넣지 않는다.** 준비 중인 서비스를 저장소마다 넣었다
  * 뺐다 하면 메뉴가 갈라지니 소개 페이지로 보내고 「준비 중」 배지가 상태를 말한다.
  */
 export const SUITE_SERVICES: SuiteService[] = [
-  { id: 'cookiemovie', name: '쿠키무비', floor: '5F', status: 'preview' },
+  { id: 'cookiemovie', name: '쿠키영화관', floor: '5F', status: 'preview' },
   { id: 'cookiemusicstudio', name: '쿠키뮤직 스튜디오', floor: '4F', status: 'beta' },
   { id: 'cookiedream', name: '쿠키드림', floor: '4F', status: 'preview' },
   { id: 'cookiecut', name: '쿠키컷', floor: '3F', status: 'stable' },
