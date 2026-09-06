@@ -26,25 +26,61 @@ export const SUITE_API_BASE = (
 export const SERVICE_ID = 'cookiemusic'
 
 /**
- * **표시용** 단가표. 실제 차감액은 워커의 `credit_prices` 가 정한다 —
- * 사용자 토큰으로는 amount 를 실어 보낼 수 없어서(워커가 400) 이 표는 화면 문구에만 쓴다.
+ * 이 앱이 차감을 거는 action 들. **값(단가)은 여기 적지 않는다.**
  *
- * **단위는 밀리크레딧**이다(1 크레딧 = 1,000). 2000 = 2 크레딧, 500 = 0.5 크레딧.
- * 값은 COOKIELAB `docs/pricing-seed-2026-09.json` · `0013_millicredits_bbanana.sql` 과 같다.
+ * 2026-09-07 까지는 이 자리에 밀리크레딧 사본표가 있었다. 그 사본이 정본과 갈라져서,
+ * 워커는 4.4 를 빼는데 화면은 2 라고 적고 버튼에는 「10 크레딧」이 박혀 있었다 —
+ * 사본이 셋이면 셋 다 틀린다. 그래서 사본을 지우고 **워커의 공개 단가 API 한 곳**만 본다.
  *
- * 프롬프트·가사(기본)가 0 인 이유 — 낱개 원가가 0.1 크레딧에도 못 미쳐 따로 팔 수 없다.
- * 그 원가를 음악 생성 단가가 흡수하고 차감을 없앴다(무료).
+ *   GET {base}/v1/public/prices?serviceId=cookiemusic  →  [{ action, label, creditsMilli }]
+ *
+ * 그 API 가 읽는 D1 `credit_prices` 가 정본이고, 정본 문서는 COOKIELAB
+ * `docs/credits-integer-nexus-2026-09.md`(2026-09-07) · `docs/pricing-seed-2026-09.json`,
+ * 마이그레이션은 `0031_integer_credits_nexus.sql` 이다. 값이 바뀌어도 이 저장소는 손댈 것이 없다.
+ *
+ * 남는 위험은 값이 아니라 **action id 가 바뀌는 것**이라, 그것만
+ * `npm run check:credits`(scripts/check-credit-actions.mjs)가 라이브 API 와 대조한다.
  */
-export const CREDIT_PRICES = {
-  'music.generate': 2000,
-  'music.cover': 2000,
-  'studio.prompt.gpt-4o-mini': 0,
-  // o3-mini 는 generate-prompt 가 gpt-4o-mini 로 내려보내므로 화면 표시도 실제 차감과 같이 0 이다
-  'studio.prompt.o3-mini': 0,
-  'studio.prompt.gpt-4o': 500,
-} as const
+export const CREDIT_ACTIONS = [
+  'music.generate',
+  'music.cover',
+  'studio.prompt.gpt-4o-mini',
+  // o3-mini 는 generate-prompt 가 gpt-4o-mini 로 내려보내지만 워커 단가표에는 별칭 행이 따로 있다
+  'studio.prompt.o3-mini',
+  'studio.prompt.gpt-4o',
+] as const
 
-export type CreditAction = keyof typeof CREDIT_PRICES
+export type CreditAction = (typeof CREDIT_ACTIONS)[number]
+
+/** action → 밀리크레딧. 워커에 없는 action(꺼진 행)은 키 자체가 없다. */
+export type CreditPriceMap = Partial<Record<CreditAction, number>>
+
+/**
+ * 이 서비스의 차감 단가를 워커에서 읽는다. 화면 문구는 **전부** 이 값으로 그린다.
+ *
+ * 실패하면 빈 표를 준다 — 화면은 「(N 크레딧)」 괄호를 통째로 빼고 그린다.
+ * 틀린 숫자를 보여 주는 것보다 숫자를 안 보여 주는 것이 낫다(사용자가 속았다고 느끼는 자리다).
+ * 워커가 60초 캐시를 달아 주므로 여기서도 같은 창으로 재검증한다.
+ */
+export async function fetchSuitePrices(): Promise<CreditPriceMap> {
+  try {
+    const res = await fetch(
+      `${SUITE_API_BASE}/v1/public/prices?serviceId=${encodeURIComponent(SERVICE_ID)}`,
+      { next: { revalidate: 60 } },
+    )
+    if (!res.ok) return {}
+    const body = await res.json()
+    const known = new Set<string>(CREDIT_ACTIONS)
+    const prices: CreditPriceMap = {}
+    for (const row of Array.isArray(body?.prices) ? body.prices : []) {
+      if (!known.has(row?.action) || typeof row?.creditsMilli !== 'number') continue
+      prices[row.action as CreditAction] = row.creditsMilli
+    }
+    return prices
+  } catch {
+    return {}
+  }
+}
 
 export type SpendResult =
   | { ok: true; ledgerId: string; balance: number }
@@ -90,10 +126,8 @@ export async function spendCredits(params: {
   const token = await accessToken()
   if (!token) return { ok: false, kind: 'unauthorized' }
 
-  // 표시용 기본값. 실제 차감액은 워커의 단가표(credit_prices)가 정한다 —
+  // amount 는 싣지 않는다 — 차감액은 워커의 단가표(credit_prices)가 정하고,
   // 사용자 토큰으로 amount 를 실어 보내면 워커가 400 으로 거부한다(2026-09-05 워커 변경).
-  const amount = CREDIT_PRICES[params.action]
-
   let res: Response
   try {
     res = await fetch(`${SUITE_API_BASE}/v1/credits/spend`, {
@@ -138,7 +172,7 @@ export async function spendCredits(params: {
       ok: false,
       kind: 'insufficient',
       balance: Number(err.balanceMilli ?? err.balance ?? 0),
-      required: Number(err.requiredMilli ?? err.required ?? amount),
+      required: Number(err.requiredMilli ?? err.required ?? 0),
     }
   }
 

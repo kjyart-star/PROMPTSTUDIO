@@ -8,7 +8,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { StudioHero } from './StudioHero'
-import { formatCredits } from '@/lib/credits/format'
+import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
 interface CoverClientProps {
@@ -27,7 +27,10 @@ export function CoverClient({ user }: CoverClientProps) {
   const [activeAudioList, setActiveAudioList] = useState<any[]>([])
   const [status, setStatus] = useState('대기 중')
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
-  const { setBalance: setCreditBalance } = useSuiteCredits(user)
+  const { prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
+  /* 버튼에 적는 차감액은 워커 단가표에서 온다 — 숫자를 화면 코드에 박아 두면 갈라진다.
+     아직 못 읽었으면 괄호를 통째로 뺀다(틀린 숫자보다 낫다). */
+  const coverCost = creditPrices['music.cover']
   const [uiLanguage, setUiLanguage] = useState<string>('KO')
 
   useEffect(() => {
@@ -461,7 +464,14 @@ export function CoverClient({ user }: CoverClientProps) {
                 disabled={isMusicGenerating || !uploadedFileUrl}
                 className="w-full py-3 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '커버 음악 생성하기 (10 크레딧)' : uiLanguage === 'JA' ? 'カバー音楽を生成 (10クレジット)' : 'Generate Cover Music (10 Credits)'}
+                {(uiLanguage === 'KO' ? '커버 음악 생성하기' : uiLanguage === 'JA' ? 'カバー音楽を生成' : 'Generate Cover Music') +
+                  (typeof coverCost !== 'number'
+                    ? ''
+                    : uiLanguage === 'KO'
+                      ? ` (${formatPriceCredits(coverCost)} 크레딧)`
+                      : uiLanguage === 'JA'
+                        ? ` (${formatPriceCredits(coverCost)}クレジット)`
+                        : ` (${formatPriceCredits(coverCost)} Credits)`)}
               </button>
             </div>
           </div>

@@ -10,7 +10,7 @@ import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
-import { formatCredits } from '@/lib/credits/format'
+import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
 interface GenerateClientProps {
@@ -95,7 +95,18 @@ export function GenerateClient({
   const [status, setStatus] = useState('대기 중')
   const [uiLanguage, setUiLanguage] = useState('KO')
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
-  const { setBalance: setCreditBalance } = useSuiteCredits(user)
+  const { prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
+  /* 버튼에 적는 차감액은 워커 단가표에서 온다 — 숫자를 화면 코드에 박아 두면 갈라진다.
+     아직 못 읽었으면 괄호를 통째로 뺀다(틀린 숫자보다 낫다). */
+  const musicCost = creditPrices['music.generate']
+  const costSuffix =
+    typeof musicCost !== 'number'
+      ? ''
+      : uiLanguage === 'KO'
+        ? ` (${formatPriceCredits(musicCost)} 크레딧)`
+        : uiLanguage === 'JA'
+          ? ` (${formatPriceCredits(musicCost)}クレジット)`
+          : ` (${formatPriceCredits(musicCost)} Credits)`
   const [profile, setProfile] = useState<any>(null)
   const [detailTrackId, setDetailTrackId] = useState<string | null>(null)
   const [detailCollapsed, setDetailCollapsed] = useState(false)
@@ -913,7 +924,7 @@ export function GenerateClient({
                 disabled={isMusicGenerating}
                 className="px-6 py-2.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-extrabold transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
               >
-                생성하기 (10 크레딧)
+                생성하기{costSuffix}
               </button>
             </div>
           </div>
@@ -943,7 +954,7 @@ export function GenerateClient({
                   className="px-6 py-3 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-yellow-950/40 cursor-pointer flex items-center gap-2"
                 >
                   <Disc className="w-4 h-4 fill-current text-black animate-spin-slow" />
-                  <span>Suno 음악 생성 시작하기 (10 크레딧)</span>
+                  <span>Suno 음악 생성 시작하기{costSuffix}</span>
                 </button>
               </div>
             )}
@@ -1206,7 +1217,7 @@ export function GenerateClient({
                     className="w-full py-4 bg-primary hover:bg-primary text-[#090909] font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0"
                   >
                     <Disc className="w-5 h-5" />
-                    {uiLanguage === 'KO' ? 'Suno 음악 생성 시작하기 (10 크레딧)' : uiLanguage === 'JA' ? 'Suno音楽生成を開始 (10クレジット)' : 'Start Suno Music Generation (10 Credits)'}
+                    {(uiLanguage === 'KO' ? 'Suno 음악 생성 시작하기' : uiLanguage === 'JA' ? 'Suno音楽生成を開始' : 'Start Suno Music Generation') + costSuffix}
                   </button>
                 </div>
               )
