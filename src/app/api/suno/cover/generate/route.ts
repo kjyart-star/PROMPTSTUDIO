@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
 import { APIPASS_COST_USD_PER_SONG, apipassKey, reportProviderUsage } from '@/lib/suite/provider'
+import { clampSunoWeight, normalizeSunoModelVersion, normalizeVocalGender } from '@/lib/suno/versions'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -65,22 +66,30 @@ export async function POST(request: Request) {
     if (!spend.ok) return creditErrorResponse(spend)
 
     // Construct the payload as per apipass docs
-    const payload = {
-      model: "suno/cover",
-      input: {
-        model_version: body.modelVersion,
-        audioUrl: body.audioUrl,
-        customMode: body.customMode,
-        instrumental: body.instrumental,
-        prompt: body.prompt,
-        style: body.style,
-        title: body.title,
-        continueAt: body.continueAt,
-        vocalGender: body.vocalGender,
-        styleWeight: body.styleWeight,
-        audioWeight: body.audioWeight
-      }
+    // (https://apipass.dev/model/suno/suno_cover). 문서에 없는 필드는 보내지 않는다.
+    const modelVersion = normalizeSunoModelVersion(body.modelVersion)
+
+    const input: Record<string, unknown> = {
+      model_version: modelVersion,
+      audioUrl: body.audioUrl,
+      customMode: body.customMode ?? false,
+      instrumental: body.instrumental ?? false,
+      prompt: body.prompt || "",
+      style: body.style || "",
+      title: body.title || "",
+      styleWeight: clampSunoWeight(body.styleWeight, 0.5),
+      weirdnessConstraint: clampSunoWeight(body.weirdnessConstraint ?? body.weirdness, 0.3),
+      audioWeight: clampSunoWeight(body.audioWeight, 0.5)
     }
+
+    const gender = normalizeVocalGender(body.vocalGender)
+    if (gender) input.vocalGender = gender
+
+    if (typeof body.negativeTags === 'string' && body.negativeTags.trim()) {
+      input.negativeTags = body.negativeTags.trim()
+    }
+
+    const payload = { model: "suno/cover", input }
 
     let response: Response
     let data: any
@@ -105,7 +114,7 @@ export async function POST(request: Request) {
        void reportProviderUsage({
          providerId: 'apipass',
          action: 'music.cover',
-         model: `suno-${String(body.modelVersion ?? 'v5').toLowerCase()}`,
+         model: `suno-${modelVersion.toLowerCase()}`,
          ref: data.data.taskId,
          userId: user.id,
          costUsd: APIPASS_COST_USD_PER_SONG,

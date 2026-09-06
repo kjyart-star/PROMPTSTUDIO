@@ -9,6 +9,7 @@ import { withBase } from '@/lib/basePath'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { StudioHero } from './StudioHero'
 import { formatCredits } from '@/lib/credits/format'
+import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
 interface CoverClientProps {
   user: any
@@ -106,7 +107,7 @@ export function CoverClient({ user }: CoverClientProps) {
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null)
 
   const [generateForm, setGenerateForm] = useState({
-    modelVersion: 'V5',
+    modelVersion: SUNO_DEFAULT_MODEL_VERSION,
     customMode: false,
     instrumental: false,
     prompt: '',
@@ -327,13 +328,12 @@ export function CoverClient({ user }: CoverClientProps) {
               <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : uiLanguage === 'JA' ? 'モデルバージョン' : 'Model Version'}</label>
               <select 
                 value={generateForm.modelVersion} 
-                onChange={e => setGenerateForm(prev => ({ ...prev, modelVersion: e.target.value }))}
+                onChange={e => setGenerateForm(prev => ({ ...prev, modelVersion: normalizeSunoModelVersion(e.target.value) }))}
                 className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
               >
-                <option value="V5">Suno V5</option>
-                <option value="V4_5PLUS">V4.5 Plus</option>
-                <option value="V4_5ALL">V4.5 All</option>
-                <option value="V4">Suno V4</option>
+                {SUNO_MODEL_VERSIONS.map(v => (
+                  <option key={v.value} value={v.value}>{v.label}</option>
+                ))}
               </select>
             </div>
 

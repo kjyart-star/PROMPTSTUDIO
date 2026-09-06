@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
 import { APIPASS_COST_USD_PER_SONG, apipassKey, reportProviderUsage } from '@/lib/suite/provider'
+import { clampSunoWeight, normalizeSunoModelVersion, normalizeVocalGender } from '@/lib/suno/versions'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -78,21 +79,30 @@ export async function POST(request: Request) {
     })
     if (!spend.ok) return creditErrorResponse(spend)
 
-    const upperModelVersion = (modelVersion || 'V5').toUpperCase()
+    const upperModelVersion = normalizeSunoModelVersion(modelVersion)
 
-    // Prepare Apipass API payload
-    const payload = {
-      model: "suno/generate",
-      input: {
-        prompt: prompt || "",
-        tags: style || "",
-        style: style || "",
-        title: title || "",
-        make_instrumental: instrumentalOnly || false,
-        model_version: upperModelVersion,
-        customMode: customMode ?? true
-      }
+    // Prepare Apipass API payload — 필드 이름·값 범위는 APIPASS 문서를 따른다
+    // (https://apipass.dev/model/suno/suno_generate). 문서에 없는 필드는 보내지 않는다.
+    const input: Record<string, unknown> = {
+      model_version: upperModelVersion,
+      prompt: prompt || "",
+      customMode: customMode ?? true,
+      instrumental: instrumentalOnly || false,
+      style: style || "",
+      title: title || "",
+      styleWeight: clampSunoWeight(styleWeight, 0.5),
+      weirdnessConstraint: clampSunoWeight(weirdness, 0.3),
+      audioWeight: clampSunoWeight(audioWeight, 0.5)
     }
+
+    const gender = normalizeVocalGender(vocalGender)
+    if (gender) input.vocalGender = gender
+
+    if (typeof negativeTags === 'string' && negativeTags.trim()) {
+      input.negativeTags = negativeTags.trim()
+    }
+
+    const payload = { model: "suno/generate", input }
 
     let response: Response
     let data: any

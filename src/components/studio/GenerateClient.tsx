@@ -11,6 +11,7 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
 import { formatCredits } from '@/lib/credits/format'
+import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
 interface GenerateClientProps {
   user: any
@@ -101,7 +102,7 @@ export function GenerateClient({
 
   const [generateForm, setGenerateForm] = useState({
     modelProvider: 'suno',
-    modelVersion: 'v5',
+    modelVersion: SUNO_DEFAULT_MODEL_VERSION,
     customMode: true,
     instrumentalOnly: false,
     prompt: initialPrompt || '',
@@ -483,7 +484,7 @@ export function GenerateClient({
     if (track.form) {
       setGenerateForm(prev => ({
         ...prev,
-        modelVersion: track.form.modelVersion || 'v5',
+        modelVersion: normalizeSunoModelVersion(track.form.modelVersion),
         customMode: track.form.customMode !== undefined ? track.form.customMode : true,
         instrumentalOnly: track.form.instrumentalOnly || false,
         prompt: track.lyrics || track.form.prompt || '',
@@ -652,7 +653,7 @@ export function GenerateClient({
         badge={
           <>
             <Disc className="w-3.5 h-3.5" />
-            <span>Suno V4 / V5 Engine</span>
+            <span>Suno V4 ~ V5.5 Engine</span>
           </>
         }
         title={
@@ -694,7 +695,7 @@ export function GenerateClient({
                       : 'bg-[#0a0a0a] text-zinc-400 border border-[#1a1a1a] hover:border-zinc-700'
                   }`}
                 >
-                  Suno (v4~v5)
+                  Suno (v4~v5.5)
                 </button>
                 <button
                   onClick={() => alert('Udio API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
@@ -721,10 +722,11 @@ export function GenerateClient({
                 onChange={e => updateFormData('modelVersion', e.target.value)}
                 className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
               >
-                <option value="v5">Suno V5</option>
-                <option value="v4">Suno V4</option>
+                {SUNO_MODEL_VERSIONS.map(v => (
+                  <option key={v.value} value={v.value}>{v.label}</option>
+                ))}
               </select>
-              <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5가 최신 기본값입니다.' : uiLanguage === 'JA' ? 'Sunoモデルバージョン。V5が最新のデフォルトです。' : 'Suno model version. V5 is the latest default.'}</p>
+              <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5.5가 최신 기본값입니다.' : uiLanguage === 'JA' ? 'Sunoモデルバージョン。V5.5が最新のデフォルトです。' : 'Suno model version. V5.5 is the latest default.'}</p>
             </div>
 
             {/* Custom Mode Toggle */}
@@ -889,7 +891,7 @@ export function GenerateClient({
                 type="button"
                 onClick={() => setGenerateForm({
                   modelProvider: 'suno',
-                  modelVersion: 'v5',
+                  modelVersion: SUNO_DEFAULT_MODEL_VERSION,
                   customMode: true,
                   instrumentalOnly: false,
                   prompt: '',
