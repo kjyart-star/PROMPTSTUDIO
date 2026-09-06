@@ -883,19 +883,33 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
   }, [tabParam])
 
+  /*
+   * 진입 파라미터는 **처음 한 번만** 반영한다. 위 useState 초깃값이 첫 렌더에서
+   * 이미 같은 일을 하므로, 여기서는 마운트된 채 파라미터가 새로 들어오는
+   * 경우만 받는다.
+   *
+   * 매 렌더마다 반영하면 사이드바가 먹통이 된다(대표 2026-09-06 «여기서 선택 후
+   * 들어가면 다른 메뉴 선택이 안 됨»): 탭을 바꾸면 아래 URL 동기화 effect 가
+   * history.replaceState 를 부르고, Next 16 은 그것을 가로채 useSearchParams 를
+   * 갱신한다 → 이 effect 가 다시 돌면서 URL 에 남아 있는 `style` 을 보고 탭을
+   * 음악 프롬프트로 되돌려 버렸다. 사이드바 클릭이 항상 이겨야 한다.
+   */
+  const appliedPrefillRef = useRef<string | null>(null)
   useEffect(() => {
     const title = searchParams.get('title')
     const style = searchParams.get('style')
     const prompt = searchParams.get('prompt')
-    if (title || style || prompt) {
-      setForm(prev => ({
-        ...prev,
-        title: title || prev.title,
-        styleDesc: style || prev.styleDesc,
-        extra: prompt ? `Remix prompt: ${prompt}` : prev.extra
-      }))
-      setCurrentTab('studio')
-    }
+    if (!title && !style && !prompt) return
+    const key = `${title ?? ''}|${style ?? ''}|${prompt ?? ''}`
+    if (appliedPrefillRef.current === key) return
+    appliedPrefillRef.current = key
+    setForm(prev => ({
+      ...prev,
+      title: title || prev.title,
+      styleDesc: style || prev.styleDesc,
+      extra: prompt ? `Remix prompt: ${prompt}` : prev.extra
+    }))
+    setCurrentTab('studio')
   }, [searchParams])
 
   const [searchTerm, setSearchTerm] = useState('')
