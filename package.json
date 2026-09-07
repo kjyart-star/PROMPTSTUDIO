@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check:credits": "node scripts/check-credit-actions.mjs"
+    "check:credits": "node scripts/check-credit-actions.mjs",
+    "check:lyrics-json": "node scripts/lyrics-json-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

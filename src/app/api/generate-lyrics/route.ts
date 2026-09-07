@@ -1,6 +1,31 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
+import { refundCredits } from '@/lib/credits/suite'
+import { generateSuiteText, suiteTextErrorResponse } from '@/lib/ai/suiteText'
+import { parseLyrics } from '@/lib/ai/lyricsJson'
+
+/**
+ * 가사 생성(Version A · B). **OpenAI 를 직접 부르지 않는다** (2026-09-07 이전).
+ *
+ * ## 옮기면서 하나가 사라졌다 — `response_format: { type: 'json_object' }`
+ * 예전에는 그 칸으로 JSON 을 **강제**했다. 게이트웨이가 지나는 Replicate 의
+ * `openai/gpt-5-nano` 입력 스키마에는 그 칸이 없다(prompt · system_prompt · messages ·
+ * image_input · reasoning_effort · verbosity · max_completion_tokens 가 전부다).
+ * 그래서 형식 보증이 **규격에서 지시문으로 내려앉았고**, 내려앉은 만큼을 코드로 받친다:
+ *
+ *   ① 지시문이 JSON 만 내놓으라고 못 박는다(코드펜스·머리말 금지까지 적는다)
+ *   ② 그래도 감싸서 오는 경우가 있으므로 펜스를 벗기고 첫 `{` ~ 마지막 `}` 만 읽는다
+ *   ③ 그래도 안 되면 **더 짧게, 형식만** 다시 시키는 재시도 1회
+ *   ④ 그래도 실패하면 한국어 실패 문구 + 크레딧 환불 (사용자 잘못이 아니다)
+ *
+ * 재시도는 멱등키가 달라야 한다 — 같은 키로 부르면 워커가 「이미 처리한 요청」으로 보고
+ * **방금 그 깨진 답**을 그대로 돌려준다. 키가 다르면 차감도 한 번 더 일어나므로,
+ * 재시도가 성공하면 **첫 번째 차감을 돌려준다**(결과는 하나인데 두 번 받을 수 없다).
+ */
+
+/** 재시도까지 실패했을 때 사용자가 읽는 말. 원인은 형식이지만 사용자가 할 일은 하나다. */
+const FORMAT_FAILED = '가사를 만들었지만 형식이 어긋나 읽지 못했습니다. 잠시 후 다시 시도해 주세요.'
 
 export async function POST(request: Request) {
   try {
@@ -10,15 +35,17 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+    }
 
     const body = await request.json()
-    const { 
-      theme, 
-      genre = 'Pop', 
-      mood = '감성적인 (Emotional)', 
-      language = '한국어', 
+    const {
+      theme,
+      genre = 'Pop',
+      mood = '감성적인 (Emotional)',
+      language = '한국어',
       structure = 'Standard (Verse-Chorus-Bridge)',
-      model = 'gpt-4o-mini',
       guideText = ''
     } = body
 
@@ -27,23 +54,6 @@ export async function POST(request: Request) {
 
     if (!theme || typeof theme !== 'string') {
       return NextResponse.json({ error: '주제 또는 스토리를 입력해주세요.' }, { status: 400 })
-    }
-
-    const apiKey = (process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '').trim()
-    if (!apiKey) {
-      // Fallback generator when OpenAI API key is unavailable (demo/mock with high quality)
-      return NextResponse.json({
-        versionA: {
-          title: `${theme.slice(0, 15)} (Direct & Catchy Hook)`,
-          stylePrompt: `${genre}, catchy hook, modern production, driving beat, clear emotional vocal, ${mood.toLowerCase()}, 120 bpm`,
-          lyrics: `[Intro | dreamy synth pad & soft guitar]\n(Yeah, let the story begin)\n\n[Verse 1]\n${theme} 속에서 피어나는 이야기\n거리 위로 번져가는 네온 불빛 따라\n우리가 함께했던 그 계절의 온도가\n아직도 내 맘에 선명히 남아있어\n\n[Pre-Chorus | building drums & bass]\n점점 더 가까워지는 시간\n망설이지 말고 내 손을 잡아\n이 밤이 지나가기 전에\n\n[Chorus | energetic & powerful hook]\n우리의 노래가 하늘에 닿을 때까지\n다시 한번 외쳐보는 소중한 그 이름\n어떤 어둠도 우릴 막을 수 없어\n영원히 빛날 우리의 찬란한 순간\n\n[Verse 2]\n조금 서툴러도 괜찮아\n함께 걷는 이 길이 아름다우니까\n바람에 실려 온 멜로디 속에\n너와 나의 꿈이 담겨 있어\n\n[Bridge | atmospheric breakdown]\n아무 말 없이 서로를 바라보던 그 눈빛\n그것만으로도 난 충분했어\n\n[Chorus | all instruments climax]\n우리의 노래가 하늘에 닿을 때까지\n다시 한번 외쳐보는 소중한 그 이름\n어떤 어둠도 우릴 막을 수 없어\n영원히 빛날 우리의 찬란한 순간\n\n[Outro | fading synth & lead guitar]\nForever with you... Under the starlight... (Fade out)`
-        },
-        versionB: {
-          title: `${theme.slice(0, 15)} (Poetic & Atmospheric)`,
-          stylePrompt: `atmospheric ${genre}, deep reverb, poetic storytelling, warm analog synth, intimate vocal texture, ${mood.toLowerCase()}, emotional crescendo, 90 bpm`,
-          lyrics: `[Intro | rainy ambient sound & slow piano chords]\n\n[Verse 1 | whisper-soft intimate vocal]\n새벽 세 시의 침묵 사이로\n흘러내리는 ${theme}의 잔상들\n닿지 못한 말들이 공기 중에 부유하고\n창가에 맺힌 빗방울처럼 번져가\n\n[Verse 2]\n기억의 책장을 한 장씩 넘길 때마다\n바래진 색채 속 네가 서 있어\n잡으려 하면 흩어지는 안개처럼\n넌 그렇게 아득한 향기로 남아\n\n[Chorus | emotional swell & cinematic strings]\n마음 깊은 곳에 묻어둔 비밀의 숲\n그곳에서 넌 영원히 숨 쉬고 있어\n시간이 흘러 모든 게 지워진대도\n이 아련한 울림은 멈추지 않아\n\n[Bridge | cello solo & layered vocal harmonies]\n계절이 몇 번을 바뀌어도\n내 안에 남겨진 너의 온기\n\n[Chorus | intense crescendo]\n마음 깊은 곳에 묻어둔 비밀의 숲\n그곳에서 넌 영원히 숨 쉬고 있어\n시간이 흘러 모든 게 지워진대도\n이 아련한 울림은 멈추지 않아\n\n[Outro | lone piano note fading away]\n기억의 끝자락에서... 안녕...`
-        }
-      })
     }
 
     const systemPrompt = `You are a world-class professional songwriter and lyricist specializing in Suno AI / Udio music generation lyrics.
@@ -56,7 +66,14 @@ You MUST generate EXACTLY TWO distinctly different, complete, high-quality lyric
 Both versions MUST use proper Suno/Udio section tags like [Intro | instrument/mood], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro].
 Include a tailored English style prompt for Suno AI for each version.
 
-Respond ONLY with valid JSON matching this schema:
+OUTPUT FORMAT — this is not optional:
+- Reply with a single JSON object and NOTHING else.
+- No markdown code fences, no \`\`\`json, no explanation before or after.
+- The first character of your reply MUST be { and the last MUST be }.
+- Inside "lyrics", write line breaks as the two characters \\n (a valid JSON string escape).
+- All four string fields below are required and none may be empty.
+
+Schema:
 {
   "versionA": {
     "title": "Song Title for Version A",
@@ -80,31 +97,53 @@ Mood: ${mood}
 Language: ${language}
 Structure: ${structure}`
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.9,
-      }),
+    /* 재시도용 지시문. 지침서를 다시 싣지 않는다 — 첫 시도가 형식에서 넘어졌으므로
+       모델에게 남은 일은 「같은 내용을 형식에 맞춰 다시 쓰는 것」 하나다. 짧을수록
+       형식을 지킬 여유가 커지고, 출력 상한(4,000 토큰)도 덜 잡아먹는다. */
+    const retrySystemPrompt = `${systemPrompt}
+
+REMINDER: your previous reply could not be parsed as JSON. Output ONLY the raw JSON object. Start with { and end with }. Do not wrap it in code fences.`
+
+    const requestId = crypto.randomUUID()
+    // 가사는 화면에 모델 선택이 없다 — 예전 코드도 gpt-4o-mini 고정이었다. 등급도 그대로 둔다.
+    const choice = 'gpt-4o-mini'
+
+    const first = await generateSuiteText({
+      choice,
+      system: systemPrompt,
+      user: userContent,
+      idempotencyKey: `lyrics:${user.id}:${requestId}`,
+    })
+    if (!first.ok) return suiteTextErrorResponse(first)
+
+    const parsedFirst = parseLyrics(first.text)
+    if (parsedFirst) return NextResponse.json(parsedFirst)
+
+    // ── 형식이 어긋났다. 딱 한 번 다시 시킨다(멱등키가 달라야 새로 만든다). ──
+    console.warn('[lyrics] JSON 파싱 실패 — 재시도')
+    const second = await generateSuiteText({
+      choice,
+      system: retrySystemPrompt,
+      user: userContent,
+      idempotencyKey: `lyrics:${user.id}:${requestId}:retry`,
     })
 
-    const data = await response.json()
-    if (!response.ok) {
-      console.error('OpenAI Lyrics API error:', data)
-      return NextResponse.json({ error: data?.error?.message || '가사 생성에 실패했습니다.' }, { status: 500 })
+    if (second.ok) {
+      const parsedSecond = parseLyrics(second.text)
+      if (parsedSecond) {
+        // 결과는 하나인데 차감은 둘이다 — 못 쓴 첫 판을 돌려준다.
+        if (first.ledgerId) await refundCredits(first.ledgerId, '가사 형식 오류로 재생성')
+        return NextResponse.json(parsedSecond)
+      }
+      console.warn('[lyrics] 재시도도 JSON 파싱 실패')
     }
 
-    const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}')
-    return NextResponse.json(parsed)
+    /* 두 번 다 못 읽었다. 사용자가 잘못한 것이 없으므로 차감을 전부 되돌린다
+       (둘째 판이 공급자 단계에서 실패했다면 그건 워커가 이미 돌려줬다). */
+    if (first.ledgerId) await refundCredits(first.ledgerId, '가사 형식 오류')
+    if (second.ok && second.ledgerId) await refundCredits(second.ledgerId, '가사 형식 오류')
+
+    return NextResponse.json({ error: FORMAT_FAILED }, { status: 502 })
   } catch (err: any) {
     console.error('API POST generate-lyrics error:', err)
     return NextResponse.json({ error: '가사 생성 중 오류가 발생했습니다.' }, { status: 500 })

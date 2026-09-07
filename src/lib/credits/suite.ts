@@ -94,8 +94,14 @@ export type BalanceResult =
 
 const UNAVAILABLE_MESSAGE = '크레딧 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'
 
-/** 로그인한 사용자의 Supabase access_token. 없으면 빈 문자열. */
-async function accessToken(): Promise<string> {
+/**
+ * 로그인한 사용자의 Supabase access_token. 없으면 빈 문자열.
+ *
+ * 워커는 이 토큰 하나로 신원과 지갑을 같이 본다 — 크레딧 경로(여기)와 생성 경로
+ * (`src/lib/ai/suiteText.ts`)가 같은 토큰을 써야 「누가 썼는지」와 「누구 크레딧이
+ * 빠졌는지」가 갈라지지 않으므로 밖에서도 쓸 수 있게 내보낸다.
+ */
+export async function suiteAccessToken(): Promise<string> {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -123,7 +129,7 @@ export async function spendCredits(params: {
   ref?: string
   reason?: string
 }): Promise<SpendResult> {
-  const token = await accessToken()
+  const token = await suiteAccessToken()
   if (!token) return { ok: false, kind: 'unauthorized' }
 
   // amount 는 싣지 않는다 — 차감액은 워커의 단가표(credit_prices)가 정하고,
@@ -216,7 +222,7 @@ export async function refundCredits(
 
 /** 지갑 잔액 조회. */
 export async function getSuiteBalance(): Promise<BalanceResult> {
-  const token = await accessToken()
+  const token = await suiteAccessToken()
   if (!token) return { ok: false, kind: 'unauthorized' }
 
   try {

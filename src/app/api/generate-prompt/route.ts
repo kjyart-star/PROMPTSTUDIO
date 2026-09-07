@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
-import { creditErrorResponse, refundCredits, spendCredits, type CreditAction } from '@/lib/credits/suite'
+import { generateSuiteText, suiteTextErrorResponse } from '@/lib/ai/suiteText'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/**
+ * 프롬프트 생성. **OpenAI 를 직접 부르지 않는다** (2026-09-07 이전).
+ *
+ * 예전에는 여기서 크레딧을 먼저 빼고 `api.openai.com` 을 부른 뒤 실패하면 환불했다.
+ * 이제 그 셋을 전부 게이트웨이가 한다(`POST /v1/ai/texts`) — 차감·환불·실패 문구가
+ * 한 곳에 모이므로 이 라우트에서 사라진 코드는 옮긴 것이지 없앤 것이 아니다.
+ * 차감 action(`studio.prompt.*`)과 멱등키 규칙은 그대로다.
+ */
 export async function POST(request: Request) {
   try {
     // [임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고
@@ -15,7 +23,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
     }
 
     // 차단 사용자 검증
@@ -34,30 +42,21 @@ export async function POST(request: Request) {
     }
 
     if (profile?.is_banned) {
-      return NextResponse.json({ error: 'Banned account. Please contact support.' }, { status: 403 })
+      return NextResponse.json({ error: '이용이 제한된 계정입니다. 고객센터로 문의해 주세요.' }, { status: 403 })
     }
 
     const body = await request.json()
     const { system, user: userPrompt, model } = body
 
     if (!system || !userPrompt || typeof system !== 'string' || typeof userPrompt !== 'string') {
-      return NextResponse.json({ error: 'System and user prompts are required' }, { status: 400 })
+      return NextResponse.json({ error: '지시문과 입력이 모두 필요합니다.' }, { status: 400 })
     }
 
-    // Cap input size to prevent abuse of the server's OpenAI billing.
+    // 입력 길이 상한. 게이트웨이에도 토큰 상한이 있지만 여기서 먼저 자른다 —
+    // 화면(StudioClient)이 이 8,000 자를 기준으로 지침서를 잘라 보내기 때문이다.
     const MAX_LEN = 8000
     if (system.length > MAX_LEN || userPrompt.length > MAX_LEN) {
-      return NextResponse.json({ error: 'Prompt too long' }, { status: 400 })
-    }
-
-    // Only allow an explicit set of models; ignore arbitrary client-supplied ones.
-    const ALLOWED_MODELS = ['gpt-4o-mini', 'gpt-4o'] as const
-    const selectedModel: (typeof ALLOWED_MODELS)[number] = ALLOWED_MODELS.includes(model) ? model : 'gpt-4o-mini'
-
-    const apiKey = (process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || '').trim()
-    if (!apiKey) {
-      console.error('Missing OpenAI API key on server env')
-      return NextResponse.json({ error: 'OpenAI API key not configured on server' }, { status: 500 })
+      return NextResponse.json({ error: '입력이 너무 깁니다. 지침서나 설명을 줄여 주세요.' }, { status: 400 })
     }
 
     // 같은 클릭이 두 번 닿아도 한 번만 빠지게 — 클라이언트가 보낸 UUID 를 멱등키에 쓴다
@@ -65,51 +64,20 @@ export async function POST(request: Request) {
       ? body.requestId
       : crypto.randomUUID()
 
-    // 크레딧 선차감. 단가는 클라이언트가 고른 모델이 아니라 서버가 정한 selectedModel 기준이다.
-    const action: CreditAction = `studio.prompt.${selectedModel}`
-    const spend = await spendCredits({
-      action,
-      idempotencyKey: `${action}:${user.id}:${requestId}`,
-      ref: requestId,
-      reason: '프롬프트·가사 생성',
+    /* 등급(=차감 action)은 클라이언트가 고른 이름이 아니라 suiteText 의 표가 정한다.
+       모르는 이름이 오면 기본 등급으로 떨어진다 — 예전 허용 목록과 같은 규칙이다. */
+    const result = await generateSuiteText({
+      choice: model,
+      system,
+      user: userPrompt,
+      idempotencyKey: `studio.prompt:${user.id}:${requestId}`,
     })
-    if (!spend.ok) return creditErrorResponse(spend)
 
-    let response: Response
-    let data: any
-    try {
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.85,
-        }),
-      })
-      data = await response.json()
-    } catch (apiErr) {
-      await refundCredits(spend.ledgerId, 'OpenAI 실패')
-      console.error('OpenAI request failed:', apiErr)
-      return NextResponse.json({ error: 'OpenAI API call failed' }, { status: 500 })
-    }
+    if (!result.ok) return suiteTextErrorResponse(result)
 
-    if (!response.ok) {
-      await refundCredits(spend.ledgerId, 'OpenAI 실패')
-      console.error('OpenAI API error:', data)
-      return NextResponse.json({ error: data?.error?.message || 'OpenAI API call failed' }, { status: response.status || 500 })
-    }
-
-    const resultText = data.choices?.[0]?.message?.content || ''
-    return NextResponse.json({ text: resultText, balance: spend.balance })
+    return NextResponse.json({ text: result.text, balance: result.balance })
   } catch (err: any) {
     console.error('API POST generate-prompt error:', err)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: '프롬프트를 만들지 못했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 })
   }
 }
