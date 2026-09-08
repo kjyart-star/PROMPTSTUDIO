@@ -70,7 +70,7 @@ export const SUITE_SERVICES: SuiteService[] = [
     role: 'AI 음악 제작',
     status: 'beta',
   },
-  { id: 'cookiedream', name: '쿠키드림', latin: 'CookieDream', role: 'AI 이미지 생성', status: 'preview' },
+  { id: 'cookiedream', name: '쿠키드림', latin: 'CookieDream', role: 'AI 이미지·영상 제작', status: 'beta' },
   { id: 'cookiecut', name: '쿠키컷', latin: 'CookieCut', role: '영상 편집', status: 'stable' },
   { id: 'cookiepix', name: '쿠키픽스', latin: 'CookiePix', role: '이미지 편집', status: 'stable' },
   { id: 'cookieillust', name: '쿠키일러스트', latin: 'CookieIllust', role: '벡터 드로잉', status: 'beta' },
