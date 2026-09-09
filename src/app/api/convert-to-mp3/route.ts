@@ -1,3 +1,4 @@
+// 브라우저 인코딩(lamejs, src/lib/audioUtils.ts encodeAudioBufferToMp3)으로 대체, 남겨 둠.
 import { NextResponse } from 'next/server'
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import { createRequire } from 'module'

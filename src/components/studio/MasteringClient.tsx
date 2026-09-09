@@ -7,7 +7,7 @@ import {
   RefreshCw, ListFilter, Volume2, ShieldCheck, Sparkles, Wand2,
   Zap, Layers, Radio, Disc, Music, ArrowUpRight
 } from 'lucide-react'
-import { audioBufferToWav, makeSoftClipCurve } from '@/lib/audioUtils'
+import { audioBufferToWav, makeSoftClipCurve, encodeAudioBufferToMp3 } from '@/lib/audioUtils'
 import { StudioHero } from './StudioHero'
 
 interface Track {
@@ -670,18 +670,8 @@ export function MasteringClient() {
     } else {
       setIsConvertingMp3(prev => ({ ...prev, [targetTrack.id]: true }))
       try {
-        const formData = new FormData()
-        formData.append('file', targetTrack.processedBlob!, `${baseName}.wav`)
-
-        const res = await fetch('/api/convert-to-mp3', {
-          method: 'POST',
-          body: formData,
-        })
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => ({}))
-          throw new Error(errJson.error || 'MP3 conversion failed')
-        }
-        const mp3Blob = await res.blob()
+        if (!targetTrack.processedBuffer) throw new Error('처리된 오디오가 없습니다')
+        const mp3Blob = await encodeAudioBufferToMp3(targetTrack.processedBuffer, 320)
         const mp3Url = URL.createObjectURL(mp3Blob)
         const a = document.createElement('a')
         a.href = mp3Url
