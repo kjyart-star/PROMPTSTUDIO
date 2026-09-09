@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server'
-import { spawn } from 'child_process'
+import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
+import { createRequire } from 'module'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import ffmpegPath from 'ffmpeg-static'
+
+/**
+ * ffmpeg 실행 파일 위치. `ffmpeg-static` 을 정적 import 하면 번들러·추적기가 44 MB 바이너리와
+ * 프로젝트 루트 전체를 서버리스 함수에 넣어(모든 API 함수가 57 MB) 무료 한도를 넘기므로
+ * 실행 시점에만 찾는다. 로컬에서는 종전처럼 ffmpeg-static 을 쓰고, 없으면 시스템 ffmpeg.
+ */
+function resolveFfmpeg(): string {
+  try {
+    const staticPath = createRequire(path.join(process.cwd(), 'package.json'))('ffmpeg-static') as string | null
+    if (staticPath && fs.existsSync(staticPath)) return staticPath
+  } catch {}
+  return 'ffmpeg'
+}
 
 export async function POST(request: Request) {
   let inputTmpPath = ''
@@ -35,20 +48,19 @@ export async function POST(request: Request) {
 
     await fs.promises.writeFile(inputTmpPath, buffer)
 
-    let ffmpegExecutable = 'ffmpeg'
-    if (ffmpegPath && fs.existsSync(ffmpegPath)) {
-      ffmpegExecutable = ffmpegPath
-    }
+    const ffmpegExecutable = resolveFfmpeg()
 
     // Run ffmpeg to transcode WAV -> 320kbps MP3
     await new Promise<void>((resolve, reject) => {
-      const ffmpegProcess = spawn(ffmpegExecutable, [
+      // 간접 호출인 이유: Turbopack 이 `spawn(실행파일)` 의 첫 인수를 정적으로 못 정하면
+      // 프로젝트 루트 전체(~30 MB)를 서버리스 함수 번들에 넣는다. 동작은 spawn 과 같다.
+      const ffmpegProcess: ChildProcessWithoutNullStreams = Reflect.apply(spawn, null, [ffmpegExecutable, [
         '-y',
         '-i', inputTmpPath,
         '-codec:a', 'libmp3lame',
         '-b:a', '320k',
         outputTmpPath
-      ])
+      ]])
 
       let errorLogs = ''
       ffmpegProcess.stderr.on('data', (data) => {
