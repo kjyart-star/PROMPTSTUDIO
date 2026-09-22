@@ -113,13 +113,23 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
             )}
           </Link>
 
-          {/* Badge top-left */}
+          {/* Badge top-left: 순위 박스 */}
           {rank !== undefined ? (
-            <span className="absolute top-2.5 left-2.5 text-[9px] font-black px-2 py-0.5 rounded bg-primary text-[#070709] tracking-wider scale-95 z-20 shadow-md">
-              {rank}위
-            </span>
+            <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 pointer-events-none">
+              <span
+                className="text-[11px] leading-none font-black px-2.5 py-1.5 rounded-[8px] text-white tracking-tight shadow-md tabular-nums border border-white/20"
+                style={{ background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' }}
+              >
+                {rank}위
+              </span>
+              {rank <= 2 && (
+                <span className="text-[9px] leading-none font-black italic px-1.5 py-1 rounded-[5px] bg-[#0284c7] text-white shadow-md">
+                  HOT
+                </span>
+              )}
+            </div>
           ) : (
-            <span className="absolute top-2.5 left-2.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-[#070709] uppercase tracking-wider scale-90 z-20">
+            <span className="absolute top-2.5 left-2.5 text-[9px] font-bold px-2 py-1 rounded-[6px] bg-[#16181d] text-zinc-300 border border-white/10 uppercase tracking-wider z-20 shadow-md">
               {uiLanguage === 'KO' ? '앨범' : uiLanguage === 'JA' ? 'アルバム' : 'ALBUM'}
             </span>
           )}

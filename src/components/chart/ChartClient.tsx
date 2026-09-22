@@ -499,8 +499,17 @@ export function ChartClient({
                       {/* 순위 및 변동 (세로로 배치) */}
                       <td className="py-4 px-6 text-center w-20">
                         <div className="flex flex-col items-center justify-center gap-1">
-                          <div className="h-5 flex items-center justify-center">
-                            <span className={`font-mono font-black text-sm ${isCurrent ? 'text-primary' : 'text-on-surface'}`}>
+                          <div className="h-6 flex items-center justify-center">
+                            <span
+                              className={`font-mono font-black text-xs px-2.5 py-1 rounded-[6px] inline-flex items-center justify-center min-w-[28px] ${
+                                idx < 3
+                                  ? 'text-white shadow-sm border border-white/15'
+                                  : isCurrent
+                                  ? 'text-white border border-white/15'
+                                  : 'text-zinc-300 bg-[#16181d] border border-white/5'
+                              }`}
+                              style={idx < 3 || isCurrent ? { background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' } : {}}
+                            >
                               {(currentPage - 1) * itemsPerPage + idx + 1}
                             </span>
                           </div>
@@ -530,12 +539,12 @@ export function ChartClient({
                             }`}>
                               {isCurrent && isPlaying ? (
                                 <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                                  <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                                  <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                                  <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                                  <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
                                 </div>
                               ) : (
-                                <Play className="w-5 h-5 fill-current text-white" />
+                                <div className="w-9 h-9 rounded-full bg-[#a0e813] flex items-center justify-center shadow-md"><Play className="w-4 h-4 fill-black stroke-black ml-0.5" /></div>
                               )}
                             </div>
                           </button>

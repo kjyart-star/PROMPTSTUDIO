@@ -265,89 +265,105 @@ export function PublicLayoutClient({
             </Link>
           </div>
 
-          <nav className="flex flex-col gap-[8px]">
+          <nav className="flex flex-col gap-[6px]">
+            {/* 홈 */}
             <Link 
               href="/" 
               onClick={() => setActiveTab('home')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'home' 
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20' 
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'home' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <Home className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '홈' : uiLanguage === 'JA' ? 'ホーム' : 'Home'}</span>
+              <Home className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '홈' : uiLanguage === 'JA' ? 'ホーム' : 'Home'}</span>
             </Link>
 
+            {/* 실시간 차트 (HOT 배지) */}
             <Link 
               href="/charts" 
               onClick={() => setActiveTab('charts')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'charts' 
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20' 
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'charts' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <Trophy className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '실시간 차트' : uiLanguage === 'JA' ? 'ライブチャート' : 'Live Charts'}</span>
+              <Trophy className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '실시간 차트' : uiLanguage === 'JA' ? 'ライブチャート' : 'Live Charts'}</span>
+              <span className="ml-auto text-[10px] font-black italic px-2 py-0.5 rounded-[5px] bg-[#0284c7] text-white leading-none shadow-sm">
+                HOT
+              </span>
             </Link>
 
-            {/* 최신 음원 — 홈의 「최신 음원 > 전체보기」와 같은 화면(SearchClient 의 특수 질의) */}
+            {/* 최신 음원 (NEW 배지) */}
             <Link
               href="/search?q=latest-tracks"
               onClick={() => setActiveTab('latest')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'latest'
-                  ? 'text-on-surface bg-white/[0.05]'
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20'
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'latest' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <Sparkles className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '최신 음원' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks'}</span>
+              <Sparkles className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '최신 음원' : uiLanguage === 'JA' ? '最新のトラック' : 'Latest Tracks'}</span>
+              <span className="ml-auto text-[10px] font-black italic px-2 py-0.5 rounded-[5px] bg-[#a3e635] text-black leading-none shadow-sm">
+                NEW
+              </span>
             </Link>
 
-            {/* 카테고리는 장르로 훑는 탐색 입구라 곡 목록(차트·최신 음원) 아래에 둔다 — 본문 상단 검색줄이 따로 있어 유일한 입구가 아니다 */}
+            {/* 카테고리 */}
             <Link 
               href="/search" 
               onClick={() => setActiveTab('search')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'search' 
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20' 
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'search' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <Search className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
+              <Search className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '카테고리' : uiLanguage === 'JA' ? 'カテゴリー' : 'Category'}</span>
             </Link>
 
+            {/* 내 채널 */}
             <Link 
               href="/profile?tab=public" 
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'profile'
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20' 
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'profile' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <User className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '내 채널' : uiLanguage === 'JA' ? 'マイチャンネル' : 'My Channel'}</span>
+              <User className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '내 채널' : uiLanguage === 'JA' ? 'マイチャンネル' : 'My Channel'}</span>
             </Link>
 
+            {/* 채널 및 음원 관리 */}
             <Link 
               href="/profile?tab=private" 
               onClick={() => setActiveTab('audio-management')}
-              className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+              className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                 activeTab === 'audio-management'
-                  ? 'text-on-surface bg-white/[0.05]' 
-                  : 'text-on-surface-variant hover:text-on-surface'
+                  ? 'text-white shadow-md border border-white/20' 
+                  : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
               }`}
+              style={activeTab === 'audio-management' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
             >
-              <Music className="w-5 h-5 text-current" />
-              <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '채널 및 음원 관리' : uiLanguage === 'JA' ? 'チャンネル & オーディオ管理' : 'Channel & Audio Management'}</span>
+              <Music className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+              <span className="leading-none">{uiLanguage === 'KO' ? '음원 관리' : uiLanguage === 'JA' ? 'オーディオ管理' : 'Audio Management'}</span>
             </Link>
 
-            {/* Divider to separate Playlists section */}
-            <div className="h-px bg-outline-variant/10 my-1 mx-4" />
+            {/* Divider */}
+            <div className="h-px bg-white/[0.06] my-2 mx-2" />
 
             <div className="flex flex-col gap-1">
               <Link 
@@ -356,18 +372,19 @@ export function PublicLayoutClient({
                   setActiveTab('library')
                   setActivePlaylistId(null)
                 }}
-                className={`flex items-center gap-[16px] py-[8px] px-[16px] rounded-lg transition-colors duration-200 font-medium ${
+                className={`flex items-center gap-[14px] py-[10px] px-[14px] rounded-[10px] transition-all duration-200 font-semibold text-[14px] ${
                   activeTab === 'library' && !activePlaylistId
-                    ? 'text-on-surface bg-white/[0.05]' 
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'text-white shadow-md border border-white/20' 
+                    : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
                 }`}
+                style={activeTab === 'library' && !activePlaylistId ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
               >
-                <Library className="w-5 h-5 text-current" />
-                <span className="text-[14px] leading-[20px] font-semibold">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
+                <Library className="w-5 h-5 text-current shrink-0 stroke-[2.2px]" />
+                <span className="leading-none">{uiLanguage === 'KO' ? '플레이리스트' : uiLanguage === 'JA' ? 'プレイリスト' : 'Playlist'}</span>
               </Link>
 
               {/* Nested playlists (subfolder style) */}
-              <div className="flex flex-col pl-[12px] pr-[4px] mt-1 gap-0.5 max-h-[220px] overflow-y-auto custom-scrollbar border-l border-outline-variant/15 ml-[24px]">
+              <div className="flex flex-col pl-[12px] pr-[4px] mt-1 gap-1 max-h-[220px] overflow-y-auto custom-scrollbar border-l border-white/10 ml-[22px]">
                 {/* 좋아요 표시한 음악 (Liked Songs) */}
                 <Link
                   href="/library?playlistId=liked"
@@ -375,10 +392,10 @@ export function PublicLayoutClient({
                     setActiveTab('library')
                     setActivePlaylistId('liked')
                   }}
-                  className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                  className={`flex items-center gap-[10px] py-[7px] px-[12px] rounded-[8px] transition-all text-[12px] font-bold tracking-wide truncate ${
                     activeTab === 'library' && activePlaylistId === 'liked'
-                      ? 'text-primary bg-primary/10 font-bold'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                      ? 'text-[#2ee6a8] bg-[#0c9965]/15 border border-[#0c9965]/40 font-extrabold'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <Heart className="w-3.5 h-3.5 shrink-0 text-current" />
@@ -392,10 +409,10 @@ export function PublicLayoutClient({
                     setActiveTab('library')
                     setActivePlaylistId('liked-albums')
                   }}
-                  className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                  className={`flex items-center gap-[10px] py-[7px] px-[12px] rounded-[8px] transition-all text-[12px] font-bold tracking-wide truncate ${
                     activeTab === 'library' && activePlaylistId === 'liked-albums'
-                      ? 'text-primary bg-primary/10 font-bold'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                      ? 'text-[#2ee6a8] bg-[#0c9965]/15 border border-[#0c9965]/40 font-extrabold'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <Disc className="w-3.5 h-3.5 shrink-0 text-current" />
@@ -411,10 +428,10 @@ export function PublicLayoutClient({
                       setActiveTab('library')
                       setActivePlaylistId(pl.id)
                     }}
-                    className={`flex items-center gap-[10px] py-[6px] px-[12px] rounded-md transition-all text-[12px] font-semibold tracking-wide truncate ${
+                    className={`flex items-center gap-[10px] py-[7px] px-[12px] rounded-[8px] transition-all text-[12px] font-bold tracking-wide truncate ${
                       activeTab === 'library' && activePlaylistId === pl.id
-                        ? 'text-primary bg-primary/10 font-bold'
-                        : 'text-on-surface-variant hover:text-on-surface hover:bg-white/[0.03]'
+                        ? 'text-[#2ee6a8] bg-[#0c9965]/15 border border-[#0c9965]/40 font-extrabold'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <ListMusic className="w-3.5 h-3.5 text-current shrink-0" />
@@ -422,8 +439,7 @@ export function PublicLayoutClient({
                   </Link>
                 ))}
               </div>
-            </div>
-          </nav>
+            </div></nav>
         </div>
 
         {/* Sidebar Footer (Admin Shortcut if logged in as admin) */}

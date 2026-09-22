@@ -583,8 +583,8 @@ export function ArtistClient({
               {tracks.slice(0, 2).map((song, index) => {
                 const isPlayingThis = currentTrack?.id === song.id && isPlaying;
                 return (
-                  <div key={song.id} className="relative rounded-3xl border border-[#1b3a2a] shadow-2xl p-6 bg-gradient-to-r from-[#07140e] via-[#0b170f] to-[#050a06] flex flex-col sm:flex-row items-center gap-6 min-h-[180px] group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] pointer-events-none"></div>
+                  <div key={song.id} className="relative rounded-3xl overflow-hidden border border-white/[0.12] shadow-2xl p-6 bg-gradient-to-r from-[#1e222d] via-[#171a23] to-[#12141b] hover:border-white/25 transition-all flex flex-col sm:flex-row items-center gap-6 min-h-[180px] group">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#14b48b]/15 rounded-full blur-[50px] pointer-events-none"></div>
                     
                     <div className="relative w-28 h-28 rounded-2xl overflow-hidden shrink-0 shadow-lg">
                       <img 
@@ -605,13 +605,13 @@ export function ArtistClient({
                       >
                         {isPlayingThis ? (
                           <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                            <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                            <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background pl-1 shadow-md">
-                            <Play className="w-5 h-5" />
+                          <div className="w-11 h-11 rounded-full bg-[#a0e813] hover:scale-105 transition-transform flex items-center justify-center text-black pl-0.5 shadow-lg shadow-[#a0e813]/25">
+                            <Play className="w-5 h-5 fill-black stroke-black" />
                           </div>
                         )}
                       </button>
@@ -619,25 +619,25 @@ export function ArtistClient({
 
                     <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                        <span className="text-[10px] font-extrabold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                        <span className="text-[10px] font-extrabold text-[#2ee6a8] bg-[#0c9965]/25 border border-[#0c9965]/50 px-2.5 py-1 rounded-[6px] uppercase tracking-wider shadow-sm">
                           FEATURED {index === 0 ? 'SINGLE' : 'TRACK'}
                         </span>
                       </div>
                       <h3 className="text-xl font-extrabold text-white tracking-tight truncate">
                         {song.title}
                       </h3>
-                      <p className="text-xs text-zinc-400 font-medium truncate">
+                      <p className="text-xs text-zinc-300 font-semibold truncate">
                         {song.album?.title || 'Single'}
                       </p>
-                      <div className="flex items-center gap-4 text-xs text-zinc-500 font-medium pt-1 justify-center sm:justify-start">
+                      <div className="flex items-center gap-4 text-xs text-zinc-300 font-medium pt-1 justify-center sm:justify-start">
                         <span className="flex items-center gap-1">
-                          <Play className="w-3.5 h-3.5 fill-current text-zinc-500" /> {song.play_count || 0} Plays
+                          <Play className="w-3.5 h-3.5 fill-current text-zinc-400" /> {song.play_count || 0} Plays
                         </span>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleLikeToggle(song.id); }}
-                          className={`flex items-center gap-1 hover:text-primary transition-colors ${userLikes.includes(song.id) ? 'text-primary font-bold' : 'text-zinc-500'}`}
+                          className={`flex items-center gap-1 hover:text-[#2ee6a8] transition-colors ${userLikes.includes(song.id) ? 'text-[#2ee6a8] font-bold' : 'text-zinc-400'}`}
                         >
-                          <Heart className={`w-3.5 h-3.5 ${userLikes.includes(song.id) ? 'fill-current text-primary' : 'text-zinc-500'}`} /> {song.like_count || 0} Likes
+                          <Heart className={`w-3.5 h-3.5 ${userLikes.includes(song.id) ? 'fill-current text-[#2ee6a8]' : 'text-zinc-400'}`} /> {song.like_count || 0} Likes
                         </button>
                         <div className="flex items-center justify-center gap-1">
                           <TrackDropdown
@@ -688,9 +688,9 @@ export function ArtistClient({
                       >
                         {isPlayingThis ? (
                           <div className="flex items-end justify-center gap-[3px] h-4 w-4">
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
                           </div>
                         ) : (
                           <Play className="w-4 h-4 text-primary fill-current ml-0.5" />
@@ -1115,9 +1115,9 @@ export function ArtistClient({
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                           {isCurrent && isPlaying ? (
                             <div className="flex items-end justify-center gap-[3px] h-3.5 w-3.5">
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                              <div className="w-[2.5px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                              <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                              <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
+                              <div className="w-[2.5px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)]"></div>
                             </div>
                           ) : (
                             <Play className="w-3.5 h-3.5 fill-current text-white" />

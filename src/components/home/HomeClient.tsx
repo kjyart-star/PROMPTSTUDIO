@@ -617,22 +617,37 @@ export function HomeClient({
                       <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
                           <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 "></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 "></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 "></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                            <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
                           </div>
                         ) : (
-                          <div className="w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all">
-                            <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
+                          <div className="w-10 h-10 bg-[#a0e813] text-black rounded-full flex items-center justify-center shadow-lg shadow-[#a0e813]/30 transform scale-90 group-hover:scale-100 transition-all">
+                            <Play className="w-4 h-4 fill-black stroke-black ml-0.5" />
                           </div>
                         )}
                       </div>
                     </button>
 
-                    {/* Badge top-left */}
-                    <span className="absolute top-2.5 left-2.5 text-[15px] leading-none font-black px-2 py-1 rounded bg-primary text-white tracking-tight z-20 shadow-md tabular-nums">
-                      {idx + 1}
-                    </span>
+                    {/* Badge top-left: 순위 박스 */}
+                    <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 pointer-events-none">
+                      <span
+                        className="text-[13px] leading-none font-black px-2.5 py-1.5 rounded-[8px] text-white tracking-tight shadow-lg tabular-nums flex items-center justify-center border border-white/20"
+                        style={{ background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' }}
+                      >
+                        {idx + 1}
+                      </span>
+                      {idx < 2 && (
+                        <span className="text-[10px] leading-none font-black italic px-2 py-1 rounded-[6px] bg-[#0284c7] text-white tracking-wider shadow-md">
+                          HOT
+                        </span>
+                      )}
+                      {idx >= 2 && idx < 4 && (
+                        <span className="text-[10px] leading-none font-black italic px-2 py-1 rounded-[6px] bg-[#a3e635] text-black tracking-wider shadow-md">
+                          NEW
+                        </span>
+                      )}
+                    </div>
 
                     {/* Floating Circular Heart + More Button */}
                     <div className={`absolute top-2.5 right-2.5 z-20 flex flex-col items-center gap-1.5 transition-all duration-300 group-hover:opacity-100 focus-within:opacity-100 ${isLiked ? 'opacity-100' : 'opacity-0'}`}>
@@ -801,7 +816,7 @@ export function HomeClient({
               <div
                 key={track.id}
                 className={`w-full p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
-                  isCurrent ? 'bg-primary/10 border-primary/30' : 'bg-[#0a0a0a]/80 border-[#1d1d1d]/50 hover:border-primary/40 hover:bg-[#131313]/85'
+                  isCurrent ? 'bg-primary/15 border-primary/40 shadow-lg' : 'bg-[#151821] border-white/[0.08] hover:border-white/20 hover:bg-[#1c202c] shadow-md'
                 }`}
                 onClick={() => {
                   handlePlay(track, displayRecommendedTracks)
@@ -826,13 +841,13 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 "></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 "></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 "></div>
+                        <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                        <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                        <div className="w-[3px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
-                        <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                      <div className="w-9 h-9 bg-[#a0e813] text-black rounded-full flex items-center justify-center shadow-lg shadow-[#a0e813]/30 transform scale-90 group-hover/image:scale-100 transition-all">
+                        <Play className="w-4 h-4 fill-black stroke-black ml-0.5" />
                       </div>
                     )}
                   </div>
@@ -847,7 +862,7 @@ export function HomeClient({
                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 text-left">
                   {/* Badges */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[8px] font-black bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded tracking-wider uppercase">
+                    <span className="text-[9px] font-extrabold bg-[#0c9965]/25 border border-[#0c9965]/45 text-[#2ee6a8] px-2 py-0.5 rounded-[5px] tracking-wider uppercase shadow-sm">
                       FEATURED SINGLE
                     </span>
                   </div>
@@ -989,9 +1004,9 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 "></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 "></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 "></div>
+                        <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                        <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
+                        <div className="w-[4px] h-full bg-[#a0e813] rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(160,232,19,0.6)] "></div>
                       </div>
                     ) : (
                       <button
@@ -1003,7 +1018,7 @@ export function HomeClient({
                         }}
                         className="w-12 h-12 bg-primary hover:bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
-                        <Play className="w-5 h-5 fill-current ml-0.5" />
+                        <Play className="w-5 h-5 fill-black stroke-black ml-0.5" />
                       </button>
                     )}
                   </div>
