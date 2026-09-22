@@ -206,7 +206,7 @@ export function SuiteFloorMenu({
         onKeyDown={onTriggerKeyDown}
         onBlur={onFocusOut}
         className={`flex h-11 shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-[14px] transition-colors ${
-          isActive ? 'font-semibold text-[#dedede]' : 'text-[#a1a1a1] hover:text-[#dedede]'
+          isActive ? 'font-bold text-[#14ad82] bg-[#14ad82]/10' : 'text-[#a1a1a1] hover:text-[#ffffff]'
         }`}
       >
         {short && <span className="mr-1.5 text-[11px] text-[#a1a1a1]">{short}</span>}
@@ -254,7 +254,7 @@ export function SuiteFloorMenu({
                     aria-hidden
                     className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border text-[11px] font-semibold tracking-[-0.02em] ${
                       itemActive
-                        ? 'border-[#dedede] bg-[#dedede] text-[#0d0d0d]'
+                        ? 'border-[#14ad82] bg-[#14ad82] text-white'
                         : 'border-[#292929] text-[#a1a1a1]'
                     }`}
                   >
@@ -264,7 +264,7 @@ export function SuiteFloorMenu({
                     <span className="flex items-center gap-2 text-[14px] font-semibold leading-[1.3] text-[#dedede]">
                       {it.name}
                       {it.status !== 'stable' && (
-                        <span className="shrink-0 rounded-[6px] border border-[#231249] px-1.5 py-0.5 text-[10px] leading-none text-[#a581f8]">
+                        <span className="shrink-0 rounded-[6px] border border-[#14ad82]/30 px-1.5 py-0.5 text-[10px] leading-none text-[#14ad82]">
                           {SUITE_STATUS_LABEL[it.status]}
                         </span>
                       )}

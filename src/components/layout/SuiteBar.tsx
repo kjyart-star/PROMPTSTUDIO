@@ -108,9 +108,9 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
             className="size-8 shrink-0 rounded-full object-cover"
           />
           {/* 서비스 고유색은 워드마크에만 남긴다 — 바 자체는 공통이다 */}
-          <span className="text-[28px] font-black leading-none tracking-normal">
-            <span className="cm-wordmark">COOKIE</span>
-            <span className="text-[#dedede]">PLAY</span>
+          <span className="text-[24px] font-black leading-none tracking-tight">
+            <span className="text-white">COOKIE</span>
+            <span className="text-[#e4ff47]">PLAY</span>
           </span>
         </a>
       </div>
@@ -143,7 +143,7 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
               href={hrefOf(s.id)}
               aria-current={isActive ? 'page' : undefined}
               className={`flex h-11 shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-[14px] transition-colors ${
-                isActive ? 'font-semibold text-[#dedede]' : 'text-[#a1a1a1] hover:text-[#dedede]'
+                isActive ? 'font-bold text-[#0c9965] bg-[#0c9965]/10' : 'text-[#a1a1a1] hover:text-[#ffffff]'
               }`}
             >
               {f.short && <span className="mr-1.5 text-[11px] text-[#a1a1a1]">{f.short}</span>}

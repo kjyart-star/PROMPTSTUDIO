@@ -8,13 +8,13 @@
 }
 
 :root {
-  /* ─── 쿠키플레이 스위트 브랜드 토큰 — 브랜드 변경은 여기 한 곳만 고친다 ─── */
-  --cm-brand: #ff2d8f;          /* 단색 대표색(아이콘·보더·포커스링·진행바) */
-  --cm-brand-dim: #e51d75;      /* 눌림·보조 */
-  --cm-brand-rgb: 255, 45, 143; /* 글로우(rgba) 전용 채널 */
-  --cm-brand-orange: #ff7a1a;
-  --cm-brand-violet: #a855f7;
-  --cm-brand-gradient: linear-gradient(100deg, #ff7a1a 0%, #ff2d8f 48%, #a855f7 100%);
+  /* ─── 쿠키플레이 스위트 브랜드 토큰 — 에메랄드/틸 그린 ~ 코발트 블루 ─── */
+  --cm-brand: #0c9965;          /* 단색 대표색(아이콘·보더·포커스링·진행바) */
+  --cm-brand-dim: #0a7a51;      /* 눌림·보조 */
+  --cm-brand-rgb: 12, 153, 101; /* 글로우(rgba) 전용 채널 */
+  --cm-brand-teal: #14ad82;
+  --cm-brand-blue: #347dd7;
+  --cm-brand-gradient: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
 
   /* 스튜디오 강조색(보라). .cm-studio 바깥에서도 참조해야 해서 여기 둔다 — 실제 적용은 .cm-studio 에서. */
   --cm-studio-accent: #8251f6;
@@ -45,11 +45,11 @@
   --color-outline: #8a8a8a;
   --color-outline-variant: #292929;
   
-  --color-primary: #ff2d8f;
-  --color-primary-fixed: #ff2d8f;
-  --color-primary-fixed-dim: #e51d75;
-  --color-primary-container: #ff2d8f;
-  --color-on-primary: #0d0d0d;
+  --color-primary: #0c9965;
+  --color-primary-fixed: #0c9965;
+  --color-primary-fixed-dim: #0a7a51;
+  --color-primary-container: #0c9965;
+  --color-on-primary: #ffffff;
   
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -60,15 +60,15 @@
    브랜드색은 최종 로고 확정 전까지 임시 — 바꿀 때는 이 블록만 고친다.
    워드마크 그라디언트(--cm-brand-gradient)는 재정의하지 않는다 — 스위트 바 COOKIEPLAY 는 원래 그라디언트 유지. */
 .cm-studio {
-  --cm-brand: var(--cm-studio-accent);
-  --cm-brand-dim: var(--cm-studio-accent-dim);
-  --cm-brand-rgb: var(--cm-studio-accent-rgb);
+  --cm-brand: #0c9965;
+  --cm-brand-dim: #0a7a51;
+  --cm-brand-rgb: 12, 153, 101;
   /* --cm-brand-gradient 는 재정의하지 않는다 — 보라 그라디언트는 .cm-wordmark-studio 에만 건다. */
 
-  --color-primary: var(--cm-studio-accent);
-  --color-primary-fixed: var(--cm-studio-accent);
-  --color-primary-fixed-dim: var(--cm-studio-accent-dim);
-  --color-primary-container: var(--cm-studio-accent);
+  --color-primary: #0c9965;
+  --color-primary-fixed: #0c9965;
+  --color-primary-fixed-dim: #0a7a51;
+  --color-primary-container: #0c9965;
   --color-on-primary: #ffffff;
 
   /* 스튜디오 헤더 락업 전용 그라디언트 — 보라 한 덩어리로 읽히게.
@@ -78,7 +78,7 @@
 
 /* 스튜디오 헤더 락업: .cm-wordmark 와 함께 붙여 그라디언트만 보라로 바꾼다 */
 .cm-wordmark-studio {
-  --cm-brand: var(--cm-studio-accent);
+  --cm-brand: #0c9965;
   --cm-brand-gradient: var(--cm-studio-gradient);
 }
 
@@ -347,7 +347,7 @@ textarea:focus {
 /* Commented out hover zoom effect for now
 .pip-disc-mask:hover {
   transform: scale(1.03) translateY(-2px);
-  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 45, 143, 0.2);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.8);
 }
 */
 
@@ -355,7 +355,7 @@ textarea:focus {
   width: 320px;
   height: 320px;
   margin-top: 40px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 45, 143, 0.3);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.95);
 }
 
 .pip-disc-spin {
@@ -395,7 +395,7 @@ textarea:focus {
   height: 46px;
   border-radius: 50%;
   background: #0a0a0a;
-  border: 1px solid rgba(255, 45, 143, 0.15);
+  border: 1px solid rgba(20, 173, 130, 0.2);
   box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 20;
   display: flex;
@@ -436,8 +436,8 @@ textarea:focus {
 }
 
 .pip-visualizer-svg circle {
-  fill: #ff2d8f; /* Neon green primary accent */
-  filter: drop-shadow(0 0 3px rgba(255, 45, 143, 0.4));
+  fill: #0c9965; /* Teal primary accent */
+  
   transition: fill 0.3s ease;
 }
 
@@ -469,7 +469,7 @@ textarea:focus {
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.25em;
-  color: #ff2d8f;
+  color: #0c9965;
   margin-bottom: 6px;
   opacity: 0.8;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
@@ -525,9 +525,9 @@ textarea:focus {
 
 .pip-progress-bar-fill {
   height: 100%;
-  background: #ff2d8f; /* Neon primary */
+  background: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(255, 45, 143, 0.5);
+  box-shadow: none;
   transition: width 0.1s linear;
 }
 
@@ -571,7 +571,7 @@ textarea:focus {
 }
 
 .pip-ctrl-toggle.is-active {
-  color: #ff2d8f;
+  color: #0c9965;
 }
 
 .pip-ctrl-play {
@@ -585,9 +585,9 @@ textarea:focus {
 
 .pip-ctrl-play:hover {
   transform: scale(1.05);
-  background: #ff2d8f;
-  color: #0a0a0a;
-  box-shadow: 0 8px 28px rgba(255, 45, 143, 0.35);
+  background: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .pip-ctrl-play:active {
@@ -605,7 +605,7 @@ textarea:focus {
   transform: translate(-50%, -50%);
   font-size: 8px;
   font-weight: 900;
-  color: #ff2d8f;
+  color: #0c9965;
 }
 
 /* Hide scrollbars utility */

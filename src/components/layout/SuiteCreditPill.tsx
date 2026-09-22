@@ -18,7 +18,7 @@ import { compactCredits, formatCredits } from '@/lib/credits/format'
 
 /** 알약은 상태가 바뀌어도 같은 모양이다 — 자리가 하나라 흔들릴 곳이 없다 */
 const CREDIT_PILL =
-  'flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#231249] bg-[#1b0e39] px-2.5 text-[13px] text-[#a581f8] transition-colors hover:text-[#dedede]'
+  'flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#292929] bg-[#161616] px-2.5 text-[13px] text-[#dedede] transition-colors hover:border-[#14ad82]/40 hover:text-white'
 
 /**
  * 누르면 언제나 요금 안내로 간다. `suiteHref` 를 거치는 이유: 배포에서는

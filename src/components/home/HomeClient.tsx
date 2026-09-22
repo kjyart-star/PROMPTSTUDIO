@@ -549,23 +549,23 @@ export function HomeClient({
 
         {/* Content Container (Aligned with main contents below) */}
         <div className="max-w-7xl mx-auto w-full px-[32px] pb-6 md:pb-8 space-y-3 relative z-10 animate-fade-in-up animation-delay-75">
-          <span className="inline-flex items-center gap-1.5 text-[8px] font-extrabold bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full uppercase tracking-wider w-fit">
+          <span className="inline-flex items-center gap-1.5 text-[8px] font-extrabold bg-[#0c9965]/10 border border-[#0c9965]/25 text-[#0c9965] px-3 py-1 rounded-full uppercase tracking-wider w-fit">
             <TrendingUp className="w-2.5 h-2.5" />
             Trending AI Hits
           </span>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-none text-white drop-shadow-md">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%)" }}>
             Listen to the Next Era of Melody
           </h2>
-          <p className="text-[10px] md:text-xs text-zinc-300 max-w-xl leading-relaxed font-semibold drop-shadow-sm">
+          <p className="text-xs md:text-sm text-zinc-100 max-w-xl leading-relaxed font-bold ">
             {uiLanguage === 'KO' ? '인공지능으로 창작된 수많은 트랙들과 제작 시 사용된 프롬프트, 가사 메타데이터를 확인해보세요.' : uiLanguage === 'JA' ? 'AI生成された無数のトラックや、その作成に使われたプロンプトと歌詞を探索しましょう。' : 'Explore countless AI-generated tracks and the prompts and lyrics used to create them.'}
           </p>
           <div className="pt-1">
             <Link
               href="/charts"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-[#090909] hover:bg-primary font-black text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-bold text-xs hover:opacity-90 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10" style={{ backgroundImage: "linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%)" }}
             >
               {uiLanguage === 'KO' ? '차트 순위 보러가기' : uiLanguage === 'JA' ? 'チャートランキングを見る' : 'View Chart Rankings'}
-              <ChevronRight className="w-3.5 h-3.5 text-black stroke-[3px]" />
+              <ChevronRight className="w-3.5 h-3.5 text-white stroke-[3px]" />
             </Link>
           </div>
         </div>
@@ -617,20 +617,20 @@ export function HomeClient({
                       <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
                           <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 "></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 "></div>
+                            <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 "></div>
                           </div>
                         ) : (
-                          <div className="w-9 h-9 bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all">
-                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          <div className="w-9 h-9 bg-primary text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-all">
+                            <Play className="w-4 h-4 fill-current ml-0.5 text-white" />
                           </div>
                         )}
                       </div>
                     </button>
 
                     {/* Badge top-left */}
-                    <span className="absolute top-2.5 left-2.5 text-[15px] leading-none font-black px-2 py-1 rounded bg-primary text-[#070709] tracking-tight z-20 shadow-md tabular-nums">
+                    <span className="absolute top-2.5 left-2.5 text-[15px] leading-none font-black px-2 py-1 rounded bg-primary text-white tracking-tight z-20 shadow-md tabular-nums">
                       {idx + 1}
                     </span>
 
@@ -644,8 +644,7 @@ export function HomeClient({
                         aria-pressed={isLiked}
                         title="좋아요"
                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
-                          isLiked
-                            ? 'bg-primary text-[#090909]'
+                          isLiked ? 'bg-primary text-white'
                             : 'bg-black/60 hover:bg-black/85 text-white border border-white/10'
                         }`}
                       >
@@ -827,12 +826,12 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[2.5px] h-5 w-5">
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-1 "></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-2 "></div>
+                        <div className="w-[3px] h-full bg-primary rounded-sm animate-eq-3 "></div>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
+                      <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover/image:scale-100 transition-all">
                         <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                       </div>
                     )}
@@ -990,9 +989,9 @@ export function HomeClient({
                   <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-300 ${isCurrent && isPlaying ? 'opacity-100' : 'opacity-0 group-hover/image:opacity-100'}`}>
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end justify-center gap-[3px] h-6 w-6">
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
-                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 shadow-[0_0_8px_rgba(255,45,143,0.5)]"></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-1 "></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-2 "></div>
+                        <div className="w-[4px] h-full bg-primary rounded-sm animate-eq-3 "></div>
                       </div>
                     ) : (
                       <button
@@ -1002,7 +1001,7 @@ export function HomeClient({
                           handlePlay(track, displayLatestTracks)
                           setNowPlayingOpen(true)
                         }}
-                        className="w-12 h-12 bg-primary hover:bg-primary text-[#090909] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        className="w-12 h-12 bg-primary hover:bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         <Play className="w-5 h-5 fill-current ml-0.5" />
                       </button>
@@ -1019,7 +1018,7 @@ export function HomeClient({
                       }}
                       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg hover:scale-110 active:scale-95 ${
                         userLikes.includes(track.id)
-                          ? 'bg-primary text-[#090909]'
+                          ? 'bg-primary text-white'
                           : 'bg-black/60 hover:bg-black/80 text-white'
                       }`}
                       title="좋아요"
