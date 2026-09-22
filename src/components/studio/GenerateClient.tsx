@@ -922,7 +922,7 @@ export function GenerateClient({
                 type="button"
                 onClick={handleGenerate}
                 disabled={isMusicGenerating}
-                className="px-6 py-2.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-extrabold transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
+                className="px-6 py-2.5 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-xl text-xs font-extrabold transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
               >
                 생성하기{costSuffix}
               </button>
@@ -951,7 +951,7 @@ export function GenerateClient({
                   type="button"
                   onClick={handleGenerate}
                   disabled={isMusicGenerating}
-                  className="px-6 py-3 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-yellow-950/40 cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-yellow-950/40 cursor-pointer flex items-center gap-2"
                 >
                   <Disc className="w-4 h-4 fill-current text-black animate-spin-slow" />
                   <span>Suno 음악 생성 시작하기{costSuffix}</span>
@@ -988,7 +988,7 @@ export function GenerateClient({
                         }}
                         className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none group/item focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
                           isSelected
-                            ? 'bg-primary/10 border-primary/40 shadow-lg shadow-emerald-500/5'
+                            ? 'bg-primary/10 border-primary/40 shadow-lg shadow-emerald-500/15'
                             : 'bg-black/25 border-zinc-800/40 hover:bg-white/[0.02] hover:border-zinc-700/50'
                         }`}
                       >
@@ -1006,9 +1006,9 @@ export function GenerateClient({
                               aria-hidden
                               className="absolute inset-0 rounded-lg bg-black/60 flex items-end justify-center gap-[2.5px] pb-3"
                             >
-                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-1 motion-reduce:animate-none" />
-                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-2 motion-reduce:animate-none" />
-                              <span className="w-[3px] h-4 bg-primary rounded-sm animate-eq-3 motion-reduce:animate-none" />
+                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-1 motion-reduce:animate-none" />
+                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-2 motion-reduce:animate-none" />
+                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-3 motion-reduce:animate-none" />
                             </span>
                           )}
                         </div>

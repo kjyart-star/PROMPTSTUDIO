@@ -77,7 +77,15 @@ export function StudioHeader({
           className="text-base font-black text-white hover:text-primary tracking-wide transition-colors px-2 py-1 shrink-0 flex items-center gap-1.5"
         >
           {/* 스튜디오는 전용 캐릭터를 두지 않는다(대표 2026-08-29) — 글씨만 쓴다 */}
-          <span><span className="cm-wordmark cm-wordmark-studio">COOKIEMUSIC</span> STUDIO</span>
+          <span className="font-black text-base flex items-center">
+            <span
+              className="bg-clip-text text-transparent font-black tracking-tight"
+              style={{ backgroundImage: "linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%)" }}
+            >
+              COOKIEMUSIC
+            </span>
+            <span className="text-white font-black tracking-tight ml-1.5">STUDIO</span>
+          </span>
         </Link>
       </div>
 

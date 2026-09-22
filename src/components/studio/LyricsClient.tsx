@@ -330,7 +330,7 @@ export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClient
           <div className="space-y-4 flex-1 flex flex-col">
             <div className="flex items-center justify-between border-b border-[#1e1e1e] pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-black">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#0c9965]/15 border border-[#0c9965]/40 text-[#2ee6a8] text-xs font-black">
                   Version B
                 </span>
                 <span className="text-xs text-zinc-400 font-semibold">• 시적 은유 & 감성 전개 (Poetic & Atmospheric)</span>
@@ -340,9 +340,9 @@ export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClient
                 <button
                   type="button"
                   onClick={() => handleCopy(resultB.lyrics, 'lyricsB')}
-                  className="px-2.5 py-1 rounded-lg bg-[#0a0a0a] hover:bg-[#171717] border border-[#1a1a1a] text-zinc-300 hover:text-purple-300 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-[#0a0a0a] hover:bg-[#171717] border border-[#1a1a1a] text-zinc-300 hover:text-[#2ee6a8] text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
-                  {copiedKey === 'lyricsB' ? <Check className="w-3.5 h-3.5 text-purple-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedKey === 'lyricsB' ? <Check className="w-3.5 h-3.5 text-[#2ee6a8]" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedKey === 'lyricsB' ? '복사됨!' : '가사 복사'}</span>
                 </button>
               )}
@@ -354,7 +354,7 @@ export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClient
                 <div className="bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-zinc-400">곡 제목</span>
-                    <span className="text-xs font-black text-purple-300">{resultB.title}</span>
+                    <span className="text-xs font-black text-[#2ee6a8]">{resultB.title}</span>
                   </div>
                   <div className="flex items-center justify-between border-t border-[#1a1a1a] pt-1.5">
                     <span className="text-[10px] font-bold text-zinc-400">Suno 스타일 태그</span>
@@ -367,7 +367,7 @@ export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClient
                   rows={14}
                   value={resultB.lyrics}
                   onChange={(e) => setResultB({ ...resultB, lyrics: e.target.value })}
-                  className="w-full flex-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-purple-400/60 resize-none custom-scrollbar leading-relaxed"
+                  className="w-full flex-1 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-4 text-xs font-mono text-zinc-200 focus:outline-none focus:border-[#0c9965]/60 resize-none custom-scrollbar leading-relaxed"
                 />
               </div>
             ) : (
@@ -383,9 +383,9 @@ export function LyricsClient({ user, onSendToGenerate, guideText }: LyricsClient
               <button
                 type="button"
                 onClick={() => sendToGenerate(resultB)}
-                className="w-full py-3 bg-[#221730] hover:bg-[#321f48] border border-purple-500/40 text-purple-200 active:scale-[0.99] rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="w-full py-3 text-white active:scale-[0.99] rounded-xl text-xs font-black uppercase tracking-wider border border-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:opacity-95" style={{ background: "linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)" }}
               >
-                <Music className="w-4 h-4 text-purple-300" />
+                <Music className="w-4 h-4 text-[#2ee6a8]" />
                 <span>Version B로 음악 생성하기 ↗</span>
               </button>
             </div>

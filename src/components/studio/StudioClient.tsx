@@ -2304,7 +2304,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           <button
                             type="button"
                             onClick={() => updateForm('targetTool', 'Suno')}
-                            className={`py-2 text-xs font-extrabold rounded-lg transition-all ${form.targetTool.toLowerCase() === 'suno' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            className={`py-2 text-xs font-extrabold rounded-lg transition-all ${form.targetTool.toLowerCase() === 'suno' ? 'text-white font-bold shadow-md border border-white/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+                            style={form.targetTool.toLowerCase() === 'suno' ? { background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' } : {}}
                           >
                             Suno
                           </button>
@@ -2335,14 +2336,16 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         <button
                           type="button"
                           onClick={() => updateForm('songType', 'vocal')}
-                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'vocal' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'vocal' ? 'text-white font-bold shadow-md border border-white/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          style={form.songType === 'vocal' ? { background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' } : {}}
                         >
                           가사 있는 곡
                         </button>
                         <button
                           type="button"
                           onClick={() => updateForm('songType', 'instrumental')}
-                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'instrumental' ? 'bg-primary text-black shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          className={`py-2.5 text-xs font-extrabold rounded-lg transition-all ${form.songType === 'instrumental' ? 'text-white font-bold shadow-md border border-white/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+                          style={form.songType === 'instrumental' ? { background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' } : {}}
                         >
                           가사 없는 연주곡 (BGM)
                         </button>
@@ -2616,9 +2619,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         type="button"
                         onClick={generate}
                         disabled={isGenerating}
-                        className="flex-1 py-3.5 bg-primary hover:bg-[#f5237f] active:scale-[0.99] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-yellow-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        className="flex-1 py-3.5 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg border border-white/20 hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50" style={{ background: "linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%)" }}
                       >
-                        <Sparkles className="w-4 h-4 fill-current text-black" />
+                        <Sparkles className="w-4 h-4 fill-current text-white" />
                         <span>{isGenerating ? 'AI 생성 중...' : `GENERATE PROMPT & LYRICS${modelCost ? ` (${formatPriceCredits(modelCost)} 크레딧)` : ''}`}</span>
                       </button>
 
@@ -2816,7 +2819,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             const full = composeGeneratedText(resultParts)
                             if (full) copyToClipboard(full, 'all')
                           }}
-                          className="py-3 px-3 rounded-xl bg-[#151515] hover:bg-[#1f1f1f] border border-[#232323] text-primary text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="py-3 px-3 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md border border-white/20 hover:opacity-95"
+                          style={{ background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' }}
                         >
                           <Copy className="w-3.5 h-3.5" />
                           <span>클립보드에 전체 복사</span>
@@ -2839,9 +2843,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       <button
                         type="button"
                         onClick={navigateToGenerate}
-                        className="w-full py-3 rounded-xl bg-[#0f0f0f] hover:bg-[#171717] border border-[#232323] hover:border-primary/40 text-zinc-300 hover:text-primary text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-black/40"
+                        className="w-full py-3 rounded-xl bg-[#141822] hover:bg-[#1a2030] border border-[#14b48b]/40 text-[#2ee6a8] hover:text-white text-xs font-extrabold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                       >
-                        <Music className="w-4 h-4 text-primary" />
+                        <Music className="w-4 h-4 text-[#2ee6a8]" />
                         <span>음악 생성 스튜디오로 이동 ↗</span>
                       </button>
                     </div>

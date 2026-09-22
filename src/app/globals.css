@@ -17,9 +17,9 @@
   --cm-brand-gradient: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
 
   /* 스튜디오 강조색(보라). .cm-studio 바깥에서도 참조해야 해서 여기 둔다 — 실제 적용은 .cm-studio 에서. */
-  --cm-studio-accent: #8251f6;
-  --cm-studio-accent-dim: #6f3fe0;
-  --cm-studio-accent-rgb: 130, 81, 246;
+  --cm-studio-accent: #0c9965;
+  --cm-studio-accent-dim: #0a7a51;
+  --cm-studio-accent-rgb: 12, 153, 101;
 
   --background: #0d0d0d;
   --foreground: #e4e4e4;
@@ -73,7 +73,7 @@
 
   /* 스튜디오 헤더 락업 전용 그라디언트 — 보라 한 덩어리로 읽히게.
      상단 스위트 바 COOKIEPLAY 워드마크는 :root 의 --cm-brand-gradient 를 계속 쓴다. */
-  --cm-studio-gradient: linear-gradient(100deg, #b98cff 0%, #8251f6 48%, #6f3fe0 100%);
+  --cm-studio-gradient: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
 }
 
 /* 스튜디오 헤더 락업: .cm-wordmark 와 함께 붙여 그라디언트만 보라로 바꾼다 */

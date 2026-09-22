@@ -67,11 +67,12 @@ export function StudioWorkspace({
           <button
             type="button"
             onClick={() => setCurrentTab('studio')}
-            className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'studio' 
-                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
             }`}
+            style={currentTab === 'studio' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <Wand2 className="w-4 h-4 shrink-0" />
             <span className="truncate">음악 프롬프트</span>
@@ -81,25 +82,30 @@ export function StudioWorkspace({
           <button
             type="button"
             onClick={() => setCurrentTab('suno')}
-            className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'suno' 
-                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
             }`}
+            style={currentTab === 'suno' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <Music className="w-4 h-4 shrink-0" />
             <span className="truncate">음악 생성</span>
+            <span className="ml-auto text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#0284c7] text-white shadow-sm leading-none">
+              HOT
+            </span>
           </button>
 
           {/* 3. 보관함 */}
           <button
             type="button"
             onClick={() => setCurrentTab('library')}
-            className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'library' 
-                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
             }`}
+            style={currentTab === 'library' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <FolderOpen className="w-4 h-4 shrink-0" />
             <span className="truncate">보관함</span>
@@ -109,25 +115,30 @@ export function StudioWorkspace({
           <button
             type="button"
             onClick={() => setCurrentTab('cover')}
-            className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'cover' 
-                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
             }`}
+            style={currentTab === 'cover' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <ImageIcon className="w-4 h-4 shrink-0" />
             <span className="truncate">AI 커버 스튜디오</span>
+            <span className="ml-auto text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#a3e635] text-black shadow-sm leading-none">
+              NEW
+            </span>
           </button>
 
           {/* 5. 마스터링 */}
           <button
             type="button"
             onClick={() => setCurrentTab('mastering')}
-            className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-extrabold transition-all cursor-pointer ${
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'mastering' 
-                ? 'bg-primary text-black shadow-md shadow-yellow-950/40' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#151515]'
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
             }`}
+            style={currentTab === 'mastering' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <Sliders className="w-4 h-4 shrink-0" />
             <span className="truncate">마스터링</span>
