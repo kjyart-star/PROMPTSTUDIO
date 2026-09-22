@@ -143,7 +143,7 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
               href={hrefOf(s.id)}
               aria-current={isActive ? 'page' : undefined}
               className={`flex h-11 shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-[14px] transition-colors ${
-                isActive ? 'font-bold text-[#0c9965] bg-[#0c9965]/10' : 'text-[#a1a1a1] hover:text-[#ffffff]'
+                isActive ? 'font-semibold text-[#dedede]' : 'text-[#a1a1a1] hover:text-[#dedede]'
               }`}
             >
               {f.short && <span className="mr-1.5 text-[11px] text-[#a1a1a1]">{f.short}</span>}

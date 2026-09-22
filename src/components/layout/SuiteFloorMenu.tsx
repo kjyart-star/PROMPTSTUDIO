@@ -206,7 +206,7 @@ export function SuiteFloorMenu({
         onKeyDown={onTriggerKeyDown}
         onBlur={onFocusOut}
         className={`flex h-11 shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-[14px] transition-colors ${
-          isActive ? 'font-bold text-[#14ad82] bg-[#14ad82]/10' : 'text-[#a1a1a1] hover:text-[#ffffff]'
+          isActive ? 'font-semibold text-[#dedede]' : 'text-[#a1a1a1] hover:text-[#dedede]'
         }`}
       >
         {short && <span className="mr-1.5 text-[11px] text-[#a1a1a1]">{short}</span>}

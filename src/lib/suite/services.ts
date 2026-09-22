@@ -114,7 +114,7 @@ export const SUITE_FLOORS: SuiteFloor[] = [
    * 쿠키드림은 아직 기획 단계라 4층에 자리만 두고 기획을 다시 한다.
    */
   { label: '3F · 작업실', productIds: ['cookiecut', 'cookiepix', 'cookieillust'] },
-  { label: '4F · AI작업실', productIds: ['cookiemusicstudio', 'cookiedream'] },
+  { label: '4F · AI작업실', productIds: ['cookiedream', 'cookiemusicstudio'] },
   /*
    * 5층은 만든 영상이 가서 머무는 자리다. 처음엔 「쿠키TV」로 넣었다가 바로
    * 「쿠키무비」로 바꿨다(대표 지시 2026-09-06: "TV보다는 무비가 좋을 듯" /
