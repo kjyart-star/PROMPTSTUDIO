@@ -67,6 +67,19 @@ function useTransitionSound() {
 
 /* --------------------------------------------------------- ScalesMixer */
 
+const COLUMN_GRADIENT_COLORS = [
+  '#0c9965', // Col 0: Emerald Green (0%)
+  '#27a453', // Col 1 (11%)
+  '#42b042', // Col 2: Bright Green (22%)
+  '#63be2c', // Col 3 (35%)
+  '#84cc17', // Col 4: Vivid Lime (48%)
+  '#9ee70b', // Col 5: Bright Lime (60%)
+  '#63ab7b', // Col 6: Mint / Teal (72%)
+  '#4ea3be', // Col 7: Cyan (81%)
+  '#4290e6', // Col 8: Sky Blue (90%)
+  '#3e86ec', // Col 9: Cobalt Blue (100%)
+];
+
 const COLS = 10;
 const ROWS = 10;
 const BAND_RANGES: [number, number][] = [
@@ -199,6 +212,7 @@ function ScalesMixer({
                 cx="5"
                 cy="5"
                 r="5"
+                fill={COLUMN_GRADIENT_COLORS[c % COLUMN_GRADIENT_COLORS.length]}
                 style={{
                   transformBox: 'fill-box',
                   transformOrigin: 'center',

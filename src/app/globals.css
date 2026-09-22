@@ -436,8 +436,6 @@ textarea:focus {
 }
 
 .pip-visualizer-svg circle {
-  fill: #0c9965; /* Teal primary accent */
-  
   transition: fill 0.3s ease;
 }
 
@@ -465,13 +463,16 @@ textarea:focus {
 }
 
 .pip-artist {
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.25em;
-  color: #0c9965;
+  background: linear-gradient(90deg, #0c9965 0%, #42b042 22%, #84cc17 48%, #63ab7b 72%, #3e86ec 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   margin-bottom: 6px;
-  opacity: 0.8;
+  opacity: 0.95;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
 }
 
