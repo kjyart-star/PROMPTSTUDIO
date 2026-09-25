@@ -472,6 +472,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   }, [])
   
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [editName, setEditName] = useState(initialProfile?.display_name || '')
   const [editAvatar, setEditAvatar] = useState(initialProfile?.avatar_url || '')
 
@@ -1417,6 +1418,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   }
 
   const saveProfile = async () => {
+    if (isSavingProfile) return
+    setIsSavingProfile(true)
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
@@ -1434,35 +1437,41 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           handle: editHandle
         })
       })
-      if (res.ok) {
-        const data = await res.json()
-        setProfile(data.profile)
-        
-        // Save extra fields to localStorage
-        const extraData = {
-          bio: editBio,
-          tags: editTags,
-          banner_url: editBanner,
-          followers: editFollowers,
-          following: editFollowing,
-          plays: editPlays,
-          likes: editLikes,
-          handle: editHandle
-        }
-        localStorage.setItem(`profile-extra-${user.id}`, JSON.stringify(extraData))
-        
-        setProfileBio(editBio)
-        setProfileTags(editTags)
-        setProfileBanner(editBanner)
-        setProfileFollowers(editFollowers)
-        setProfileFollowing(editFollowing)
-        setProfilePlays(editPlays)
-        setProfileLikes(editLikes)
-        setProfileHandle(editHandle)
-        
-        setIsEditingProfile(false)
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(data?.error || '프로필 저장에 실패했습니다.')
       }
-    } catch (e) { console.error(e) }
+      setProfile(data.profile)
+
+      // Save extra fields to localStorage
+      const extraData = {
+        bio: editBio,
+        tags: editTags,
+        banner_url: editBanner,
+        followers: editFollowers,
+        following: editFollowing,
+        plays: editPlays,
+        likes: editLikes,
+        handle: editHandle
+      }
+      localStorage.setItem(`profile-extra-${user.id}`, JSON.stringify(extraData))
+
+      setProfileBio(editBio)
+      setProfileTags(editTags)
+      setProfileBanner(editBanner)
+      setProfileFollowers(editFollowers)
+      setProfileFollowing(editFollowing)
+      setProfilePlays(editPlays)
+      setProfileLikes(editLikes)
+      setProfileHandle(editHandle)
+      setIsEditingProfile(false)
+      showToast('프로필이 저장되었습니다.', 'success')
+    } catch (e: any) {
+      console.error(e)
+      showToast(e?.message || '프로필 저장에 실패했습니다.', 'error')
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2911,7 +2920,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           </div>
         ) : activeTab === 'albums' ? (
           <div className="flex flex-col w-full">
-            <div className="flex gap-4 mb-6 border-b border-outline-variant/20 pb-4">
+            <div className="flex gap-2 sm:gap-4 mb-6 border-b border-outline-variant/20 pb-4 overflow-x-auto scrollbar-thin">
               <button 
                 onClick={() => {
                   setActiveTab('private');
@@ -3041,7 +3050,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         ) : activeTab === 'private' ? (
           /* Private Tab View (Management Dashboard) */
           <div className="flex flex-col w-full">
-            <div className="flex gap-4 mb-6 border-b border-outline-variant/20 pb-4">
+            <div className="flex gap-2 sm:gap-4 mb-6 border-b border-outline-variant/20 pb-4 overflow-x-auto scrollbar-thin">
               <button 
                 onClick={() => {
                   setActiveTab('private');
@@ -3049,7 +3058,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   url.searchParams.set('tab', 'private');
                   window.history.pushState({ tab: 'private' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPrivateView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex shrink-0 items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPrivateView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
                 <Lock className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 음원 관리' : uiLanguage === 'JA' ? 'ライブラリ (非公開)' : 'Private Library'}
               </button>
@@ -3060,7 +3069,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   url.searchParams.set('tab', 'albums');
                   window.history.pushState({ tab: 'albums' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isAlbumsView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex shrink-0 items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isAlbumsView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
                 <Folder className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 앨범 관리' : uiLanguage === 'JA' ? 'アルバム管理' : 'My Albums'}
               </button>
@@ -3075,7 +3084,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     setShowComingSoon(true);
                   }
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
+                className={`flex shrink-0 items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer text-on-surface-variant hover:bg-surface-container-low`}
               >
                 <Users className="w-4 h-4" /> {uiLanguage === 'KO' ? '채널 관리' : uiLanguage === 'JA' ? 'チャンネル管理' : 'Channel Mgt'}
               </button>
@@ -3087,7 +3096,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                   url.searchParams.set('tab', 'public');
                   window.history.pushState({ tab: 'public' }, '', url.toString());
                 }} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPublicView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                className={`flex shrink-0 items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors cursor-pointer ${isPublicView ? 'bg-surface-container-high text-on-surface' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
               >
                 <Globe className="w-4 h-4" /> {uiLanguage === 'KO' ? '내 채널 (퍼블리싱됨)' : uiLanguage === 'JA' ? 'マイチャンネル (公開済み)' : 'My Channel (Published)'}
               </button>
@@ -3095,9 +3104,9 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             
 
 
-            <div className="flex gap-6 min-h-[80vh]">
+            <div className="flex flex-col 2xl:flex-row gap-6 min-h-[80vh]">
               {/* --- SIDEBAR --- */}
-              <div className="w-64 shrink-0 flex flex-col border-r border-outline-variant/10 pr-6">
+              <div className="w-full 2xl:w-64 shrink-0 flex flex-col border-b 2xl:border-b-0 2xl:border-r border-outline-variant/10 pb-4 2xl:pb-0 2xl:pr-6">
                 <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-3 flex flex-col gap-3">
                   <div className="flex flex-col gap-1">
                     <button 
@@ -3162,8 +3171,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
 
             <div className="mb-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+                <h2 className="text-lg font-bold text-on-surface flex items-center gap-2 min-w-0">
                   {(() => {
                     if (selectedPlaylistFilter === 'all') return <><Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '모든 폴더 (전체 음원)' : 'All Songs'}</>
                     if (selectedPlaylistFilter === 'liked') return <><Heart className="w-5 h-5 text-primary fill-current" /> {uiLanguage === 'KO' ? '좋아요 표시한 음악' : 'Liked Songs'}</>
@@ -3173,8 +3182,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                     return <><Music className="w-5 h-5 text-primary" /> {uiLanguage === 'KO' ? '음원 목록' : 'Songs'}</>
                   })()}
                 </h2>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="relative flex-1 sm:flex-none min-w-[160px]">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60" />
                     <input
                       type="text"
@@ -3184,7 +3193,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
                         setTrackSearchQuery(e.target.value)
                         setCurrentPage(1) // Reset pagination on search
                       }}
-                      className="w-48 pl-8 pr-3 py-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors"
+                      className="w-full sm:w-48 pl-8 pr-3 py-1.5 bg-surface-container-low border border-outline-variant/20 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors"
                     />
                   </div>
                   <select
@@ -3226,15 +3235,15 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                 return (
                   <div className="space-y-4">
-                    <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl overflow-hidden shadow-xl">
-                      <table className="w-full text-left border-collapse">
+                    <div className="bg-surface-container-low border border-outline-variant/10 rounded-2xl overflow-x-auto shadow-xl scrollbar-thin">
+                      <table className="w-full min-w-[860px] text-left border-separate border-spacing-0">
                         <thead>
                           <tr className="border-b border-outline-variant/10 bg-surface-container-lowest/80 text-[10px] font-bold text-on-surface-variant/80 uppercase tracking-wider">
                             <th className="py-3 px-4 w-14 text-center">{uiLanguage === 'KO' ? '번호' : uiLanguage === 'JA' ? '番号' : 'No.'}</th>
                             <th className="py-3 px-4">{uiLanguage === 'KO' ? '곡 정보' : uiLanguage === 'JA' ? 'トラック情報' : 'Track Info'}</th>
                             <th className="py-3 px-4 w-40">{uiLanguage === 'KO' ? '채널 / 소속 폴더' : uiLanguage === 'JA' ? 'チャンネル / フォルダ' : 'Channel / Folder'}</th>
                             <th className="py-3 px-4 w-28 text-center whitespace-nowrap">{uiLanguage === 'KO' ? '등록일' : uiLanguage === 'JA' ? '追加日' : 'Date Added'}</th>
-                            {!isPublicView && <th className="py-3 px-4 w-44 text-right">관리</th>}
+                            {!isPublicView && <th className="sticky right-0 z-20 py-3 px-4 w-[236px] min-w-[236px] text-right bg-surface-container-lowest shadow-[-12px_0_20px_-16px_rgba(0,0,0,0.95)]">관리</th>}
                             {isPublicView && <th className="py-3 px-4 w-16 text-center">좋아요</th>}
                           </tr>
                         </thead>
@@ -3341,8 +3350,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
                                 {/* Administration Actions (Private View only) */}
                                 {!isPublicView && (
-                                  <td className="py-4 px-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                  <td className="sticky right-0 z-10 py-4 px-4 w-[236px] min-w-[236px] text-right bg-surface-container-low group-hover:bg-[#1a1a1a] shadow-[-12px_0_20px_-16px_rgba(0,0,0,0.95)] transition-colors">
+                                    <div className="flex items-center justify-end gap-1.5">
                                       <div className="relative p-1.5 rounded-full bg-surface-container hover:bg-primary hover:text-black transition-colors cursor-pointer group/btn" title="공개 범위 설정">
                                         {song.is_published ? (song.channel_id ? <Users className="w-3.5 h-3.5 text-primary" /> : <Globe className="w-3.5 h-3.5 text-primary" />) : <Lock className="w-3.5 h-3.5 text-zinc-500" />}
                                         <select 
@@ -5117,9 +5126,10 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
               <button 
                 type="button"
                 onClick={saveProfile}
-                className="px-5 py-2.5 text-sm font-bold bg-primary text-background hover:bg-primary/95 rounded-xl transition-all"
+                disabled={isSavingProfile}
+                className="px-5 py-2.5 text-sm font-bold bg-primary text-background hover:bg-primary/95 rounded-xl transition-all disabled:cursor-wait disabled:opacity-60"
               >
-                Save
+                {isSavingProfile ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

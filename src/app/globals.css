@@ -103,6 +103,40 @@ body {
   border-radius: 10px;
 }
 
+/* 좁은 패널·관리 테이블용 스크롤바. 운영체제 기본의 밝은 트랙이
+   다크 화면 아래에 노출되지 않도록 가로·세로를 같은 톤으로 고정한다. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3f3c #0d0f0e;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #0d0f0e;
+  border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  min-width: 40px;
+  min-height: 40px;
+  background: #3a3f3c;
+  border: 2px solid #0d0f0e;
+  border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: #a0e813;
+}
+
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: #0d0f0e;
+}
+
 /* 스크롤바도 그 화면의 강조색을 따른다 — 스튜디오에선 보라, 스트리밍에선 핑크.
    하드코딩하면 스튜디오에서 핑크 막대가 남는다 (대표 지시 2026-09-05). */
 ::-webkit-scrollbar-thumb:hover,

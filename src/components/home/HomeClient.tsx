@@ -62,7 +62,10 @@ interface HomeClientProps {
 // 아티스트 구역의 목표 슬롯 수. 실제 아티스트로 먼저 채우고 남는 칸만 자리 표시로 메운다.
 // 아티스트가 늘어나면 자리 표시가 하나씩 저절로 사라지고, 이 값을 0 으로 두면 기능이 꺼진다.
 const ARTIST_SLOTS = 6
-const ALBUM_SLOTS = 6
+const ALBUM_SLOTS = 10
+
+// 음원·앨범 선반은 총 10개를 같은 한 줄에 놓고 좁은 화면에서는 가로 스크롤한다.
+const TEN_ITEM_SHELF = 'grid grid-flow-col auto-cols-[72%] sm:auto-cols-[42%] md:auto-cols-[28%] lg:auto-cols-[calc((100%-60px)/6)] gap-3 overflow-x-auto scrollbar-none scroll-smooth pb-4'
 
 // 앨범 자리 표시용 자켓 (가상 인물, 제목·로고 없음). 순서대로 돌려 쓴다.
 const PLACEHOLDER_COVERS = [
@@ -548,7 +551,7 @@ export function HomeClient({
         </div>
 
         {/* Content Container (Aligned with main contents below) */}
-        <div className="max-w-7xl mx-auto w-full px-[32px] pb-6 md:pb-8 space-y-3 relative z-10 animate-fade-in-up animation-delay-75">
+        <div className="w-full px-[32px] pb-6 md:pb-8 space-y-3 relative z-10 animate-fade-in-up animation-delay-75">
           <span className="inline-flex items-center gap-1.5 text-[8px] font-extrabold bg-[#0c9965]/10 border border-[#0c9965]/25 text-[#0c9965] px-3 py-1 rounded-full uppercase tracking-wider w-fit">
             <TrendingUp className="w-2.5 h-2.5" />
             Trending AI Hits
@@ -572,11 +575,11 @@ export function HomeClient({
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-[32px] py-10 space-y-12 animate-fade-in-up animation-delay-150">
+      <div className="w-full py-10 space-y-12 animate-fade-in-up animation-delay-150">
         {/* 인기 음원 & 최신 앨범 */}
         <div className="space-y-12">
 
-        {/* 실시간 인기곡 탑 5 */}
+        {/* 실시간 인기곡 1–10위: 5개씩 두 줄 */}
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2">
             <h2 className="text-xs font-black flex items-center gap-2 text-on-surface-variant uppercase tracking-widest">
@@ -773,6 +776,7 @@ export function HomeClient({
 
         <Carousel
           items={popularAlbumItems}
+          containerClassName={TEN_ITEM_SHELF}
           renderItem={(album, index) => (
             album.__placeholder ? (
               <PlaceholderSlot
@@ -781,7 +785,7 @@ export function HomeClient({
                 uiLanguage={uiLanguage}
                 onClick={notReadyToast}
                 index={album.__slotIndex}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)]"
+                className="w-full min-w-0"
               />
             ) : (
               <AlbumCard key={album.id} album={album} variant="home" rank={index + 1} />
@@ -804,10 +808,8 @@ export function HomeClient({
           </Link>
         </div>
 
-        <Carousel
-          items={displayRecommendedTracks.slice(0, 12)}
-          containerClassName="grid grid-rows-2 grid-flow-col gap-x-6 gap-y-4 auto-cols-[85%] sm:auto-cols-[calc((100%-24px)/2)] md:auto-cols-[calc((100%-24px)/2)] lg:auto-cols-[calc((100%-48px)/3)] overflow-x-auto scrollbar-none scroll-smooth pb-4"
-          renderItem={(track) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+          {displayRecommendedTracks.slice(0, 6).map((track) => {
             const isCurrent = currentTrack?.id === track.id
             const playCount = track.play_count || (track.id.startsWith('dummy-') ? (track.title.length * 900 + 1500) : 0)
             const likeCount = track.like_count || (track.id.startsWith('dummy-') ? (track.title.length * 40 + 90) : 0)
@@ -815,7 +817,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className={`w-full p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
+                className={`w-full min-w-0 overflow-hidden p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
                   isCurrent ? 'bg-primary/15 border-primary/40 shadow-lg' : 'bg-[#151821] border-white/[0.08] hover:border-white/20 hover:bg-[#1c202c] shadow-md'
                 }`}
                 onClick={() => {
@@ -861,8 +863,8 @@ export function HomeClient({
                 {/* Track Info */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 text-left">
                   {/* Badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[9px] font-extrabold bg-[#0c9965]/25 border border-[#0c9965]/45 text-[#2ee6a8] px-2 py-0.5 rounded-[5px] tracking-wider uppercase shadow-sm">
+                    <div className="flex min-w-0 items-center gap-1.5 flex-wrap">
+                    <span className="max-w-full truncate whitespace-nowrap text-[9px] font-extrabold bg-[#0c9965]/25 border border-[#0c9965]/45 text-[#2ee6a8] px-2 py-0.5 rounded-[5px] tracking-wider uppercase shadow-sm">
                       FEATURED SINGLE
                     </span>
                   </div>
@@ -890,9 +892,9 @@ export function HomeClient({
                   </div>
 
                   {/* Stats Row */}
-                    <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5 justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-500 font-mono mt-1.5">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
                           <Play className="w-3.5 h-3.5 text-zinc-500 fill-current" />
                           {formatCount(playCount)} Plays
                         </span>
@@ -901,27 +903,29 @@ export function HomeClient({
                             e.stopPropagation()
                             handleLikeToggle(track.id)
                           }}
-                          className={`flex items-center gap-1 transition-colors cursor-pointer ${userLikes.includes(track.id) ? 'text-primary font-bold' : 'hover:text-primary'}`}
+                          className={`flex shrink-0 items-center gap-1 whitespace-nowrap transition-colors cursor-pointer ${userLikes.includes(track.id) ? 'text-primary font-bold' : 'hover:text-primary'}`}
                           title="좋아요"
                         >
                           <Heart className={`w-3.5 h-3.5 ${userLikes.includes(track.id) ? 'fill-current text-primary' : 'text-zinc-500'}`} />
                           <span>{formatCount(likeCount + (userLikes.includes(track.id) && !initialUserLikes.includes(track.id) ? 1 : (!userLikes.includes(track.id) && initialUserLikes.includes(track.id) ? -1 : 0)))} Likes</span>
                         </button>
                       </div>
-                      <TrackDropdown
-                      track={track}
-                      myPlaylists={myPlaylists}
-                      userLikes={userLikes}
-                      uiLanguage={uiLanguage}
-                      onLikeToggle={handleLikeToggle}
-                      onSaveToPlaylist={handleSaveToPlaylist}
-                    />
+                      <div className="ml-auto shrink-0">
+                        <TrackDropdown
+                          track={track}
+                          myPlaylists={myPlaylists}
+                          userLikes={userLikes}
+                          uiLanguage={uiLanguage}
+                          onLikeToggle={handleLikeToggle}
+                          onSaveToPlaylist={handleSaveToPlaylist}
+                        />
+                      </div>
                   </div>
                 </div>
               </div>
             )
-          }}
-        />
+          })}
+        </div>
       </section>
 
       {/* 최신 앨범 */}
@@ -940,6 +944,7 @@ export function HomeClient({
 
         <Carousel
           items={latestAlbumItems}
+          containerClassName={TEN_ITEM_SHELF}
           renderItem={(album) => (
             album.__placeholder ? (
               <PlaceholderSlot
@@ -948,7 +953,7 @@ export function HomeClient({
                 uiLanguage={uiLanguage}
                 onClick={notReadyToast}
                 index={album.__slotIndex}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)]"
+                className="w-full min-w-0"
               />
             ) : (
               <AlbumCard key={album.id} album={album} variant="home" />
@@ -973,6 +978,7 @@ export function HomeClient({
 
         <Carousel
           items={displayLatestTracks.slice(0, 10)}
+          containerClassName={TEN_ITEM_SHELF}
           renderItem={(track) => {
             const isCurrent = currentTrack?.id === track.id
             const playCount = track.play_count || (track.id.startsWith('dummy-') ? (track.title.length * 800 + 1100) : 0)
@@ -981,7 +987,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300"
+                className="w-full min-w-0 flex flex-col justify-between group transition-all duration-300"
               >
                 <div 
                   onClick={() => {
@@ -1016,7 +1022,7 @@ export function HomeClient({
                           handlePlay(track, displayLatestTracks)
                           setNowPlayingOpen(true)
                         }}
-                        className="w-12 h-12 bg-primary hover:bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                        className="w-12 h-12 bg-[#a0e813] hover:bg-[#b8f23f] text-black rounded-full flex items-center justify-center shadow-lg shadow-[#a0e813]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       >
                         <Play className="w-5 h-5 fill-black stroke-black ml-0.5" />
                       </button>

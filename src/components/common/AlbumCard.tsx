@@ -96,7 +96,7 @@ export function AlbumCard({ album, variant = 'grid', rank }: AlbumCardProps) {
     const likeCount = album.total_likes || (album.id.startsWith('album-') ? (album.title.length * 35 + 80) : 0)
 
     return (
-      <div className="flex-none w-[75%] sm:w-[calc((100%-24px)/2)] md:w-[calc((100%-48px)/3)] lg:w-[calc((100%-120px)/6)] flex flex-col justify-between group transition-all duration-300">
+      <div className="w-full min-w-0 flex flex-col justify-between group transition-all duration-300">
         <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-white/5">
           <Link 
             href={`/albums/${album.slug || album.id}`} 

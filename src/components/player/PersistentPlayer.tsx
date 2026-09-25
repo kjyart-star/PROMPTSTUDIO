@@ -9,6 +9,7 @@ import {
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
+import { Disc, DiscStyles } from './Disc';
 import { withBase } from '@/lib/basePath'
 
 // hasMobileNav — 이 화면에 모바일 하단 내비(md:hidden, h-24)가 있으면 true.
@@ -344,6 +345,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
   };
 
   const displayTrack = currentTrack as any;
+  const displayCoverUrl = displayTrack?.album?.cover_url || displayTrack?.image_url || withBase('/default-album.png');
   const displayCurrentTime = currentTrack ? currentTime : 0;
   const displayDuration = currentTrack ? duration || displayTrack.duration_sec : 0;
 
@@ -390,6 +392,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
 
       {/* 하단 고정 플레이어 UI */}
       {/* 모바일에선 하단 내비(h-24)가 bottom-0 을 차지하므로 플레이어를 그 바로 위에 얹는다. md+ 는 내비가 없어 종전대로 bottom-0. */}
+      <DiscStyles />
       <footer className={`fixed left-0 w-full z-50 flex items-center justify-between px-[32px] h-24 glass-panel border-t border-outline-variant/10 ${
         hasMobileNav ? 'bottom-24 md:bottom-0' : 'bottom-0'
       }`}>
@@ -411,21 +414,26 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
               </div>
             </>
           )}
-          {displayTrack?.album?.cover_url && (
-            <div 
+          {currentTrack && (
+            <button
+              type="button"
               onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
-              className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 shadow-lg border border-outline-variant/10 cursor-pointer hover:opacity-85 active:scale-95 transition-all"
+              className="group relative mr-2 block h-14 w-14 shrink-0 cursor-pointer overflow-visible text-left active:scale-95 transition-transform"
               title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
+              aria-label={`${displayTrack.title} ${isNowPlayingOpen ? '곡 정보 닫기' : '곡 정보 보기'}`}
             >
-              <img
-                src={displayTrack.album.cover_url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            </div>
+              <Disc spinning={isPlaying} />
+              <span className="relative z-10 block h-full w-full overflow-hidden rounded-lg border border-outline-variant/10 bg-surface-container shadow-lg transition-opacity group-hover:opacity-90">
+                <img
+                  src={displayCoverUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </span>
+            </button>
           )}
           {currentTrack && (
-            <div className="hidden sm:block min-w-0">
+            <div className="relative z-10 hidden sm:block min-w-0">
               <button
                 onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
                 className="block font-semibold text-[14px] leading-[20px] text-on-surface hover:underline truncate text-left w-full focus:outline-none"
