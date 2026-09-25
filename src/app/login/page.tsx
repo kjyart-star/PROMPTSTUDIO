@@ -341,18 +341,15 @@ function Wordmark({ className = '', compact = false }: { className?: string; com
   // 로고를 누르면 쿠키플레이 메인으로 — 대표 확정 동선. 일반 <a href="/"> 는
   // basePath 가 붙지 않아 window.location.origin + '/' (쿠키플레이 홈)로 간다.
   return (
-    <a href={suiteHref('/')} className={`flex items-center gap-2 select-none w-fit ${className}`}>
-      {/* 허브 메인과 같은 쿠키 캐릭터 마크(대표 2026-08-28: "캐릭터 로고로, 메인페이지에 맞춰") */}
+    <a href={suiteHref('/')} title="쿠키플레이 홈" className={`flex items-center select-none w-fit ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={withBase('/images/cookie-mark.png')}
-        alt=""
-        aria-hidden="true"
-        className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} shrink-0 rounded-full object-cover`}
+        src="https://cookieplay.app/brand/cookieplay-lockup.svg"
+        alt="COOKIEPLAY"
+        width={1131}
+        height={169}
+        className={`${compact ? 'w-[150px]' : 'w-[180px]'} h-auto shrink-0`}
       />
-      <span className={`${compact ? 'text-[16px]' : 'text-[24px]'} font-black tracking-tight leading-none`}>
-        <span className="cm-wordmark">COOKIE</span>
-        <span className="text-white">PLAY</span>
-      </span>
     </a>
   )
 }

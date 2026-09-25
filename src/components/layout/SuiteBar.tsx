@@ -1,6 +1,6 @@
 'use client'
 
-import { BASE_PATH, suiteHref, withBase } from '@/lib/basePath'
+import { BASE_PATH, suiteHref } from '@/lib/basePath'
 import { SUITE_SERVICES, SUITE_STATUS_LABEL, suiteNavFloors } from '@/lib/suite/services'
 import { SuiteCreditPill } from './SuiteCreditPill'
 import { SuiteFloorMenu } from './SuiteFloorMenu'
@@ -16,7 +16,7 @@ import { SuiteAccountBadge } from './SuiteAccountBadge'
  *
  * 메뉴는 **층 하나가 한 칸**이다. 서비스가 둘 이상인 층(3F · 4F)은 접힌 메뉴
  * (`SuiteFloorMenu`)로, 하나뿐인 층은 지금처럼 바로 링크로 그린다 — 대표 지시
- * (2026-09-06: "4층은 AI작업실로 하고, 마우스 올리면 아래로 쿠키뮤직 스튜디오·쿠키드림
+ * (2026-09-06: "4층은 AI작업실로 하고, 마우스 올리면 아래로 쿠키드림·쿠키뮤직 스튜디오
  * 이런 식으로 나오게 해줘", "3층은 3가지"). 아홉 칸이 여섯 칸이 되면서 메뉴가 한 줄에
  * 들어가고, 가운데 정렬이 가능해졌다.
  *
@@ -48,6 +48,9 @@ const HREF_BY_ID: Record<string, string> = {
   cookiechat: suiteHref('/cookiechat'),
   cookiephotostudio: suiteHref('/photo'),
 }
+
+/** 쿠키플레이 공통 헤더와 같은 원본 SVG 워드마크. */
+const COOKIEPLAY_LOGO = 'https://cookieplay.app/brand/cookieplay-lockup.svg'
 
 const hrefOf = (id: string) => HREF_BY_ID[id]
 
@@ -99,19 +102,10 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
         <a
           href={suiteHref('/')}
           title="쿠키플레이 홈"
-          className="order-1 flex h-14 shrink-0 items-center gap-2.5 md:h-16"
+          className="order-1 flex h-14 shrink-0 items-center md:h-16"
         >
-          <img
-            src={withBase('/images/cookie-mark.png')}
-            alt=""
-            aria-hidden
-            className="size-8 shrink-0 rounded-full object-cover"
-          />
-          {/* 서비스 고유색은 워드마크에만 남긴다 — 바 자체는 공통이다 */}
-          <span className="text-[24px] font-black leading-none tracking-tight">
-            <span className="text-white">COOKIE</span>
-            <span className="text-[#e4ff47]">PLAY</span>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={COOKIEPLAY_LOGO} alt="COOKIEPLAY" width={1131} height={169} className="h-auto w-[180px] shrink-0 select-none md:w-[212px]" />
         </a>
       </div>
 
