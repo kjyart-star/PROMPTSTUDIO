@@ -31,3 +31,11 @@
 ## Reference
 
 Supabase insert/upsert semantics checked against https://supabase.com/docs/reference/javascript/upsert and update returned-row checks against https://supabase.com/docs/reference/javascript/update on 2026-09-26.
+
+## Production verification — 19:22 KST
+
+- Release `a4d46e75aba106561162c0b69ebe8cab515be95b` pushed to `master`.
+- Vercel `dpl_CDX6RX47oUCe6shsfY4UnRUjrF98` READY; build completed in 48 seconds. Production aliases `music.cookieplay.app` and `accounts.cookieplay.app` resolve to this deployment and commit.
+- Public entry point `https://cookieplay.app/music/studio?tab=suno` reloaded successfully. Actual production download produced another valid 101.999979-second, 48 kHz stereo MP3 with embedded artwork (2,416,283 bytes).
+- Anonymous production status request returned HTTP 401. No browser console errors observed during production checks. Credit balance unchanged.
+- This documentation follow-up is on the audit branch; the application release remains `a4d46e7`.
