@@ -26,6 +26,27 @@ export function CoverClient({ user }: CoverClientProps) {
   const [pollingTaskId, setPollingTaskId] = useState<string | null>(null)
   const [activeAudioList, setActiveAudioList] = useState<any[]>([])
   const [status, setStatus] = useState('대기 중')
+  const pollInFlight = useRef(false)
+  const generationInFlight = useRef(false)
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    fetch(withBase('/api/song-history')).then(async response => {
+      if (!response.ok) return
+      const history = await response.json()
+      if (cancelled || !Array.isArray(history)) return
+      const covers = history.filter(item => item.form?.kind === 'cover')
+      setActiveAudioList(covers.filter(item => item.status === 'completed' && item.audio_url))
+      const pending = covers.find(item => item.status === 'processing' && item.suno_task_id)
+      if (pending) {
+        setPollingTaskId(pending.suno_task_id)
+        setIsMusicGenerating(true)
+        setStatus('진행 중인 커버 생성을 확인하고 있습니다.')
+      }
+    }).catch(console.error)
+    return () => { cancelled = true }
+  }, [user?.id])
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
   const { prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
   /* 버튼에 적는 차감액은 워커 단가표에서 온다 — 숫자를 화면 코드에 박아 두면 갈라진다.
@@ -82,7 +103,7 @@ export function CoverClient({ user }: CoverClientProps) {
 
   const handlePlayCoverAudio = (audio: any, idx: number) => {
     if (!audio.audio_url) return
-    const trackId = `cover-audio-${idx}`
+    const trackId = audio.id || `cover-audio-${idx}-${audio.audio_url}`
     const trackToPlay = {
       id: trackId,
       title: audio.title || `Cover Track #${idx + 1}`,
@@ -129,6 +150,8 @@ export function CoverClient({ user }: CoverClientProps) {
     if (!pollingTaskId) return
 
     const interval = setInterval(async () => {
+      if (pollInFlight.current) return
+      pollInFlight.current = true
       try {
         const res = await fetch(`/api/suno/cover/status?taskId=${pollingTaskId}`)
         if (res.ok) {
@@ -146,9 +169,13 @@ export function CoverClient({ user }: CoverClientProps) {
             alert(`커버 곡 생성 실패: ${data.message || '알 수 없는 오류'}`)
             setStatus(uiLanguage === 'KO' ? "생성 실패" : uiLanguage === 'JA' ? "生成に失敗しました" : "Generation failed")
           }
+        } else {
+          setStatus('커버 상태를 확인하지 못했습니다. 보관함에 기록을 유지하며 다시 확인합니다.')
         }
       } catch (e) {
         console.error(e)
+      } finally {
+        pollInFlight.current = false
       }
     }, 5000)
 
@@ -197,11 +224,14 @@ export function CoverClient({ user }: CoverClientProps) {
   }
 
   const handleGenerate = async () => {
+    if (generationInFlight.current || pollingTaskId) return
     if (!uploadedFileUrl) {
       alert(uiLanguage === 'KO' ? "원본 오디오 파일을 먼저 업로드해주세요." : uiLanguage === 'JA' ? "先にソース音声ファイルをアップロードしてください。" : "Please upload a source audio file first.")
       return
     }
 
+    generationInFlight.current = true
+    setActiveAudioList([])
     setIsMusicGenerating(true)
     setStatus(uiLanguage === 'KO' ? 'Apipass 서버로 커버 생성 요청을 전송했습니다.' : uiLanguage === 'JA' ? 'Apipassにカバー生成リクエストを送信しました。' : 'Sent cover generation request to Apipass.')
     
@@ -240,6 +270,8 @@ export function CoverClient({ user }: CoverClientProps) {
       console.error(e)
       setIsMusicGenerating(false)
       setStatus(uiLanguage === 'KO' ? '오류 발생' : uiLanguage === 'JA' ? 'エラーが発生しました' : 'Error occurred')
+    } finally {
+      generationInFlight.current = false
     }
   }
 
@@ -512,7 +544,7 @@ export function CoverClient({ user }: CoverClientProps) {
                         onClick={() => handlePlayCoverAudio(audio, idx)}
                         className="px-4 py-2 bg-[#161616] border border-[#232323] hover:border-primary/50 text-zinc-200 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow"
                       >
-                        {isPlaying && currentTrack?.id === `cover-audio-${idx}` ? (
+                        {isPlaying && currentTrack?.id === (audio.id || `cover-audio-${idx}-${audio.audio_url}`) ? (
                           <>
                             <Pause className="w-3.5 h-3.5 fill-current text-primary" />
                             <span>{uiLanguage === 'KO' ? '일시정지' : uiLanguage === 'JA' ? '一時停止' : 'Pause'}</span>

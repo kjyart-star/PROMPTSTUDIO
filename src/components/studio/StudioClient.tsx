@@ -17,6 +17,7 @@ import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
+import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
 import { formatPriceCredits } from '@/lib/credits/format'
@@ -985,23 +986,16 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
   }
 
-  /** 다운로드는 비로그인(로컬 보관함)에서도 되어야 한다 */
-  const downloadHistoryTrack = (item: any) => {
+  /** Downloads use the authenticated music API, including private storage paths. */
+  const downloadHistoryTrack = async (item: any) => {
     const url = item.audio_url || item.stream_url || item.url
     if (!url) return
     const filename = item.title || 'Untitled'
     try {
-      let proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
-      if (item.image_url) proxyUrl += `&image=${encodeURIComponent(item.image_url)}`
-      const a = document.createElement('a')
-      a.href = proxyUrl
-      a.download = `${filename}.mp3`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      await downloadStudioTrack(url, filename, item.image_url)
     } catch (e) {
       console.error(e)
-      window.open(url, '_blank')
+      alert(e instanceof Error ? e.message : '다운로드에 실패했습니다.')
     }
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getSunoStatus } from '@/lib/suno/channel'
+import { GET as getSavedStatus } from '@/app/api/suno/status/route'
 
 export async function GET(request: Request) {
   try {
@@ -15,21 +15,21 @@ export async function GET(request: Request) {
 
     if (!taskId) return NextResponse.json({ error: 'taskId required' }, { status: 400 })
 
-    // 접수한 그 채널에만 묻는다 — 작업 id 의 접두사가 길을 정한다.
-    const outcome = await getSunoStatus(taskId)
-
-    if (!outcome.ok) {
-      return NextResponse.json({ error: outcome.message }, { status: 400 })
-    }
-
-    if (outcome.state === 'succeeded') {
-      // You could also save the result to Supabase song_history here
-      return NextResponse.json({ status: 'completed', results: outcome.results })
-    }
-    if (outcome.state === 'failed') {
-      return NextResponse.json({ status: 'failed', message: outcome.message })
-    }
-    return NextResponse.json({ status: 'processing' })
+    const { data: histories, error } = await supabase.from('song_history').select('id')
+      .eq('suno_task_id', taskId).eq('user_id', user.id).order('created_at', { ascending: true }).limit(1)
+    if (error) return NextResponse.json({ error: 'History lookup failed' }, { status: 500 })
+    if (!histories?.length) return NextResponse.json({ error: 'Cover history not found' }, { status: 404 })
+    const url = new URL(request.url)
+    url.searchParams.set('historyId', histories[0].id)
+    const response = await getSavedStatus(new Request(url, { headers: request.headers }))
+    if (!response.ok) return response
+    const result = await response.json()
+    if (result.status !== 'completed') return NextResponse.json(result)
+    const { data: tracks, error: tracksError } = await supabase.from('song_history')
+      .select('id,title,audio_url,image_url').eq('suno_task_id', taskId).eq('user_id', user.id)
+      .eq('status', 'completed').order('created_at', { ascending: true })
+    if (tracksError) return NextResponse.json({ error: 'Could not load saved covers' }, { status: 500 })
+    return NextResponse.json({ status: 'completed', results: tracks })
   } catch (err: any) {
     console.error('Cover Status Error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })

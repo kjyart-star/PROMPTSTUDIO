@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getSunoStatus } from '@/lib/suno/channel'
+import { createHash } from 'node:crypto'
 
 /**
  * 스토리지 쓰기 전용 클라이언트.
@@ -85,6 +86,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'taskId and historyId are required' }, { status: 400 })
     }
 
+    // Authorize BEFORE looking up the provider task or using privileged storage.
+    const { data: originalItem, error: historyError } = await supabase
+      .from('song_history').select('*').eq('id', historyId).eq('user_id', user.id).maybeSingle()
+    if (historyError) return NextResponse.json({ error: 'History lookup failed' }, { status: 500 })
+    if (!originalItem || originalItem.suno_task_id !== taskId) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+    if (originalItem.status === 'completed') {
+      return NextResponse.json({ status: 'completed', audio_url: originalItem.audio_url, image_url: originalItem.image_url })
+    }
+
     // 접수한 그 채널에만 묻는다 — 작업 id 의 접두사가 길을 정한다.
     // 접두사가 없는 id 는 2채널 이전에 만들어진 것이라 APIPASS 로 간다.
     const outcome = await getSunoStatus(taskId)
@@ -96,26 +108,11 @@ export async function GET(request: Request) {
     if (outcome.state === 'succeeded') {
       // Extract the first generated audio and image
       const resultsArr = outcome.results
+      if (!resultsArr.length || resultsArr.some(result => !result.audio_url)) {
+        return NextResponse.json({ error: 'Provider returned incomplete audio results' }, { status: 502 })
+      }
       const mockAudioUrl = resultsArr[0]?.audio_url || ''
       const mockImageUrl = resultsArr[0]?.image_url || ''
-
-      // Get the original history item to copy its metadata for extra variations
-      const { data: originalItem } = await supabase
-        .from('song_history')
-        .select('*')
-        .eq('id', historyId)
-        .eq('user_id', user.id)
-        .single()
-
-      // If already completed, bypass DB updates to prevent duplicate variation entries
-      if (originalItem && originalItem.status === 'completed') {
-        return NextResponse.json({
-          status: 'completed',
-          audio_url: originalItem.audio_url,
-          image_url: originalItem.image_url,
-          results: resultsArr
-        })
-      }
 
       // 생성 결과를 우리 스토리지로 옮긴다 — 외부 CDN 링크가 사라져도 곡이 남게.
       const storage = storageClient()
@@ -134,28 +131,15 @@ export async function GET(request: Request) {
         resultsArr[0].image_url = finalImageUrl
       }
 
-      // Update the first variation (original row)
-      const { error } = await supabase
-        .from('song_history')
-        .update({
-          status: 'completed',
-          audio_url: finalAudioUrl,
-          image_url: finalImageUrl
-        })
-        .eq('id', historyId)
-        .eq('user_id', user.id)
-
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
-      }
-
       // If there are multiple variations (Suno normally generates 2 tracks), insert them as separate entries
       if (resultsArr.length > 1 && originalItem) {
         for (let i = 1; i < resultsArr.length; i++) {
           const extraAudio = resultsArr[i]?.audio_url || ''
           const extraImage = resultsArr[i]?.image_url || ''
           if (extraAudio) {
-            const extraId = crypto.randomUUID()
+            // Stable primary key makes concurrent polls/retries idempotent without a migration.
+            const hash = createHash('sha256').update(`${user.id}:${historyId}:${taskId}:${i}`).digest('hex')
+            const extraId = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`
             const finalExtraAudio = await uploadToStorage(storage, extraAudio, 'tracks', `audio/${extraId}.mp3`, 'path')
             const finalExtraImage = extraImage
               ? await uploadToStorage(storage, extraImage, 'avatars', `suno_covers/${user.id}/${extraId}.png`)
@@ -164,7 +148,8 @@ export async function GET(request: Request) {
             resultsArr[i].audio_url = finalExtraAudio
             resultsArr[i].image_url = finalExtraImage
 
-            await supabase.from('song_history').insert({
+            const { error: variationError } = await supabase.from('song_history').upsert({
+              id: extraId,
               user_id: user.id,
               title: originalItem.title + ` (v${i + 1})`,
               prompt: originalItem.prompt || '',
@@ -176,10 +161,20 @@ export async function GET(request: Request) {
               audio_url: finalExtraAudio,
               image_url: finalExtraImage,
               is_published: false
-            })
+            }, { onConflict: 'id', ignoreDuplicates: true })
+            if (variationError) {
+              return NextResponse.json({ error: 'Could not save all generated tracks. Retry status lookup.' }, { status: 500 })
+            }
           }
         }
       }
+
+      // Only mark the parent complete after EVERY variation has been saved.
+      const { data: saved, error } = await supabase.from('song_history')
+        .update({ status: 'completed', audio_url: finalAudioUrl, image_url: finalImageUrl })
+        .eq('id', historyId).eq('user_id', user.id).eq('suno_task_id', taskId)
+        .select('id').maybeSingle()
+      if (error || !saved) return NextResponse.json({ error: 'Could not save generated track' }, { status: 500 })
 
       return NextResponse.json({
         status: 'completed',

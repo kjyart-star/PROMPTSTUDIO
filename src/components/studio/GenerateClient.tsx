@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
+import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
@@ -83,6 +84,8 @@ export function GenerateClient({
   const [activeAudio, setActiveAudio] = useState<{ url: string, image: string, is_published?: boolean } | null>(null)
   const [generatedTracks, setGeneratedTracks] = useState<any[]>([])
   const [activeTasks, setActiveTasks] = useState<any[]>([])
+  const pollInFlight = useRef(false)
+  const generationInFlight = useRef(false)
   const [historyList, setHistoryList] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
   const [activePlaylistMenuId, setActivePlaylistMenuId] = useState<string | null>(null)
@@ -134,19 +137,10 @@ export function GenerateClient({
   const handleDownloadTrack = async (url: string, filename: string, imageUrl?: string) => {
     if (!url) return
     try {
-      let proxyUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`
-      if (imageUrl) {
-        proxyUrl += `&image=${encodeURIComponent(imageUrl)}`
-      }
-      const a = document.createElement('a')
-      a.href = proxyUrl
-      a.download = `${filename}.mp3`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      await downloadStudioTrack(url, filename, imageUrl)
     } catch (e) {
       console.error(e)
-      window.open(url, '_blank')
+      alert(e instanceof Error ? e.message : '다운로드에 실패했습니다.')
     }
   }
 
@@ -298,6 +292,9 @@ export function GenerateClient({
     if (activeTasks.length === 0) return
 
     const interval = setInterval(async () => {
+      if (pollInFlight.current) return
+      pollInFlight.current = true
+      try {
       let hasChanges = false
       let completedOrFailedCount = 0
 
@@ -344,7 +341,8 @@ export function GenerateClient({
       )
 
       if (hasChanges) {
-        setActiveTasks(updatedTasks)
+        // Preserve a newly submitted task that was not in this poll's snapshot.
+        setActiveTasks(current => current.map(task => updatedTasks.find(next => next.id === task.id) || task))
       }
 
       if (completedOrFailedCount > 0) {
@@ -361,18 +359,23 @@ export function GenerateClient({
           setActiveTasks(prev => prev.filter(t => t.status === 'processing'))
         }, 3000)
       }
+      } finally {
+        pollInFlight.current = false
+      }
     }, 4000)
 
     return () => clearInterval(interval)
   }, [activeTasks, currentHistoryId])
 
   const handleGenerate = async () => {
+    if (generationInFlight.current) return
     const processingCount = activeTasks.filter(t => t.status === 'processing').length
     if (processingCount >= 6) {
       alert(uiLanguage === 'KO' ? '최대 6개까지 동시에 음악을 생성할 수 있습니다.' : uiLanguage === 'JA' ? '同時に最大6曲まで生成できます。' : 'You can generate up to 6 tracks concurrently.')
       return
     }
 
+    generationInFlight.current = true
     setIsMusicGenerating(true)
     setStatus('Suno 서버로 생성 요청을 전송했습니다.')
 
@@ -397,12 +400,14 @@ export function GenerateClient({
       } else {
         alert("음원 히스토리 생성에 실패했습니다.")
         setIsMusicGenerating(false)
+        generationInFlight.current = false
         return
       }
     } catch (err) {
       console.error('Error creating history item:', err)
       alert("임시 음원 정보 생성에 실패했습니다.")
       setIsMusicGenerating(false)
+      generationInFlight.current = false
       return
     }
 
@@ -442,17 +447,19 @@ export function GenerateClient({
         } else {
           alert("음악 생성 요청 실패")
         }
-        if (activeHistoryId) {
+        if (activeHistoryId && [400, 401, 402, 403, 404].includes(res.status)) {
           await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
         }
       }
     } catch (e) {
       console.error(e)
-      if (activeHistoryId) {
-        await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
-      }
+      // A lost response does not mean the provider rejected the paid request.
+      // Keep the history so refresh can recover a task accepted by the server.
+      setStatus('접수 결과를 확인하지 못했습니다. 보관함을 확인한 뒤 다시 시도해 주세요.')
+      await refreshHistoryList()
     } finally {
       setIsMusicGenerating(false)
+      generationInFlight.current = false
     }
   }
 

@@ -51,6 +51,20 @@ export async function POST(request: Request) {
       ? body.requestId
       : crypto.randomUUID()
 
+    // Allocate durable history before any paid request. A reused request ID must
+    // return the same task rather than submit another cover.
+    const { data: previous, error: lookupError } = await supabase.from('song_history')
+      .select('id,suno_task_id').eq('id', requestId).eq('user_id', user.id).maybeSingle()
+    if (lookupError) return NextResponse.json({ error: 'History lookup failed' }, { status: 500 })
+    if (previous?.suno_task_id) return NextResponse.json({ taskId: previous.suno_task_id, historyId: previous.id })
+    if (previous) return NextResponse.json({ error: 'This cover request is already being submitted.' }, { status: 409 })
+    const { error: historyError } = await supabase.from('song_history').insert({
+      id: requestId, user_id: user.id, title: body.title?.trim() || 'AI Cover',
+      prompt: body.style || '', lyrics: body.prompt || '', status: 'processing',
+      is_published: false, form: { ...body, kind: 'cover' },
+    })
+    if (historyError) return NextResponse.json({ error: 'Could not create cover history' }, { status: 500 })
+
     // 크레딧 선차감. 접수가 실패하면 아래에서 되돌린다.
     const spend = await spendCredits({
       action: 'music.cover',
@@ -58,7 +72,10 @@ export async function POST(request: Request) {
       ref: requestId,
       reason: 'AI 커버 생성',
     })
-    if (!spend.ok) return creditErrorResponse(spend)
+    if (!spend.ok) {
+      await supabase.from('song_history').update({ status: 'failed' }).eq('id', requestId).eq('user_id', user.id)
+      return creditErrorResponse(spend)
+    }
 
     const modelVersion = normalizeSunoModelVersion(body.modelVersion)
 
@@ -82,6 +99,7 @@ export async function POST(request: Request) {
 
     if (!outcome.ok) {
       await refundCredits(spend.ledgerId, 'suno 접수 실패')
+      await supabase.from('song_history').update({ status: 'failed' }).eq('id', requestId).eq('user_id', user.id)
       return NextResponse.json({ error: outcome.message }, { status: 400 })
     }
 
@@ -95,9 +113,13 @@ export async function POST(request: Request) {
       costUsd: SUNO_COST_USD_PER_SONG[outcome.channel],
     })
 
-    // Typically we would save this to Supabase song_history here
-    // but for simplicity, we just return the taskId to the client
-    return NextResponse.json({ taskId: outcome.taskRef, balance: spend.balance })
+    const { data: saved, error: saveError } = await supabase.from('song_history')
+      .update({ suno_task_id: outcome.taskRef, status: 'processing' })
+      .eq('id', requestId).eq('user_id', user.id).select('id').maybeSingle()
+    if (saveError || !saved) {
+      return NextResponse.json({ error: 'Cover accepted but history update failed. Contact support.', taskId: outcome.taskRef, historyId: requestId }, { status: 500 })
+    }
+    return NextResponse.json({ taskId: outcome.taskRef, historyId: requestId, balance: spend.balance })
   } catch (err: any) {
     console.error('Create Cover Error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })

@@ -60,6 +60,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'historyId is required' }, { status: 400 })
     }
 
+    // Never charge for a missing or another user's history entry.
+    const { data: history, error: historyError } = await supabase.from('song_history')
+      .select('id,suno_task_id').eq('id', historyId).eq('user_id', user.id).maybeSingle()
+    if (historyError) return NextResponse.json({ error: 'History lookup failed' }, { status: 500 })
+    if (!history) return NextResponse.json({ error: 'History not found' }, { status: 404 })
+    if (history.suno_task_id) {
+      return NextResponse.json({ taskId: history.suno_task_id, status: 'processing' })
+    }
+
     // 같은 클릭이 두 번 닿아도 한 번만 빠지게 — 클라이언트가 보낸 UUID 를 멱등키에 쓴다
     const requestId = typeof body.requestId === 'string' && UUID_RE.test(body.requestId)
       ? body.requestId
@@ -110,7 +119,7 @@ export async function POST(request: Request) {
     })
 
     // Update DB with task ID and status
-    const { error } = await supabase
+    const { data: saved, error } = await supabase
       .from('song_history')
       .update({
         suno_task_id: taskId,
@@ -118,10 +127,11 @@ export async function POST(request: Request) {
       })
       .eq('id', historyId)
       .eq('user_id', user.id)
+      .select('id').maybeSingle()
 
-    if (error) {
+    if (error || !saved) {
       console.error('Error updating task ID:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Generation accepted but history could not be updated. Contact support.', taskId, historyId }, { status: 500 })
     }
 
     return NextResponse.json({ taskId, status: 'processing', balance: spend.balance })
