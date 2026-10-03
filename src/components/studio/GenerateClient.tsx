@@ -990,6 +990,9 @@ export function GenerateClient({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
+                            // 전역 스페이스 단축키(PersistentPlayer)와 이중 토글되어 깜박이므로 여기서 끊는다
+                            e.stopPropagation()
+                            if (e.repeat) return
                             playListTrack(track)
                           }
                         }}

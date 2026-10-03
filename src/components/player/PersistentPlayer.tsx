@@ -280,9 +280,13 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
 
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
+        if (e.repeat) return;
         const state = usePlayerStore.getState();
         if (!state.currentTrack) return;
         state.togglePlay();
+        // 포커스된 버튼이 키 뗄 때 한 번 더 눌리는 것(이중 토글) 방지
+        const ae = document.activeElement as HTMLElement | null;
+        if (ae && (ae.tagName === 'BUTTON' || ae.getAttribute('role') === 'button')) ae.blur();
       } else if (e.code === 'ArrowUp' || e.key === 'ArrowUp') {
         e.preventDefault();
         const state = usePlayerStore.getState();

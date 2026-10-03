@@ -1956,6 +1956,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
+                            // 전역 스페이스 단축키와 이중 토글되어 깜박이므로 여기서 끊는다
+                            e.stopPropagation()
+                            if (e.repeat) return
                             playHistoryTrack(item)
                             setLibraryDetailId(item.id)
                           }
