@@ -8,6 +8,12 @@
 }
 
 :root {
+  /* 쿠키플레이 브랜드(라임) 계정 묶음 토큰 — COOKIELAB index.css 의 --primary/--secondary 세트와 같은 값 */
+  --suite-primary: #e4ff47;
+  --suite-primary-foreground: #12130c;
+  --suite-secondary: #161c00;
+  --suite-secondary-border: #1e2400;
+  --suite-secondary-foreground: #8ca931;
   /* ─── 쿠키플레이 스위트 브랜드 토큰 — 에메랄드/틸 그린 ~ 코발트 블루 ─── */
   --cm-brand: #0c9965;          /* 단색 대표색(아이콘·보더·포커스링·진행바) */
   --cm-brand-dim: #0a7a51;      /* 눌림·보조 */

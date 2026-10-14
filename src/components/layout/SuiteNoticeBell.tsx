@@ -119,12 +119,12 @@ export function SuiteNoticeBell({ activeId }: { activeId?: string }) {
         aria-expanded={open}
         title={label}
         aria-label={label}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#231249] bg-[#1b0e39] text-[#a581f8] transition-colors hover:text-[#dedede]"
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--suite-secondary-border)] bg-[var(--suite-secondary)] text-[var(--suite-secondary-foreground)] transition-colors hover:text-[#dedede]"
       >
         <Bell className="h-3.5 w-3.5 shrink-0" aria-hidden />
         {count > 0 && (
           /* 숫자는 종 위에 겹친다 — 바가 좁아도 폭을 더 먹지 않는다 */
-          <span className="absolute -right-1 -top-1 inline-flex min-w-[16px] items-center justify-center rounded-full bg-[#8251f6] px-1 text-[10px] font-semibold leading-[16px] tabular-nums text-white">
+          <span className="absolute -right-1 -top-1 inline-flex min-w-[16px] items-center justify-center rounded-full bg-[var(--suite-primary)] px-1 text-[10px] font-semibold leading-[16px] tabular-nums text-[var(--suite-primary-foreground)]">
             {count > 9 ? '9+' : count}
           </span>
         )}

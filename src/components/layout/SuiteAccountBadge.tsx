@@ -176,7 +176,7 @@ export function SuiteAccountBadge() {
         aria-haspopup="menu"
         aria-expanded={open}
         title={label}
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#292929] text-[#dedede] transition-colors hover:border-[#8251f6]"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#292929] text-[#dedede] transition-colors hover:border-[var(--suite-primary)]"
       >
         {profile?.avatarUrl ? (
           <img

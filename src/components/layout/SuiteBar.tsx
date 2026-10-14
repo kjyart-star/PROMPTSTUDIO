@@ -158,7 +158,7 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
           /* 아직 문을 열지 않은 서비스는 그 사실이 같이 보여야 한다.
              375px 에서는 계정 묶음에 자리를 내주고 감춘다(기준과 같음). */
           <div className="order-4 ml-auto flex shrink-0 items-center gap-2 md:order-5 md:ml-0">
-            <span className="hidden shrink-0 rounded-[6px] border border-[#231249] px-1.5 py-0.5 text-[10px] leading-none text-[#a581f8] sm:inline-block">
+            <span className="hidden shrink-0 rounded-[6px] border border-[var(--suite-secondary-border)] px-1.5 py-0.5 text-[10px] leading-none text-[var(--suite-secondary-foreground)] sm:inline-block">
               {SUITE_STATUS_LABEL[current.status]}
             </span>
           </div>

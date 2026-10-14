@@ -13,12 +13,12 @@ import { compactCredits, formatCredits } from '@/lib/credits/format'
  * 된다. 충전 버튼을 따로 두지 않는 이유다.
  *
  * 색·모양은 쿠키플레이 기준 바(COOKIELAB `SuiteShell` 의 CREDIT_PILL)와 같다.
- * 이 저장소에는 그쪽 CSS 토큰이 없어서 다크 테마 값을 리터럴로 적는다.
+ * 색은 globals.css 의 --suite-* 브랜드 토큰이다.
  */
 
 /** 알약은 상태가 바뀌어도 같은 모양이다 — 자리가 하나라 흔들릴 곳이 없다 */
 const CREDIT_PILL =
-  'flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#e4ff47]/40 bg-[#161616] px-2.5 text-[13px] text-[#e4ff47] transition-colors hover:border-[#e4ff47] hover:text-white'
+  'flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--suite-secondary-border)] bg-[var(--suite-secondary)] px-2.5 text-[13px] text-[var(--suite-secondary-foreground)] transition-colors hover:text-[#dedede]'
 
 /**
  * 누르면 언제나 요금 안내로 간다. `suiteHref` 를 거치는 이유: 배포에서는
