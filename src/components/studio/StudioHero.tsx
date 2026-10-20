@@ -31,7 +31,7 @@ interface StudioHeroProps {
  */
 export function StudioHero({ badge, title, desc, bg, children }: StudioHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d0f12] via-[#14181f] to-[#0a0b0e] border border-white/10 p-6 lg:p-8 shadow-2xl">
+    <div className="relative overflow-clip rounded-3xl bg-gradient-to-r from-[#0d0f12] via-[#14181f] to-[#0a0b0e] border border-white/10 p-6 lg:p-8 shadow-2xl">
       {bg && (
         <>
           <div
