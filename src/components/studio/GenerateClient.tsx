@@ -429,6 +429,11 @@ export function GenerateClient({
   const playListTrack = (track: any) => {
     if (!track?.audio_url) return
     setDetailTrackId(track.id)
+    // 접어 둔 상세 패널(좁은 레일)도 곡을 누르면 펼쳐서 그 곡을 보여 준다
+    if (detailCollapsed) {
+      setDetailCollapsed(false)
+      try { localStorage.setItem('studio-detail-collapsed', '0') } catch { /* private mode */ }
+    }
     if (currentTrack?.id === track.id) {
       togglePlay()
       return
