@@ -655,7 +655,7 @@ export function GenerateClient({
         bg="/studio/hero-gen.webp"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] min-[1440px]:grid-cols-[400px_minmax(0,1fr)] gap-4 items-start">
         {/* Left Column: Input Settings (5칸 또는 6칸) */}
         <div className="space-y-5 cm-panel-console bg-[#111111] p-5 rounded-2xl border border-[#1e1e1e] shadow-xl lg:sticky lg:top-0 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto custom-scrollbar">
           <div className="flex justify-between items-center border-b border-[#1e1e1e] pb-3">
