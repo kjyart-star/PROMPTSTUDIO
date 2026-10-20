@@ -62,7 +62,7 @@ export function StudioWorkspace({
       <div className="flex flex-1 min-h-0 gap-3 p-3 pb-[108px]">
 
         {/* 1. Left Vertical Icon + Text Sidebar */}
-        <aside className="w-48 rounded-lg border border-outline-variant bg-surface-container-low flex flex-col p-3 gap-1.5 shrink-0 z-10 select-none overflow-y-auto custom-scrollbar">
+        <aside className="w-52 rounded-lg border border-outline-variant bg-surface-container-low flex flex-col p-3 gap-1.5 shrink-0 z-10 select-none overflow-y-auto custom-scrollbar">
           {/* 1. 음악 프롬프트 */}
           <button
             type="button"
@@ -123,7 +123,7 @@ export function StudioWorkspace({
             style={currentTab === 'cover' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
           >
             <ImageIcon className="w-4 h-4 shrink-0" />
-            <span className="truncate">AI 커버 스튜디오</span>
+            <span className="truncate">AI 커버</span>
             <span className="ml-auto text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#a3e635] text-black shadow-sm leading-none">
               NEW
             </span>
