@@ -28,9 +28,9 @@ export interface ParamProps {
   disabled?: boolean
 }
 
-const toNorm = (v: number, min: number, max: number, scale: Scale) =>
+export const toNorm = (v: number, min: number, max: number, scale: Scale) =>
   scale === 'log' ? Math.log(v / min) / Math.log(max / min) : (v - min) / (max - min)
-const fromNorm = (t: number, min: number, max: number, scale: Scale) =>
+export const fromNorm = (t: number, min: number, max: number, scale: Scale) =>
   scale === 'log' ? min * Math.pow(max / min, t) : min + t * (max - min)
 
 export function fmtValue(v: number, unit?: string, step = 0.1): string {
@@ -40,7 +40,7 @@ export function fmtValue(v: number, unit?: string, step = 0.1): string {
   return v > 0 && (unit === 'dB' || unit === 'LU') ? `+${s}` : s
 }
 
-function quantize(v: number, step: number, min: number, max: number) {
+export function quantize(v: number, step: number, min: number, max: number) {
   const q = Math.round(v / step) * step
   return Math.min(max, Math.max(min, Number(q.toFixed(4))))
 }

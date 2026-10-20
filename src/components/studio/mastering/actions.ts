@@ -259,9 +259,9 @@ export function applyTemplate(tpl: MasterTemplate) {
 }
 
 /** 템플릿 + 곡 분석 보정 + 라우드니스 맞춤 */
-export async function runAutoMaster(tpl: MasterTemplate) {
+export async function runAutoMaster(tpl: MasterTemplate): Promise<boolean> {
   const t = activeTrackNow()
-  if (!t) return
+  if (!t) return false
   busy('곡을 분석하는 중')
   try {
     const dec = await decodeTrack(t)
@@ -274,8 +274,9 @@ export async function runAutoMaster(tpl: MasterTemplate) {
     st().setTemplateId(tpl.id)
     st().setTarget({ id: tpl.id, label: tpl.label, lufs: tpl.lufs, tp: tpl.tp })
     ui().set({ autoNotes: [...notes, `라우드니스 ${res.integrated.toFixed(1)} LUFS · 트루 피크 ${res.truePeak.toFixed(1)} dBTP 로 맞춤`] })
-    notify('ok', `자동 마스터링 완료 — 「${tpl.label}」 기준, ${res.integrated.toFixed(1)} LUFS. 아래 슬롯에서 값을 더 고칠 수 있어요.`)
-  } catch (e) { console.error(e); notify('err', '자동 마스터링에 실패했어요.') } finally { done() }
+    notify('ok', `「${tpl.label}」 기준으로 마스터링했어요 — 목표 음량에 맞췄어요(${res.integrated.toFixed(1)} LUFS).`)
+    return true
+  } catch (e) { console.error(e); notify('err', '자동 마스터링에 실패했어요. 다시 눌러 주세요.'); return false } finally { done() }
 }
 
 /** 템플릿 미리듣기 — 가장 큰 8초 구간을 반복하며 템플릿을 잠깐 켠다 */
@@ -385,29 +386,34 @@ async function renderMp3Safe(t: TrackItem, dec: DecodedAudio, base: ChainParams,
   const { loop } = ui()
   const useLoop = opts.range === 'loop' && loop && t.id === st().activeId
   const meta: TrackMeta = extra?.noMeta ? {} : { title: t.meta.title, artist: t.meta.artist, album: t.meta.album, isrc: t.meta.isrc, trackNo: extra?.trackNo, cover: await coverBytes(t.meta.coverUrl) }
+  const range = { start: useLoop ? loop!.start * dec.sampleRate : 0, end: useLoop ? loop!.end * dec.sampleRate : undefined, edit: t.edit, signal: cancelRef }
+  // 먼저 WAV 기준 라우드니스 — MP3 도 이 크기를 지킨다
+  const ref = await renderChain(dec.channels, dec.sampleRate, base, { ...range, write: false, onProgress: x => onP(x * 0.1) })
   const want = base.limiter.ceiling
-  let margin = 1
-  let out: { blob: Blob; channels: Float32Array<ArrayBuffer>[] } | null = null
-  for (let k = 0; k < 3; k++) {
-    const p = { ...base, limiter: { ...base.limiter, ceiling: want - margin, gain: base.limiter.gain + margin } }
-    const res = await renderChain(dec.channels, dec.sampleRate, p, {
-      start: useLoop ? loop!.start * dec.sampleRate : 0, end: useLoop ? loop!.end * dec.sampleRate : undefined,
-      edit: t.edit, onProgress: x => onP((k * 0.33) + x * 0.2), signal: cancelRef,
-    })
+  let ceil = want - 1, gain = base.limiter.gain + 1
+  let best: { blob: Blob; channels: Float32Array<ArrayBuffer>[]; err: number } | null = null
+  for (let k = 0; k < 4; k++) {
+    const p = { ...base, limiter: { ...base.limiter, ceiling: ceil, gain } }
+    const res = await renderChain(dec.channels, dec.sampleRate, p, { ...range, onProgress: x => onP(0.1 + k * 0.22 + x * 0.12) })
     const ch = res.channels!
     const ab = new AudioBuffer({ length: Math.max(1, ch[0].length), numberOfChannels: 2, sampleRate: dec.sampleRate })
     ab.copyToChannel(ch[0], 0); ab.copyToChannel(ch[1], 1)
-    const mp3 = await encodeAudioBufferToMp3(ab, 320, x => onP(k * 0.33 + 0.2 + (x / 100) * 0.1))
-    out = { blob: mp3, channels: ch }
+    const mp3 = await encodeAudioBufferToMp3(ab, 320, x => onP(0.1 + k * 0.22 + 0.12 + (x / 100) * 0.08))
+    // 인코딩 결과를 다시 풀어 트루 피크·라우드니스를 잰다
     const back = await decodeAudio(await mp3.arrayBuffer(), dec.sampleRate)
     const tp = new TruePeakMeter()
     tp.process(back.channels[0], back.channels[1], back.channels[0].length)
     const over = linToDb(tp.max) - want
-    if (over <= 0) break
-    margin += over + 0.2
+    const lufsGap = Number.isFinite(ref.integrated) ? ref.integrated - measureIntegratedLufs(back.channels, dec.sampleRate) : 0
+    const err = Math.max(0, over) * 2 + Math.abs(lufsGap)
+    if (!best || err < best.err) best = { blob: mp3, channels: ch, err }
+    if (over <= 0 && Math.abs(lufsGap) <= 0.5) break
+    // 피크가 넘치면 천장을 내리고, 작아졌으면 게인을 올린다(천장 아래에서만 커진다)
+    if (over > 0) ceil -= over + 0.2
+    gain += lufsGap
   }
   onP(1)
-  return { blob: await tagMp3(out!.blob, meta), ext: 'mp3' as const, channels: out!.channels, sampleRate: dec.sampleRate }
+  return { blob: await tagMp3(best!.blob, meta), ext: 'mp3' as const, channels: best!.channels, sampleRate: dec.sampleRate }
 }
 
 /** 내보낸 파일을 다시 열어 재측정 */
@@ -697,3 +703,13 @@ export function activeTrackNow(): TrackItem | null {
 }
 
 export { measureIntegratedLufs }
+
+/** 곡에서 가장 큰 부분부터 재생 (간단 모드 「적용하고 듣기」) */
+export async function playFromLoudest() {
+  const t = activeTrackNow()
+  const eng = getEngine()
+  if (!t || !eng) return
+  const a = st().srcAnalysis[t.id]
+  eng.seek(a ? loudestWindow(a, 8) : 0)
+  await eng.play().catch(() => {})
+}

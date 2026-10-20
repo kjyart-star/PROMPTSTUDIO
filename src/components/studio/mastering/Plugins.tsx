@@ -28,7 +28,7 @@ const BANDS: { key: BandKey; label: string; color: string }[] = [
   { key: 'lpf', label: 'LPF', color: '#9ca3af' },
 ]
 
-function EqGraph({ eq, onChange }: { eq: EqParams; onChange: (fn: (e: EqParams) => EqParams) => void }) {
+export function EqGraph({ eq, onChange }: { eq: EqParams; onChange: (fn: (e: EqParams) => EqParams) => void }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const drag = useRef<BandKey | null>(null)
   const eqRef = useRef(eq)
@@ -217,7 +217,7 @@ function EqPanel({ p, set }: { p: ChainParams; set: Setter }) {
 
 // ───────────────────────── 컴프레서 ─────────────────────────
 
-function TransferCurve({ threshold, ratio, knee, makeup = 0 }: { threshold: number; ratio: number; knee: number; makeup?: number }) {
+export function TransferCurve({ threshold, ratio, knee, makeup = 0 }: { threshold: number; ratio: number; knee: number; makeup?: number }) {
   const S = 120, lo = -60
   const map = (db: number) => ((db - lo) / -lo) * S
   let d = ''
@@ -240,7 +240,7 @@ function TransferCurve({ threshold, ratio, knee, makeup = 0 }: { threshold: numb
   )
 }
 
-function GrBar({ engine, pick, label }: { engine: MasteringEngine; pick: (m: NonNullable<MasteringEngine['meters']>) => number; label: string }) {
+export function GrBar({ engine, pick, label }: { engine: MasteringEngine; pick: (m: NonNullable<MasteringEngine['meters']>) => number; label: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const txt = useRef<HTMLSpanElement>(null)
   useEffect(() => {
@@ -364,7 +364,7 @@ const SAT_MODES: { value: SatMode; label: string }[] = [
   { value: 'triode', label: '3극관' }, { value: 'transformer', label: '트랜스포머' }, { value: 'clip', label: '소프트 클립' },
 ]
 
-function SatCurve({ drive, mode }: { drive: number; mode: SatMode }) {
+export function SatCurve({ drive, mode }: { drive: number; mode: SatMode }) {
   const S = 110
   const g = Math.pow(10, drive / 20)
   let d = ''
