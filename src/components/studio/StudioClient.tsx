@@ -2256,7 +2256,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-zinc-400">대상 툴 (TARGET AI)</label>
-                        <div className="grid grid-cols-3 gap-1 bg-[#0a0a0a] p-1 rounded-xl border border-[#1a1a1a]">
+                        <div className="grid grid-cols-1 gap-1 bg-[#0a0a0a] p-1 rounded-xl border border-[#1a1a1a]">
                           <button
                             type="button"
                             onClick={() => updateForm('targetTool', 'Suno')}
@@ -2264,22 +2264,6 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             style={form.targetTool.toLowerCase() === 'suno' ? { background: 'linear-gradient(90deg, #14b48b 0%, #3688e9 100%)' } : {}}
                           >
                             Suno
-                          </button>
-                          <button
-                            type="button"
-                            disabled
-                            className="py-2 text-xs font-semibold rounded-lg text-zinc-500 relative flex items-center justify-center gap-1 cursor-not-allowed"
-                          >
-                            <span>Udio</span>
-                            <span className="text-[8px] bg-red-950/80 text-red-400 border border-red-800/40 px-1 rounded">예정</span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled
-                            className="py-2 text-xs font-semibold rounded-lg text-zinc-500 relative flex items-center justify-center gap-1 cursor-not-allowed"
-                          >
-                            <span>MusicFX</span>
-                            <span className="text-[8px] bg-red-950/80 text-red-400 border border-red-800/40 px-1 rounded">예정</span>
                           </button>
                         </div>
                       </div>

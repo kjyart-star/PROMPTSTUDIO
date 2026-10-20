@@ -677,20 +677,6 @@ export function GenerateClient({
                 >
                   Suno (v4~v5.5)
                 </button>
-                <button
-                  onClick={() => alert('Udio API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
-                  className="px-4 py-2 bg-[#0a0a0a] text-zinc-500 border border-[#1a1a1a] rounded-xl text-xs font-semibold relative cursor-not-allowed flex items-center gap-1.5"
-                >
-                  <span>Udio (v1.5)</span>
-                  <span className="bg-red-950/80 border border-red-800/40 text-red-400 text-[8px] px-1.5 py-0.5 rounded">{uiLanguage === 'KO' ? '예정' : uiLanguage === 'JA' ? '近日公開' : 'Coming'}</span>
-                </button>
-                <button
-                  onClick={() => alert('Google MusicFX API 연동 대기 중입니다. 곧 지원될 예정입니다!')}
-                  className="px-4 py-2 bg-[#0a0a0a] text-zinc-500 border border-[#1a1a1a] rounded-xl text-xs font-semibold relative cursor-not-allowed flex items-center gap-1.5"
-                >
-                  <span>MusicFX</span>
-                  <span className="bg-red-950/80 border border-red-800/40 text-red-400 text-[8px] px-1.5 py-0.5 rounded">{uiLanguage === 'KO' ? '예정' : uiLanguage === 'JA' ? '近日公開' : 'Coming'}</span>
-                </button>
               </div>
             </div>
 
