@@ -10,10 +10,11 @@ import { encodeAudioBufferToMp3 } from '@/lib/audioUtils'
 import { defaultEdit, measureIntegratedLufs, TruePeakMeter, linToDb, type ChainParams, type EditParams } from '@/lib/mastering/dsp'
 import { decodeAudio, computePeaks, renderChain, autoMatchLoudness, mixStems, joinAlbum, type DecodedAudio } from '@/lib/mastering/render'
 import { analyzeAudio, loudestWindow, matchingCurve, type Analysis } from '@/lib/mastering/analyze'
-import { autoMaster } from '@/lib/mastering/automaster'
+import { masterToTarget, refineGain } from '@/lib/mastering/automaster'
 import { TEMPLATES, type MasterTemplate } from '@/lib/mastering/templates'
 import { encodeWav, tagMp3, makeZip, readZip, type BitDepth, type DitherKind, type TrackMeta } from '@/lib/mastering/fileformats'
 import { MasteringEngine } from './engine'
+import { registerDecoder, registerApplied, settleRendered } from './destination'
 import { useMastering, normalizeChain, newTrack, type TrackItem, type LibrarySong, type Target, type Stem } from './store'
 
 // ───────────────────────── 화면 상태(바쁨·알림·내보내기 옵션) ─────────────────────────
@@ -43,6 +44,10 @@ interface Ui {
   preview: { templateId: string; prev: ChainParams } | null
   peaks: Float32Array | null
   processedPeaks: Float32Array | null
+  /** 마지막 템플릿(자동 마스터링) 적용 결과 — 「템플릿 값에서 바뀜」 표시·되돌리기 기준 */
+  templateParams: ChainParams | null
+  /** 내보내기 옵션을 사용자가 직접 바꿨으면 납품처를 바꿔도 덮어쓰지 않는다 */
+  exportManual: boolean
   set: (p: Partial<Omit<Ui, 'set'>>) => void
 }
 
@@ -57,6 +62,8 @@ export const useUi = create<Ui>(set => ({
   preview: null,
   peaks: null,
   processedPeaks: null,
+  templateParams: null,
+  exportManual: false,
   set: p => set(p),
 }))
 
@@ -230,6 +237,7 @@ export async function autoMatch() {
   if (!t) return
   busy('곡 전체를 재며 라우드니스를 맞추는 중')
   try {
+    await settleRendered()
     const dec = await decodeTrack(t)
     const { target, params } = st()
     const res = await autoMatchLoudness(dec.channels, dec.sampleRate, { ...params, listenOriginal: false }, target.lufs, progress, t.edit)
@@ -267,19 +275,20 @@ export async function runAutoMaster(tpl: MasterTemplate): Promise<boolean> {
     const dec = await decodeTrack(t)
     let a = st().srcAnalysis[t.id]
     if (!a) { a = await analyzeAudio(dec.channels, dec.sampleRate, { onProgress: p => progress(p * 0.4) }); st().setSrcAnalysis(t.id, a) }
-    const { params, notes } = autoMaster(a, tpl)
     busy('목표 라우드니스에 맞추는 중', 0.4)
-    const res = await autoMatchLoudness(dec.channels, dec.sampleRate, params, tpl.lufs, p => progress(0.4 + p * 0.6), t.edit)
+    const res = await masterToTarget(dec.channels, dec.sampleRate, a, tpl, { onProgress: p => progress(0.4 + p * 0.6) })
     st().setParams(() => res.params, 'automaster')
+    await refreshProcessedPeaks(t, dec, res.params, p => progress(0.95 + p * 0.05))
     st().setTemplateId(tpl.id)
-    st().setTarget({ id: tpl.id, label: tpl.label, lufs: tpl.lufs, tp: tpl.tp })
-    ui().set({ autoNotes: [...notes, `라우드니스 ${res.integrated.toFixed(1)} LUFS · 트루 피크 ${res.truePeak.toFixed(1)} dBTP 로 맞춤`] })
-    notify('ok', `「${tpl.label}」 기준으로 마스터링했어요 — 목표 음량에 맞췄어요(${res.integrated.toFixed(1)} LUFS).`)
+    st().setTarget({ id: tpl.id, label: tpl.label, lufs: res.targetLufs, tp: tpl.tp })
+    const lowered = res.targetLufs < tpl.lufs - 0.05
+    ui().set({ autoNotes: [...res.notes, `라우드니스 ${res.integrated.toFixed(1)} LUFS · 트루 피크 ${res.truePeak.toFixed(1)} dBTP 로 맞춤${lowered ? ` (다이내믹을 지키려고 목표를 ${res.targetLufs} LUFS 로 낮췄어요)` : ''}`] })
+    notify('ok', `「${tpl.label}」 기준으로 마스터링했어요 — ${lowered ? `곡의 강약을 지키려고 목표를 ${res.targetLufs} LUFS 로 낮춰 ` : '목표 음량에 '}맞췄어요(${res.integrated.toFixed(1)} LUFS).`)
     return true
   } catch (e) { console.error(e); notify('err', '자동 마스터링에 실패했어요. 다시 눌러 주세요.'); return false } finally { done() }
 }
 
-/** 템플릿 미리듣기 — 가장 큰 8초 구간을 반복하며 템플릿을 잠깐 켠다 */
+/** 템플릿 미리듣기 — 가장 큰 10초 구간을 반복하며 템플릿을 잠깐 켠다 */
 export async function previewTemplate(tpl: MasterTemplate) {
   const t = activeTrackNow()
   const eng = getEngine()
@@ -287,9 +296,9 @@ export async function previewTemplate(tpl: MasterTemplate) {
   const cur = ui().preview
   const prev = cur ? cur.prev : st().params
   const a = st().srcAnalysis[t.id]
-  const start = a ? loudestWindow(a, 8) : 0
+  const start = a ? loudestWindow(a, 10) : 0
   useMastering.setState({ params: { ...tpl.build(), listenOriginal: false } })
-  ui().set({ preview: { templateId: tpl.id, prev }, loop: { start, end: start + 8 }, loopOn: true })
+  ui().set({ preview: { templateId: tpl.id, prev }, loop: { start, end: start + 10 }, loopOn: true })
   eng.seek(start)
   await eng.play().catch(() => {})
 }
@@ -303,6 +312,20 @@ export function endPreview(apply: boolean) {
   } else useMastering.setState({ params: pv.prev })
   ui().set({ preview: null, loopOn: false })
 }
+
+/** 타임라인 「녹색=마스터」 겹침 파형 — 적용한 체인으로 한 번 렌더해 채운다(트림 구간이 있으면 비운다) */
+async function refreshProcessedPeaks(t: TrackItem, dec: { channels: Float32Array[]; sampleRate: number }, params: ChainParams, onProgress?: (p: number) => void) {
+  if (t.edit.start || t.edit.end) { ui().set({ processedPeaks: null }); return }
+  try {
+    const r = await renderChain(dec.channels, dec.sampleRate, { ...params, listenOriginal: false }, { edit: t.edit, onProgress })
+    if (r.channels) ui().set({ processedPeaks: computePeaks(r.channels, 4000) })
+  } catch (e) { console.error(e) }
+}
+
+registerApplied((id, dec, params) => {
+  const t = st().tracks.find(x => x.id === id)
+  return t ? refreshProcessedPeaks(t, dec, params) : Promise.resolve()
+})
 
 export async function analyzeOutput() {
   const t = activeTrackNow()
@@ -357,11 +380,12 @@ async function coverBytes(url?: string | null): Promise<TrackMeta['cover']> {
 }
 
 /** 한 곡을 렌더해 파일로 */
-export async function renderTrackFile(t: TrackItem, opts: ExportOpts, onP: (p: number) => void, extra?: { trackNo?: string; noMeta?: boolean }) {
+export async function renderTrackFile(t: TrackItem, opts: ExportOpts, onP: (p: number) => void, extra?: { trackNo?: string; noMeta?: boolean; params?: ChainParams }) {
   const dec = await decodeTrack(t, opts.rate)
   const { loop } = ui()
   const useLoop = opts.range === 'loop' && loop && t.id === st().activeId
-  const base = { ...st().params, listenOriginal: false }
+  // 비교용 원본 듣기·음량 맞춤은 내보내기에 들어가지 않는다
+  const base = { ...(extra?.params ?? st().params), listenOriginal: false, originalTrim: 0 }
   if (opts.format === 'mp3') return renderMp3Safe(t, dec, base, opts, onP, extra)
   const params = base
   const res = await renderChain(dec.channels, dec.sampleRate, params, {
@@ -417,10 +441,10 @@ async function renderMp3Safe(t: TrackItem, dec: DecodedAudio, base: ChainParams,
 }
 
 /** 내보낸 파일을 다시 열어 재측정 */
-export async function measureFile(blob: Blob, name: string, opts: ExportOpts): Promise<ExportReport> {
+export async function measureFile(blob: Blob, name: string, opts: ExportOpts, targetOverride?: Target): Promise<ExportReport> {
   const dec = await decodeAudio(await blob.arrayBuffer(), opts.rate)
   const a = await analyzeAudio(dec.channels, dec.sampleRate, { spectrogramCols: 8 })
-  const target = st().target
+  const target = targetOverride ?? st().target
   return {
     file: name,
     format: opts.format === 'mp3' ? 'MP3 320k' : `WAV ${opts.bits === 32 ? '32f' : opts.bits}bit · ${opts.rate / 1000}kHz`,
@@ -451,6 +475,51 @@ export async function exportActive() {
     const rep = await measureFile(out.blob, name, opts)
     ui().set({ reports: [rep, ...ui().reports].slice(0, 30) })
     notify(rep.pass.loudness && rep.pass.peak ? 'ok' : 'info', `내보냈어요 — ${rep.integrated.toFixed(1)} LUFS · 트루 피크 ${rep.truePeak.toFixed(1)} dBTP · ${rep.pass.loudness && rep.pass.peak ? '목표 합격' : '목표와 차이 있음(리포트 참고)'}`)
+  } catch (e) {
+    if (isCancel(e)) notify('info', '내보내기를 멈췄어요.')
+    else { console.error(e); notify('err', '내보내다 문제가 생겼어요.') }
+  } finally { done() }
+}
+
+/**
+ * 납품처 여러 곳으로 한꺼번에 — 납품처마다 목표 음량·천장에 맞춰 리미터 게인만 다시 맞추고(체인의 다른 값은 그대로) 렌더·내려받기.
+ * 화면의 체인 값은 바꾸지 않는다.
+ */
+export async function exportForDestinations(dests: { id: string; label: string; lufs: number; tp: number; opts: ExportOpts }[]) {
+  const t = activeTrackNow()
+  if (!t || !dests.length) return
+  cancelRef.cancelled = false
+  const manual = ui().exportManual
+  busy('납품처별로 내보내는 중')
+  try {
+    const dec = await decodeTrack(t)
+    for (let i = 0; i < dests.length; i++) {
+      const d = dests[i]
+      const p0 = i / dests.length, span = 1 / dests.length
+      const opts = manual ? ui().exportOpts : d.opts
+      const cur = st().params
+      const base = { ...cur, listenOriginal: false, originalTrim: 0, limiter: { ...cur.limiter, ceiling: d.tp, truePeak: true } }
+      busy(`「${d.label}」 음량을 맞추는 중`, p0)
+      let fit: { params: ChainParams; integrated: number; truePeak: number } = await autoMatchLoudness(dec.channels, dec.sampleRate, base, d.lufs, x => progress(p0 + x * span * 0.15), t.edit)
+      // 할선법 보정 — 목표 ±0.2 안에 들고 트루 피크가 천장을 넘지 않을 때까지(최대 3번)
+      for (let k = 0; k < 3 && !cancelRef.cancelled; k++) {
+        const tpOver = fit.truePeak - d.tp
+        if (Math.abs(fit.integrated - d.lufs) < 0.2 && tpOver <= 0) break
+        let pr = fit.params
+        if (tpOver > 0) pr = { ...pr, limiter: { ...pr.limiter, ceiling: Math.round((pr.limiter.ceiling - tpOver - 0.1) * 10) / 10 } }
+        fit = await refineGain(dec.channels, dec.sampleRate, pr, d.lufs, t.edit)
+        progress(p0 + span * (0.15 + 0.05 * (k + 1)))
+      }
+      busy(`「${d.label}」 파일을 만드는 중`, p0 + span * 0.3)
+      const out = await renderTrackFile(t, opts, x => progress(p0 + span * (0.3 + x * 0.6)), { params: fit.params })
+      const name = `${safe(t.meta.title || t.title)} (마스터링 · ${d.label}).${out.ext}`
+      download(out.blob, name)
+      const rep = await measureFile(out.blob, name, opts, { id: d.id, label: d.label, lufs: d.lufs, tp: d.tp })
+      ui().set({ reports: [rep, ...ui().reports].slice(0, 30) })
+    }
+    const fresh = ui().reports.slice(0, dests.length)
+    const ok = fresh.every(r => r.pass.loudness && r.pass.peak)
+    notify(ok ? 'ok' : 'info', `${dests.length}곳용 파일을 내보냈어요 — ${ok ? '모두 목표 합격' : '목표와 차이 나는 파일이 있어요(아래 줄 참고)'}`)
   } catch (e) {
     if (isCancel(e)) notify('info', '내보내기를 멈췄어요.')
     else { console.error(e); notify('err', '내보내다 문제가 생겼어요.') }
@@ -697,12 +766,38 @@ export async function importPresetFile(file: File): Promise<{ name: string; para
   }
 }
 
+registerDecoder(async id => { const t = st().tracks.find(x => x.id === id); return t ? decodeTrack(t) : null })
+
 export function activeTrackNow(): TrackItem | null {
   const s = st()
   return s.tracks.find(t => t.id === s.activeId) ?? null
 }
 
 export { measureIntegratedLufs }
+
+/**
+ * 자동 마스터링용 분석 — 반복 구간이 켜져 있으면 그 구간만 잘라 재고, 아니면 곡 전체(이미 쟀으면 그 값).
+ * 구간 분석은 곡의 원본 분석(srcAnalysis)을 바꾸지 않는다.
+ */
+export async function analyzeForAuto(): Promise<Analysis | null> {
+  const t = activeTrackNow()
+  if (!t) return null
+  const { loop, loopOn } = ui()
+  const useLoop = !!(loopOn && loop && loop.end - loop.start > 1)
+  if (!useLoop && st().srcAnalysis[t.id]) return st().srcAnalysis[t.id]
+  busy(useLoop ? '반복 구간을 분석하는 중' : '곡을 분석하는 중')
+  try {
+    const dec = await decodeTrack(t)
+    if (useLoop) {
+      const s0 = Math.floor(loop!.start * dec.sampleRate)
+      const s1 = Math.min(dec.channels[0].length, Math.ceil(loop!.end * dec.sampleRate))
+      return await analyzeAudio(dec.channels.map(c => c.subarray(s0, s1)), dec.sampleRate, { onProgress: progress })
+    }
+    const a = await analyzeAudio(dec.channels, dec.sampleRate, { onProgress: progress })
+    st().setSrcAnalysis(t.id, a)
+    return a
+  } catch (e) { console.error(e); notify('err', '곡을 분석하지 못했어요.'); return null } finally { done() }
+}
 
 /** 곡에서 가장 큰 부분부터 재생 (간단 모드 「적용하고 듣기」) */
 export async function playFromLoudest() {

@@ -7,23 +7,34 @@
  *  - 재생: <audio>/스템 → AudioWorklet 마스터 체인(src/lib/mastering/dsp.ts) → 미터·스피커
  *  - 내보내기: 같은 체인을 청크 단위 오프라인 렌더 → WAV(16/24/32f, 디더)·MP3, 태그, ZIP
  *  - 보관함 저장: 결과만 tracks 버킷에 올리고 새 곡으로 기록(원곡은 그대로)
- * 화면은 두 가지: 간단 모드(4단계 + 사진 카드) / 고급 모드(DAW 형태). 상태는 store.ts, 동작은 actions.ts.
+ * 한 화면에서 단계적으로 펼친다: 기본은 초보 흐름(스타일 → 자동 적용 → 노브 → 비교 → 내보내기),
+ * 「전문 설정」을 펼치면 같은 화면에 체인 14 모듈·도구·전체 미터가 나온다. 보기는 「마스터링」/「믹서」 두 가지.
+ * 골격: 메뉴 줄 / 전송 줄 / 타임라인 / 본문 3열(왼쪽 목록 · 가운데 패널 · 오른쪽 미터) / 하단 줄.
+ * 상태는 store.ts, 동작은 actions.ts.
  */
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { X, Loader2, Undo2, Redo2, FileDown, FileUp, Library, FolderOpen } from 'lucide-react'
-import type { ChainParams } from '@/lib/mastering/dsp'
+import { X, Loader2, Undo2, Redo2, FileDown, FileUp, Library, FolderOpen, SlidersHorizontal, AudioWaveform, SlidersVertical, ChevronDown, ChevronRight } from 'lucide-react'
+import type { AutoTarget, ChainParams } from '@/lib/mastering/dsp'
 import { fmtClock } from './mastering/Timeline'
 import { useMastering, readChainLS, normalizeChain, type LibrarySong } from './mastering/store'
 import {
-  useUi, getEngine, cancelRef, addFiles, addLibrarySong, fetchLibrary, saveSession, loadSessionFile, exportPresetFile, importPresetFile,
+  useUi, getEngine, cancelRef, addFiles, addLibrarySong, fetchLibrary, saveSession, loadSessionFile, exportPresetFile, importPresetFile, activate,
 } from './mastering/actions'
-import { SimpleView } from './mastering/SimpleView'
-import { AdvancedView } from './mastering/AdvancedView'
+import { TransportBar, TimelineStrip, WarningsBar, BottomBar, EasyMeters, type ViewCtx } from './mastering/Shell'
+import { StyleList, StyleCenter } from './mastering/StylePanel'
+import { ChainList, ToolList, ToolPanel, StatusLine, TOOLS, type CenterView } from './mastering/ChainList'
+import { ModulePanel } from './mastering/ModulePanel'
+import { MeterColumn } from './mastering/Meters'
+import { MODULE_LABEL } from './mastering/labels'
+import { MixerView } from './mastering/MixerView'
+import { HelpButton } from './mastering/HelpPanel'
+import { Tour } from './mastering/Tour'
 import './mastering/mastering.css'
 
 const LS_PRESETS = 'cm.mastering.userPresets.v1'
 const LS_TARGET = 'cm.mastering.target.v2'
 const LS_MODE = 'cm.mastering.mode.v1'
+const LS_VIEW = 'cm.mastering.view.v1'
 const noopSubscribe = () => () => {}
 const readLS = <T,>(k: string, fallback: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fallback } catch { return fallback } }
 const writeLS = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
@@ -45,7 +56,13 @@ export function MasteringClient() {
   const notice = useUi(s => s.notice)
   const setUi = useUi(s => s.set)
 
-  const [mode, setMode] = useState<'simple' | 'pro'>('simple')
+  /** 전문 설정 펼침 — 저장값 'pro' 면 펼침, 그 밖('simple'·이상값)은 접힘 */
+  const [expanded, setExpanded] = useState(false)
+  const [view, setView] = useState<'master' | 'mixer'>('master')
+  const [center, setCenter] = useState<CenterView>({ kind: 'style' })
+  const [lastPanel, setLastPanel] = useState<CenterView | null>(null)
+  const [autoTarget, setAutoTarget] = useState<AutoTarget | null>(null)
+  const [mono, setMono] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [compare, setCompare] = useState<'a' | 'b' | 'r'>('b')
   const [duration, setDuration] = useState(0)
@@ -68,15 +85,22 @@ export function MasteringClient() {
     const tg = readLS(LS_TARGET, null)
     if (tg) useMastering.getState().setTarget(tg)
     setUserPresets(readLS(LS_PRESETS, []))
-    setMode(readLS<'simple' | 'pro'>(LS_MODE, 'simple'))
+    setExpanded(readLS<unknown>(LS_MODE, 'simple') === 'pro')
+    setView(readLS<unknown>(LS_VIEW, 'master') === 'mixer' ? 'mixer' : 'master')
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
-  const changeMode = (m: 'simple' | 'pro') => { setMode(m); writeLS(LS_MODE, m) }
+  const toggleExpanded = () => {
+    const next = !expanded
+    setExpanded(next); writeLS(LS_MODE, next ? 'pro' : 'simple')
+    if (!next) setCenter({ kind: 'style' })
+  }
+  const changeView = (v: 'master' | 'mixer') => { setView(v); writeLS(LS_VIEW, v) }
+  const openCenter = (v: CenterView) => { setCenter(v); if (v.kind !== 'style') setLastPanel(v) }
 
   // ── 엔진 동기화 ──
   useEffect(() => { engine?.setParams(params) }, [engine, params])
   useEffect(() => { if (active) engine?.setEdit(active.edit) }, [engine, active])
-  useEffect(() => { engine?.setMonitor(monitorDb, muted) }, [engine, monitorDb, muted])
+  useEffect(() => { engine?.setMonitor(monitorDb, muted, mono) }, [engine, monitorDb, muted, mono])
   useEffect(() => { writeLS(LS_TARGET, target) }, [target])
   useEffect(() => {
     if (!engine) return
@@ -181,10 +205,14 @@ export function MasteringClient() {
 
   if (!engine) return <div className="ms h-[480px]" />
 
-  const viewCtx = {
-    engine, playing, compare, setListenMode, togglePlay, counterRef,
-    openLibrary: () => openLibrary(), openFile: () => fileRef.current?.click(),
+  const viewCtx: ViewCtx = {
+    engine, playing, compare, setListenMode, togglePlay, stop, addMarker,
+    openLibrary: () => openLibrary(), openFile: () => fileRef.current?.click(), openReferencePicker: cb => openLibrary(cb),
+    duration: duration || srcA?.duration || 0,
+    matchAB, setMatchAB: v => { setMatchAB(v); if (compare === 'a') setTimeout(() => setListenMode('a'), 0) },
+    monitorDb, setMonitorDb, muted, setMuted, mono, setMono, autoTarget, setAutoTarget, expanded,
   }
+  const panelName = (v: CenterView | null) => (!v ? '' : v.kind === 'slot' ? MODULE_LABEL[v.slot] : v.kind === 'tool' ? TOOLS.find(t => t.id === v.tool)!.label : '')
 
   return (
     <div
@@ -195,20 +223,22 @@ export function MasteringClient() {
       style={dropActive ? { outline: '2px dashed var(--m-green)', outlineOffset: -2 } : undefined}
     >
       {/* 메뉴 줄 */}
-      <div className="ms-menubar flex-wrap" style={{ height: 'auto', minHeight: 32, paddingBlock: 3 }}>
-        <span className="title">마스터링</span>
-        <div className="ms-seg" role="tablist" aria-label="화면 모드">
-          <button type="button" role="tab" aria-selected={mode === 'simple'} aria-pressed={mode === 'simple'} onClick={() => changeMode('simple')}>간단 모드</button>
-          <button type="button" role="tab" aria-selected={mode === 'pro'} aria-pressed={mode === 'pro'} onClick={() => changeMode('pro')}>고급 모드</button>
+      <div className="ms-menubar">
+        <div className="ms-viewtabs" role="tablist" aria-label="보기">
+          <button type="button" role="tab" aria-selected={view === 'master'} onClick={() => changeView('master')}><AudioWaveform className="w-4 h-4" /> 마스터링</button>
+          <button type="button" role="tab" aria-selected={view === 'mixer'} onClick={() => changeView('mixer')}><SlidersVertical className="w-4 h-4" /> 믹서</button>
         </div>
-        <span className="w-2" />
+        <button type="button" className="ms-protoggle" aria-pressed={expanded} onClick={toggleExpanded} title="체인 14 모듈·도구·전체 미터를 같은 화면에 펼쳐요">
+          <SlidersHorizontal className="w-3.5 h-3.5" /> 전문 설정
+        </button>
+        <span className="w-1" />
         <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => openLibrary()}><Library className="w-3.5 h-3.5" /> 보관함</button>
         <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 파일</button>
-        {mode === 'pro' && (
+        {expanded && (
           <>
             <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => sessionRef.current?.click()}><FileUp className="w-3.5 h-3.5" /> 세션 열기</button>
             <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={saveSession} disabled={!tracks.length || !!busy}><FileDown className="w-3.5 h-3.5" /> 세션 저장</button>
-            <select defaultValue="" className="ms-select" style={{ height: 22 }} aria-label="내 프리셋"
+            <select defaultValue="" className="ms-select" aria-label="내 프리셋"
               onChange={e => { const v = e.target.value; e.target.value = ''; if (v === '__save') savePreset(); else if (v === '__export') exportPresetFile('내 마스터링 체인'); else if (v === '__import') presetFileRef.current?.click(); else { const u = userPresets.find(x => x.name === v); if (u) setParams(() => normalizeChain(u.params), 'preset') } }}>
               <option value="">프리셋…</option>
               {userPresets.map(u => <option key={u.name} value={u.name}>{u.name}</option>)}
@@ -220,7 +250,15 @@ export function MasteringClient() {
             <button type="button" className="ms-menubtn" onClick={() => useMastering.getState().redo()} disabled={!canRedo} aria-label="다시 실행 (⇧⌘/Ctrl+Z)" title="다시 실행 (⇧⌘/Ctrl+Z)"><Redo2 className="w-3.5 h-3.5" /></button>
           </>
         )}
-        <span className="ml-auto dim truncate max-w-[40%]">{active ? `${active.meta.title || active.title}${tracks.length > 1 ? ` 외 ${tracks.length - 1}곡` : ''}` : '곡 없음'}</span>
+        <span className="ml-auto min-w-0 max-w-[40%] flex items-center">
+          {tracks.length > 1 ? (
+            <select className="ms-select max-w-full" aria-label="곡 고르기" value={active?.id ?? ''} onChange={e => activate(e.target.value)}>
+              {tracks.map((t, i) => <option key={t.id} value={t.id}>{i + 1}. {t.meta.title || t.title}</option>)}
+            </select>
+          ) : <span className="dim truncate">{active ? active.meta.title || active.title : '곡 없음'}</span>}
+        </span>
+        <HelpButton />
+        <Tour expanded={expanded} />
         <input ref={fileRef} type="file" accept="audio/*,.wav,.mp3,.flac,.aif,.aiff,.m4a" multiple hidden onChange={e => { if (e.target.files) addFiles(Array.from(e.target.files)); e.target.value = '' }} />
         <input ref={sessionRef} type="file" accept=".cmmaster,.zip" hidden onChange={e => { const f = e.target.files?.[0]; if (f) loadSessionFile(f); e.target.value = '' }} />
         <input ref={presetFileRef} type="file" accept="application/json,.json" hidden onChange={async e => {
@@ -234,14 +272,14 @@ export function MasteringClient() {
       {(notice || busy) && (
         <div className="flex flex-col gap-1 px-2 pt-2">
           {notice && (
-            <div role="status" className="flex items-start gap-2 rounded border px-3 py-1.5 text-[12px]"
+            <div role="status" className="flex items-start gap-2 rounded-lg border px-3 py-1.5 text-[12px]"
               style={{ borderColor: notice.kind === 'err' ? 'var(--m-red)' : notice.kind === 'ok' ? 'var(--m-green-dim)' : 'var(--m-line)', background: 'var(--m-panel)' }}>
               <span className="flex-1">{notice.text}</span>
               <button type="button" aria-label="알림 닫기" onClick={() => setUi({ notice: null })} className="dim hover:text-white"><X className="w-4 h-4" /></button>
             </div>
           )}
           {busy && (
-            <div className="flex items-center gap-3 rounded border border-[var(--m-line)] bg-[var(--m-panel)] px-3 py-1.5 text-[12px]">
+            <div className="flex items-center gap-3 rounded-lg border border-[var(--m-line)] bg-[var(--m-panel)] px-3 py-1.5 text-[12px]">
               <Loader2 className="w-4 h-4 animate-spin text-[var(--m-green)]" />
               <span>{busy.label}</span>
               <div className="flex-1 h-1.5 rounded bg-[var(--m-well)] overflow-hidden min-w-[80px]">
@@ -254,13 +292,58 @@ export function MasteringClient() {
         </div>
       )}
 
-      {mode === 'simple'
-        ? <SimpleView ctx={viewCtx} />
-        : <AdvancedView ctx={{ ...viewCtx, stop, addMarker, duration: duration || srcA?.duration || 0, matchAB, setMatchAB: v => { setMatchAB(v); if (compare === 'a') setTimeout(() => setListenMode('a'), 0) }, monitorDb, setMonitorDb, muted, setMuted, openReferencePicker: cb => openLibrary(cb) }} />}
+      <TransportBar ctx={viewCtx} counterRef={counterRef} />
+      <TimelineStrip ctx={viewCtx} />
+
+      {view === 'mixer' ? (
+        <div className="ms-mixerwrap"><MixerView /></div>
+      ) : (
+        <div className="ms-body">
+          {/* 왼쪽: 스타일 · (펼침) 체인 · 도구 */}
+          <aside className="ms-left">
+            <StyleList expanded={expanded} ctx={viewCtx} />
+            <button type="button" className="ms-fold strong" aria-expanded={expanded} onClick={toggleExpanded}>
+              {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />} {expanded ? '전문 설정 접기' : '전문 설정 펼치기(체인 보기)'}
+            </button>
+            {expanded && (
+              <>
+                <ChainList engine={engine} view={center} onOpen={openCenter} />
+                <ToolList view={center} onOpen={openCenter} />
+              </>
+            )}
+          </aside>
+
+          {/* 가운데 */}
+          <main className="ms-center">
+            {(expanded || center.kind !== 'style') && (
+              <nav className="ms-crumbs" role="tablist" aria-label="가운데 패널">
+                <button type="button" role="tab" aria-selected={center.kind === 'style'} onClick={() => setCenter({ kind: 'style' })}>스타일 · 자동</button>
+                {lastPanel && (
+                  <button type="button" role="tab" aria-selected={center.kind !== 'style'} onClick={() => setCenter(lastPanel)}>{panelName(lastPanel)}</button>
+                )}
+              </nav>
+            )}
+            <WarningsBar engine={engine} />
+            {center.kind === 'style' && <StyleCenter ctx={viewCtx} />}
+            {center.kind === 'slot' && <ModulePanel slot={center.slot} p={params} set={fn => setParams(fn, `slot:${center.slot}`)} engine={engine} />}
+            {center.kind === 'tool' && <ToolPanel tool={center.tool} ctx={viewCtx} />}
+          </main>
+
+          {/* 오른쪽: 미터 */}
+          <aside className="ms-right">
+            {expanded
+              ? <MeterColumn engine={engine} targetLufs={target.lufs} ceiling={params.limiter.ceiling} playing={playing} />
+              : <EasyMeters engine={engine} />}
+          </aside>
+        </div>
+      )}
+
+      <BottomBar expanded={expanded} />
+      {expanded && <StatusLine engine={engine} />}
 
       {libraryPick && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="보관함에서 불러오기" onClick={() => setLibraryPick(null)}>
-          <div className="ms w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="ms w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl rounded-lg" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 h-11 border-b border-[var(--m-line-soft)]">
               <h2 className="text-[14px] font-bold">보관함에서 불러오기</h2>
               <button type="button" aria-label="닫기" onClick={() => setLibraryPick(null)} className="dim hover:text-white"><X className="w-4 h-4" /></button>

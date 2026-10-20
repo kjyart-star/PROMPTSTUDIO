@@ -146,7 +146,7 @@ export const useMastering = create<State>((set, get) => {
     params: defaultChain(),
     tracks: [],
     activeId: null,
-    target: { id: 'stream', label: '스트리밍', lufs: -14, tp: -1 },
+    target: { id: 'album', label: '음반 (CD · 디지털 앨범)', lufs: -9, tp: -0.3 }, // 기본 납품처 = 음반(destinations.ts DEFAULT_DESTINATION)
     templateId: null,
     reference: null,
     srcAnalysis: {},

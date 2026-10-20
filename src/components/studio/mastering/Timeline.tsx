@@ -6,7 +6,7 @@
  * 오토메이션 레인: 빈 곳 클릭 = 점 추가, 점 드래그 = 이동, 점 더블클릭 = 삭제.
  * 확대하면 이 영역만 가로로 스크롤된다.
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { evalAuto, fadeShape, type AutoPoint, type AutoTarget, type EditParams } from '@/lib/mastering/dsp'
 import type { ClipEvent } from '@/lib/mastering/analyze'
 import { MONO } from './controls'
@@ -36,7 +36,7 @@ export function fmtClock(t: number, withMs = true) {
 
 export function Timeline({
   peaks, processedPeaks, duration, engine, markers, onMarkers, loop, loopOn, zoom, onSeek, onLoop,
-  edit, onEdit, autoTarget, autoBase, clips,
+  edit, onEdit, autoTarget, autoBase, clips, height = 150,
 }: {
   peaks: Float32Array | null
   processedPeaks?: Float32Array | null
@@ -55,6 +55,8 @@ export function Timeline({
   /** 오토메이션 점이 없을 때 기준값(그 파라미터의 지금 값) */
   autoBase: number
   clips?: ClipEvent[]
+  /** 파형 영역 높이(px) */
+  height?: number
 }) {
   const wrap = useRef<HTMLDivElement>(null)
   const wave = useRef<HTMLCanvasElement>(null)
@@ -100,8 +102,9 @@ export function Timeline({
           g.fillRect(x, mid - mx * (wh / 2), 1, Math.max(1, (mx - mn) * (wh / 2)))
         }
       }
-      if (processedPeaks) drawPeaks(processedPeaks, 'rgba(52,125,215,0.55)')
-      if (peaks) drawPeaks(peaks, 'rgba(20,173,130,0.85)')
+      // 전후 겹침: 원본은 뒤에 희미한 회색, 처리본은 앞에 선명한 녹색
+      if (peaks) drawPeaks(peaks, processedPeaks ? 'rgba(170,175,182,0.32)' : 'rgba(170,175,182,0.6)')
+      if (processedPeaks) drawPeaks(processedPeaks, 'rgba(82,210,126,0.8)')
       if (duration > 0) {
         const X = (t: number) => (t / duration) * w
         // 잘라 낼 앞뒤는 어둡게
@@ -141,10 +144,10 @@ export function Timeline({
     const ro = new ResizeObserver(draw)
     ro.observe(c)
     return () => ro.disconnect()
-  }, [peaks, processedPeaks, duration, zoom, edit, clips])
+  }, [peaks, processedPeaks, duration, zoom, edit, clips, height])
 
   // 오토메이션 레인
-  const pts: AutoPoint[] = autoTarget ? edit.automation[autoTarget] ?? [] : []
+  const pts = useMemo<AutoPoint[]>(() => (autoTarget ? edit.automation[autoTarget] ?? [] : []), [autoTarget, edit.automation])
   const range = autoTarget ? AUTO_RANGE[autoTarget] : AUTO_RANGE.volume
   useEffect(() => {
     const c = lane.current
@@ -218,9 +221,9 @@ export function Timeline({
   const pct = (t: number) => `${(t / Math.max(duration, 1e-6)) * 100}%`
 
   return (
-    <div ref={wrap} className="relative w-full overflow-x-auto overflow-y-hidden rounded-md bg-[#0b0b0b] border border-white/5 custom-scrollbar">
+    <div ref={wrap} className="relative w-full overflow-x-auto overflow-y-hidden rounded-lg bg-[var(--m-well)] border border-[var(--m-line-soft)] custom-scrollbar">
       <div className="relative" style={{ width: `${zoom * 100}%` }}>
-        <div className="relative" style={{ height: 150 }}>
+        <div className="relative" style={{ height }}>
           <canvas
             ref={wave}
             className="absolute inset-0 w-full h-full cursor-text touch-none"

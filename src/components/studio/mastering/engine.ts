@@ -12,7 +12,7 @@ import type { ChainParams, EditParams, MeterSnapshot } from '@/lib/mastering/dsp
 
 export interface StemPlay { buffer: AudioBuffer; gain: number; pan: number; mute: boolean; solo: boolean; eq: { low: number; mid: number; high: number } }
 
-interface StemNodes { src: AudioBufferSourceNode | null; low: BiquadFilterNode; mid: BiquadFilterNode; high: BiquadFilterNode; pan: StereoPannerNode; gain: GainNode; cfg: StemPlay }
+interface StemNodes { src: AudioBufferSourceNode | null; low: BiquadFilterNode; mid: BiquadFilterNode; high: BiquadFilterNode; pan: StereoPannerNode; gain: GainNode; cfg: StemPlay; /** 믹서 레벨 미터용 탭(게인 뒤) */ an?: AnalyserNode }
 
 type Listener = () => void
 
@@ -33,6 +33,9 @@ export class MasteringEngine {
   private edit: EditParams | null = null
   private monitorDb = 0
   private monitorMuted = false
+  private monitorMono = false
+  /** 모노 확인용 — 1채널로 접어(L+R 의 평균) 양쪽 스피커에 같은 소리를 보낸다 */
+  private monoNode: GainNode | null = null
   meters: MeterSnapshot | null = null
   error: string | null = null
   private url: string | null = null
@@ -94,6 +97,10 @@ export class MasteringEngine {
       split.connect(anL, 0); split.connect(anR, 1)
       refSrc.connect(refGain)
       refGain.connect(post); refGain.connect(mon); refGain.connect(split)
+      const mono = ctx.createGain()
+      mono.channelCount = 1; mono.channelCountMode = 'explicit'; mono.channelInterpretation = 'speakers'
+      mono.connect(ctx.destination)
+      this.monoNode = mono
       mon.connect(ctx.destination)
       this.inputBus = bus; this.refGain = refGain
       this.preAnalyser = pre; this.postAnalyser = post; this.monitor = mon; this.anL = anL; this.anR = anR
@@ -161,7 +168,9 @@ export class MasteringEngine {
       const pan = ctx.createStereoPanner()
       const gain = ctx.createGain()
       low.connect(mid); mid.connect(high); high.connect(pan); pan.connect(gain); gain.connect(this.inputBus!)
-      const n: StemNodes = { src: null, low, mid, high, pan, gain, cfg: c }
+      const an = ctx.createAnalyser(); an.fftSize = 256
+      gain.connect(an)
+      const n: StemNodes = { src: null, low, mid, high, pan, gain, cfg: c, an }
       return n
     })
     this.stemDuration = Math.max(0, ...cfg.map(c => c.buffer.duration))
@@ -181,6 +190,19 @@ export class MasteringEngine {
       n.low.gain.value = c.eq.low; n.mid.gain.value = c.eq.mid; n.high.gain.value = c.eq.high
       n.pan.pan.value = Math.max(-1, Math.min(1, c.pan / 100))
       n.gain.gain.value = c.mute || (anySolo && !c.solo) ? 0 : Math.pow(10, c.gain / 20)
+    })
+  }
+
+  /** 스템마다 지금 피크(선형 0~1, 게인·뮤트 뒤) — 믹서 미터용. 멈춰 있으면 0 */
+  private stemBuf: Float32Array<ArrayBuffer> | null = null
+  stemLevels(): number[] {
+    return this.stems.map(n => {
+      if (!n.an || !this.stemPlaying) return 0
+      if (!this.stemBuf || this.stemBuf.length !== n.an.fftSize) this.stemBuf = new Float32Array(n.an.fftSize)
+      n.an.getFloatTimeDomainData(this.stemBuf)
+      let pk = 0
+      for (let i = 0; i < this.stemBuf.length; i++) { const v = Math.abs(this.stemBuf[i]); if (v > pk) pk = v }
+      return pk
     })
   }
 
@@ -237,14 +259,20 @@ export class MasteringEngine {
 
   resetMeters() { this.node?.port.postMessage({ type: 'reset' }) }
 
-  setMonitor(db: number, muted: boolean) {
-    this.monitorDb = db; this.monitorMuted = muted
-    this.applyMonitor()
+  /** 모니터 볼륨·음소거·모노 확인 — 스피커로 가는 소리만 바뀌고 미터·내보내기에는 영향이 없다 */
+  setMonitor(db: number, muted: boolean, mono = false) {
+    const monoChanged = mono !== this.monitorMono
+    this.monitorDb = db; this.monitorMuted = muted; this.monitorMono = mono
+    this.applyMonitor(monoChanged)
   }
-  private applyMonitor() {
+  private applyMonitor(rewire = true) {
     if (!this.monitor || !this.ctx) return
     const g = this.monitorMuted ? 0 : Math.pow(10, this.monitorDb / 20)
     this.monitor.gain.setTargetAtTime(g, this.ctx.currentTime, 0.02)
+    if (rewire && this.monoNode) {
+      try { this.monitor.disconnect() } catch {}
+      this.monitor.connect(this.monitorMono ? this.monoNode : this.ctx.destination)
+    }
   }
 
   private async playMain() {

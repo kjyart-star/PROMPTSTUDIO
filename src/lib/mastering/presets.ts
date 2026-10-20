@@ -85,7 +85,8 @@ export const LOUDNESS_TARGETS: LoudnessTarget[] = [
   { id: 'hifi', label: '고음질 스트리밍', lufs: -16, ceiling: -1 },
   { id: 'podcast', label: '팟캐스트', lufs: -16, ceiling: -1 },
   { id: 'broadcast', label: '방송', lufs: -23, ceiling: -1 },
-  { id: 'cd', label: 'CD · 클럽', lufs: -9, ceiling: -0.3 },
+  { id: 'cd', label: 'CD · 음반', lufs: -9, ceiling: -1 },
+  { id: 'club', label: '클럽 · DJ', lufs: -8, ceiling: -0.3 },
 ]
 
 /** EQ 톤 프리셋 (예전 마스터링 화면의 성향 프리셋을 7밴드 EQ 로 옮김) */

@@ -28,7 +28,7 @@ const BANDS: { key: BandKey; label: string; color: string }[] = [
   { key: 'lpf', label: 'LPF', color: '#9ca3af' },
 ]
 
-export function EqGraph({ eq, onChange }: { eq: EqParams; onChange: (fn: (e: EqParams) => EqParams) => void }) {
+export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (e: EqParams) => EqParams) => void; /** 배경 없이(아래 스펙트럼이 보이게) */ bare?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const drag = useRef<BandKey | null>(null)
   const eqRef = useRef(eq)
@@ -113,7 +113,7 @@ export function EqGraph({ eq, onChange }: { eq: EqParams; onChange: (fn: (e: EqP
   return (
     <canvas
       ref={ref}
-      className="w-full h-[170px] block rounded-md bg-[#0b0b0b] border border-white/5 cursor-crosshair touch-none"
+      className={bare ? 'absolute inset-0 w-full h-full block cursor-crosshair touch-none' : 'w-full h-[170px] block rounded-md bg-[#0b0b0b] border border-white/5 cursor-crosshair touch-none'}
       onPointerDown={e => {
         const k = pick(e)
         if (!k) return

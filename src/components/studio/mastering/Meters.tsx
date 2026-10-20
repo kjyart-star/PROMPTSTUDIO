@@ -4,11 +4,14 @@
  * 오른쪽 미터 열 — 입력/출력 피크·RMS, LUFS(모멘터리·단기·통합), 트루 피크,
  * 게인 리덕션, 스펙트럼, 상관(위상) 미터. 화면 갱신은 rAF 로 캔버스에 직접 그린다.
  */
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import type { MasteringEngine } from './engine'
 import { MONO } from './controls'
+import { METER_HELP, loudTone, peakTone } from './labels'
 
 const DB_MIN = -60
+/** 미터 열 최대 높이 — 본문 3열이 이 높이 안에 들어오게 */
+export const METER_COL_MAX_H = 374
 
 const lin2db = (x: number) => (x > 1e-9 ? 20 * Math.log10(x) : -200)
 const fmt = (v: number, d = 1) => (Number.isFinite(v) && v > -150 ? v.toFixed(d) : '-∞')
@@ -252,9 +255,9 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         setT('m', fmt(m?.momentary ?? -Infinity))
         setT('s', fmt(m?.shortTerm ?? -Infinity))
         const integ = m?.integrated ?? -Infinity
-        setT('i', fmt(integ), Number.isFinite(integ) && Math.abs(integ - tgt) <= 1 ? '#34d399' : '#e4e4e4')
+        setT('i', fmt(integ), Number.isFinite(integ) ? loudTone(integ, tgt) : '#e4e4e4')
         const tp = m?.truePeakMax ?? -Infinity
-        setT('tp', fmt(tp), tp > ceil + 0.05 ? '#ef4444' : '#e4e4e4')
+        setT('tp', fmt(tp), Number.isFinite(tp) && tp > -150 ? peakTone(tp, ceil) : '#e4e4e4')
         setT('corr', m ? m.correlation.toFixed(2) : '—')
         setT('lra', m && m.lra > 0 ? m.lra.toFixed(1) : '—')
         setT('psr', m && Number.isFinite(m.psr) && m.psr < 60 ? m.psr.toFixed(1) : '—')
@@ -267,81 +270,73 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
     return () => cancelAnimationFrame(raf)
   }, [engine])
 
-  const reg = (k: string) => (el: HTMLSpanElement | null) => { txt.current[k] = el }
+  // 숫자 칸은 data-k 로 찾아 rAF 에서 직접 바꾼다
+  const reg = useCallback((el: HTMLSpanElement | null) => { if (el?.dataset.k) txt.current[el.dataset.k] = el }, [])
 
+  // 높이 고정형(METER_COL_MAX_H 안) — 레벨·라우드니스 2열, 수치 한 줄, 누름, 스펙트럼 옆에 고니오·상관
   return (
-    <div className="flex flex-col gap-2 min-w-0">
-      <Section title="레벨">
-        <canvas ref={lvRef} className="w-full h-[150px] block" />
-        <div className="grid grid-cols-2 text-[10px] text-zinc-500 mt-1" style={MONO}>
-          <span>입력 <span ref={reg('inpk')} className="text-zinc-200">-∞</span></span>
-          <span className="text-right">출력 <span ref={reg('outpk')} className="text-zinc-200">-∞</span></span>
+    <div className="ms-meters flex flex-col gap-1 min-w-0" style={{ maxHeight: METER_COL_MAX_H, overflowY: 'auto' }} data-testid="meter-column">
+      <div className="grid grid-cols-2 gap-1">
+        <Section title="레벨" help={METER_HELP.level}>
+          <canvas ref={lvRef} className="w-full h-[80px] block" />
+          <div className="grid grid-cols-2 text-[10px] leading-[12px] text-zinc-500 mt-0.5" style={MONO}>
+            <span title="입력 피크">입 <span ref={reg} data-k="inpk" className="text-zinc-200">-∞</span></span>
+            <span className="text-right" title="출력 피크">출 <span ref={reg} data-k="outpk" className="text-zinc-200">-∞</span></span>
+          </div>
+        </Section>
+        <Section title="라우드니스" help={`${METER_HELP.lufs} 타깃 ${targetLufs} LUFS`} right={<span className="text-[9px] text-zinc-500" style={MONO} title="타깃(LUFS)">{targetLufs}</span>}>
+          <canvas ref={ldRef} className="w-full h-[80px] block" />
+          <div className="grid grid-cols-3 text-[10px] leading-[12px] text-zinc-200 mt-0.5" style={MONO}>
+            <span ref={reg} data-k="m" title="순간(M) LUFS">-∞</span>
+            <span ref={reg} data-k="s" title="단기(S) LUFS">-∞</span>
+            <span ref={reg} data-k="i" title="통합(I) LUFS" className="font-semibold text-white">-∞</span>
+          </div>
+        </Section>
+      </div>
+      <Section title="" help={`트루 피크: ${METER_HELP.tp} · LRA: ${METER_HELP.lra}`}>
+        <div className="grid grid-cols-4 gap-1" style={MONO}>
+          <MiniStat label="피크" k="tp" unit="dBTP" reg={reg} help={METER_HELP.tp} />
+          <MiniStat label="LRA" k="lra" unit="LU" reg={reg} help={METER_HELP.lra} />
+          <MiniStat label="PSR" k="psr" unit="dB" reg={reg} help={METER_HELP.psr} />
+          <MiniStat label="PLR" k="plr" unit="dB" reg={reg} help={METER_HELP.plr} />
         </div>
       </Section>
-      <Section title="라우드니스" right={<span className="text-[10px] text-zinc-500" style={MONO}>타깃 {targetLufs}</span>}>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <canvas ref={ldRef} className="w-full h-[110px] block" />
-          <div className="flex flex-col justify-between text-right" style={MONO}>
-            <Readout label="통합" k="i" reg={reg} big />
-            <Readout label="단기" k="s" reg={reg} />
-            <Readout label="순간" k="m" reg={reg} />
+      <Section title="게인 리덕션(누르는 양)" help={METER_HELP.gr}>
+        <canvas ref={grRef} className="w-full h-[50px] block" />
+      </Section>
+      <Section title="스펙트럼 · 고니오 · 위상 상관" help={`스펙트럼: ${METER_HELP.spectrum} · 고니오미터: ${METER_HELP.gonio} · 위상 상관: ${METER_HELP.corr}`}
+        right={<span ref={reg} data-k="corr" className="text-[10px] text-zinc-200" style={MONO} title="위상 상관">—</span>}>
+        <div className="flex gap-1.5">
+          <canvas ref={spRef} className="flex-1 min-w-0 h-[90px] block" aria-label="스펙트럼" />
+          <div className="flex flex-col gap-1.5 flex-none w-[52px]">
+            <canvas ref={goRef} className="w-[52px] h-[52px] block" aria-label="고니오미터" />
+            <canvas ref={crRef} className="w-[52px] h-[30px] block" aria-label="위상 상관" />
           </div>
         </div>
-        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/5 text-[10px]" style={MONO}>
-          <span className="text-zinc-500">트루 피크 최대</span>
-          <span><span ref={reg('tp')} className="text-zinc-100 text-[12px]">-∞</span><span className="text-zinc-500 ml-1">dBTP</span></span>
-        </div>
-      </Section>
-      <Section title="다이내믹">
-        <div className="grid grid-cols-3 gap-1 text-center" style={MONO}>
-          <MiniStat label="LRA" k="lra" unit="LU" reg={reg} />
-          <MiniStat label="PSR" k="psr" unit="dB" reg={reg} />
-          <MiniStat label="PLR" k="plr" unit="dB" reg={reg} />
-        </div>
-      </Section>
-      <Section title="게인 리덕션">
-        <canvas ref={grRef} className="w-full h-[80px] block" />
-      </Section>
-      <Section title="스펙트럼">
-        <canvas ref={spRef} className="w-full h-[96px] block" />
-      </Section>
-      <Section title="고니오미터">
-        <canvas ref={goRef} className="w-full aspect-square max-h-[180px] block" />
-      </Section>
-      <Section title="위상 상관" right={<span ref={reg('corr')} className="text-[11px] text-zinc-200" style={MONO}>—</span>}>
-        <canvas ref={crRef} className="w-full h-[26px] block" />
       </Section>
     </div>
   )
 }
 
-function MiniStat({ label, k, unit, reg }: { label: string; k: string; unit: string; reg: (k: string) => (el: HTMLSpanElement | null) => void }) {
+function MiniStat({ label, k, unit, reg, help }: { label: string; k: string; unit: string; reg: (el: HTMLSpanElement | null) => void; help?: string }) {
   return (
-    <div className="rounded bg-black/40 py-1">
-      <div className="text-[9px] text-zinc-500">{label}</div>
-      <span ref={reg(k)} className="text-[12px] text-zinc-100">—</span>
-      <span className="text-[8px] text-zinc-500 ml-0.5">{unit}</span>
+    <div className="rounded-md bg-black/40 px-1 py-0.5 min-w-0 flex items-baseline justify-between gap-0.5 text-[10px] leading-[14px]" title={help ? `${label} (${unit}) — ${help}` : `${label} (${unit})`}>
+      <span className="text-[9px] text-zinc-500">{label}</span>
+      <span ref={reg} data-k={k} className="text-zinc-100 truncate">—</span>
     </div>
   )
 }
 
-function Readout({ label, k, reg, big }: { label: string; k: string; reg: (k: string) => (el: HTMLSpanElement | null) => void; big?: boolean }) {
+export function Section({ title, right, children, className, help }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string; help?: string }) {
+  // 설명은 마우스를 올리면 보여요(열 높이를 고정하려고 본문에서는 뺐다)
   return (
-    <div className="leading-tight">
-      <div className="text-[9px] text-zinc-500">{label}</div>
-      <span ref={reg(k)} className={big ? 'text-[18px] font-semibold text-white' : 'text-[13px] text-zinc-200'}>-∞</span>
-      <span className="text-[9px] text-zinc-500 ml-0.5">LUFS</span>
-    </div>
-  )
-}
-
-export function Section({ title, right, children, className }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-lg border border-white/[0.07] bg-[#121212] p-2 ${className ?? ''}`}>
-      <header className="flex items-center justify-between mb-1.5">
-        <h3 className="text-[10px] font-semibold tracking-wide text-zinc-400">{title}</h3>
-        {right}
-      </header>
+    <section className={`rounded-lg border border-[var(--m-line-soft)] bg-[var(--m-well)] p-1.5 min-w-0 ${className ?? ''}`} title={help}>
+      {(title || right) && (
+        <header className="flex items-center justify-between gap-1 mb-0.5 min-w-0">
+          <h3 className="text-[10px] leading-[12px] font-semibold text-[var(--m-dim)] truncate">{title}</h3>
+          {right}
+        </header>
+      )}
       {children}
     </section>
   )

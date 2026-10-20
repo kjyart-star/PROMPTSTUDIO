@@ -7,9 +7,9 @@
  */
 import { MATCH_FREQS, type ChainParams } from './dsp'
 import { defaultChain } from './presets'
-import { TEMPLATES, type MasterTemplate, type ToneTarget } from './templates'
+import { TEMPLATES, plrLossOf, type MasterTemplate, type ToneTarget } from './templates'
 import { normalizeBands, type Analysis } from './analyze'
-import { toneTargetDb } from './automaster'
+import { toneTargetDb, autoMaster } from './automaster'
 
 export type UseId = 'use-stream' | 'use-video' | 'use-broadcast' | 'use-podcast' | 'use-club' | 'use-cd' | 'use-shorts' | 'use-bgm'
 export type TextureId = 'none' | 'tex-warm' | 'tex-bright' | 'tex-punch' | 'tex-wide' | 'tex-vintage' | 'tex-clean'
@@ -98,7 +98,12 @@ function applyUse(c: ChainParams, use: UseId) {
       break
     case 'use-bgm':
     case 'use-broadcast':
-      if (use === 'use-bgm') c.eq.mf = { ...c.eq.mf, on: true, freq: 2000, gain: Math.min(c.eq.mf.gain, -2) }
+      // 배경음악 모드 — 대사와 섞일 전제: 과한 압축·리미팅 금지, 넓은 다이내믹, 대사 대역(1~4kHz) 살짝 비우기
+      c.eq.mf = { ...c.eq.mf, on: true, freq: 2000, gain: Math.min(c.eq.mf.gain, use === 'use-bgm' ? -2 : -1.5) }
+      c.comp = { ...c.comp, ratio: Math.min(c.comp.ratio, 2) }
+      c.bypass.multiband = true
+      c.bypass.clipper = true
+      c.limiter = { ...c.limiter, gain: Math.min(c.limiter.gain, 2) }
       break
     case 'use-club':
       c.stereo.bassMono = Math.max(c.stereo.bassMono, 150)
@@ -148,6 +153,13 @@ function textureTone(t: ToneTarget, tex: TextureId | null): ToneTarget {
   }
 }
 
+/** 조합의 PLR 감소 허용치 — 크게 만드는 용도(클럽·음반)는 용도 값, 그 밖엔 용도·장르 중 엄격한 쪽 */
+function comboPlrLoss(use: MasterTemplate | null, genre: MasterTemplate | null): number | undefined {
+  if (!use && !genre) return undefined
+  if (use && (use.id === 'use-club' || use.id === 'use-cd')) return plrLossOf(use)
+  return Math.min(use ? plrLossOf(use) : Infinity, genre ? plrLossOf(genre) : Infinity)
+}
+
 /** 고른 조합을 템플릿 한 개처럼 만든다 (자동 마스터링이 그대로 받는다) */
 export function composeChoice(ch: Choice): MasterTemplate {
   const use = byId(ch.use), genre = byId(ch.genre)
@@ -158,10 +170,10 @@ export function composeChoice(ch: Choice): MasterTemplate {
   const label = [use && USE_CARDS.find(u => u.id === ch.use)?.title, genre?.label, tex && TEXTURE_CARDS.find(t => t.id === tex)?.title].filter(Boolean).join(' · ') || '기본'
   return {
     id: `combo:${ch.use ?? '-'}:${ch.genre ?? '-'}:${ch.texture ?? '-'}`,
-    label, category: 'genre', why: label, lufs, tp, tone, tags: [],
+    label, category: 'genre', why: label, lufs, tp, tone, tags: [], plrLoss: comboPlrLoss(use, genre),
     build: () => {
       const c = genre ? genre.build() : use ? use.build() : defaultChain()
-      if (use && genre) applyUse(c, ch.use!)
+      if (use) applyUse(c, ch.use!)
       if (tex) applyTexture(c, tex)
       c.limiter.ceiling = tp
       return c
@@ -209,3 +221,59 @@ export function loudnessWords(now: number, target: number): { text: string; tone
 
 export const templatePlain = (id: string) =>
   GENRE_PLAIN[id] ?? USE_CARDS.find(u => u.id === id)?.plain ?? TEXTURE_CARDS.find(t => t.id === id)?.plain ?? ''
+
+// ───────────────────────── 간단 모드: 스타일 카드 하나 + 강도 하나 ─────────────────────────
+
+export interface SimpleStyle { id: string; title: string; plain: string; image: string; genre: string; texture: TextureId | null }
+
+export const SIMPLE_STYLES: SimpleStyle[] = [
+  { id: 'pop', title: '팝 · K팝', plain: GENRE_PLAIN['pop'], image: 'genre-pop', genre: 'pop', texture: null },
+  { id: 'hiphop', title: '힙합 · R&B', plain: GENRE_PLAIN['hiphop'], image: 'genre-hiphop', genre: 'hiphop', texture: null },
+  { id: 'edm-house', title: '전자 · 클럽', plain: GENRE_PLAIN['edm-house'], image: 'genre-electronic', genre: 'edm-house', texture: null },
+  { id: 'rock', title: '록 · 밴드', plain: GENRE_PLAIN['rock'], image: 'genre-rock', genre: 'rock', texture: null },
+  { id: 'indie-acoustic', title: '어쿠스틱 · 재즈', plain: GENRE_PLAIN['indie-acoustic'], image: 'genre-acoustic', genre: 'indie-acoustic', texture: null },
+  { id: 'cinematic', title: '영화 · OST', plain: GENRE_PLAIN['cinematic'], image: 'genre-classical', genre: 'cinematic', texture: null },
+  { id: 'vocal', title: '목소리 · 팟캐스트', plain: '말소리가 또렷하고 숨소리·치찰음은 부드러워요', image: 'use-podcast', genre: 'vocal', texture: 'tex-clean' },
+  { id: 'drama-bgm', title: '영상 배경음악', plain: GENRE_PLAIN['drama-bgm'], image: 'use-bgm', genre: 'drama-bgm', texture: null },
+]
+
+/** 내보내기 목표(LOUDNESS_TARGETS id) → 용도 */
+export const TARGET_USE: Record<string, UseId> = {
+  stream: 'use-stream', video: 'use-video', hifi: 'use-stream', podcast: 'use-podcast',
+  broadcast: 'use-broadcast', cd: 'use-cd', club: 'use-club',
+}
+
+const KEEP_FULL = new Set(['order', 'bypass', 'limiter', 'listenOriginal', 'originalTrim'])
+
+function lerpAny(a: unknown, b: unknown, t: number): unknown {
+  if (typeof b === 'number') return typeof a === 'number' ? a + (b - a) * t : b
+  if (Array.isArray(b)) return Array.isArray(a) && a.length === b.length ? b.map((v, i) => lerpAny(a[i], v, t)) : b
+  if (b && typeof b === 'object') {
+    const o: Record<string, unknown> = {}
+    for (const k of Object.keys(b)) o[k] = lerpAny((a as Record<string, unknown> | undefined)?.[k], (b as Record<string, unknown>)[k], t)
+    return o
+  }
+  return b
+}
+
+/** neutral(손 안 댄 체인)에서 full 까지 t(0~1)만큼 — 음량 목표(리미터 등)는 강도와 무관하게 full 그대로 */
+export function blendChain(neutral: ChainParams, full: ChainParams, t: number): ChainParams {
+  const k = Math.max(0, Math.min(1, Number.isFinite(t) ? t : 0))
+  const out: Record<string, unknown> = {}
+  for (const key of Object.keys(full) as (keyof ChainParams)[]) {
+    out[key] = KEEP_FULL.has(key) ? structuredClone(full[key]) : lerpAny(neutral[key], full[key], k)
+  }
+  const c = out as unknown as ChainParams
+  // 필터 기울기는 12·24·36·48 중 하나여야 한다 — 중간값은 가까운 쪽으로
+  const snap = (v: number) => [12, 24, 36, 48].reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a)) as 12 | 24 | 36 | 48
+  c.eq = { ...c.eq, hpf: { ...c.eq.hpf, slope: snap(c.eq.hpf.slope) }, lpf: { ...c.eq.lpf, slope: snap(c.eq.lpf.slope) } }
+  return c
+}
+
+/** 스타일 카드 + 내보내기 목표 + 강도(0~100) → 체인 */
+/** full: 렌더로 맞춘 풀 체인(masterToTarget 결과)이 있으면 예측 대신 그걸 쓴다 */
+export function simpleChain(style: SimpleStyle, targetId: string, strength: number, src?: Analysis | null, full0?: ChainParams): { tpl: MasterTemplate; params: ChainParams } {
+  const tpl = composeChoice({ use: TARGET_USE[targetId] ?? 'use-stream', genre: style.genre, texture: style.texture })
+  const full = full0 ?? (src ? autoMaster(src, tpl).params : tpl.build())
+  return { tpl, params: blendChain(defaultChain(), full, strength / 100) }
+}

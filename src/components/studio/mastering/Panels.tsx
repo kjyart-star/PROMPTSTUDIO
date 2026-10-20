@@ -48,7 +48,7 @@ export function TemplatesPanel() {
     <div className="flex flex-col gap-2">
       {pv && (
         <div className="rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 flex flex-wrap items-center gap-2 text-[12px]">
-          <span className="text-amber-100">「{pv.label}」 미리듣기 — 곡에서 가장 큰 8초를 반복해요</span>
+          <span className="text-amber-100">「{pv.label}」 미리듣기 — 곡에서 가장 큰 10초를 반복해요</span>
           <Segmented size="xs" value={listenOriginal ? 'a' : 'b'} onChange={v => useMastering.setState(s => ({ params: { ...s.params, listenOriginal: v === 'a', originalTrim: 0 } }))}
             options={[{ value: 'a', label: 'A 원본' }, { value: 'b', label: 'B 템플릿' }]} />
           <button type="button" className={btnPrimary} onClick={() => endPreview(true)}><Check className="w-3.5 h-3.5" /> 적용</button>
@@ -89,7 +89,7 @@ function TemplateCard({ t, fav, onFav, active, previewing, disabled }: { t: Mast
       </div>
       <p className="text-[11px] text-zinc-400 leading-snug">{t.why}</p>
       <div className="flex flex-wrap gap-1 mt-auto">
-        <button type="button" className={btn} disabled={disabled} onClick={() => previewTemplate(t)} aria-label={`${t.label} 미리듣기`}><Play className="w-3 h-3" /> 8초 듣기</button>
+        <button type="button" className={btn} disabled={disabled} onClick={() => previewTemplate(t)} aria-label={`${t.label} 미리듣기`}><Play className="w-3 h-3" /> 10초 듣기</button>
         <button type="button" className={btn} disabled={disabled} onClick={() => applyTemplate(t)} aria-label={`${t.label} 적용`}>적용</button>
         <button type="button" className={btnPrimary} disabled={disabled} onClick={() => runAutoMaster(t)} aria-label={`${t.label} 템플릿과 곡 분석으로 자동 마스터링`}><Wand2 className="w-3 h-3" /> 분석+자동</button>
       </div>

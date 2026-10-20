@@ -1,0 +1,24 @@
+/* ── 믹서 ── 트랙별 세로 채널 스트립을 가로로 나란히(가로 스크롤 없음) */
+.ms-mixer { display: flex; flex-direction: column; border-top: 1px solid var(--m-line-soft); background: var(--m-bg); min-width: 0; }
+.ms-mixbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px; border-bottom: 1px solid var(--m-line-soft); background: var(--m-panel); }
+.ms-mixrow { display: flex; flex-wrap: nowrap; align-items: stretch; gap: 4px; padding: 6px; overflow: hidden; min-width: 0; }
+.ms-mixrow .ms-strip { flex: 1 1 140px; min-width: 108px; max-width: 150px; height: auto; border: 1px solid var(--m-line-soft); border-radius: 6px; }
+.ms-mixrow .ms-strip.folded { flex: 0 1 72px; min-width: 64px; max-width: 80px; }
+.ms-mixrow .ms-strip.master { flex: 0 0 150px; max-width: 150px; margin-left: auto; border-color: var(--m-line); }
+.ms-mixrow .ms-strip h4 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ms-mixrow .ms-strip .sub { font-size: 10px; font-weight: 700; color: var(--m-dim); }
+.ms-mixrow .ms-slot { text-align: left; padding: 0 4px; }
+.ms-mixrow .ms-slot.flat { background: var(--m-well); color: var(--m-dim); border-color: var(--m-line-soft); }
+.ms-mixrow .ms-sm button.mute[aria-pressed='true'] { background: var(--m-amber); border-color: var(--m-amber); color: #1c1d1f; }
+.ms-mixrow .ms-nametag { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.ms-fm { display: flex; justify-content: center; align-items: flex-end; gap: 4px; }
+.ms-fm canvas { display: block; width: 12px; border-radius: 2px; background: var(--m-well); }
+.ms-fm canvas.st { width: 18px; }
+.ms-mixempty { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; padding: 16px 20px; border: 1px dashed var(--m-line); border-radius: 6px; background: var(--m-panel); }
+.ms-mixempty p { font-size: 13px; color: var(--m-text); word-break: keep-all; }
+.ms-mixempty p.dim { font-size: 12px; }
+.ms-mixdock { border-top: 1px solid var(--m-line-soft); background: var(--m-panel); padding: 8px 10px; }
+.ms-mixdock-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ms-mixdock-head h3 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 접어도 창이 좁아 다 못 들어가면 다음 줄로(잘려 안 보이는 스트립이 없게) */
+.ms-mixrow:has(> .ms-strip.folded) { flex-wrap: wrap; row-gap: 4px; }

@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { composeChoice, USE_CARDS, GENRE_GROUPS, TEXTURE_CARDS, GENRE_PLAIN, changeBars, recommendGenres, loudnessWords, type Choice } from './compose'
+import { composeChoice, USE_CARDS, GENRE_GROUPS, TEXTURE_CARDS, GENRE_PLAIN, changeBars, recommendGenres, loudnessWords, SIMPLE_STYLES, TARGET_USE, blendChain, simpleChain, imageSrc, type Choice } from './compose'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { defaultChain, LOUDNESS_TARGETS } from './presets'
 import { TEMPLATES } from './templates'
 import { autoMatchLoudness } from './render'
 import { analyzeAudio } from './analyze'
@@ -82,5 +85,38 @@ describe('간단 모드 조합', () => {
     expect(loudnessWords(-20, -14).text).toBe('많이 작아요')
     expect(loudnessWords(-12, -14).text).toBe('조금 커요')
     expect(dbToLin(0)).toBe(1)
+  })
+})
+
+describe('간단 모드 스타일 카드 + 강도', () => {
+  it('스타일 8장이 유효하고 이미지가 실제로 있다', () => {
+    expect(SIMPLE_STYLES.length).toBe(8)
+    for (const s of SIMPLE_STYLES) {
+      const t = composeChoice({ use: 'use-stream', genre: s.genre, texture: s.texture })
+      expect(Number.isFinite(t.build().limiter.gain)).toBe(true)
+      expect(s.plain.length).toBeGreaterThan(5)
+      expect(existsSync(join(process.cwd(), 'public', imageSrc(s.image)))).toBe(true)
+    }
+  })
+  it('TARGET_USE 가 모든 음량 목표를 덮는다', () => {
+    for (const t of LOUDNESS_TARGETS) expect(TARGET_USE[t.id]).toBeTruthy()
+  })
+  it('blendChain: t=0 은 neutral 톤·폭, limiter 는 full / t=1 은 full / t=0.5 는 중간', () => {
+    const neutral = defaultChain()
+    const full = simpleChain(SIMPLE_STYLES[2], 'club', 100).params
+    const c0 = blendChain(neutral, full, 0), c1 = blendChain(neutral, full, 1), ch = blendChain(neutral, full, 0.5)
+    expect(c0.eq.hf.gain).toBe(neutral.eq.hf.gain)
+    expect(c0.saturation.drive).toBe(neutral.saturation.drive)
+    expect(c0.stereo.width).toBe(neutral.stereo.width)
+    expect(c0.limiter).toEqual(full.limiter)
+    expect(c1).toEqual(full)
+    expect(ch.eq.hf.gain).toBeCloseTo((neutral.eq.hf.gain + full.eq.hf.gain) / 2, 6)
+    expect(ch.stereo.width).toBeCloseTo((neutral.stereo.width + full.stereo.width) / 2, 6)
+    expect(blendChain(neutral, full, 9)).toEqual(full)
+  })
+  it('simpleChain: 목표 천장과 음량이 강도와 무관하게 적용', () => {
+    const a = simpleChain(SIMPLE_STYLES[0], 'club', 0), b = simpleChain(SIMPLE_STYLES[0], 'club', 100)
+    expect(a.params.limiter).toEqual(b.params.limiter)
+    expect(a.tpl.lufs).toBe(-8)
   })
 })
