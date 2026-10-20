@@ -27,12 +27,12 @@ export function StudioHeader({
   projectTitle = 'CookieMusic Studio Project',
   setProjectTitle
 }: StudioHeaderProps) {
-  // 참고 이미지와 100% 동일한 탭 순서: 음악 프롬프트 -> 음악 생성 -> 보관함 -> AI 커버 스튜디오 -> 마스터링
+  // 참고 이미지와 100% 동일한 탭 순서: 음악 프롬프트 -> 음악 생성 -> 보관함 -> AI 커버 -> 마스터링
   const tabs = [
     { id: 'studio' as const, label: '음악 프롬프트', icon: Wand2 },
     { id: 'suno' as const, label: '음악 생성', icon: Music },
     { id: 'library' as const, label: '보관함', icon: HardDrive },
-    { id: 'cover' as const, label: 'AI 커버 스튜디오', icon: ImageIcon },
+    { id: 'cover' as const, label: 'AI 커버', icon: ImageIcon },
     { id: 'mastering' as const, label: '마스터링', icon: Volume2 },
   ]
 

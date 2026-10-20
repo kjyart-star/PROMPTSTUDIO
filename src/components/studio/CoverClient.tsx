@@ -286,11 +286,11 @@ export function CoverClient({ user }: CoverClientProps) {
         }
         title={
           uiLanguage === 'KO' ? (
-            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">커버 스튜디오</span></>
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">커버</span></>
           ) : uiLanguage === 'JA' ? (
-            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">カバースタジオ</span></>
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">カバー</span></>
           ) : (
-            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">COVER STUDIO</span></>
+            <>AI <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">COVER</span></>
           )
         }
         desc={
