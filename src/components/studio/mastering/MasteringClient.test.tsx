@@ -251,3 +251,24 @@ describe('마스터링 화면 — 한 화면 단계적 펼침', () => {
     expect(tabs.map(t => t.textContent?.trim())).toEqual(['마스터링', '믹서'])
   })
 })
+
+describe('마스터링 화면 — 옛 저장값', () => {
+  it('목록에 없는 옛 납품처 id 는 음반으로 바로잡고 저장값도 갱신한다', () => {
+    mem['cm.mastering.target.v2'] = JSON.stringify({ id: 'combo:use-cd:pop:-', label: 'CD · 음반 · 팝', lufs: -9, tp: -0.3 })
+    mem['cm.mastering.mode.v1'] = '"pro"'
+    render(<MasteringClient />)
+    expect(useMastering.getState().target.id).toBe('album')
+    const group = screen.getByRole('group', { name: '어디에 쓸 곡인가요' })
+    const on = within(group).getAllByRole('button').filter(b => b.getAttribute('aria-pressed') === 'true')
+    expect(on).toHaveLength(1)
+    expect(on[0].textContent).toMatch(/^음반/)
+    expect(JSON.parse(mem['cm.mastering.target.v2']).id).toBe('album')
+  })
+
+  it('사용자가 직접 지정한 음량(custom)은 음반으로 덮지 않고 유지한다', () => {
+    mem['cm.mastering.target.v2'] = JSON.stringify({ id: 'custom', label: '직접 지정', lufs: -11.5, tp: -1 })
+    render(<MasteringClient />)
+    expect(useMastering.getState().target.id).toBe('custom')
+    expect(useMastering.getState().target.lufs).toBe(-11.5)
+  })
+})

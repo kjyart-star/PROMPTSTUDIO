@@ -112,19 +112,22 @@ const isStyleApplied = (tid: string | null) => !!tid && tid.startsWith('style:')
 
 const autoDone = new Set<string>()
 
-export function StyleList({ expanded, ctx }: { expanded: boolean; ctx: ViewCtx }) {
+export function StyleList({ ctx }: { expanded?: boolean; ctx: ViewCtx }) {
   const pick = useStyleSel(s => s.pick)
   const activeId = useMastering(s => s.activeId)
   const src = useMastering(s => (s.activeId ? s.srcAnalysis[s.activeId] : undefined))
   const [more, setMore] = useState(false)
   const auto = useMemo(() => resolveStyle({ kind: 'auto' }, src), [src])
 
-  // 원클릭: 곡 분석이 끝나면 한 번 자동 적용하고 바로 재생(전문 설정을 펼쳐 둔 동안은 손대지 않는다)
+  // 원클릭: 곡 분석이 끝나면 한 번 자동 적용하고 바로 재생(저장된 모드와 무관하게 곡마다 1회)
   useEffect(() => {
-    if (!activeId || !src || expanded || autoDone.has(activeId)) return
+    if (!activeId || !src || autoDone.has(activeId)) return
     autoDone.add(activeId)
-    void oneClickMaster(src)
-  }, [activeId, src, expanded])
+    oneClickMaster(src).catch(e => {
+      console.error(e)
+      useUi.getState().set({ notice: { kind: 'err', text: '자동으로 맞추지 못했어요. 스타일을 눌러 다시 시도해 주세요.' } })
+    })
+  }, [activeId, src])
 
   const choose = (p: StylePick) => {
     useStyleSel.getState().set({ pick: p })

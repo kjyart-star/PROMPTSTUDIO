@@ -29,6 +29,7 @@ import { MODULE_LABEL } from './mastering/labels'
 import { MixerView } from './mastering/MixerView'
 import { HelpButton } from './mastering/HelpPanel'
 import { Tour } from './mastering/Tour'
+import { destById, DEFAULT_DEST } from './mastering/destination'
 import './mastering/mastering.css'
 
 const LS_PRESETS = 'cm.mastering.userPresets.v1'
@@ -82,8 +83,13 @@ export function MasteringClient() {
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- 브라우저 저장값은 마운트 뒤에만 읽을 수 있다 */
     if (!useMastering.getState().tracks.length) useMastering.setState({ params: readChainLS() })
-    const tg = readLS(LS_TARGET, null)
-    if (tg) useMastering.getState().setTarget(tg)
+    const tg = readLS<{ id: string; label: string; lufs: number; tp: number } | null>(LS_TARGET, null)
+    // 옛 체계가 남긴 납품처 id(목록에 없는 combo:* 등)는 기본 납품처(음반)로 바로잡고 저장값도 갱신한다.
+    // 'custom' 은 사용자가 노브로 직접 지정한 음량이므로 그대로 둔다.
+    const known = tg && (tg.id === 'custom' || destById(tg.id))
+    const d = destById(DEFAULT_DEST)
+    if (tg && known) useMastering.getState().setTarget(tg)
+    else if (d) useMastering.getState().setTarget({ id: d.id, label: d.label, lufs: d.lufs, tp: d.tp })
     setUserPresets(readLS(LS_PRESETS, []))
     setExpanded(readLS<unknown>(LS_MODE, 'simple') === 'pro')
     setView(readLS<unknown>(LS_VIEW, 'master') === 'mixer' ? 'mixer' : 'master')
