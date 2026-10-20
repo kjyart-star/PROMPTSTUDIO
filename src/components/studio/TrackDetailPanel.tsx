@@ -336,7 +336,7 @@ export function TrackDetailPanel({
           접힌 레일이 원래 폭에 붙잡혀 자리를 안 비운다(실측). 등장 효과는 안쪽에서 준다. */}
       <aside
         ref={asideRef}
-        className={`hidden lg:block shrink-0 self-start sticky top-0 ${
+        className={`hidden min-[1025px]:block shrink-0 self-start sticky top-0 ${
           collapsed ? 'w-9' : 'w-[21rem]'
         }`}
       >
@@ -376,7 +376,7 @@ export function TrackDetailPanel({
       </aside>
 
       {/* 모바일: 아래에서 올라오는 시트 */}
-      <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true">
+      <div className="min-[1025px]:hidden fixed inset-0 z-50" role="dialog" aria-modal="true">
         <div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
