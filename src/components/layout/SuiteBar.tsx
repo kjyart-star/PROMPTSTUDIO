@@ -1,7 +1,8 @@
 'use client'
 
-import { BASE_PATH, suiteHref } from '@/lib/basePath'
-import { SUITE_SERVICES, SUITE_STATUS_LABEL, suiteNavFloors } from '@/lib/suite/services'
+import { suiteHref } from '@/lib/basePath'
+import { SUITE_STATUS_LABEL } from '@/lib/suite/services'
+import { useSuiteMenu } from '@/lib/suite/menu'
 import { SuiteCreditPill } from './SuiteCreditPill'
 import { SuiteFloorMenu } from './SuiteFloorMenu'
 import { SuiteNoticeBell } from './SuiteNoticeBell'
@@ -20,9 +21,8 @@ import { SuiteAccountBadge } from './SuiteAccountBadge'
  * 이런 식으로 나오게 해줘", "3층은 3가지"). 아홉 칸이 여섯 칸이 되면서 메뉴가 한 줄에
  * 들어가고, 가운데 정렬이 가능해졌다.
  *
- * 메뉴 목록은 `@/lib/suite/services` 한 곳에서만 나온다 — 그 파일은 세 저장소에서
- * 글자 하나까지 같아야 하므로 주소(href)는 여기서 `id` 로 붙인다(저장소마다 basePath ·
- * 오리진이 다르다).
+ * 메뉴 목록은 쿠키플레이 `suite-menu.json` 한 곳에서만 나온다(`@/lib/suite/menu` 가 받아 온다 —
+ * 번들 사본으로 먼저 그리고 받은 값으로 교체). 이 앱 자신의 화면 주소만 basePath 를 붙인다.
  *
  * 링크는 전부 **일반 `<a>`** 다. `next/link` 는 basePath(`/music`)를 자동으로 붙이지만
  * 여기 목적지는 쿠키플레이(오리진 루트)와 형제 서비스라 basePath 가 붙으면 안 된다.
@@ -34,25 +34,8 @@ import { SuiteAccountBadge } from './SuiteAccountBadge'
  * 색은 리터럴 hex 다 — 기준 저장소의 CSS 토큰이 여기엔 없어서 다크 테마 값을 그대로 적었다.
  */
 
-/** 서비스 id → 이 저장소에서의 주소. 목록·순서는 `services.ts` 가 정한다. */
-const HREF_BY_ID: Record<string, string> = {
-  /* 자리만 세운 서비스라 볼 화면이 없다 — 쿠키드림과 같이 소개 페이지로 보낸다 */
-  cookiemovie: suiteHref('/cookiemovie'),
-  cookiecut: suiteHref('/editor'),
-  cookiepix: suiteHref('/cookiepix/app'),
-  cookieillust: suiteHref('/cookieillust/app'),
-  cookiemusicstudio: `${BASE_PATH}/studio`,
-  /* 준비 중이라 만드는 화면이 없다 — 쿠키챗과 같이 소개 페이지로 보낸다 */
-  cookiedream: suiteHref('/cookiedream'),
-  cookiemusic: BASE_PATH,
-  cookiechat: suiteHref('/cookiechat'),
-  cookiephotostudio: suiteHref('/photo'),
-}
-
 /** 쿠키플레이 공통 헤더와 같은 원본 SVG 워드마크. */
 const COOKIEPLAY_LOGO = 'https://cookieplay.app/brand/cookieplay-lockup.svg'
-
-const hrefOf = (id: string) => HREF_BY_ID[id]
 
 /** COOKIELAB 제품 id 를 그대로 쓴다 — 공지(announcement)의 scope 값이 이 id 라 종이 그대로 걸러낸다. */
 export type SuiteServiceId =
@@ -67,7 +50,9 @@ export type SuiteServiceId =
   | 'cookiephotostudio'
 
 export function SuiteBar({ active }: { active?: SuiteServiceId }) {
-  const current = SUITE_SERVICES.find((s) => s.id === active)
+  /* 층 · 서비스 · 주소는 쿠키플레이 suite-menu.json 한 곳에서 온다(`@/lib/suite/menu`) */
+  const { floors, services, hrefOf } = useSuiteMenu()
+  const current = services.find((s) => s.id === active)
 
   return (
     /* 높이는 자식이 만든다(기준과 같음): 데스크톱 64px, 375px 에서는 메뉴가 아랫줄로
@@ -116,7 +101,7 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
            왼쪽에 선다 — 폭도 같이 키운다(패딩 40+40 = 5rem). */
         className="order-5 -mx-5 flex w-full min-w-0 items-center gap-1 overflow-x-auto scrollbar-none border-t border-[#292929] px-5 min-[768px]:-mx-10 min-[768px]:w-[calc(100%+5rem)] md:justify-center-safe md:gap-2 min-[768px]:px-10 min-[1360px]:order-none min-[1360px]:mx-0 min-[1360px]:w-auto min-[1360px]:border-t-0 min-[1360px]:px-0"
       >
-        {suiteNavFloors().map((f) => {
+        {floors.map((f) => {
           if (f.items.length > 1) {
             return (
               <SuiteFloorMenu

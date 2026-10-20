@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "updated": "2026-10-20",
+  "floors": [
+    { "short": "5F", "name": "쿠키영화관", "services": ["cookiemovie"] },
+    { "short": "4F", "name": "AI작업실", "services": ["cookiedream", "cookiemusicstudio"] },
+    { "short": "3F", "name": "작업실", "services": ["cookiecut", "cookieeffect", "cookiepix", "cookieillust"] },
+    { "short": "2F", "name": "쿠키뮤직", "services": ["cookiemusic"] },
+    { "short": "1F", "name": "쿠키챗", "services": ["cookiechat"] },
+    { "short": "B1", "name": "포토 스튜디오", "services": ["cookiephotostudio"] }
+  ],
+  "services": [
+    { "id": "cookiemovie", "name": "쿠키영화관", "abbr": "CM", "role": "AI 영화", "status": "beta", "href": "/cookiemovie" },
+    { "id": "cookiedream", "name": "쿠키드림", "abbr": "CD", "role": "AI 이미지·영상 제작", "status": "beta", "href": "/cookiedream" },
+    { "id": "cookiemusicstudio", "name": "쿠키뮤직 스튜디오", "abbr": "CMS", "role": "AI 음악 제작", "status": "beta", "href": "/music/studio" },
+    { "id": "cookiecut", "name": "쿠키컷", "abbr": "CC", "role": "영상 편집", "status": "stable", "href": "/editor" },
+    { "id": "cookieeffect", "name": "쿠키이펙트", "abbr": "CE", "role": "모션 그래픽·합성", "status": "stable", "href": "/cookieeffect/app" },
+    { "id": "cookiepix", "name": "쿠키픽스", "abbr": "CP", "role": "이미지 편집", "status": "stable", "href": "/cookiepix/app" },
+    { "id": "cookieillust", "name": "쿠키일러스트", "abbr": "CI", "role": "벡터 드로잉", "status": "stable", "href": "/cookieillust/app" },
+    { "id": "cookiemusic", "name": "쿠키뮤직", "abbr": "CM", "role": "AI 음악", "status": "beta", "href": "/music" },
+    { "id": "cookiechat", "name": "쿠키챗", "abbr": "CC", "role": "AI 캐릭터 대화", "status": "preview", "href": "/cookiechat" },
+    { "id": "cookiephotostudio", "name": "쿠키포토스튜디오", "abbr": "CPS", "role": "AI 헤드샷 · 프로필 세트", "status": "beta", "href": "/photo" }
+  ]
+}
