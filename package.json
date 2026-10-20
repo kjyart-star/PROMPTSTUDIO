@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check:credits": "node scripts/check-credit-actions.mjs",
-    "check:lyrics-json": "node scripts/lyrics-json-check.mjs"
+    "check:lyrics-json": "node scripts/lyrics-json-check.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -25,12 +26,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^26.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

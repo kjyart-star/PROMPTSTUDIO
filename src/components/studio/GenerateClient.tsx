@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
+import { AudioDuration } from './StudioAudioDuration'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
@@ -23,48 +24,6 @@ interface GenerateClientProps {
   initialNegativePrompt?: string
 }
 
-const durationCache: Record<string, number> = {}
-
-export function AudioDuration({ url, className = '' }: { url: string; className?: string }) {
-  const [durationStr, setDurationStr] = useState<string>('-:-')
-
-  useEffect(() => {
-    if (!url) return
-
-    if (durationCache[url] !== undefined) {
-      const secs = durationCache[url]
-      const mins = Math.floor(secs / 60)
-      const remainingSecs = Math.floor(secs % 60)
-      setDurationStr(`${mins}:${remainingSecs.toString().padStart(2, '0')}`)
-      return
-    }
-
-    const audio = new Audio()
-    audio.src = url
-    audio.preload = 'metadata'
-
-    const handleLoadedMetadata = () => {
-      const secs = audio.duration
-      if (!isNaN(secs) && isFinite(secs)) {
-        durationCache[url] = secs
-        const mins = Math.floor(secs / 60)
-        const remainingSecs = Math.floor(secs % 60)
-        setDurationStr(`${mins}:${remainingSecs.toString().padStart(2, '0')}`)
-      }
-    }
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.load()
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.src = ''
-    }
-  }, [url])
-
-  return <span className={className}>{durationStr}</span>
-}
-
 export function GenerateClient({ 
   user, 
   historyId,
@@ -77,7 +36,10 @@ export function GenerateClient({
   const router = useRouter()
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(historyId || searchParams.get('historyId'))
 
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
+  const currentTrack = usePlayerStore((s) => s.currentTrack)
+  const isPlaying = usePlayerStore((s) => s.isPlaying)
+  const playTrack = usePlayerStore((s) => s.playTrack)
+  const togglePlay = usePlayerStore((s) => s.togglePlay)
 
   const [historyItem, setHistoryItem] = useState<any>(null)
   const [isMusicGenerating, setIsMusicGenerating] = useState(false)

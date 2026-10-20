@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { ChevronDown, FileText, Music, Sparkles, Wand2, X, Settings, ArrowRight, Play, Pause, FolderPlus, Check, Type, Mic, Info, Image as ImageIcon, Volume2, Globe, Clock, Download, MoreVertical, Disc, Loader2, Heart, Trash2, LogIn, LogOut, Upload, Plus, Bell, Shield, RefreshCw, Layers, Copy, Users, Library, HardDrive, Grid3X3, LayoutGrid, Rows3, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
+import { AudioDuration } from './StudioAudioDuration'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { GENRE_TRANSLATIONS } from '@/lib/constants/genres'
@@ -22,48 +23,6 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
 import { formatPriceCredits } from '@/lib/credits/format'
 import { fetchSystemGuides, composeGuideText, type SystemGuide } from '@/lib/studio/systemGuides'
-
-const durationCache: Record<string, number> = {}
-
-function AudioDuration({ url, className = '' }: { url: string; className?: string }) {
-  const [durationStr, setDurationStr] = useState<string>('-:-')
-
-  useEffect(() => {
-    if (!url) return
-
-    if (durationCache[url] !== undefined) {
-      const secs = durationCache[url]
-      const mins = Math.floor(secs / 60)
-      const remainingSecs = Math.floor(secs % 60)
-      setDurationStr(`${mins}:${remainingSecs.toString().padStart(2, '0')}`)
-      return
-    }
-
-    const audio = new Audio()
-    audio.src = url
-    audio.preload = 'metadata'
-
-    const handleLoadedMetadata = () => {
-      const secs = audio.duration
-      if (!isNaN(secs) && isFinite(secs)) {
-        durationCache[url] = secs
-        const mins = Math.floor(secs / 60)
-        const remainingSecs = Math.floor(secs % 60)
-        setDurationStr(`${mins}:${remainingSecs.toString().padStart(2, '0')}`)
-      }
-    }
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.load()
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.src = ''
-    }
-  }, [url])
-
-  return <span className={className}>{durationStr}</span>
-}
 
 // AI 제공자 및 모델 설정
 const PROVIDERS = {

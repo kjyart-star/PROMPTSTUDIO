@@ -163,14 +163,24 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
    * 정상 케이스는 예전처럼 즉시 재생되고, 오래된 캐시만 재시도를 탄다.
    */
   const resignedRef = useRef(false);
+  // 새 곡의 src 가 실제로 붙은 곡 id. 서명(비동기) 동안 이전 src 로 play() 를 부르지 않게 한다.
+  const loadedTrackIdRef = useRef<string | null>(null);
+  // 곡 전환 중 우리가 낸 pause 는 사용자의 정지가 아니다 — onPause 가 isPlaying 을 끄지 못하게 한다.
+  const switchingRef = useRef(false);
 
   useEffect(() => {
     if (!audioRef.current || !currentTrack) return;
     resignedRef.current = false;
 
     let isCurrent = true;
+    // 이전 곡이 새 src 가 붙을 때까지 계속 울리거나 되살아나지 않게 먼저 멈춘다.
+    if (loadedTrackIdRef.current !== currentTrack.id) {
+      switchingRef.current = true;
+      audioRef.current.pause();
+    }
     const play = (u: string) => {
       if (!isCurrent || !audioRef.current) return;
+      loadedTrackIdRef.current = currentTrack.id;
       audioRef.current.src = u;
       audioRef.current.load();
       if (isPlaying) {
@@ -184,7 +194,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
     const retryWithFreshSign = async () => {
       if (resignedRef.current || !currentTrack.raw_file_url || !isCurrent) {
         if (!currentTrack.raw_file_url) {
-          _setIsPlaying(false);
+          switchingRef.current = false; _setIsPlaying(false);
           showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
         }
         return;
@@ -199,7 +209,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
         if (data?.signedUrl) play(data.signedUrl);
       } catch (e) {
         console.error('Error re-signing URL in player:', e);
-        _setIsPlaying(false);
+        switchingRef.current = false; _setIsPlaying(false);
         showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
       }
     };
@@ -242,6 +252,8 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
   useEffect(() => {
     if (!audioRef.current) return;
     if (isPlaying) {
+      // 새 곡의 src 가 아직 안 붙었으면 곡 로드 쪽이 재생한다(빈 src·이전 곡 재생 → 실패 → 정지 깜박임 방지)
+      if (currentTrack && loadedTrackIdRef.current !== currentTrack.id) return;
       audioRef.current.play().catch(() => _setIsPlaying(false));
     } else {
       audioRef.current.pause();
@@ -365,8 +377,10 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
       <audio
         ref={audioRef}
         onPlay={() => _setIsPlaying(true)}
-        onPause={() => _setIsPlaying(false)}
+        onLoadStart={() => { switchingRef.current = false; }}
+        onPause={() => { if (!switchingRef.current) _setIsPlaying(false); }}
         onError={() => {
+          switchingRef.current = false;
           _setIsPlaying(false);
           showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');
         }}
