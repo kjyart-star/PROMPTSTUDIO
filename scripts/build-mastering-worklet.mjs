@@ -20,6 +20,8 @@ class MasterChainProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e) => {
       const m = e.data
       if (m.type === 'params') this.chain.setParams(m.params)
+      else if (m.type === 'edit') this.chain.setEdit(m.edit)
+      else if (m.type === 'time') this.chain.setPosition(m.t)
       else if (m.type === 'reset') this.chain.resetMeters()
     }
   }
@@ -39,11 +41,15 @@ registerProcessor('master-chain', MasterChainProcessor)
 `
 
 export async function buildWorkletSource() {
-  const src = readFileSync(join(root, 'src/lib/mastering/dsp.ts'), 'utf8')
-  const out = ts.transpileModule(src, {
-    compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext, removeComments: false },
-  }).outputText
-  return `// 자동 생성 파일 — 직접 고치지 말 것. 원본: src/lib/mastering/dsp.ts (npm run build:worklet)\n${out}${PROCESSOR}`
+  // fft.ts → dsp.ts 순서로 이어 붙이고 서로 간 import 줄은 지운다(한 파일 모듈이 된다)
+  let out = ''
+  for (const f of ['fft.ts', 'dsp.ts']) {
+    const src = readFileSync(join(root, 'src/lib/mastering', f), 'utf8').replace(/^import .* from '\.\/[a-z]+'\s*$/gm, '')
+    out += ts.transpileModule(src, {
+      compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext, removeComments: false },
+    }).outputText
+  }
+  return `// 자동 생성 파일 — 직접 고치지 말 것. 원본: src/lib/mastering/fft.ts + dsp.ts (npm run build:worklet)\n${out}${PROCESSOR}`
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

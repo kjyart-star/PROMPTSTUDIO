@@ -56,6 +56,7 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
   const spRef = useRef<HTMLCanvasElement>(null)
   const crRef = useRef<HTMLCanvasElement>(null)
   const grRef = useRef<HTMLCanvasElement>(null)
+  const goRef = useRef<HTMLCanvasElement>(null)
   const txt = useRef<Record<string, HTMLSpanElement | null>>({})
   const propsRef = useRef({ targetLufs, ceiling, playing })
   useEffect(() => { propsRef.current = { targetLufs, ceiling, playing } }, [targetLufs, ceiling, playing])
@@ -67,6 +68,8 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
     let lastTxt = 0
     let freqPost: Float32Array<ArrayBuffer> | null = null
     let freqPre: Float32Array<ArrayBuffer> | null = null
+    let tdL: Float32Array<ArrayBuffer> | null = null
+    let tdR: Float32Array<ArrayBuffer> | null = null
     const setT = (k: string, v: string, color?: string) => {
       const el = txt.current[k]
       if (!el) return
@@ -202,6 +205,30 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         }
       }
 
+      // 고니오미터(벡터스코프): 세로 = 미드, 가로 = 사이드
+      if (goRef.current) {
+        const { g, w, h } = setupCanvas(goRef.current)
+        g.fillStyle = 'rgba(13,13,13,0.35)'
+        g.fillRect(0, 0, w, h)
+        g.strokeStyle = '#262626'
+        g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2)
+        g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke()
+        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#5a5a5a'
+        g.textAlign = 'left'; g.fillText('L', 3, 10); g.textAlign = 'right'; g.fillText('R', w - 3, 10)
+        if (on && engine.anL && engine.anR) {
+          if (!tdL || tdL.length !== engine.anL.fftSize) { tdL = new Float32Array(engine.anL.fftSize); tdR = new Float32Array(engine.anR.fftSize) }
+          engine.anL.getFloatTimeDomainData(tdL); engine.anR.getFloatTimeDomainData(tdR!)
+          g.fillStyle = 'rgba(20,173,130,0.55)'
+          const sc = Math.min(w, h) * 0.45
+          for (let i = 0; i < tdL.length; i += 2) {
+            const l = tdL[i], r = tdR![i]
+            const x = w / 2 + ((r - l) / Math.SQRT2) * sc
+            const y = h / 2 - ((l + r) / Math.SQRT2) * sc
+            g.fillRect(x, y, 1.2, 1.2)
+          }
+        }
+      }
+
       // 상관 미터
       if (crRef.current) {
         const { g, w, h } = setupCanvas(crRef.current)
@@ -229,6 +256,9 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         const tp = m?.truePeakMax ?? -Infinity
         setT('tp', fmt(tp), tp > ceil + 0.05 ? '#ef4444' : '#e4e4e4')
         setT('corr', m ? m.correlation.toFixed(2) : '—')
+        setT('lra', m && m.lra > 0 ? m.lra.toFixed(1) : '—')
+        setT('psr', m && Number.isFinite(m.psr) && m.psr < 60 ? m.psr.toFixed(1) : '—')
+        setT('plr', m && Number.isFinite(m.plr) && m.plr < 60 ? m.plr.toFixed(1) : '—')
         setT('inpk', fmt(lin2db(Math.max(m?.inLevel.peakL ?? 0, m?.inLevel.peakR ?? 0))))
         setT('outpk', fmt(lin2db(Math.max(m?.outLevel.peakL ?? 0, m?.outLevel.peakR ?? 0))))
       }
@@ -262,15 +292,35 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
           <span><span ref={reg('tp')} className="text-zinc-100 text-[12px]">-∞</span><span className="text-zinc-500 ml-1">dBTP</span></span>
         </div>
       </Section>
+      <Section title="다이내믹">
+        <div className="grid grid-cols-3 gap-1 text-center" style={MONO}>
+          <MiniStat label="LRA" k="lra" unit="LU" reg={reg} />
+          <MiniStat label="PSR" k="psr" unit="dB" reg={reg} />
+          <MiniStat label="PLR" k="plr" unit="dB" reg={reg} />
+        </div>
+      </Section>
       <Section title="게인 리덕션">
         <canvas ref={grRef} className="w-full h-[80px] block" />
       </Section>
       <Section title="스펙트럼">
         <canvas ref={spRef} className="w-full h-[96px] block" />
       </Section>
+      <Section title="고니오미터">
+        <canvas ref={goRef} className="w-full aspect-square max-h-[180px] block" />
+      </Section>
       <Section title="위상 상관" right={<span ref={reg('corr')} className="text-[11px] text-zinc-200" style={MONO}>—</span>}>
         <canvas ref={crRef} className="w-full h-[26px] block" />
       </Section>
+    </div>
+  )
+}
+
+function MiniStat({ label, k, unit, reg }: { label: string; k: string; unit: string; reg: (k: string) => (el: HTMLSpanElement | null) => void }) {
+  return (
+    <div className="rounded bg-black/40 py-1">
+      <div className="text-[9px] text-zinc-500">{label}</div>
+      <span ref={reg(k)} className="text-[12px] text-zinc-100">—</span>
+      <span className="text-[8px] text-zinc-500 ml-0.5">{unit}</span>
     </div>
   )
 }

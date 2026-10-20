@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { MasterChain, measureIntegratedLufs, dbToLin, linToDb, eqResponseDb, type ChainParams } from './dsp'
-import { defaultChain, buildGenrePreset, GENRE_PRESETS } from './presets'
-import { renderChain, encodeWav } from './render'
+import { defaultChain } from './presets'
+import { TEMPLATES } from './templates'
+import { renderChain } from './render'
+import { encodeWav } from './fileformats'
 import { buildWorkletSource } from '../../../scripts/build-mastering-worklet.mjs'
 
 const FS = 48000
@@ -130,14 +132,16 @@ describe('멀티밴드·체인', () => {
       expect(Math.abs(linToDb(mx) - -12)).toBeLessThan(0.3)
     }
   })
-  it('장르 프리셋 모두 NaN 없이 처리되고 ceiling 을 지킨다', async () => {
+  it('템플릿 모두 NaN 없이 처리되고 ceiling 을 지킨다', async () => {
     const L = noise(1, 0.7, 5), R = noise(1, 0.7, 9)
-    for (const g of GENRE_PRESETS) {
-      const p = buildGenrePreset(g.id)
+    for (const g of TEMPLATES) {
+      const p = g.build()
       const res = await renderChain([L, R], FS, p)
       const out = res.channels!
       let mx = 0
-      for (const ch of out) for (let i = 0; i < ch.length; i++) { expect(Number.isFinite(ch[i])).toBe(true); mx = Math.max(mx, Math.abs(ch[i])) }
+      let bad = 0
+      for (const ch of out) for (let i = 0; i < ch.length; i++) { if (!Number.isFinite(ch[i])) bad++; mx = Math.max(mx, Math.abs(ch[i])) }
+      expect(bad, g.id).toBe(0)
       expect(mx).toBeLessThanOrEqual(dbToLin(p.limiter.ceiling) + 1e-6)
       expect(out[0].length).toBe(L.length)
     }
@@ -153,7 +157,7 @@ describe('멀티밴드·체인', () => {
 describe('WAV 쓰기', () => {
   it('24bit 헤더와 값', async () => {
     const x = new Float32Array([0, 0.5, -0.5, 1])
-    const blob = encodeWav([x, x], 44100, 24, false)
+    const blob = encodeWav([x, x], 44100, 24, 'none')
     const v = new DataView(await blob.arrayBuffer())
     expect(v.getUint16(34, true)).toBe(24)
     expect(v.getUint32(40, true)).toBe(4 * 2 * 3)
@@ -163,7 +167,7 @@ describe('WAV 쓰기', () => {
   })
   it('16bit 디더는 ±1 LSB 안', async () => {
     const x = new Float32Array(1000).fill(0.25)
-    const blob = encodeWav([x], 48000, 16, true)
+    const blob = encodeWav([x], 48000, 16, 'tpdf')
     const v = new DataView(await blob.arrayBuffer())
     for (let i = 0; i < 1000; i++) expect(Math.abs(v.getInt16(44 + i * 2, true) - 8192)).toBeLessThanOrEqual(2)
   })

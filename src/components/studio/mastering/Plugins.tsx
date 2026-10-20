@@ -3,8 +3,8 @@
 /** 인서트 슬롯별 플러그인 패널 */
 import React, { useEffect, useRef } from 'react'
 import {
-  compCurve, eqResponseDb, saturate,
-  type ChainParams, type EqParams, type EqBandParams, type EqShelfParams, type EqPassParams, type MbBandParams, type SlotId,
+  compCurve, eqResponseDb, saturate, softClip, MATCH_FREQS,
+  type ChainParams, type SatMode, type MsBandSet, type DynBandParams, type EqParams, type EqBandParams, type EqShelfParams, type EqPassParams, type MbBandParams, type SlotId,
 } from '@/lib/mastering/dsp'
 import { DEFAULT_EQ, EQ_TONE_PRESETS } from '@/lib/mastering/presets'
 import { Knob, NumField, Fader, Led, Segmented, MONO } from './controls'
@@ -194,6 +194,8 @@ function EqPanel({ p, set }: { p: ChainParams; set: Setter }) {
           })}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Segmented size="xs" value={eq.mode} onChange={v => upd(e => ({ ...e, mode: v }))}
+            options={[{ value: 'min', label: '최소 위상' }, { value: 'linear', label: '리니어 페이즈' }]} />
           <span className="text-[10px] text-zinc-500">톤 프리셋</span>
           {EQ_TONE_PRESETS.map(t => (
             <button key={t.id} type="button"
@@ -246,7 +248,7 @@ function GrBar({ engine, pick, label }: { engine: MasteringEngine; pick: (m: Non
     const loop = () => {
       raf = requestAnimationFrame(loop)
       const m = engine.meters
-      const gr = m && !engine.audio.paused ? pick(m) : 0
+      const gr = m && !engine.paused ? pick(m) : 0
       if (ref.current) ref.current.style.height = `${Math.min(100, (-gr / 18) * 100)}%`
       if (txt.current) txt.current.textContent = gr < -0.05 ? gr.toFixed(1) : '0.0'
     }
@@ -282,6 +284,7 @@ function CompPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: Ma
         <Knob label="니" value={c.knee} min={0} max={24} def={6} unit="dB" onChange={v => u({ knee: v })} />
         <Knob label="메이크업" value={c.makeup} min={-12} max={24} def={0} unit="dB" bipolar onChange={v => u({ makeup: v })} />
         <Knob label="믹스" value={c.mix} min={0} max={100} def={100} step={1} unit="%" onChange={v => u({ mix: v })} />
+        <div className="flex flex-col justify-center"><Led on={c.autoMakeup} onClick={() => u({ autoMakeup: !c.autoMakeup })} label="자동 메이크업" title="줄어든 음량의 절반을 자동으로 되돌려요" /></div>
       </div>
       <GrBar engine={engine} pick={pickComp} label="리덕션" />
     </div>
@@ -356,7 +359,12 @@ function StereoPanel({ p, set }: { p: ChainParams; set: Setter }) {
 
 // ───────────────────────── 새추레이션 ─────────────────────────
 
-function SatCurve({ drive, mode }: { drive: number; mode: 'tape' | 'tube' | 'clip' }) {
+const SAT_MODES: { value: SatMode; label: string }[] = [
+  { value: 'tape', label: '테이프' }, { value: 'tapeWarm', label: '테이프(따뜻)' }, { value: 'tube', label: '진공관' },
+  { value: 'triode', label: '3극관' }, { value: 'transformer', label: '트랜스포머' }, { value: 'clip', label: '소프트 클립' },
+]
+
+function SatCurve({ drive, mode }: { drive: number; mode: SatMode }) {
   const S = 110
   const g = Math.pow(10, drive / 20)
   let d = ''
@@ -381,7 +389,7 @@ function SaturationPanel({ p, set }: { p: ChainParams; set: Setter }) {
       <SatCurve drive={s.drive} mode={s.mode} />
       <div className="flex flex-col gap-2">
         <Segmented value={s.mode} onChange={v => u({ mode: v })}
-          options={[{ value: 'tape', label: '테이프' }, { value: 'tube', label: '진공관' }, { value: 'clip', label: '소프트 클립' }]} />
+          options={SAT_MODES} />
         <div className="flex gap-2">
           <Knob size={48} label="드라이브" value={s.drive} min={0} max={24} def={3} unit="dB" onChange={v => u({ drive: v })} />
           <Knob label="믹스" value={s.mix} min={0} max={100} def={50} step={1} unit="%" onChange={v => u({ mix: v })} />
@@ -421,20 +429,241 @@ export function PluginPanel({ slot, p, set, engine }: { slot: SlotId; p: ChainPa
     case 'stereo': return <StereoPanel p={p} set={set} />
     case 'saturation': return <SaturationPanel p={p} set={set} />
     case 'limiter': return <LimiterPanel p={p} set={set} engine={engine} />
+    case 'gate': return <GatePanel p={p} set={set} engine={engine} />
+    case 'mseq': return <MsEqPanel p={p} set={set} />
+    case 'dyneq': return <DynEqPanel p={p} set={set} engine={engine} />
+    case 'deesser': return <DeesserPanel p={p} set={set} engine={engine} />
+    case 'match': return <MatchPanel p={p} set={set} />
+    case 'transient': return <TransientPanel p={p} set={set} engine={engine} />
+    case 'imager': return <ImagerPanel p={p} set={set} />
+    case 'clipper': return <ClipperPanel p={p} set={set} />
   }
 }
+
+const SAT_LABEL: Record<SatMode, string> = { tape: '테이프', tapeWarm: '테이프(따뜻)', tube: '진공관', triode: '3극관', transformer: '트랜스포머', clip: '소프트 클립' }
 
 /** 슬롯 카드 한 줄 요약 */
 export function slotSummary(slot: SlotId, p: ChainParams): string {
   switch (slot) {
     case 'eq': {
       const act = (['lf', 'lmf', 'mf', 'hmf', 'hf'] as const).filter(k => p.eq[k].on && Math.abs(p.eq[k].gain) >= 0.1).length
-      return `${act}밴드 조정${p.eq.hpf.on ? ` · HPF ${Math.round(p.eq.hpf.freq)}Hz` : ''}`
+      return `${act}밴드${p.eq.mode === 'linear' ? ' · 리니어' : ''}${p.eq.hpf.on ? ` · HPF ${Math.round(p.eq.hpf.freq)}` : ''}`
     }
     case 'comp': return `${p.comp.threshold.toFixed(0)}dB · ${p.comp.ratio.toFixed(1)}:1`
     case 'multiband': return `${Math.round(p.multiband.lowX)} / ${p.multiband.highX >= 1000 ? (p.multiband.highX / 1000).toFixed(1) + 'k' : Math.round(p.multiband.highX)}Hz`
-    case 'stereo': return `폭 ${p.stereo.width}%${p.stereo.bassMono ? ` · 저역 모노 ${Math.round(p.stereo.bassMono)}Hz` : ''}`
-    case 'saturation': return `${{ tape: '테이프', tube: '진공관', clip: '소프트 클립' }[p.saturation.mode]} · ${p.saturation.drive.toFixed(1)}dB`
+    case 'stereo': return `폭 ${p.stereo.width}%${p.stereo.bassMono ? ` · 모노 ${Math.round(p.stereo.bassMono)}Hz` : ''}`
+    case 'saturation': return `${SAT_LABEL[p.saturation.mode]} · ${p.saturation.drive.toFixed(1)}dB`
     case 'limiter': return `+${p.limiter.gain.toFixed(1)}dB · 천장 ${p.limiter.ceiling.toFixed(1)}`
+    case 'gate': return `${p.gate.threshold.toFixed(0)}dB · ${p.gate.ratio.toFixed(1)}:1`
+    case 'mseq': return `미드 ${countMs(p.mseq.mid)} · 사이드 ${countMs(p.mseq.side)}`
+    case 'dyneq': return `${p.dyneq.bands.filter(b => b.on).length}밴드`
+    case 'deesser': return `${(p.deesser.freq / 1000).toFixed(1)}k · ${p.deesser.threshold.toFixed(0)}dB`
+    case 'match': return p.match.curve.some(v => Math.abs(v) > 0.01) ? `강도 ${p.match.strength}%` : '곡선 없음'
+    case 'transient': return `어택 ${p.transient.attack} · 서스테인 ${p.transient.sustain}`
+    case 'imager': return p.imager.widths.map(w => `${w}`).join(' / ') + '%'
+    case 'clipper': return `${p.clipper.threshold.toFixed(1)}dB · 부드럽게 ${p.clipper.softness}%`
   }
+}
+
+const countMs = (b: MsBandSet) => [b.low.gain, b.b1.gain, b.b2.gain, b.high.gain].filter(g => Math.abs(g) >= 0.1).length
+
+// ───────────────────────── 게이트 / 익스팬더 ─────────────────────────
+
+const pickGate = (m: NonNullable<MasteringEngine['meters']>) => m.gateGr
+const pickDeess = (m: NonNullable<MasteringEngine['meters']>) => m.deessGr
+const pickTrans = (m: NonNullable<MasteringEngine['meters']>) => -Math.abs(m.transientDb)
+const pickDyn = [0, 1, 2, 3].map(i => (m: NonNullable<MasteringEngine['meters']>) => -Math.abs(m.dyneqGr[i] ?? 0))
+
+function GatePanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: MasteringEngine }) {
+  const g = p.gate
+  const u = (patch: Partial<typeof g>) => set(x => ({ ...x, gate: { ...x.gate, ...patch } }))
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <div className="flex flex-wrap gap-2">
+        <Knob label="스레숄드" value={g.threshold} min={-90} max={-10} def={-60} unit="dB" onChange={v => u({ threshold: v })} />
+        <Knob label="레이쇼" value={g.ratio} min={1} max={20} def={2} step={0.1} scale="log" format={v => `1:${v.toFixed(1)}`} onChange={v => u({ ratio: v })} />
+        <Knob label="최대 감쇠" value={g.range} min={0} max={80} def={20} unit="dB" onChange={v => u({ range: v })} />
+        <Knob label="어택" value={g.attack} min={0.1} max={50} def={1} step={0.1} unit="ms" scale="log" onChange={v => u({ attack: v })} />
+        <Knob label="홀드" value={g.hold} min={0} max={500} def={50} step={1} unit="ms" onChange={v => u({ hold: v })} />
+        <Knob label="릴리스" value={g.release} min={5} max={2000} def={200} step={1} unit="ms" scale="log" onChange={v => u({ release: v })} />
+      </div>
+      <GrBar engine={engine} pick={pickGate} label="감쇠" />
+      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">스레숄드보다 작은 소리를 더 작게 만들어요. 레이쇼 1:2 정도면 부드러운 익스팬더, 크게 하면 게이트처럼 끊겨요.</p>
+    </div>
+  )
+}
+
+// ───────────────────────── M/S EQ ─────────────────────────
+
+function MsEqPanel({ p, set }: { p: ChainParams; set: Setter }) {
+  const side = (which: 'mid' | 'side', label: string, color: string) => {
+    const b = p.mseq[which]
+    const u = (k: keyof MsBandSet, patch: Record<string, number>) => set(x => ({ ...x, mseq: { ...x.mseq, [which]: { ...x.mseq[which], [k]: { ...x.mseq[which][k], ...patch } } } }))
+    return (
+      <div className="rounded-md bg-black/30 border border-white/5 p-2">
+        <div className="text-[11px] font-bold mb-1.5" style={{ color }}>{label}</div>
+        <div className="flex flex-wrap gap-1">
+          <Knob size={34} color={color} label="저역 셸프" value={b.low.gain} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u('low', { gain: v })} />
+          <Knob size={30} color={color} label="주파수" value={b.low.freq} min={30} max={500} def={120} step={1} unit="Hz" scale="log" onChange={v => u('low', { freq: v })} />
+          <Knob size={34} color={color} label="벨 1" value={b.b1.gain} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u('b1', { gain: v })} />
+          <Knob size={30} color={color} label="주파수" value={b.b1.freq} min={100} max={5000} def={400} step={1} unit="Hz" scale="log" onChange={v => u('b1', { freq: v })} />
+          <Knob size={34} color={color} label="벨 2" value={b.b2.gain} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u('b2', { gain: v })} />
+          <Knob size={30} color={color} label="주파수" value={b.b2.freq} min={500} max={16000} def={3000} step={1} unit="Hz" scale="log" onChange={v => u('b2', { freq: v })} />
+          <Knob size={34} color={color} label="고역 셸프" value={b.high.gain} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u('high', { gain: v })} />
+          <Knob size={30} color={color} label="주파수" value={b.high.freq} min={2000} max={18000} def={10000} step={1} unit="Hz" scale="log" onChange={v => u('high', { freq: v })} />
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+      {side('mid', '미드 (가운데 — 보컬·킥·베이스)', '#14ad82')}
+      {side('side', '사이드 (양옆 — 공간·악기 폭)', '#347dd7')}
+    </div>
+  )
+}
+
+// ───────────────────────── 다이내믹 EQ ─────────────────────────
+
+function DynEqPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: MasteringEngine }) {
+  const ub = (i: number, patch: Partial<DynBandParams>) => set(x => ({ ...x, dyneq: { bands: x.dyneq.bands.map((b, k) => (k === i ? { ...b, ...patch } : b)) } }))
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[11px] text-zinc-500">소리가 스레숄드를 넘을 때만 그 대역을 움직여요 — 가끔 튀는 공진·치찰·저역 뭉침에 좋아요.</p>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+        {p.dyneq.bands.map((b, i) => (
+          <div key={i} className="rounded-md bg-black/30 border border-white/5 p-2 flex gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[11px] font-bold text-zinc-200">밴드 {i + 1}</span>
+                <Led on={b.on} onClick={() => ub(i, { on: !b.on })} label="켬" />
+                <Segmented size="xs" value={b.mode} onChange={v => ub(i, { mode: v })} options={[{ value: 'cut', label: '넘으면 깎기' }, { value: 'boost', label: '넘으면 올리기' }]} />
+              </div>
+              <div className="flex flex-wrap gap-1">
+                <Knob size={32} label="주파수" value={b.freq} min={20} max={20000} def={1000} step={1} unit="Hz" scale="log" disabled={!b.on} onChange={v => ub(i, { freq: v })} />
+                <Knob size={32} label="Q" value={b.q} min={0.3} max={8} def={1.2} step={0.01} scale="log" disabled={!b.on} onChange={v => ub(i, { q: v })} />
+                <Knob size={32} label="스레숄드" value={b.threshold} min={-60} max={0} def={-24} unit="dB" disabled={!b.on} onChange={v => ub(i, { threshold: v })} />
+                <Knob size={32} label="레이쇼" value={b.ratio} min={1} max={10} def={3} step={0.1} scale="log" format={v => `${v.toFixed(1)}:1`} disabled={!b.on} onChange={v => ub(i, { ratio: v })} />
+                <Knob size={32} label="최대" value={b.range} min={0} max={12} def={4} unit="dB" disabled={!b.on} onChange={v => ub(i, { range: v })} />
+                <Knob size={32} label="고정 게인" value={b.gain} min={-12} max={12} def={0} unit="dB" bipolar disabled={!b.on} onChange={v => ub(i, { gain: v })} />
+                <Knob size={32} label="어택" value={b.attack} min={0.1} max={100} def={10} step={0.1} unit="ms" scale="log" disabled={!b.on} onChange={v => ub(i, { attack: v })} />
+                <Knob size={32} label="릴리스" value={b.release} min={10} max={1000} def={120} step={1} unit="ms" scale="log" disabled={!b.on} onChange={v => ub(i, { release: v })} />
+              </div>
+            </div>
+            <GrBar engine={engine} pick={pickDyn[i]} label="변화" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ───────────────────────── 디에서 ─────────────────────────
+
+function DeesserPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: MasteringEngine }) {
+  const d = p.deesser
+  const u = (patch: Partial<typeof d>) => set(x => ({ ...x, deesser: { ...x.deesser, ...patch } }))
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <div className="flex flex-wrap gap-2">
+        <Knob size={46} label="주파수" value={d.freq} min={2000} max={14000} def={6500} step={1} unit="Hz" scale="log" onChange={v => u({ freq: v })} />
+        <Knob label="스레숄드" value={d.threshold} min={-60} max={0} def={-28} unit="dB" onChange={v => u({ threshold: v })} />
+        <Knob label="최대 감쇠" value={d.range} min={0} max={18} def={6} unit="dB" onChange={v => u({ range: v })} />
+        <div className="flex flex-col justify-center"><Led on={d.listen} onClick={() => u({ listen: !d.listen })} label="감지 소리 듣기" tone="warn" title="디에서가 감지하는 대역만 들려줘요 — 주파수를 맞출 때" /></div>
+      </div>
+      <GrBar engine={engine} pick={pickDeess} label="감쇠" />
+      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">「ㅅ·ㅊ」 같은 치찰음이 튈 때만 그 위 고역을 내려요. 감지 소리 듣기를 켜고 주파수를 치찰음이 가장 크게 들리는 곳에 맞추세요.</p>
+    </div>
+  )
+}
+
+// ───────────────────────── 매칭 EQ ─────────────────────────
+
+function MatchPanel({ p, set }: { p: ChainParams; set: Setter }) {
+  const m = p.match
+  const W = 520, H = 120
+  const x = (i: number) => (i / (MATCH_FREQS.length - 1)) * W
+  const y = (db: number) => H / 2 - (db / 12) * (H / 2 - 6)
+  const pts = m.curve.map((v, i) => `${x(i)},${y((v * m.strength) / 100)}`).join(' ')
+  const has = m.curve.some(v => Math.abs(v) > 0.01)
+  return (
+    <div className="flex flex-col gap-2">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px] rounded-md bg-[#0b0b0b] border border-white/5" preserveAspectRatio="none" aria-label="매칭 곡선">
+        {[-6, 0, 6].map(d => <line key={d} x1={0} x2={W} y1={y(d)} y2={y(d)} stroke={d === 0 ? '#3a3a3a' : '#222'} />)}
+        {has && <polyline points={pts} fill="none" stroke="rgb(20,173,130)" strokeWidth={2} vectorEffect="non-scaling-stroke" />}
+      </svg>
+      <div className="flex flex-wrap items-center gap-3">
+        <Knob label="강도" value={m.strength} min={0} max={100} def={70} step={1} unit="%" onChange={v => set(c => ({ ...c, match: { ...c.match, strength: v } }))} />
+        <button type="button" onClick={() => set(c => ({ ...c, match: { ...c.match, curve: c.match.curve.map(() => 0) } }))} disabled={!has}
+          className="h-7 px-2.5 rounded-md border border-white/10 bg-black/40 text-[11px] text-zinc-300 hover:text-white disabled:opacity-40">곡선 지우기</button>
+        <p className="text-[11px] text-zinc-500 max-w-[360px]">{has ? '레퍼런스 곡과의 스펙트럼 차이로 만든 곡선이에요. 리니어 페이즈라 위상이 바뀌지 않아요(지연 약 45ms).' : '곡선이 없어요. 아래 「레퍼런스」 탭에서 레퍼런스 곡을 불러와 「레퍼런스 톤 맞추기」를 누르세요.'}</p>
+      </div>
+    </div>
+  )
+}
+
+// ───────────────────────── 트랜지언트 ─────────────────────────
+
+function TransientPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: MasteringEngine }) {
+  const t = p.transient
+  const u = (patch: Partial<typeof t>) => set(x => ({ ...x, transient: { ...x.transient, ...patch } }))
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <Knob size={52} label="어택" value={t.attack} min={-100} max={100} def={0} step={1} unit="%" bipolar onChange={v => u({ attack: v })} />
+      <Knob size={52} label="서스테인" value={t.sustain} min={-100} max={100} def={0} step={1} unit="%" bipolar onChange={v => u({ sustain: v })} />
+      <Knob label="출력" value={t.output} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u({ output: v })} />
+      <GrBar engine={engine} pick={pickTrans} label="변화" />
+      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">어택을 올리면 킥·스네어가 앞으로 튀어나오고, 서스테인을 내리면 잔향·꼬리가 짧아져 단단해져요.</p>
+    </div>
+  )
+}
+
+// ───────────────────────── 대역별 폭 ─────────────────────────
+
+function ImagerPanel({ p, set }: { p: ChainParams; set: Setter }) {
+  const im = p.imager
+  const names = ['저역', '중역', '고역']
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-3 items-end">
+        <NumField label="저/중 경계" value={im.lowX} min={40} max={1000} def={150} step={1} unit="Hz" scale="log" width={84}
+          onChange={v => set(x => ({ ...x, imager: { ...x.imager, lowX: Math.min(v, x.imager.highX * 0.8) } }))} />
+        <NumField label="중/고 경계" value={im.highX} min={500} max={16000} def={4000} step={1} unit="Hz" scale="log" width={84}
+          onChange={v => set(x => ({ ...x, imager: { ...x.imager, highX: Math.max(v, x.imager.lowX * 1.25) } }))} />
+      </div>
+      <div className="flex flex-wrap gap-4">
+        {names.map((n, i) => (
+          <Fader key={n} label={n} value={im.widths[i]} min={0} max={200} def={100} step={1} unit="%" height={110}
+            onChange={v => set(x => ({ ...x, imager: { ...x.imager, widths: x.imager.widths.map((w, k) => (k === i ? v : w)) } }))} />
+        ))}
+        <p className="text-[11px] text-zinc-500 max-w-[280px] leading-relaxed self-center">대역마다 넓이를 따로 정해요. 저역은 좁게(모노 쪽), 고역은 넓게 두면 단단하면서 시원한 이미지가 돼요.</p>
+      </div>
+    </div>
+  )
+}
+
+// ───────────────────────── 소프트 클리퍼 ─────────────────────────
+
+function ClipperPanel({ p, set }: { p: ChainParams; set: Setter }) {
+  const c = p.clipper
+  const u = (patch: Partial<typeof c>) => set(x => ({ ...x, clipper: { ...x.clipper, ...patch } }))
+  const S = 110
+  let d = ''
+  for (let i = 0; i <= 60; i++) {
+    const xv = -1.5 + (i / 60) * 3
+    const yv = softClip(xv, Math.pow(10, c.threshold / 20), c.softness / 100)
+    d += `${i ? 'L' : 'M'} ${((xv + 1.5) / 3) * S} ${S - ((yv + 1.5) / 3) * S} `
+  }
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <svg width={S} height={S} className="rounded-md bg-[#0b0b0b] border border-white/5 shrink-0" aria-label="클리핑 곡선">
+        <line x1={0} y1={S} x2={S} y2={0} stroke="#333" strokeDasharray="3 3" />
+        <path d={d} stroke="rgb(20,173,130)" strokeWidth={2} fill="none" />
+      </svg>
+      <Knob size={48} label="스레숄드" value={c.threshold} min={-12} max={0} def={-0.5} unit="dB" onChange={v => u({ threshold: v })} />
+      <Knob label="부드럽게" value={c.softness} min={0} max={100} def={40} step={1} unit="%" onChange={v => u({ softness: v })} />
+      <Knob label="출력" value={c.output} min={-6} max={6} def={0} unit="dB" bipolar onChange={v => u({ output: v })} />
+      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">리미터 앞에서 짧은 피크를 먼저 둥글게 잘라, 리미터가 덜 일하게 해요. 펌핑 없이 소리가 커져요.</p>
+    </div>
+  )
 }

@@ -1,4 +1,4 @@
-import { MasterChain, LoudnessMeter, TruePeakMeter, linToDb, type ChainParams } from './dsp'
+import { MasterChain, LoudnessMeter, TruePeakMeter, Biquad, designShelf, designPeaking, defaultEdit, linToDb, dbToLin, type ChainParams, type EditParams } from './dsp'
 
 const CHUNK = 4096
 
@@ -49,14 +49,19 @@ export async function renderChain(
   src: Float32Array[],
   fs: number,
   params: ChainParams,
-  opts: { start?: number; end?: number; write?: boolean; onProgress?: (p: number) => void; signal?: { cancelled: boolean } } = {},
+  opts: { start?: number; end?: number; write?: boolean; edit?: EditParams; onProgress?: (p: number) => void; signal?: { cancelled: boolean } } = {},
 ): Promise<RenderResult> {
-  const start = Math.max(0, Math.floor(opts.start ?? 0))
-  const end = Math.min(src[0].length, Math.floor(opts.end ?? src[0].length))
+  const edit = opts.edit ?? defaultEdit()
+  // 앞뒤 자르기(편집)와 요청 구간 중 좁은 쪽
+  const eStart = Math.floor(edit.start * fs), eEnd = edit.end > 0 ? Math.floor(edit.end * fs) : src[0].length
+  const start = Math.max(0, Math.floor(opts.start ?? 0), eStart)
+  const end = Math.min(src[0].length, Math.floor(opts.end ?? src[0].length), eEnd)
   const len = Math.max(0, end - start)
   const chain = new MasterChain(fs, CHUNK)
   chain.meterOn = false
   chain.setParams({ ...params, listenOriginal: false })
+  chain.setEdit(edit)
+  chain.setPosition(start / fs)
   const lat = chain.latency
   const write = opts.write !== false
   const outL = write ? new Float32Array(len) : null
@@ -110,17 +115,18 @@ export async function autoMatchLoudness(
   params: ChainParams,
   targetLufs: number,
   onProgress?: (p: number) => void,
+  edit?: EditParams,
 ): Promise<{ params: ChainParams; integrated: number; truePeak: number }> {
   let p: ChainParams = structuredClone(params)
   const useLimiter = !p.bypass.limiter
   let last = { integrated: -Infinity, truePeak: -Infinity }
   const passes = 4
   for (let k = 0; k < passes; k++) {
-    last = await renderChain(src, fs, p, { write: false, onProgress: x => onProgress?.((k + x) / passes) })
+    last = await renderChain(src, fs, p, { write: false, edit, onProgress: x => onProgress?.((k + x) / passes) })
     if (!isFinite(last.integrated)) break
     const diff = targetLufs - last.integrated
     if (Math.abs(diff) < 0.2) break
-    if (useLimiter) p = { ...p, limiter: { ...p.limiter, gain: clamp(p.limiter.gain + diff, -12, 24) } }
+    if (useLimiter) p = { ...p, limiter: { ...p.limiter, gain: clamp(p.limiter.gain + diff, -30, 24) } }
     else p = { ...p, inputTrim: clamp(p.inputTrim + diff, -24, 24) }
   }
   onProgress?.(1)
@@ -129,37 +135,75 @@ export async function autoMatchLoudness(
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, Math.round(v * 10) / 10))
 
-// ───────────────────────── WAV 쓰기 ─────────────────────────
 
-/** PCM WAV (16/24bit). 16bit 등에서 dither=true 면 TPDF 디더를 더한다 */
-export function encodeWav(ch: Float32Array[], fs: number, bits: 16 | 24, dither: boolean, rand: () => number = Math.random): Blob {
-  const nCh = ch.length
-  const n = ch[0].length
-  const bps = bits / 8
-  const dataLen = n * nCh * bps
-  const buf = new ArrayBuffer(44 + dataLen)
-  const v = new DataView(buf)
-  const w = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)) }
-  w(0, 'RIFF'); v.setUint32(4, 36 + dataLen, true); w(8, 'WAVE')
-  w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, nCh, true)
-  v.setUint32(24, fs, true); v.setUint32(28, fs * nCh * bps, true); v.setUint16(32, nCh * bps, true); v.setUint16(34, bits, true)
-  w(36, 'data'); v.setUint32(40, dataLen, true)
-  const full = bits === 16 ? 32767 : 8388607
-  const minV = -full - 1
-  const u8 = new Uint8Array(buf)
-  let o = 44
-  for (let i = 0; i < n; i++) {
-    for (let c = 0; c < nCh; c++) {
-      let x = ch[c][i] * full
-      if (dither) x += rand() - rand() // TPDF ±1 LSB
-      let q = Math.round(x)
-      if (q > full) q = full; else if (q < minV) q = minV
-      if (bits === 16) { v.setInt16(o, q, true); o += 2 }
-      else {
-        const u = q < 0 ? q + 0x1000000 : q
-        u8[o] = u & 0xff; u8[o + 1] = (u >> 8) & 0xff; u8[o + 2] = (u >> 16) & 0xff; o += 3
-      }
+// ───────────────────────── 스템 믹스 ─────────────────────────
+
+export interface StemMix {
+  channels: Float32Array[]
+  gain: number
+  pan: number
+  mute: boolean
+  solo: boolean
+  eq: { low: number; mid: number; high: number }
+}
+
+/** 스템마다 게인·팬·3밴드 EQ 를 걸고 더한다 (가장 긴 스템 길이) */
+export async function mixStems(stems: StemMix[], fs: number): Promise<Float32Array<ArrayBuffer>[]> {
+  const n = Math.max(0, ...stems.map(s => s.channels[0].length))
+  const L = new Float32Array(n), R = new Float32Array(n)
+  const anySolo = stems.some(s => s.solo)
+  for (const s of stems) {
+    if (s.mute || (anySolo && !s.solo)) continue
+    const fl = [new Biquad(), new Biquad(), new Biquad()]
+    fl[0].set(designShelf('low', 120, s.eq.low, 0.7071, fs))
+    fl[1].set(designPeaking(1000, s.eq.mid, 0.8, fs))
+    fl[2].set(designShelf('high', 8000, s.eq.high, 0.7071, fs))
+    const flat = s.eq.low === 0 && s.eq.mid === 0 && s.eq.high === 0
+    const g = dbToLin(s.gain)
+    const ang = ((Math.max(-100, Math.min(100, s.pan)) + 100) / 200) * (Math.PI / 2)
+    // 등전력 팬: 가운데에서 1, 끝에서 √2
+    const gl = g * Math.cos(ang) * Math.SQRT2, gr = g * Math.sin(ang) * Math.SQRT2
+    const a = s.channels[0], b = s.channels[1] ?? a
+    for (let i = 0; i < a.length; i++) {
+      let l = a[i], r = b[i]
+      if (!flat) for (const f of fl) { l = f.l(l); r = f.r(r) }
+      L[i] += l * gl; R[i] += r * gr
+      if ((i & 0xfffff) === 0) await tick()
     }
   }
-  return new Blob([buf], { type: 'audio/wav' })
+  return [L, R]
 }
+
+// ───────────────────────── 앨범 이어 붙이기 ─────────────────────────
+
+export interface AlbumPiece { channels: Float32Array[]; gapAfter: number; xfadeAfter: number }
+
+/** 곡 사이에 간격(초)을 두거나 크로스페이드(초, 등전력)로 겹친다 */
+export function joinAlbum(pieces: AlbumPiece[], fs: number): Float32Array<ArrayBuffer>[] {
+  let total = 0
+  pieces.forEach((p, i) => {
+    total += p.channels[0].length
+    if (i < pieces.length - 1) {
+      const x = Math.round(Math.min(p.xfadeAfter * fs, p.channels[0].length, pieces[i + 1].channels[0].length))
+      total += x ? -x : Math.round(p.gapAfter * fs)
+    }
+  })
+  const L = new Float32Array(Math.max(0, total)), R = new Float32Array(Math.max(0, total))
+  let pos = 0
+  pieces.forEach((p, i) => {
+    const a = p.channels[0], b = p.channels[1] ?? a
+    const xin = i > 0 ? Math.round(Math.min(pieces[i - 1].xfadeAfter * fs, pieces[i - 1].channels[0].length, a.length)) : 0
+    const xout = i < pieces.length - 1 ? Math.round(Math.min(p.xfadeAfter * fs, a.length, pieces[i + 1].channels[0].length)) : 0
+    for (let k = 0; k < a.length; k++) {
+      let g = 1
+      if (k < xin) g *= Math.sin((Math.PI / 2) * (k / xin))
+      if (xout && k >= a.length - xout) g *= Math.cos((Math.PI / 2) * ((k - (a.length - xout)) / xout))
+      const j = pos + k
+      if (j >= 0 && j < L.length) { L[j] += a[k] * g; R[j] += b[k] * g }
+    }
+    pos += a.length - xout + (i < pieces.length - 1 && !xout ? Math.round(p.gapAfter * fs) : 0)
+  })
+  return [L, R]
+}
+
+export { linToDb }

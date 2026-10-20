@@ -46,14 +46,15 @@ function quantize(v: number, step: number, min: number, max: number) {
 }
 
 /** 드래그·더블클릭·직접 입력 공통 훅 */
-function useParamDrag(p: ParamProps, axis: 'y' | 'xy') {
+function useParamDrag(p: ParamProps, axis: 'y' | 'xy', onTap?: () => void) {
   const { value, min, max, def, step = 0.1, scale = 'lin', onChange, disabled } = p
-  const start = useRef<{ x: number; y: number; t: number } | null>(null)
+  const start = useRef<{ x: number; y: number; t: number; x0: number; y0: number } | null>(null)
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onPointerDown = (e: React.PointerEvent) => {
     if (disabled || e.button !== 0) return
     e.preventDefault()
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    start.current = { x: e.clientX, y: e.clientY, t: toNorm(value, min, max, scale) }
+    start.current = { x: e.clientX, y: e.clientY, t: toNorm(value, min, max, scale), x0: e.clientX, y0: e.clientY }
   }
   const onPointerMove = (e: React.PointerEvent) => {
     const s = start.current
@@ -66,6 +67,12 @@ function useParamDrag(p: ParamProps, axis: 'y' | 'xy') {
     onChange(quantize(fromNorm(s.t, min, max, scale), step, min, max))
   }
   const onPointerUp = (e: React.PointerEvent) => {
+    const s = start.current
+    // 움직이지 않고 뗐으면 「탭」 — 더블클릭과 겹치지 않게 조금 기다렸다 연다
+    if (s && onTap && Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < 3) {
+      if (tapTimer.current) clearTimeout(tapTimer.current)
+      tapTimer.current = setTimeout(() => { tapTimer.current = null; onTap() }, 230)
+    }
     start.current = null
     try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId) } catch {}
   }
@@ -77,13 +84,14 @@ function useParamDrag(p: ParamProps, axis: 'y' | 'xy') {
   }
   return {
     onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onKeyDown,
-    onDoubleClick: () => !disabled && onChange(def),
+    onDoubleClick: () => { if (tapTimer.current) { clearTimeout(tapTimer.current); tapTimer.current = null } if (!disabled) onChange(def) },
   }
 }
 
 /** 값 글자 — 클릭하면 입력 칸으로 바뀐다 */
-function ValueText({ p, className }: { p: ParamProps; className?: string }) {
-  const [edit, setEdit] = useState<string | null>(null)
+function ValueText({ p, className, editState }: { p: ParamProps; className?: string; editState?: [string | null, (v: string | null) => void] }) {
+  const own = useState<string | null>(null)
+  const [edit, setEdit] = editState ?? own
   const { value, unit, step = 0.1, format, min, max, onChange } = p
   const text = format ? format(value) : fmtValue(value, unit, step)
   if (edit !== null) {
@@ -177,7 +185,8 @@ export function Knob(props: ParamProps & { size?: number; color?: string; bipola
 
 /** 작은 숫자 칸 (드래그 가능) */
 export function NumField(props: ParamProps & { width?: number }) {
-  const handlers = useParamDrag(props, 'xy')
+  const editState = useState<string | null>(null)
+  const handlers = useParamDrag(props, 'xy', () => editState[1](String(props.value)))
   return (
     <div className={`flex flex-col gap-0.5 ${props.disabled ? 'opacity-40' : ''}`} style={{ width: props.width ?? 64 }}>
       <span className="text-[10px] text-zinc-400 leading-none">{props.label}</span>
@@ -190,7 +199,7 @@ export function NumField(props: ParamProps & { width?: number }) {
         className="h-6 flex items-center justify-center rounded-md bg-black/50 border border-white/10 cursor-ew-resize touch-none outline-none focus-visible:border-[var(--cm-brand)]"
         title="드래그로 조절 · Shift 미세 조절 · 더블클릭 기본값"
       >
-        <ValueText p={props} />
+        <ValueText p={props} editState={editState} />
       </div>
     </div>
   )
