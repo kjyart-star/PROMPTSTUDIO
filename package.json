@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/sync-suite-menu.mjs",
+    "prebuild": "node scripts/sync-suite-menu.mjs && node scripts/build-mastering-worklet.mjs",
+    "build:worklet": "node scripts/build-mastering-worklet.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
