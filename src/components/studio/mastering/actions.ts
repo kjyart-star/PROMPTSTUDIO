@@ -107,18 +107,46 @@ export async function fetchLibrary(): Promise<{ songs: LibrarySong[]; error?: st
   }
 }
 
+/** 불러오기 단계별 실패 — 화면에 어느 단계에서 막혔는지 보여 준다 */
+export class SongLoadError extends Error {
+  constructor(public stage: 'sign' | 'download' | 'decode', message: string) { super(message) }
+}
+
+/**
+ * 보관함 곡의 음원을 받는다.
+ * - 저장소 경로(audio/xxx.mp3)는 서명 주소로 바꾸고, 이미 https 주소면 그대로 쓴다.
+ * - cache: 'no-store' — 플레이어 <audio> 가 CORS 없이 받아 둔 캐시를 fetch 가 재사용하면
+ *   Access-Control-Allow-Origin 이 없는 응답이 돌아와 「Failed to fetch」 로 막힌다(배포본에서 확인).
+ */
 export async function fetchSongBlob(s: { audio_url: string }): Promise<Blob> {
   let url = s.audio_url
   if (!/^https?:/.test(url)) {
-    const r = await fetch(withBase(`/api/tracks/signed-url?file_path=${encodeURIComponent(url)}`))
-    const j = await r.json()
-    if (!r.ok || !j.signedUrl) throw new Error(j.error || 'sign')
+    let r: Response
+    try { r = await fetch(withBase(`/api/tracks/signed-url?file_path=${encodeURIComponent(url)}`), { cache: 'no-store' }) }
+    catch { throw new SongLoadError('sign', '재생 주소를 받는 중 연결이 끊겼어요. 인터넷 연결을 확인해 주세요.') }
+    const j = await r.json().catch(() => ({}))
+    if (r.status === 401) throw new SongLoadError('sign', '로그인이 만료됐어요. 다시 로그인한 뒤 불러와 주세요.')
+    if (r.status === 403) throw new SongLoadError('sign', '이 곡을 불러올 권한이 없어요.')
+    if (!r.ok || !j.signedUrl) throw new SongLoadError('sign', `재생 주소를 만들지 못했어요(${r.status}).`)
     url = j.signedUrl
   }
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('fetch')
-  return res.blob()
+  const ctl = new AbortController()
+  const timer = setTimeout(() => ctl.abort(), 120000)
+  try {
+    const res = await fetch(url, { cache: 'no-store', signal: ctl.signal })
+    if (res.status === 404) throw new SongLoadError('download', '저장소에 음원 파일이 없어요.')
+    if (res.status === 401 || res.status === 403) throw new SongLoadError('download', '음원 주소가 만료됐어요. 다시 불러와 주세요.')
+    if (!res.ok) throw new SongLoadError('download', `음원을 받지 못했어요(${res.status}).`)
+    return await res.blob()
+  } catch (e) {
+    if (e instanceof SongLoadError) throw e
+    if ((e as Error).name === 'AbortError') throw new SongLoadError('download', '음원을 받는 데 너무 오래 걸려 멈췄어요. 잠시 뒤 다시 시도해 주세요.')
+    throw new SongLoadError('download', '음원 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.')
+  } finally { clearTimeout(timer) }
 }
+
+export const loadErrorText = (e: unknown, what = '곡') =>
+  e instanceof SongLoadError ? `${what}을 불러오지 못했어요 — ${e.message}` : `${what}을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.`
 
 export const MAX_TRACKS = 20
 
@@ -145,7 +173,7 @@ export async function addLibrarySong(s: LibrarySong) {
     if (wasEmpty) await activate(t.id)
   } catch (e) {
     console.error(e)
-    notify('err', '곡을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.')
+    notify('err', loadErrorText(e))
   } finally { done() }
 }
 
@@ -169,7 +197,7 @@ export async function activate(id: string) {
     }
   } catch (e) {
     console.error(e)
-    notify('err', '이 파일은 열 수 없어요. 다른 형식(WAV·MP3)으로 시도해 주세요.')
+    notify('err', '음원은 받았지만 소리로 풀지 못했어요(파일 형식 문제). WAV·MP3 로 다시 시도해 주세요.')
   }
 }
 

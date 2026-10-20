@@ -11,7 +11,7 @@ import { AUTO_RANGE, fmtClock } from './Timeline'
 import { useMastering, type TrackItem, type LibrarySong } from './store'
 import {
   useUi, getEngine, applyTemplate, previewTemplate, endPreview, runAutoMaster, analyzeOutput, loadReference, matchToReference,
-  fetchSongBlob, decodeTrack, exportActive, saveToLibrary, exportAlbumZip, exportAlbumJoined, albumLoudness, addStemFiles,
+  fetchSongBlob, loadErrorText, decodeTrack, exportActive, saveToLibrary, exportAlbumZip, exportAlbumJoined, albumLoudness, addStemFiles,
   enterStems, activate, type ExportOpts,
 } from './actions'
 
@@ -260,7 +260,7 @@ export function ReferencePanel({ onPickLibrary }: { onPickLibrary: (cb: (s: Libr
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={btn} onClick={() => onPickLibrary(async s => { const b = await fetchSongBlob(s); await loadReference(b, s.title, s.id) })}><Library className="w-3.5 h-3.5" /> 보관함에서</button>
+        <button type="button" className={btn} onClick={() => onPickLibrary(async s => { try { const b = await fetchSongBlob(s); await loadReference(b, s.title, s.id) } catch (e) { useUi.getState().set({ notice: { kind: 'err', text: loadErrorText(e, '레퍼런스') } }) } })}><Library className="w-3.5 h-3.5" /> 보관함에서</button>
         <button type="button" className={btn} onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 파일에서</button>
         <input ref={fileRef} type="file" accept="audio/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) loadReference(f, f.name.replace(/\.[^/.]+$/, '')); e.target.value = '' }} />
         {ref && <span className="text-[12px] text-zinc-200">레퍼런스: <b>{ref.title}</b> <span className="text-zinc-500" style={MONO}>{fmt(ref.analysis?.integrated)} LUFS · LRA {fmt(ref.analysis?.lra)} · TP {fmt(ref.analysis?.truePeak)}</span></span>}
