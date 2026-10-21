@@ -2,23 +2,57 @@
 .ms-mixer { display: flex; flex-direction: column; border-top: 1px solid var(--m-line-soft); background: var(--m-bg); min-width: 0; }
 .ms-mixbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px; border-bottom: 1px solid var(--m-line-soft); background: var(--m-panel); }
 .ms-mixrow { display: flex; flex-wrap: nowrap; align-items: stretch; gap: 4px; padding: 6px; overflow: hidden; min-width: 0; }
-.ms-mixrow .ms-strip { flex: 1 1 140px; min-width: 108px; max-width: 150px; height: auto; border: 1px solid var(--m-line-soft); border-radius: 6px; }
+.ms-mixrow .ms-strip { flex: 1 1 140px; min-width: 108px; max-width: 200px; height: auto; border: 1px solid var(--m-line-soft); border-radius: 6px; }
 .ms-mixrow .ms-strip.folded { flex: 0 1 72px; min-width: 64px; max-width: 80px; }
 .ms-mixrow .ms-strip.master { flex: 0 0 150px; max-width: 150px; margin-left: auto; border-color: var(--m-line); }
-.ms-mixrow .ms-strip h4 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ms-mixrow .ms-strip .sub { font-size: 10px; font-weight: 700; color: var(--m-dim); }
-.ms-mixrow .ms-slot { text-align: left; padding: 0 4px; }
-.ms-mixrow .ms-slot.flat { background: var(--m-well); color: var(--m-dim); border-color: var(--m-line-soft); }
-.ms-mixrow .ms-sm button.mute[aria-pressed='true'] { background: var(--m-amber); border-color: var(--m-amber); color: #1c1d1f; }
-.ms-mixrow .ms-nametag { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
-.ms-fm { display: flex; justify-content: center; align-items: flex-end; gap: 4px; }
+.ms-mixer .ms-strip h4 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ms-mixer .ms-strip .sub { font-size: 10px; font-weight: 700; color: var(--m-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ms-mixer .ms-slot { text-align: left; padding: 0 4px; }
+.ms-mixer .ms-slot.flat { background: var(--m-well); color: var(--m-dim); border-color: var(--m-line-soft); }
+.ms-mixer .ms-sm button.mute[aria-pressed='true'] { background: var(--m-amber); border-color: var(--m-amber); color: #1c1d1f; }
+.ms-mixer .ms-nametag { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.ms-mrow { display: flex; flex-direction: column; gap: 6px; }
+/* 페이더·미터 — 스트립의 남는 높이를 채운다(스트립끼리 높이가 맞고 빈 띠가 없다) */
+.ms-fm { display: flex; justify-content: center; align-items: stretch; gap: 4px; flex: 1 1 auto; min-height: 150px; }
 .ms-fm canvas { display: block; width: 12px; border-radius: 2px; background: var(--m-well); }
 .ms-fm canvas.st { width: 18px; }
+.ms-fm .ms-meterfill { position: relative; width: 12px; align-self: stretch; margin: 14px 0 16px; border-radius: 2px; background: var(--m-well); overflow: hidden; }
+.ms-fm .ms-meterfill.st { width: 18px; }
+.ms-fm .ms-meterfill canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ms-mixempty { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; padding: 16px 20px; border: 1px dashed var(--m-line); border-radius: 6px; background: var(--m-panel); }
 .ms-mixempty p { font-size: 13px; color: var(--m-text); word-break: keep-all; }
 .ms-mixempty p.dim { font-size: 12px; }
 .ms-mixdock { border-top: 1px solid var(--m-line-soft); background: var(--m-panel); padding: 8px 10px; }
+.ms-mixdock.empty { min-height: 32px; padding: 0 12px; display: flex; align-items: center; font-size: 12px; color: var(--m-faint); }
 .ms-mixdock-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .ms-mixdock-head h3 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 접어도 창이 좁아 다 못 들어가면 다음 줄로(잘려 안 보이는 스트립이 없게) */
 .ms-mixrow:has(> .ms-strip.folded) { flex-wrap: wrap; row-gap: 4px; }
+
+/* 스템 없음 — 왼쪽(작은 안내 카드 + 마스터 모듈 패널) · 오른쪽(두 열 마스터 스트립). 두 열 높이를 맞춘다 */
+.ms-mixer.nostems { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 6px; padding: 6px; align-items: stretch; }
+.ms-mixleft { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ms-mixer.nostems .ms-mixempty { flex: none; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 12px 16px; min-height: 0; }
+.ms-mixer.nostems .ms-mixempty p + p { margin-top: 3px; }
+.ms-mixer.nostems .ms-mixdock { flex: 1 1 auto; min-height: 0; border: 1px solid var(--m-line-soft); border-radius: 6px; display: flex; flex-direction: column; }
+.ms-mixer.nostems .ms-mixdock .ms-modpanel { flex: 1 1 auto; }
+.ms-mixer.nostems .ms-mixdock .ms-modbody { flex: 1 1 auto; }
+.ms-mixer.nostems .ms-mixdock .ms-modgraph { max-height: none; }
+.ms-strip.master.wide { flex: none; max-width: none; border: 1px solid var(--m-line); border-radius: 6px; }
+.ms-strip.master.wide .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.ms-strip.master.wide .ms-mrow { flex-direction: row; align-items: flex-end; justify-content: center; gap: 8px; }
+.ms-strip.master.wide .ms-mrow .ms-sm { width: 110px; }
+/* 왼쪽 열이 전체 폭보다 좁아 EQ 8열이 두 줄로 꺾이면 패널이 너무 길어진다 → EQ 만 그래프 위·열 아래 */
+.ms-mixer.nostems .ms-mixdock .ms-modbody.eq { grid-template-columns: minmax(0, 1fr); }
+.ms-mixer.nostems .ms-mixdock .ms-modbody.eq .ms-modgraph { max-height: 200px; }
+/* 1279px 이하 — 두 열을 놓기엔 좁다. 한 열로: 안내 카드 → 마스터 스트립(가로 전체, 슬롯 여러 열) → 모듈 패널(내용 높이) */
+@media (max-width: 1279px) {
+  .ms-mixer.nostems { grid-template-columns: minmax(0, 1fr); }
+  .ms-mixleft { display: contents; }
+  .ms-mixer.nostems .ms-mixempty { order: 0; }
+  .ms-strip.master.wide { order: 1; }
+  .ms-mixer.nostems .ms-mixdock { order: 2; flex: none; }
+  .ms-mixer.nostems .ms-mixdock .ms-modgraph { max-height: 200px; }
+  .ms-strip.master.wide .slots { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .ms-strip.master.wide .ms-fm { flex: none; height: 170px; min-height: 0; }
+}

@@ -4,7 +4,7 @@
  * 마스터링 화면의 공통 골격 — 전송 줄 · 타임라인(+ 바로 아래 도킹 모듈 패널) · 경고 줄 · 하단 줄(목표 음량·내보내기) · 쉬운 미터.
  */
 import React, { useEffect, useRef, useState } from 'react'
-import { Play, Pause, Square, Repeat, Flag, SkipBack, Wand2, ZoomIn, ZoomOut, Volume2, VolumeX, X, Download, Save, Check, AlertTriangle } from 'lucide-react'
+import { Play, Pause, Square, Repeat, Flag, SkipBack, Wand2, ZoomIn, ZoomOut, Volume2, VolumeX, X, Download, Save, Check, AlertTriangle, ChevronDown } from 'lucide-react'
 import { type AutoTarget, type ChainParams } from '@/lib/mastering/dsp'
 import { DESTS, DERIVATIVES, destById } from './destination'
 import { loudnessWords } from '@/lib/mastering/compose'
@@ -223,6 +223,40 @@ export function pickTarget(id: string) {
   }
 }
 
+/** 「함께 받기」 — 체크 가능한 드롭다운 메뉴 하나(납품처 칩을 두 번 늘어놓지 않는다) */
+function ExtraMenu({ targetId, ids, onToggle }: { targetId: string; ids: string[]; onToggle: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => { if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('pointerdown', onDown); window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('pointerdown', onDown); window.removeEventListener('keydown', onKey) }
+  }, [open])
+  const list = DESTS.filter(d => d.id !== targetId)
+  return (
+    <div className="ms-menuwrap" ref={wrap}>
+      <button type="button" className="ms-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(v => !v)}
+        title="같은 마스터를 다른 곳용 음량으로도 함께 만들어요">
+        함께 받기{ids.length ? ` (${ids.length})` : ''} <ChevronDown className="w-3.5 h-3.5" style={open ? { transform: 'rotate(180deg)' } : undefined} />
+      </button>
+      {open && (
+        <div className="ms-menu" role="menu" aria-label="함께 내보내기">
+          <span className="head">체크한 곳용 파일을 같이 만들어요</span>
+          {list.map(d => (
+            <button key={d.id} type="button" role="menuitemcheckbox" aria-checked={ids.includes(d.id)} onClick={() => onToggle(d.id)}>
+              <span className="box" aria-hidden>{ids.includes(d.id) && <Check className="w-3 h-3" />}</span>
+              {d.label}
+              <span className="v">{d.lufs} / {d.tp}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function BottomBar({ expanded }: { expanded: boolean }) {
   const target = useMastering(s => s.target)
   const active = useMastering(s => !!s.activeId)
@@ -245,17 +279,17 @@ export function BottomBar({ expanded }: { expanded: boolean }) {
   const recent = reports.slice(0, Math.max(1, (dest ? 1 : 0) + extraIds.length))
   return (
     <div className="ms-bottom" data-tour="export">
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="어디에 쓸 곡인가요">
-        <span className="ms-rowlabel mr-1" title="고르면 목표 음량·천장·파일 형식이 맞춰져요">어디에 쓸 곡인가요?</span>
-        {DESTS.map(t => (
-          <button key={t.id} type="button" className="ms-chipbtn" aria-pressed={target.id === t.id} onClick={() => pickTarget(t.id)} title={`${t.label} — 목표 ${t.lufs} LUFS · 천장 ${t.tp} dB`}>
-            {t.label}{target.id === t.id && <span className="mono faint">{t.lufs} / {t.tp}</span>}
-          </button>
-        ))}
-        {!dest && <span className="ms-chipbtn" aria-pressed="true">{target.label} <span className="mono faint">{target.lufs}</span></span>}
+      <div className="ms-bottomrow">
+        <div className="flex items-center gap-1.5" role="group" aria-label="어디에 쓸 곡인가요">
+          <span className="ms-rowlabel" title="고르면 목표 음량·천장·파일 형식이 맞춰져요">용도</span>
+          <select className="ms-select dest" aria-label="용도" value={dest ? target.id : 'custom'} onChange={e => pickTarget(e.target.value)}>
+            {DESTS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            {!dest && <option value="custom">{target.label}</option>}
+          </select>
+          <span className="mono dim text-[11px]" title="목표 음량(LUFS) / 천장(dBTP)">{target.lufs} / {target.tp}</span>
+        </div>
         <button type="button" className="ms-btn go" onClick={autoMatch} disabled={!active || !!busy} title="곡 전체를 재서 음량 상한(리미터)의 게인을 목표에 맞춰요"><Wand2 className="w-3.5 h-3.5" /> 자동 맞춤</button>
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="sep" aria-hidden />
         <div className="ms-seg" role="group" aria-label="파일 형식">
           <button type="button" aria-pressed={opts.format === 'wav'} onClick={() => setFormat('wav')} title="음원 사이트 등록·보관용(고음질, 파일이 커요)">WAV</button>
           <button type="button" aria-pressed={opts.format === 'mp3'} onClick={() => setFormat('mp3')} title="메신저·공유용(작은 파일)">MP3</button>
@@ -283,19 +317,12 @@ export function BottomBar({ expanded }: { expanded: boolean }) {
         {manual && dest && (
           <button type="button" className="ms-btn" onClick={() => useUi.getState().set({ exportOpts: { ...dest.opts }, exportManual: false })} title={`${dest.label}에 맞는 파일 설정으로`}>납품처 기준으로</button>
         )}
+        <ExtraMenu targetId={target.id} ids={extraIds} onToggle={toggleExtra} />
         <button type="button" className="ms-btn go" style={{ height: 30 }} disabled={!active || !!busy} onClick={download}
           title={extraIds.length ? `${dest?.label ?? ''}와 함께 고른 ${extraIds.length}곳용 파일을 각각 만들어요` : '지금 설정으로 파일을 만들어요'}>
           <Download className="w-4 h-4" /> 파일로 받기{extraIds.length ? ` (${extraIds.length + 1}개)` : ''}
         </button>
         <button type="button" className="ms-btn" style={{ height: 30 }} disabled={!active || !!busy} onClick={saveToLibrary} title="결과를 보관함에 새 곡으로 저장해요(원곡은 그대로)"><Save className="w-4 h-4" /> 보관함에 저장</button>
-        <div className="flex flex-wrap items-center gap-1.5 ml-2" role="group" aria-label="함께 내보내기">
-          <span className="ms-rowlabel" title="같은 마스터를 다른 곳용 음량으로도 함께 만들어요">함께 내보내기</span>
-          {DESTS.filter(d => d.id !== target.id).map(d => (
-            <button key={d.id} type="button" className="ms-chipbtn" aria-pressed={extraIds.includes(d.id)} onClick={() => toggleExtra(d.id)}>
-              {extraIds.includes(d.id) && <Check className="w-3 h-3" />}{d.label}
-            </button>
-          ))}
-        </div>
       </div>
       {reports.length > 0 && (
         <ul className="flex flex-col gap-0.5" aria-label="내보낸 파일 재측정">

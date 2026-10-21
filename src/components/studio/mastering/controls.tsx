@@ -205,13 +205,14 @@ export function NumField(props: ParamProps & { width?: number }) {
   )
 }
 
-/** 세로 페이더 */
-export function Fader(props: ParamProps & { height?: number }) {
+/** 세로 페이더 — height 'fill' 이면 부모의 남는 높이를 채운다(최소 100px) */
+export function Fader(props: ParamProps & { height?: number | 'fill' }) {
   const { min, max, value, scale = 'lin', height = 120, label } = props
   const handlers = useParamDrag(props, 'y')
   const t = Math.min(1, Math.max(0, toNorm(value, min, max, scale)))
+  const fill = height === 'fill'
   return (
-    <div className="flex flex-col items-center gap-1 select-none" style={{ width: 52 }}>
+    <div className={`flex flex-col items-center gap-1 select-none ${fill ? 'h-full min-h-0' : ''}`} style={{ width: 52 }}>
       <span className="text-[10px] text-zinc-400 leading-none whitespace-nowrap">{label}</span>
       <div
         role="slider"
@@ -219,8 +220,8 @@ export function Fader(props: ParamProps & { height?: number }) {
         aria-valuenow={value}
         tabIndex={0}
         {...handlers}
-        className="relative w-7 cursor-ns-resize touch-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--cm-brand)] rounded"
-        style={{ height }}
+        className={`relative w-7 cursor-ns-resize touch-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--cm-brand)] rounded ${fill ? 'flex-1 min-h-[100px]' : ''}`}
+        style={fill ? undefined : { height }}
         title="드래그로 조절 · Shift 미세 조절 · 더블클릭 기본값"
       >
         <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 rounded bg-black/70 border border-white/10" />

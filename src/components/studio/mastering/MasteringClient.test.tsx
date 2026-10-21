@@ -15,9 +15,10 @@ const fakeEngine = vi.hoisted(() => ({
   updateStems: () => {}, leaveStems: () => {},
 }))
 
+const exportSpy = vi.hoisted(() => ({ dests: vi.fn(), active: vi.fn() }))
 vi.mock('./actions', async importOriginal => {
   const orig = await importOriginal<typeof import('./actions')>()
-  return { ...orig, getEngine: () => fakeEngine }
+  return { ...orig, getEngine: () => fakeEngine, exportForDestinations: exportSpy.dests, exportActive: exportSpy.active }
 })
 
 import { MasteringClient } from '../MasteringClient'
@@ -192,16 +193,74 @@ describe('마스터링 화면 — 한 화면 단계적 펼침', () => {
     expect(useMastering.getState().params.limiter.ceiling).toBe(-1)
   })
 
-  it('첫 화면은 음반 납품처가 눌려 있고, 스트리밍을 누르면 목표가 바뀌며 파생본 칩이 보인다', () => {
-    render(<MasteringClient />)
-    const group = screen.getByRole('group', { name: '어디에 쓸 곡인가요' })
-    expect(within(group).getByRole('button', { name: /음반/ }).getAttribute('aria-pressed')).toBe('true')
-    const extra = screen.getByRole('group', { name: '함께 내보내기' })
-    expect(within(extra).getByRole('button', { name: /^음원 스트리밍/ }).getAttribute('aria-pressed')).toBe('true')
-    expect(within(extra).getByRole('button', { name: /^동영상 플랫폼/ }).getAttribute('aria-pressed')).toBe('true')
-    fireEvent.click(within(group).getByRole('button', { name: /^음원 스트리밍/ }))
+  it('첫 화면은 용도가 음반이고, 스트리밍으로 바꾸면 목표가 바뀐다 — 납품처 칩 줄은 하나도 없다(드롭다운 하나)', () => {
+    const { container } = render(<MasteringClient />)
+    const use = screen.getByRole('combobox', { name: '용도' }) as HTMLSelectElement
+    expect(use.value).toBe('album')
+    expect(use.closest('[role="group"]')!.getAttribute('aria-label')).toBe('어디에 쓸 곡인가요')
+    expect(container.querySelectorAll('.ms-bottom .ms-chipbtn').length).toBe(0)
+    fireEvent.change(use, { target: { value: 'stream' } })
     expect(useMastering.getState().target.id).toBe('stream')
     expect(useMastering.getState().target.lufs).toBe(-14)
+    expect(screen.getByText('-14 / -1')).toBeTruthy()
+  })
+
+  it('「함께 받기」는 체크 가능한 메뉴 하나 — 음반이면 스트리밍·동영상이 기본 체크, 체크를 풀면 받을 파일 수가 줄어든다', () => {
+    render(<MasteringClient />)
+    expect(screen.queryByRole('menu', { name: '함께 내보내기' })).toBeNull()
+    const open = screen.getByRole('button', { name: /^함께 받기 \(2\)/ })
+    expect(screen.getByRole('button', { name: /파일로 받기 \(3개\)/ })).toBeTruthy()
+    fireEvent.click(open)
+    const menu = screen.getByRole('menu', { name: '함께 내보내기' })
+    const items = within(menu).getAllByRole('menuitemcheckbox')
+    // 지금 용도(음반)는 목록에 없다
+    expect(items.some(i => /^음반/.test(i.textContent ?? ''))).toBe(false)
+    expect(within(menu).getByRole('menuitemcheckbox', { name: /^음원 스트리밍/ }).getAttribute('aria-checked')).toBe('true')
+    expect(within(menu).getByRole('menuitemcheckbox', { name: /^동영상 플랫폼/ }).getAttribute('aria-checked')).toBe('true')
+    fireEvent.click(within(menu).getByRole('menuitemcheckbox', { name: /^동영상 플랫폼/ }))
+    expect(within(menu).getByRole('menuitemcheckbox', { name: /^동영상 플랫폼/ }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('button', { name: /^함께 받기 \(1\)/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /파일로 받기 \(2개\)/ })).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('menu', { name: '함께 내보내기' })).toBeNull()
+  })
+
+  it('「파일로 받기」는 용도 + 함께 받기에 체크한 납품처 목록으로 내보내고, 체크를 다 풀면 한 파일만 만든다', () => {
+    seedTrack()
+    render(<MasteringClient />)
+    exportSpy.dests.mockClear(); exportSpy.active.mockClear()
+    fireEvent.click(screen.getByRole('button', { name: /파일로 받기 \(3개\)/ }))
+    expect(exportSpy.dests).toHaveBeenCalledTimes(1)
+    expect(exportSpy.dests.mock.calls[0][0].map((d: { id: string }) => d.id)).toEqual(['album', 'stream', 'video'])
+    fireEvent.click(screen.getByRole('button', { name: /^함께 받기/ }))
+    const menu = screen.getByRole('menu', { name: '함께 내보내기' })
+    fireEvent.click(within(menu).getByRole('menuitemcheckbox', { name: /^음원 스트리밍/ }))
+    fireEvent.click(within(menu).getByRole('menuitemcheckbox', { name: /^동영상 플랫폼/ }))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    fireEvent.click(screen.getByRole('button', { name: /^파일로 받기$/ }))
+    expect(exportSpy.active).toHaveBeenCalledTimes(1)
+    expect(exportSpy.dests).toHaveBeenCalledTimes(1)
+  })
+
+  it('모듈 패널은 파라미터당 컨트롤이 노브 하나 — 가는 슬라이더 줄·값 막대로 두 번 나오지 않는다', () => {
+    render(<MasteringClient />)
+    fireEvent.click(proToggle())
+    closeTour()
+    fireEvent.click(screen.getByRole('button', { name: '타격감(트랜지언트) 설정 열기' }))
+    const panel = screen.getByRole('region', { name: '모듈 패널' })
+    const sliders = within(panel).getAllByRole('slider')
+    expect(sliders.map(s => s.getAttribute('aria-label'))).toEqual(['어택', '서스테인', '출력'])
+    expect(panel.querySelector('.ms-hs')).toBeNull()
+    expect(within(panel).queryByLabelText('값 막대')).toBeNull()
+    // 타격감은 엔벨로프 그래프, 노브는 큰 크기(60)
+    expect(within(panel).getByLabelText('타격 엔벨로프 — 처리 전후')).toBeTruthy()
+    expect((sliders[0] as HTMLElement).style.width).toBe('60px')
+    // 값 글자를 누르면 직접 입력 → Enter 로 체인에 반영
+    fireEvent.click(within(within(panel).getByRole('group', { name: '어택' })).getByRole('button', { name: /^[+-]?\d/ }))
+    const input = within(panel).getByRole('textbox')
+    fireEvent.change(input, { target: { value: '35' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(useMastering.getState().params.transient.attack).toBe(35)
   })
 
   it('스타일 카드를 고르면(곡 있음) 템플릿이 적용되고 강도 슬라이더가 보인다', () => {
@@ -258,10 +317,7 @@ describe('마스터링 화면 — 옛 저장값', () => {
     mem['cm.mastering.mode.v1'] = '"pro"'
     render(<MasteringClient />)
     expect(useMastering.getState().target.id).toBe('album')
-    const group = screen.getByRole('group', { name: '어디에 쓸 곡인가요' })
-    const on = within(group).getAllByRole('button').filter(b => b.getAttribute('aria-pressed') === 'true')
-    expect(on).toHaveLength(1)
-    expect(on[0].textContent).toMatch(/^음반/)
+    expect((screen.getByRole('combobox', { name: '용도' }) as HTMLSelectElement).value).toBe('album')
     expect(JSON.parse(mem['cm.mastering.target.v2']).id).toBe('album')
   })
 

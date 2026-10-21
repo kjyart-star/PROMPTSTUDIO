@@ -2,131 +2,23 @@
 
 /**
  * 모듈 패널(타임라인 바로 아래 가로 전체 폭 도킹) — 머리줄 32px(이름 · 기본값 · 템플릿 값 · 바이패스 · 접기 · 닫기)
- * · 「이 모듈은?」 · 왼쪽 큰 그래프 + 오른쪽 밴드별/섹션별 파라미터 열(작은 노브). 한 번에 하나만 열린다. 떠 있는 창은 없다.
+ * · 「이 모듈은?」 · 왼쪽 그래프(모듈 성격에 맞는 시각화) + 오른쪽 큰 노브 격자(파라미터당 컨트롤 하나).
+ * 패널 높이는 내용에 맞춘다 — 빈 띠 없음. 한 번에 하나만 열린다. 떠 있는 창은 없다.
  */
 import React, { useEffect, useRef, useState } from 'react'
 import { RotateCcw, Wand2, X, ChevronDown, CircleHelp } from 'lucide-react'
-import { MATCH_FREQS, type ChainParams, type SlotId } from '@/lib/mastering/dsp'
+import { MATCH_FREQS, msSections, coefsMagDb, softClip, type ChainParams, type SlotId, type MsBandSet } from '@/lib/mastering/dsp'
 import { defaultChain } from '@/lib/mastering/presets'
-import { fmtValue, quantize, toNorm, fromNorm, Knob } from './controls'
+import { Knob } from './controls'
 import { EqGraph, TransferCurve, SatCurve } from './Plugins'
-import { SCHEMA, getPath, setPath, resetSlot, paramColumns, type Row, type ParamRow } from './paramSchema'
+import { SCHEMA, getPath, setPath, resetSlot, paramColumns, type ParamRow } from './paramSchema'
 import { moduleHelp, dangerFix } from './moduleHelp'
 import { MODULE_LABEL, GR_PICK, kindColor } from './labels'
 import { useUi } from './actions'
 import type { MasteringEngine } from './engine'
 
-type Num = Extract<Row, { kind: 'num' }>
 type Meters = NonNullable<MasteringEngine['meters']>
 type Set = (fn: (p: ChainParams) => ChainParams) => void
-
-function HSlider({ row, value, onChange, disabled }: { row: Num; value: number; onChange: (v: number) => void; disabled?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ x: number; t: number } | null>(null)
-  const scale = row.scale ?? 'lin', step = row.step ?? 0.1
-  const t = Math.min(1, Math.max(0, toNorm(value, row.min, row.max, scale)))
-  const zero = row.min < 0 && row.max > 0 && scale === 'lin' ? toNorm(0, row.min, row.max, scale) : 0
-  const setFromX = (clientX: number) => {
-    const r = ref.current!.getBoundingClientRect()
-    const nt = Math.min(1, Math.max(0, (clientX - r.left) / (r.width || 1)))
-    onChange(quantize(fromNorm(nt, row.min, row.max, scale), step, row.min, row.max))
-    return nt
-  }
-  return (
-    <div
-      ref={ref}
-      className="ms-hs"
-      role="slider"
-      aria-label={row.label}
-      aria-valuemin={row.min}
-      aria-valuemax={row.max}
-      aria-valuenow={value}
-      aria-disabled={disabled}
-      tabIndex={disabled ? -1 : 0}
-      title={`${row.help ? `${row.help}\n` : ''}끌거나 눌러 조절 · Shift 미세 · 더블클릭 기본값`}
-      onPointerDown={e => {
-        if (disabled) return
-        e.currentTarget.setPointerCapture(e.pointerId)
-        const nt = e.shiftKey ? t : setFromX(e.clientX)
-        drag.current = { x: e.clientX, t: nt }
-      }}
-      onPointerMove={e => {
-        const d = drag.current
-        if (!d || disabled) return
-        const w = ref.current!.getBoundingClientRect().width || 1
-        d.t = Math.min(1, Math.max(0, d.t + ((e.clientX - d.x) / w) * (e.shiftKey ? 0.1 : 1)))
-        d.x = e.clientX
-        onChange(quantize(fromNorm(d.t, row.min, row.max, scale), step, row.min, row.max))
-      }}
-      onPointerUp={() => { drag.current = null }}
-      onDoubleClick={() => !disabled && onChange(row.def)}
-      onKeyDown={e => {
-        if (disabled) return
-        const k = e.shiftKey ? 0.002 : 0.02
-        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); onChange(quantize(fromNorm(Math.min(1, t + k), row.min, row.max, scale), step, row.min, row.max)) }
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); onChange(quantize(fromNorm(Math.max(0, t - k), row.min, row.max, scale), step, row.min, row.max)) }
-      }}
-    >
-      <div className="fill" style={{ left: `${Math.min(zero, t) * 100}%`, width: `${Math.abs(t - zero) * 100}%` }} />
-      <div className="thumb" style={{ left: `${t * 100}%` }} />
-    </div>
-  )
-}
-
-function ValueCell({ row, value, onChange, changed }: { row: Num; value: number; onChange: (v: number) => void; changed?: boolean }) {
-  const [edit, setEdit] = useState<string | null>(null)
-  const text = row.fmt ? row.fmt(value)
-    : row.unit === 'Hz' ? (value >= 1000 ? `${(value / 1000).toFixed(2)} kHz` : `${Math.round(value)} Hz`)
-    : `${fmtValue(value, row.unit, row.step ?? 0.1)}${row.unit ? ` ${row.unit}` : ''}`
-  if (edit !== null) {
-    return (
-      <input autoFocus value={edit} onChange={e => setEdit(e.target.value)} onBlur={() => setEdit(null)} aria-label={`${row.label} 값 입력`}
-        onKeyDown={e => {
-          if (e.key === 'Enter') { let v = parseFloat(edit); if (/k$/i.test(edit.trim())) v *= 1000; if (Number.isFinite(v)) onChange(quantize(v, row.step ?? 0.1, row.min, row.max)); setEdit(null) }
-          if (e.key === 'Escape') setEdit(null)
-        }}
-        className="ms-input mono w-full" />
-    )
-  }
-  return <button type="button" className={`val text-left hover:text-white ${changed ? 'changed' : ''}`} onClick={() => setEdit(String(value))} title={changed ? '템플릿 값에서 바뀜 — 눌러서 직접 입력' : '눌러서 직접 입력'}>{text}</button>
-}
-
-/** 파라미터 표 — 넓으면 두 열로 */
-export function ParamTable({ slot, p, set }: { slot: SlotId; p: ChainParams; set: Set }) {
-  const tpl = useUi(s => s.templateParams)
-  return (
-    <div className="ms-ptable">
-      {SCHEMA[slot].map((row, i) => {
-        if (row.kind === 'section') return <div key={i} className="sec">{row.label}</div>
-        const v = getPath(p, row.path)
-        const upd = (nv: unknown) => set(c => setPath(c, row.path, nv))
-        const changed = !!tpl && getPath(tpl, row.path) !== v
-        return (
-          <div key={i} className="ms-prow">
-            <span className="lbl" title={row.help ? `${row.label} — ${row.help}` : row.label}>{row.label}</span>
-            {row.kind === 'num' && <HSlider row={row} value={Number(v)} onChange={upd} />}
-            {row.kind === 'num' && <ValueCell row={row} value={Number(v)} onChange={upd} changed={changed} />}
-            {row.kind === 'bool' && (
-              <>
-                <div><button type="button" className={`ms-btn ${changed ? 'changed' : ''}`} aria-pressed={!!v} title={changed ? `템플릿 값에서 바뀜 · ${row.help ?? ''}` : row.help} onClick={() => upd(!v)} style={v ? { borderColor: 'var(--m-green-dim)', color: 'var(--m-green)' } : undefined}>{v ? row.on : row.off}</button></div>
-                <span />
-              </>
-            )}
-            {row.kind === 'select' && (
-              <>
-                <select className="ms-select" value={String(v)} aria-label={row.label} title={row.help}
-                  onChange={e => { const o = row.options.find(x => String(x.value) === e.target.value); if (o) upd(o.value) }}>
-                  {row.options.map(o => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
-                </select>
-                <span className={changed ? 'val changed' : 'val'}>{changed ? '바뀜' : ''}</span>
-              </>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 /** 캔버스 크기 맞추기 — 그리기 문맥이 없으면(테스트 환경 등) null */
 function ctx2d(c: HTMLCanvasElement) {
@@ -139,8 +31,8 @@ function ctx2d(c: HTMLCanvasElement) {
   return { g, w, h }
 }
 
-/** EQ 곡선 + 실시간 스펙트럼(처리 전 회색 · 처리 후 녹색) */
-export function EqWithSpectrum({ p, set, engine, height = 200 }: { p: ChainParams; set: Set; engine: MasteringEngine; height?: number }) {
+/** EQ 곡선 + 실시간 스펙트럼(처리 전 회색 · 처리 후 녹색). height 를 주지 않으면 부모 높이를 채운다 */
+export function EqWithSpectrum({ p, set, engine, height }: { p: ChainParams; set: Set; engine: MasteringEngine; height?: number }) {
   const cv = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     let raf = 0
@@ -178,15 +70,15 @@ export function EqWithSpectrum({ p, set, engine, height = 200 }: { p: ChainParam
     return () => cancelAnimationFrame(raf)
   }, [engine])
   return (
-    <div className="relative rounded-lg overflow-hidden border border-[var(--m-line-soft)]" style={{ height }}>
+    <div className="relative rounded-lg overflow-hidden border border-[var(--m-line-soft)]" style={{ height: height ?? '100%', minHeight: height ? undefined : 150 }}>
       <canvas ref={cv} className="absolute inset-0 w-full h-full block" aria-hidden />
       <EqGraph bare eq={p.eq} onChange={fn => set(c => ({ ...c, eq: fn(c.eq) }))} />
     </div>
   )
 }
 
-/** 최근 10초 게인 리덕션 그래프 — 리미터는 들어옴/나감 레벨과 천장도 함께 */
-function GrGraph({ engine, pick: pk, ceiling, height = 200 }: { engine: MasteringEngine; pick: (m: Meters) => number; ceiling?: number; height?: number }) {
+/** 최근 10초 게인 리덕션 그래프(부모 높이를 채움) — 리미터는 들어옴/나감 레벨과 천장도 함께 */
+function GrGraph({ engine, pick: pk, ceiling }: { engine: MasteringEngine; pick: (m: Meters) => number; ceiling?: number }) {
   const cv = useRef<HTMLCanvasElement>(null)
   const inTxt = useRef<HTMLSpanElement>(null)
   const outTxt = useRef<HTMLSpanElement>(null)
@@ -231,10 +123,10 @@ function GrGraph({ engine, pick: pk, ceiling, height = 200 }: { engine: Masterin
     return () => cancelAnimationFrame(raf)
   }, [engine, ceiling, pk])
   return (
-    <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-      <canvas ref={cv} className="w-full block rounded-lg border border-[var(--m-line-soft)]" style={{ height }} aria-label="최근 10초 게인 리덕션" />
+    <div className="ms-graphfill">
+      <canvas ref={cv} className="block w-full flex-1 min-h-0 rounded-lg border border-[var(--m-line-soft)]" aria-label="최근 10초 게인 리덕션" />
       {ceiling !== undefined && (
-        <div className="flex gap-4 text-[11px]">
+        <div className="flex gap-4 text-[11px] pt-1.5 flex-none">
           <span className="dim" title="리미터로 들어오는 소리의 최고 높이">들어옴 <span ref={inTxt} className="mono text-[var(--m-text)]">-∞</span> dB</span>
           <span className="dim" title="리미터를 지난 소리의 최고 높이 — 천장을 넘으면 빨강">나감 <span ref={outTxt} className="mono">-∞</span> dB</span>
           <span className="dim">천장 <span className="mono text-[var(--m-text)]">{ceiling.toFixed(1)}</span> dB</span>
@@ -244,65 +136,140 @@ function GrGraph({ engine, pick: pk, ceiling, height = 200 }: { engine: Masterin
   )
 }
 
-/** 넓이 시각화 — 막대(100% = 원래 그대로) */
-function WidthBars({ rows }: { rows: [string, number][] }) {
+const GRAPH_W = 320, GRAPH_H = 150
+
+/** 타격감 — 드럼 한 타의 엔벨로프: 회색 = 처리 전, 녹색 = 어택·서스테인을 적용한 뒤 */
+function TransientShape({ attack, sustain }: { attack: number; sustain: number }) {
+  const W = GRAPH_W, H = GRAPH_H, pad = 6
+  const N = 120
+  const pre: string[] = [], post: string[] = []
+  for (let i = 0; i <= N; i++) {
+    const t = i / N
+    const env = t < 0.05 ? t / 0.05 : Math.exp(-(t - 0.05) * 5)
+    // 어택 구간(앞 ~80ms)과 꼬리 구간의 가중치
+    const aW = t < 0.05 ? 1 : Math.exp(-(t - 0.05) * 28)
+    const sW = t < 0.05 ? 0 : 1 - aW
+    const g = (attack / 100) * 9 * aW + (sustain / 100) * 7 * sW
+    const lin = Math.pow(10, Math.max(-15, Math.min(12, g)) / 20)
+    const y = (v: number) => H - pad - Math.min(1.9, v) * ((H - pad * 2) / 1.9)
+    const x = pad + t * (W - pad * 2)
+    pre.push(`${x.toFixed(1)},${y(env).toFixed(1)}`)
+    post.push(`${x.toFixed(1)},${y(env * lin).toFixed(1)}`)
+  }
+  const base = `${pad},${H - pad}`
   return (
-    <div className="grid gap-1.5" style={{ gridTemplateColumns: '52px 1fr 44px' }} aria-label="넓이">
-      {rows.map(([k, v]) => (
-        <React.Fragment key={k}>
-          <span className="text-[11px] dim">{k}</span>
-          <div className="relative h-3 rounded-md bg-[var(--m-well)] overflow-hidden">
-            <span className="absolute top-0 bottom-0 bg-[#b07be8]/70" style={{ left: `${50 - Math.min(200, v) / 4}%`, width: `${Math.min(200, v) / 2}%` }} />
-            <span className="absolute top-[-2px] bottom-[-2px] left-[25%] w-px bg-[var(--m-line)]" />
-            <span className="absolute top-[-2px] bottom-[-2px] left-[75%] w-px bg-[var(--m-line)]" />
-          </div>
-          <span className="mono text-[11px] text-right">{Math.round(v)}%</span>
-        </React.Fragment>
-      ))}
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" preserveAspectRatio="none" aria-label="타격 엔벨로프 — 처리 전후">
+      <line x1={pad} x2={W - pad} y1={H - pad - (H - pad * 2) / 1.9} y2={H - pad - (H - pad * 2) / 1.9} stroke="#34373b" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+      <polygon points={`${base} ${pre.join(' ')} ${W - pad},${H - pad}`} fill="rgba(170,175,182,0.18)" />
+      <polyline points={pre.join(' ')} fill="none" stroke="#9ea3aa" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+      <polyline points={post.join(' ')} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+    </svg>
   )
 }
 
-/** 간단 시각화 — 값마다 가운데(0)에서 뻗는 막대 */
-function ValueBars({ rows }: { rows: { label: string; v: number; min: number; max: number; unit: string }[] }) {
+/** 부드러운 깎기 — 들어오는 레벨 → 나가는 레벨(점선 = 그대로, 녹색 = 깎은 뒤, 주황 = 스레숄드) */
+function ClipShape({ threshold, softness }: { threshold: number; softness: number }) {
+  const W = GRAPH_W, H = GRAPH_H, pad = 6
+  const t = Math.pow(10, threshold / 20)
+  const R = 1.5
+  const X = (v: number) => pad + ((v + R) / (2 * R)) * (W - pad * 2)
+  const Y = (v: number) => H - pad - ((v + R) / (2 * R)) * (H - pad * 2)
+  let d = ''
+  for (let i = 0; i <= 80; i++) {
+    const x = -R + (i / 80) * 2 * R
+    d += `${i ? 'L' : 'M'} ${X(x).toFixed(1)} ${Y(softClip(x, t, softness / 100)).toFixed(1)} `
+  }
   return (
-    <div className="grid gap-x-2 gap-y-1.5 items-center" style={{ gridTemplateColumns: 'minmax(64px, auto) 1fr 56px' }} aria-label="값 막대">
-      {rows.map(r => {
-        const zero = r.min < 0 ? -r.min / (r.max - r.min) : 0
-        const t = (Math.min(r.max, Math.max(r.min, r.v)) - r.min) / (r.max - r.min)
-        return (
-          <React.Fragment key={r.label}>
-            <span className="text-[11px] dim whitespace-nowrap">{r.label}</span>
-            <div className="ms-bar">
-              {r.min < 0 && <span className="mid" />}
-              <span className="v" style={{ left: `${Math.min(zero, t) * 100}%`, width: `${Math.abs(t - zero) * 100}%`, background: 'var(--m-green)' }} />
-            </div>
-            <span className="mono text-[11px] text-right">{r.v > 0 && r.min < 0 ? '+' : ''}{r.v.toFixed(r.unit === '%' ? 0 : 1)} {r.unit}</span>
-          </React.Fragment>
-        )
+    <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" preserveAspectRatio="none" aria-label="깎기 곡선">
+      <line x1={X(-R)} y1={Y(-R)} x2={X(R)} y2={Y(R)} stroke="#42454a" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+      <line x1={pad} x2={W - pad} y1={Y(t)} y2={Y(t)} stroke="#f0a43a" strokeOpacity={0.5} vectorEffect="non-scaling-stroke" />
+      <line x1={pad} x2={W - pad} y1={Y(-t)} y2={Y(-t)} stroke="#f0a43a" strokeOpacity={0.5} vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
+/** 스테레오 폭 — 반원 위에 대역마다 퍼지는 각도(100% = 원래, 바깥 호일수록 높은 대역) */
+function StereoField({ bands, bassMono }: { bands: { label: string; width: number }[]; bassMono?: number }) {
+  const W = GRAPH_W, H = GRAPH_H
+  const cx = W / 2, cy = H - 18
+  const rMax = Math.min(cx - 36, cy - 14)
+  const arc = (r: number, span: number) => {
+    const a = Math.min(90, (Math.max(0, Math.min(200, span)) / 100) * 45)
+    const p = (deg: number) => [cx + r * Math.sin((deg * Math.PI) / 180), cy - r * Math.cos((deg * Math.PI) / 180)]
+    const [x0, y0] = p(-a), [x1, y1] = p(a)
+    return a < 0.5 ? '' : `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
+  }
+  const colors = ['#b07be8', '#52d27e', '#4f8fe8']
+  const n = bands.length
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" aria-label="스테레오 폭">
+      {[0.5, 1].map(k => <path key={k} d={`M ${cx - rMax * k} ${cy} A ${rMax * k} ${rMax * k} 0 0 1 ${cx + rMax * k} ${cy}`} fill="none" stroke="#34373b" />)}
+      <line x1={cx} y1={cy} x2={cx} y2={cy - rMax} stroke="#34373b" strokeDasharray="2 3" />
+      <line x1={cx} y1={cy} x2={cx - rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#42454a" strokeDasharray="2 3" />
+      <line x1={cx} y1={cy} x2={cx + rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#42454a" strokeDasharray="2 3" />
+      {bands.map((b, i) => {
+        const r = rMax * (n === 1 ? 0.78 : 0.45 + (i / (n - 1)) * 0.5)
+        return <path key={b.label} d={arc(r, b.width)} fill="none" stroke={colors[n === 1 ? 1 : i]} strokeWidth={n === 1 ? 10 : 7} strokeLinecap="round" />
       })}
-    </div>
+      <text x={10} y={cy + 4} fill="#9ea3aa" fontSize={11}>L</text>
+      <text x={W - 18} y={cy + 4} fill="#9ea3aa" fontSize={11}>R</text>
+      <text x={cx} y={cy - rMax - 4} fill="#868b93" fontSize={10} textAnchor="middle">가운데</text>
+      {bands.map((b, i) => (
+        <text key={b.label} x={10 + i * 70} y={H - 4} fill={colors[n === 1 ? 1 : i]} fontSize={11}>{b.label} {Math.round(b.width)}%</text>
+      ))}
+      {bassMono !== undefined && bassMono >= 20 && <text x={W - 8} y={H - 4} fill="#9ea3aa" fontSize={11} textAnchor="end">{Math.round(bassMono)} Hz 아래 모노</text>}
+    </svg>
   )
 }
 
-const GRAPH_H = 200
+/** 미드/사이드 EQ 곡선 — 녹색 = 가운데(미드), 파랑 = 양옆(사이드), ±12 dB */
+function MsEqCurve({ mid, side }: { mid: MsBandSet; side: MsBandSet }) {
+  const W = GRAPH_W, H = GRAPH_H, fs = 48000, N = 96
+  const line = (b: MsBandSet) => {
+    const secs = msSections(b, fs)
+    const pts: string[] = []
+    for (let i = 0; i <= N; i++) {
+      const f = 20 * Math.pow(1000, i / N)
+      let db = 0
+      for (const c of secs) db += coefsMagDb(c, f, fs)
+      pts.push(`${((i / N) * W).toFixed(1)},${(H / 2 - (Math.max(-12, Math.min(12, db)) / 12) * (H / 2 - 8)).toFixed(1)}`)
+    }
+    return pts.join(' ')
+  }
+  const fx = (f: number) => (Math.log(f / 20) / Math.log(1000)) * W
+  // 글자는 HTML 로(늘어나는 SVG 안에 두면 글자도 늘어난다)
+  return (
+    <div className="relative h-full min-h-[120px]">
+      <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg absolute inset-0" preserveAspectRatio="none" aria-label="미드·사이드 EQ 곡선">
+        {[100, 1000, 10000].map(f => <line key={f} x1={fx(f)} x2={fx(f)} y1={0} y2={H} stroke="#26282b" vectorEffect="non-scaling-stroke" />)}
+        {[-6, 6].map(d => <line key={d} x1={0} x2={W} y1={H / 2 - (d / 12) * (H / 2 - 8)} y2={H / 2 - (d / 12) * (H / 2 - 8)} stroke="#26282b" vectorEffect="non-scaling-stroke" />)}
+        <line x1={0} x2={W} y1={H / 2} y2={H / 2} stroke="#42454a" vectorEffect="non-scaling-stroke" />
+        <polyline points={line(side)} fill="none" stroke="#4f8fe8" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        <polyline points={line(mid)} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="absolute left-2 top-1 text-[11px] flex gap-3 pointer-events-none"><span style={{ color: '#52d27e' }}>미드</span><span style={{ color: '#4f8fe8' }}>사이드</span></div>
+      <div className="absolute right-2 bottom-1 text-[10px] faint pointer-events-none">20 Hz – 20 kHz · ±12 dB</div>
+    </div>
+  )
+}
 
 function Graph({ slot, p, set, engine }: { slot: SlotId; p: ChainParams; set: Set; engine: MasteringEngine }) {
   const gr = GR_PICK[slot]
-  if (slot === 'eq') return <EqWithSpectrum p={p} set={set} engine={engine} height={GRAPH_H} />
-  if (slot === 'limiter') return <GrGraph engine={engine} pick={GR_PICK.limiter!} ceiling={p.limiter.ceiling} height={GRAPH_H - 26} />
+  if (slot === 'eq') return <EqWithSpectrum p={p} set={set} engine={engine} />
+  if (slot === 'limiter') return <GrGraph engine={engine} pick={GR_PICK.limiter!} ceiling={p.limiter.ceiling} />
   if (slot === 'comp') {
     return (
-      <div className="flex items-start gap-3">
+      <div className="flex items-stretch gap-3 h-full min-h-0">
         <div className="flex flex-col gap-1.5 flex-none"><TransferCurve threshold={p.comp.threshold} ratio={p.comp.ratio} knee={p.comp.knee} makeup={p.comp.makeup} /><p className="text-[11px] dim leading-relaxed max-w-[120px]">대각선보다 아래로 꺾인 만큼 큰 소리를 눌러요.</p></div>
-        <GrGraph engine={engine} pick={gr!} height={GRAPH_H - 10} />
+        <GrGraph engine={engine} pick={gr!} />
       </div>
     )
   }
   if (slot === 'multiband') {
     return (
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-2 h-full min-h-0">
+        <div className="flex flex-wrap gap-3 flex-none">
           {['저역', '중역', '고역'].map((nm, i) => (
             <div key={nm} className="flex flex-col items-center gap-1">
               <TransferCurve threshold={p.multiband.bands[i].threshold} ratio={p.multiband.bands[i].ratio} knee={6} makeup={p.multiband.bands[i].gain} />
@@ -310,13 +277,16 @@ function Graph({ slot, p, set, engine }: { slot: SlotId; p: ChainParams; set: Se
             </div>
           ))}
         </div>
-        <GrGraph engine={engine} pick={gr!} height={80} />
+        <GrGraph engine={engine} pick={gr!} />
       </div>
     )
   }
   if (slot === 'saturation') return <div className="flex items-center gap-3"><SatCurve drive={p.saturation.drive} mode={p.saturation.mode} /><p className="text-[11px] dim leading-relaxed">곡선이 위아래로 둥글게 휠수록 색이 진해져요.</p></div>
-  if (slot === 'stereo') return <WidthBars rows={[['전체', p.stereo.width]]} />
-  if (slot === 'imager') return <WidthBars rows={[['저역', p.imager.widths[0]], ['중역', p.imager.widths[1]], ['고역', p.imager.widths[2]]]} />
+  if (slot === 'stereo') return <StereoField bands={[{ label: '전체', width: p.stereo.width }]} bassMono={p.stereo.bassMono} />
+  if (slot === 'imager') return <StereoField bands={[{ label: '저역', width: p.imager.widths[0] }, { label: '중역', width: p.imager.widths[1] }, { label: '고역', width: p.imager.widths[2] }]} />
+  if (slot === 'transient') return <TransientShape attack={p.transient.attack} sustain={p.transient.sustain} />
+  if (slot === 'clipper') return <ClipShape threshold={p.clipper.threshold} softness={p.clipper.softness} />
+  if (slot === 'mseq') return <MsEqCurve mid={p.mseq.mid} side={p.mseq.side} />
   if (slot === 'match') {
     const W = 400, H = 90
     const x = (i: number) => (i / (MATCH_FREQS.length - 1)) * W
@@ -332,11 +302,7 @@ function Graph({ slot, p, set, engine }: { slot: SlotId; p: ChainParams; set: Se
       </div>
     )
   }
-  if (gr) return <GrGraph engine={engine} pick={gr} height={GRAPH_H - 10} />
-  // 그 외(가운데·양옆 다듬기 · 타격감 · 부드러운 깎기) — dB·% 값 막대
-  const rows = SCHEMA[slot].filter((r): r is Num => r.kind === 'num' && (r.unit === 'dB' || r.unit === '%') && r.min < r.max)
-  const pre = slot === 'mseq' ? (r: Num) => `${r.path.includes('.mid.') ? '미드' : '사이드'} ${r.label}` : (r: Num) => r.label
-  return <ValueBars rows={rows.map(r => ({ label: pre(r), v: Number(getPath(p, r.path)), min: r.min, max: r.max, unit: r.unit ?? '' }))} />
+  return <GrGraph engine={engine} pick={gr!} />
 }
 
 /** 도킹 패널 머리줄(32px 한 줄) — 모듈·도구 공통 */
@@ -399,7 +365,13 @@ function ModuleHelpBody({ slot }: { slot: SlotId }) {
 
 const shortLabel = (label: string, col: string) => (label === col ? '켬' : col && label.startsWith(`${col} `) ? label.slice(col.length + 1) : label)
 
-function ParamCell({ row, col, p, set, recommend }: { row: ParamRow; col: string; p: ChainParams; set: Set; recommend: Set }) {
+/** 노브 크기 — 파라미터가 적은 모듈은 크게(60), 많은 모듈(EQ·다이내믹 EQ·M/S EQ·멀티밴드)은 44 */
+export function knobSize(slot: SlotId) {
+  const n = SCHEMA[slot].filter(r => r.kind === 'num').length
+  return n > 10 ? 44 : n > 6 ? 52 : 60
+}
+
+function ParamCell({ row, col, p, set, recommend, size }: { row: ParamRow; col: string; p: ChainParams; set: Set; recommend: Set; size: number }) {
   const tpl = useUi(s => s.templateParams)
   const v = getPath(p, row.path)
   const upd = (nv: unknown) => set(c => setPath(c, row.path, nv))
@@ -428,7 +400,7 @@ function ParamCell({ row, col, p, set, recommend }: { row: ParamRow; col: string
   return (
     <div className={`ms-pcell ${d ? 'warn' : ''} ${changed ? 'changed' : ''}`} role="group" aria-label={row.label} title={d ? `${tip}\n주의: ${d.why}` : tip}>
       <Knob label={short} value={Number(v)} min={row.min} max={row.max} def={row.def} step={row.step ?? 0.1} unit={row.unit} scale={row.scale}
-        format={row.fmt} onChange={upd} size={28} color={d ? 'var(--m-amber)' : 'var(--m-green)'} bipolar={row.min < 0 && row.max > 0} />
+        format={row.fmt} onChange={upd} size={size} color={d ? 'var(--m-amber)' : 'var(--m-green)'} bipolar={row.min < 0 && row.max > 0} />
       {d && (
         <button type="button" className="ms-rec" title={`${d.why} — ${row.label}을(를) ${d.fix}${row.unit ? ` ${row.unit}` : ''}(으)로`}
           onClick={() => recommend(c => setPath(c, row.path, d.fix))}>추천값</button>
@@ -437,18 +409,19 @@ function ParamCell({ row, col, p, set, recommend }: { row: ParamRow; col: string
   )
 }
 
-/** 파라미터 열 — 밴드·섹션마다 한 열(켬·모양 같은 스위치 위, 노브 아래) */
+/** 파라미터 열 — 밴드·섹션마다 한 열(켬·모양 같은 스위치 위, 노브 아래). 파라미터당 컨트롤은 노브 하나 */
 function ParamColumns({ slot, p, set, recommend }: { slot: SlotId; p: ChainParams; set: Set; recommend: Set }) {
   const cols = paramColumns(slot)
+  const size = knobSize(slot)
   return (
     <div className={`ms-pcols ${slot === 'eq' ? 'eq' : cols.length > 1 ? 'sec' : 'flat'}`} role="group" aria-label="파라미터">
       {cols.map(c => (
         <div key={c.label || 'all'} className="ms-pcol">
           {c.label && <div className="ms-pcolhead">{c.label}</div>}
           {c.rows.some(r => r.kind !== 'num') && (
-            <div className="sw">{c.rows.filter(r => r.kind !== 'num').map(r => <ParamCell key={r.path} row={r} col={c.label} p={p} set={set} recommend={recommend} />)}</div>
+            <div className="sw">{c.rows.filter(r => r.kind !== 'num').map(r => <ParamCell key={r.path} row={r} col={c.label} p={p} set={set} recommend={recommend} size={size} />)}</div>
           )}
-          <div className="kn">{c.rows.filter(r => r.kind === 'num').map(r => <ParamCell key={r.path} row={r} col={c.label} p={p} set={set} recommend={recommend} />)}</div>
+          <div className="kn">{c.rows.filter(r => r.kind === 'num').map(r => <ParamCell key={r.path} row={r} col={c.label} p={p} set={set} recommend={recommend} size={size} />)}</div>
         </div>
       ))}
     </div>
@@ -494,7 +467,7 @@ export function ModulePanel({ slot, p, set, engine, heading, onClose, folded, on
       {!folded && (
         <>
           {helpOpen && <ModuleHelpBody slot={slot} />}
-          <div className="ms-modbody">
+          <div className={`ms-modbody ${slot === 'eq' ? 'eq' : ''}`}>
             <div className={`ms-modgraph ${bypass ? 'opacity-50' : ''}`}><Graph slot={slot} p={p} set={set} engine={engine} /></div>
             <ParamColumns slot={slot} p={p} set={set} recommend={recommend ?? set} />
           </div>

@@ -2,7 +2,8 @@
 
 /**
  * 믹서 보기 — 스템마다 세로 채널 스트립을 가로로 나란히 + 맨 오른쪽 「마스터」 스트립.
- * 슬롯을 누르면 아래 고정 패널에서 편집한다(한 번에 하나, 떠 있는 창 없음).
+ * 슬롯을 누르면 고정 패널에서 편집한다(한 번에 하나, 떠 있는 창 없음).
+ * 스템이 없으면 믹서 영역은 작은 안내 카드로 접고, 남는 높이는 마스터 모듈 패널이 쓴다(빈 영역 없음).
  */
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { FolderOpen, X } from 'lucide-react'
@@ -25,8 +26,8 @@ const STRIP_MIN = 108, MASTER_W = 150, GAP = 4
 const signed = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`
 const panText = (v: number) => (v === 0 ? 'C' : v < 0 ? `L${-v}` : `R${v}`)
 
-/** 세그먼트 레벨 미터 — read() 가 선형 피크(채널별)를 돌려준다 */
-function LevelMeter({ read, height, label }: { read: () => number[]; height: number; label: string }) {
+/** 세그먼트 레벨 미터 — read() 가 선형 피크(채널별)를 돌려준다. height 'fill' 이면 세로로 늘어난다 */
+function LevelMeter({ read, height, label }: { read: () => number[]; height: number | 'fill'; label: string }) {
   const cv = useRef<HTMLCanvasElement>(null)
   const readRef = useRef(read)
   useEffect(() => { readRef.current = read })
@@ -63,7 +64,10 @@ function LevelMeter({ read, height, label }: { read: () => number[]; height: num
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [])
-  return <canvas ref={cv} role="img" aria-label={label} className={label.includes('출력') ? 'st' : undefined} style={{ height }} />
+  const st = label.includes('출력')
+  const canvas = <canvas ref={cv} role="img" aria-label={label} className={st ? 'st' : undefined} style={height === 'fill' ? undefined : { height }} />
+  // fill: 캔버스를 감싸는 상자가 늘어나고 캔버스는 그 안에 절대 배치 — 캔버스 속성 높이가 상자 높이를 키우는 되먹임을 막는다
+  return height === 'fill' ? <div className={`ms-meterfill ${st ? 'st' : ''}`}>{canvas}</div> : canvas
 }
 
 function StemStrip({ s, index, engine, folded, sel, onSel, us }: {
@@ -71,7 +75,6 @@ function StemStrip({ s, index, engine, folded, sel, onSel, us }: {
   onSel: (b: Band) => void; us: (patch: Partial<Stem>) => void
 }) {
   const readLevel = () => [engine?.stemLevels?.()[index] ?? 0]
-  const faderH = folded ? 90 : 170
   return (
     <div className={`ms-strip ${folded ? 'folded' : ''}`} data-strip="stem" aria-label={`${s.title} 채널`}>
       <h4 title={s.title}>{s.title}</h4>
@@ -100,15 +103,16 @@ function StemStrip({ s, index, engine, folded, sel, onSel, us }: {
         <button type="button" aria-pressed={s.solo} aria-label={`${s.title} 솔로`} title="솔로(S) — 이 채널만 듣기" onClick={() => us({ solo: !s.solo })}>S</button>
       </div>
       <div className="ms-fm">
-        <Fader label="게인" value={s.gain} min={-24} max={12} def={0} step={0.1} unit="dB" height={faderH} onChange={v => us({ gain: v })} />
-        <LevelMeter read={readLevel} height={faderH} label={`${s.title} 레벨`} />
+        <Fader label="게인" value={s.gain} min={-24} max={12} def={0} step={0.1} unit="dB" height="fill" onChange={v => us({ gain: v })} />
+        <LevelMeter read={readLevel} height="fill" label={`${s.title} 레벨`} />
       </div>
       <div className="ms-nametag" title={s.title}>{s.title}</div>
     </div>
   )
 }
 
-function MasterStrip({ engine, sel, onSel }: { engine: MasteringEngine | null; sel: Sel; onSel: (s: SlotId) => void }) {
+/** 마스터 스트립 — wide 면(스템 없음) 모듈 슬롯을 두 열로 놓아 높이를 줄인다 */
+function MasterStrip({ engine, sel, onSel, wide }: { engine: MasteringEngine | null; sel: Sel; onSel: (s: SlotId) => void; wide?: boolean }) {
   const params = useMastering(s => s.params)
   const setParams = useMastering(s => s.setParams)
   const [dragSlot, setDragSlot] = useState<SlotId | null>(null)
@@ -122,15 +126,15 @@ function MasterStrip({ engine, sel, onSel }: { engine: MasteringEngine | null; s
     return m && engine && !engine.paused ? [m.outLevel.peakL, m.outLevel.peakR] : [0, 0]
   }
   return (
-    <div className="ms-strip master" data-strip="master" aria-label="마스터 채널">
+    <div className={`ms-strip master ${wide ? 'wide' : ''}`} data-strip="master" aria-label="마스터 채널">
       <h4>마스터</h4>
-      <span className="sub">처리</span>
-      <div className="flex flex-col gap-[3px]">
+      <span className="sub">처리 — 누르면 {wide ? '왼쪽' : '아래'}에서 편집</span>
+      <div className="slots flex flex-col gap-[3px]">
         {params.order.map(s => (
           <button key={s} type="button" draggable
             className={`ms-slot ${params.bypass[s] ? 'flat' : 'on'} ${dragSlot === s ? 'drag' : ''}`}
             aria-pressed={sel?.kind === 'master' && sel.slot === s}
-            title={`${MODULE_LABEL[s]}${params.bypass[s] ? ' (꺼짐)' : ''} — 눌러서 아래에서 편집 · 더블클릭 켬/끔 · 끌어서 순서 바꾸기`}
+            title={`${MODULE_LABEL[s]}${params.bypass[s] ? ' (꺼짐)' : ''} — 눌러서 편집 · 더블클릭 켬/끔 · 끌어서 순서 바꾸기`}
             onClick={() => onSel(s)} onDoubleClick={() => toggle(s)}
             onDragStart={e => { setDragSlot(s); e.dataTransfer.effectAllowed = 'move' }}
             onDragOver={e => { if (dragSlot) e.preventDefault() }}
@@ -140,15 +144,17 @@ function MasterStrip({ engine, sel, onSel }: { engine: MasteringEngine | null; s
           </button>
         ))}
       </div>
-      <NumField label="입력 맞춤" value={params.inputTrim} min={-24} max={24} def={0} step={0.1} unit="dB" width={136} onChange={v => setParams(p => ({ ...p, inputTrim: v }), 'inputTrim')} />
-      <div className="ms-sm" style={{ gridTemplateColumns: '1fr' }}>
-        <button type="button" className="ab" aria-pressed={params.listenOriginal} title="처리 전 원본 소리로 듣기"
-          onClick={() => useMastering.setState(s => ({ params: { ...s.params, listenOriginal: !s.params.listenOriginal } }))}>원본 듣기(A)</button>
+      <div className="ms-mrow">
+        <NumField label="입력 맞춤" value={params.inputTrim} min={-24} max={24} def={0} step={0.1} unit="dB" width={wide ? 120 : 136} onChange={v => setParams(p => ({ ...p, inputTrim: v }), 'inputTrim')} />
+        <div className="ms-sm" style={{ gridTemplateColumns: '1fr' }}>
+          <button type="button" className="ab" aria-pressed={params.listenOriginal} title="처리 전 원본 소리로 듣기"
+            onClick={() => useMastering.setState(s => ({ params: { ...s.params, listenOriginal: !s.params.listenOriginal } }))}>원본 듣기(A)</button>
+        </div>
       </div>
       <div className="ms-fm">
-        <Fader label="출력 게인" value={params.limiter.gain} min={-12} max={24} def={0} step={0.1} unit="dB" height={170}
+        <Fader label="출력 게인" value={params.limiter.gain} min={-12} max={24} def={0} step={0.1} unit="dB" height="fill"
           onChange={v => setParams(p => ({ ...p, limiter: { ...p.limiter, gain: v } }), 'slot:limiter')} />
-        <LevelMeter read={readOut} height={170} label="마스터 출력 레벨" />
+        <LevelMeter read={readOut} height="fill" label="마스터 출력 레벨" />
       </div>
       <div className="ms-nametag">마스터</div>
     </div>
@@ -165,13 +171,19 @@ function StemEqPanel({ s, band, onClose, us }: { s: Stem; band: Band; onClose: (
       </div>
       <div className="flex flex-wrap gap-4">
         {BANDS.map(b => (
-          <Knob key={b.id} label={b.label} value={s.eq[b.id]} min={-12} max={12} def={0} step={0.1} unit="dB" size={44} bipolar
+          <Knob key={b.id} label={b.label} value={s.eq[b.id]} min={-12} max={12} def={0} step={0.1} unit="dB" size={56} bipolar
             color={b.id === band ? 'var(--m-green)' : undefined}
             onChange={v => us({ eq: { ...s.eq, [b.id]: v } })} />
         ))}
       </div>
     </section>
   )
+}
+
+/** 처음 열 때 패널에 보일 마스터 모듈 — 켜진 것 중 첫 번째, 없으면 음량 상한 */
+function firstSlot(): SlotId {
+  const p = useMastering.getState().params
+  return p.order.find(s => !p.bypass[s]) ?? 'limiter'
 }
 
 export function MixerView() {
@@ -182,10 +194,11 @@ export function MixerView() {
   const engine = getEngine()
   const fileRef = useRef<HTMLInputElement>(null)
   const rowRef = useRef<HTMLDivElement>(null)
-  const [sel, setSel] = useState<Sel>(null)
+  const [sel, setSel] = useState<Sel>(() => ({ kind: 'master', slot: firstSlot() }))
   const [foldWanted, setFoldWanted] = useState(false)
   const [tooWide, setTooWide] = useState(false)
   const stems = useMemo(() => t?.stems ?? [], [t?.stems])
+  const noStems = stems.length === 0
 
   // 스템 값 → 재생 엔진(버퍼는 엔진이 이미 들고 있다)
   useEffect(() => {
@@ -222,46 +235,59 @@ export function MixerView() {
   const fileInput = <input ref={fileRef} type="file" accept="audio/*" multiple hidden onChange={e => { if (e.target.files && t) addStemFiles(t.id, Array.from(e.target.files)); e.target.value = '' }} />
   const stemLed = <Led on={!!t?.useStems} onClick={toggleStems} label={t?.useStems ? '스템으로 마스터링 중' : '스템으로 마스터링'} title="켜면 원곡 대신 스템을 섞은 소리로 재생·내보내기해요" />
 
+  const dock = (
+    <div className={`ms-mixdock ${sel ? '' : 'empty'}`}>
+      {!sel && <span>마스터 스트립의 모듈을 누르면 여기에 설정이 열려요</span>}
+      {sel?.kind === 'stem' && selStem && <StemEqPanel s={selStem} band={sel.band} onClose={() => setSel(null)} us={us(selStem.id)} />}
+      {sel?.kind === 'master' && engine && (
+        <ModulePanel slot={sel.slot} p={params} engine={engine} heading={`마스터 · ${MODULE_LABEL[sel.slot]}`}
+          set={fn => setParams(fn, `slot:${sel.slot}`)} onClose={() => setSel(null)} />
+      )}
+    </div>
+  )
+
+  if (noStems) {
+    // 스템 없음 — 작은 안내 카드 + 마스터 모듈 패널(왼쪽), 두 열 마스터 스트립(오른쪽)
+    return (
+      <div className="ms-mixer nostems" aria-label="믹서">
+        {fileInput}
+        <div className="ms-mixleft" ref={rowRef}>
+          <div className="ms-mixempty">
+            <div className="min-w-0">
+              <p>스템(보컬·드럼·베이스·반주처럼 나뉜 파일)을 넣으면 채널이 생겨요</p>
+              <p className="dim">자동으로 나누기는 준비 중이에요.{!t && ' 곡을 먼저 불러오세요.'}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 flex-none">
+              <button type="button" className="ms-btn" disabled={!t} onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 스템 파일 추가</button>
+              {t && stemLed}
+            </div>
+          </div>
+          {dock}
+        </div>
+        <MasterStrip engine={engine} sel={sel} onSel={slot => setSel({ kind: 'master', slot })} wide />
+      </div>
+    )
+  }
+
   return (
     <div className="ms-mixer" aria-label="믹서">
       {fileInput}
-      {stems.length > 0 && (
-        <div className="ms-mixbar">
-          {stemLed}
-          <button type="button" className="ms-btn" onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 스템 파일 추가</button>
-          {!t?.useStems && <span className="text-[11px] dim">「스템으로 마스터링」을 켜야 채널 조절이 소리에 반영돼요.</span>}
-          <button type="button" className="ms-btn ml-auto" aria-pressed={folded} disabled={tooWide}
-            title={tooWide ? '채널이 많아 자동으로 접었어요' : '채널을 이름·M/S·페이더만 남기고 접기'}
-            onClick={() => setFoldWanted(v => !v)}>{folded ? '펼치기' : '접기'}</button>
-        </div>
-      )}
+      <div className="ms-mixbar">
+        {stemLed}
+        <button type="button" className="ms-btn" onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 스템 파일 추가</button>
+        {!t?.useStems && <span className="text-[11px] dim">「스템으로 마스터링」을 켜야 채널 조절이 소리에 반영돼요.</span>}
+        <button type="button" className="ms-btn ml-auto" aria-pressed={folded} disabled={tooWide}
+          title={tooWide ? '채널이 많아 자동으로 접었어요' : '채널을 이름·M/S·페이더만 남기고 접기'}
+          onClick={() => setFoldWanted(v => !v)}>{folded ? '펼치기' : '접기'}</button>
+      </div>
       <div className="ms-mixrow" ref={rowRef}>
-        {stems.length === 0 && (
-          <div className="ms-mixempty">
-            <p>스템(보컬·드럼·베이스·반주처럼 나뉜 파일)을 넣으면 채널이 생겨요</p>
-            <p className="dim">자동으로 나누기는 준비 중이에요.</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" className="ms-btn" disabled={!t} onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 스템 파일 추가</button>
-              {t && stemLed}
-              {!t && <span className="text-[11px] dim">곡을 먼저 불러오세요.</span>}
-            </div>
-          </div>
-        )}
         {stems.map((s, i) => (
           <StemStrip key={s.id} s={s} index={i} engine={engine} folded={folded} sel={sel}
             onSel={band => setSel({ kind: 'stem', id: s.id, band })} us={us(s.id)} />
         ))}
         <MasterStrip engine={engine} sel={sel} onSel={slot => setSel({ kind: 'master', slot })} />
       </div>
-      {sel && (
-        <div className="ms-mixdock">
-          {sel.kind === 'stem' && selStem && <StemEqPanel s={selStem} band={sel.band} onClose={() => setSel(null)} us={us(selStem.id)} />}
-          {sel.kind === 'master' && engine && (
-            <ModulePanel slot={sel.slot} p={params} engine={engine} heading={`마스터 · ${MODULE_LABEL[sel.slot]}`}
-              set={fn => setParams(fn, `slot:${sel.slot}`)} onClose={() => setSel(null)} />
-          )}
-        </div>
-      )}
+      {dock}
     </div>
   )
 }
