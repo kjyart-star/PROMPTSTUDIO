@@ -155,7 +155,7 @@ export async function GET(request: Request) {
               prompt: originalItem.prompt || '',
               lyrics: originalItem.lyrics || '',
               notes: originalItem.notes || '',
-              form: originalItem.form || {},
+              form: { ...(originalItem.form || {}), ...(resultsArr[i]?.id ? { suno_audio_id: String(resultsArr[i].id) } : {}) },
               suno_task_id: taskId,
               status: 'completed',
               audio_url: finalExtraAudio,
@@ -171,7 +171,11 @@ export async function GET(request: Request) {
 
       // Only mark the parent complete after EVERY variation has been saved.
       const { data: saved, error } = await supabase.from('song_history')
-        .update({ status: 'completed', audio_url: finalAudioUrl, image_url: finalImageUrl })
+        .update({
+          status: 'completed', audio_url: finalAudioUrl, image_url: finalImageUrl,
+          // 스템 분리에 쓰는 Suno 곡 id — 이 id 가 있어야 나중에 보컬/악기를 나눌 수 있다
+          ...(resultsArr[0]?.id ? { form: { ...(originalItem.form || {}), suno_audio_id: String(resultsArr[0].id) } } : {}),
+        })
         .eq('id', historyId).eq('user_id', user.id).eq('suno_task_id', taskId)
         .select('id').maybeSingle()
       if (error || !saved) return NextResponse.json({ error: 'Could not save generated track' }, { status: 500 })

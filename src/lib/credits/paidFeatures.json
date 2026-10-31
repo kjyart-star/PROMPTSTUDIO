@@ -1,0 +1,14 @@
+{
+  "_doc": "스튜디오 유료 기능의 최악 원가와 받는 크레딧. 정본 문서: COOKIELAB docs/music-studio-paid-pricing-2026-11-01.md. 값이 바뀌면 이 파일과 문서를 같이 고친다. 마진 하한 검사(margin.test.ts)가 배포 게이트다.",
+  "fxKrwPerUsd": 1450,
+  "gatewayFeeKrw": 1,
+  "pgFeeRate": 0.033,
+  "deepestKrwPerCredit": 80,
+  "minMultiple": 2,
+  "features": [
+    { "id": "music.generate", "serviceId": "cookiemusic", "action": "music.generate", "credits": 8, "costUsd": 0.06, "failureFactor": 1.2, "storageKrw": 3 },
+    { "id": "music.cover", "serviceId": "cookiemusic", "action": "music.cover", "credits": 8, "costUsd": 0.06, "failureFactor": 1.2, "storageKrw": 3 },
+    { "id": "music.stem2", "serviceId": "cookiemusic", "action": "music.stem2", "credits": 3, "costUsd": 0.06, "failureFactor": 1.2, "storageKrw": 3, "note": "원가 미확정(apipass 표기 $0.005 / $0.06) → 큰 쪽" },
+    { "id": "image.albumart", "serviceId": "cookieplay", "action": "image.generate.gpt-image-2-5", "credits": 1, "costUsd": 0.01317, "failureFactor": 1.1, "storageKrw": 0.5, "note": "fal 1024² 보통 1장, 게이트웨이 경유" }
+  ]
+}

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/sync-suite-menu.mjs && node scripts/build-mastering-worklet.mjs",
+    "prebuild": "node scripts/sync-suite-menu.mjs && node scripts/build-mastering-worklet.mjs && vitest run src/lib/credits src/app/api/suno/stem src/app/api/studio/album-art",
     "build:worklet": "node scripts/build-mastering-worklet.mjs",
     "build": "next build",
     "start": "next start",

@@ -16,6 +16,8 @@ import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
 import QuickMasterDialog from './QuickMasterDialog'
 import LyricTimingEditor from './LyricTimingEditor'
+import AlbumArtDialog from './AlbumArtDialog'
+import StemDialog from './StemDialog'
 import { filterLibrary, isInstrumental, moveInOrder, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import dynamic from 'next/dynamic'
@@ -934,6 +936,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [quickMasterItem, setQuickMasterItem] = useState<any | null>(null)
   const [timingItem, setTimingItem] = useState<any | null>(null)
   const [queueCount, setQueueCount] = useState(0)
+  const [artItem, setArtItem] = useState<any | null>(null)
+  const [stemItem, setStemItem] = useState<any | null>(null)
+  const [artMilli, setArtMilli] = useState<number | null | undefined>(undefined)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -1198,6 +1203,11 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     check()
     return () => { dead = true; if (timer) clearTimeout(timer) }
   }, [user, currentTab])
+
+  useEffect(() => {
+    if (!user) return
+    fetch('/api/studio/album-art?quote=1').then((r) => r.json()).then((d) => setArtMilli(typeof d?.creditsMilli === 'number' ? d.creditsMilli : null)).catch(() => setArtMilli(null))
+  }, [user])
 
   const fetchPlaylists = async () => {
     if (!user) return
@@ -1883,6 +1893,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         onMastering={() => setCurrentTab('mastering')}
                         onQuickMaster={() => setQuickMasterItem(item)}
                         onEditTiming={() => setTimingItem(item)}
+                        onAlbumArt={() => setArtItem(item)}
+                        onStem={() => setStemItem(item)}
+                        artMilli={artMilli}
+                        stemMilli={creditPrices['music.stem2']}
                         onMove={libraryQuery.playlistId && libraryQuery.sort === 'playlist' ? (dir) => moveInPlaylist(item.id, dir) : undefined}
                         onDownload={() => downloadHistoryTrack(item)}
                         onTrash={() => setDeleteConfirmId(item.id)}
@@ -1895,7 +1909,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       ...(item.form?.kind === 'mastering' ? [uiLanguage === 'KO' ? '마스터링 완료' : uiLanguage === 'JA' ? 'マスタリング済み' : 'Mastered'] : []),
                       ...(masteredSourceIds.has(item.id) ? [uiLanguage === 'KO' ? '원곡' : uiLanguage === 'JA' ? '原曲' : 'Original'] : []),
                       ...(Array.isArray(item.form?.lrc) && item.form.lrc.length ? ['LRC'] : []),
-                      ...(item.form?.stems ? [uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'] : []),
+                      ...(item.form?.stems?.status === 'done' ? [uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'] : []),
                     ]
                     const stemBadge = badgeList.length ? (
                       <>{badgeList.map((b) => <span key={b} className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-primary">{b}</span>)}</>
@@ -2967,6 +2981,26 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         }}
         uiLanguage={uiLanguage}
       />
+
+      {artItem && (
+        <AlbumArtDialog
+          song={artItem}
+          userId={user?.id ?? null}
+          onClose={() => setArtItem(null)}
+          onApply={(url) => updateHistoryItem(artItem.id, { image_url: url })}
+          onBalance={(m) => setCreditBalance(m)}
+        />
+      )}
+
+      {stemItem && (
+        <StemDialog
+          song={history.find((h: any) => h.id === stemItem.id) || stemItem}
+          priceMilli={creditPrices['music.stem2']}
+          onClose={() => setStemItem(null)}
+          onChanged={() => { fetchSongHistory() }}
+          onBalance={(m) => setCreditBalance(m)}
+        />
+      )}
 
       {timingItem && (
         <LyricTimingEditor

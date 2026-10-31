@@ -44,6 +44,7 @@ export const SERVICE_ID = 'cookiemusic'
 export const CREDIT_ACTIONS = [
   'music.generate',
   'music.cover',
+  'music.stem2',
   'studio.prompt.gpt-4o-mini',
   // o3-mini 는 generate-prompt 가 gpt-4o-mini 로 내려보내지만 워커 단가표에는 별칭 행이 따로 있다
   'studio.prompt.o3-mini',

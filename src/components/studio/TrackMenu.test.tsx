@@ -11,7 +11,7 @@ const base = (over: any = {}) => ({
   playlists: [{ id: 'p1', title: '아침' }],
   signedIn: true,
   buttonClass: 'b', iconClass: 'i',
-  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onQuickMaster: vi.fn(), onEditTiming: vi.fn(), onDownload: vi.fn(), onTrash: vi.fn(),
+  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onQuickMaster: vi.fn(), onEditTiming: vi.fn(), onAlbumArt: vi.fn(), onStem: vi.fn(), artMilli: 1000, stemMilli: 3000, onDownload: vi.fn(), onTrash: vi.fn(),
   ...over,
 })
 
@@ -83,5 +83,19 @@ describe('TrackMenu', () => {
     render(<TrackMenu {...base({ item: { id: 'a', form: { lrc: [{ t: 1, text: 'x' }] } } })} />)
     fireEvent.click(screen.getByLabelText('더보기'))
     expect(screen.getByText('LRC 내보내기')).toBeTruthy()
+  })
+
+  it('유료 항목에는 ✦ 크레딧 표기가 붙고 스템이 끝난 곡은 「스템 보기」로 바뀐다', () => {
+    const p = base()
+    const { unmount } = render(<TrackMenu {...p} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.getByText('✦1')).toBeTruthy()
+    expect(screen.getByText('✦3')).toBeTruthy()
+    fireEvent.click(screen.getByText(/앨범아트 만들기/))
+    expect(p.onAlbumArt).toHaveBeenCalled()
+    unmount()
+    render(<TrackMenu {...base({ item: { id: 'a', form: { stems: { status: 'done' } } } })} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.getByText('스템 보기')).toBeTruthy()
   })
 })

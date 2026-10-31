@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import LyricsHelper from './LyricsHelper'
 import { parseTiming, toLrc, type TimedLine } from './lrc'
+import { PriceBadge } from './PaidConfirm'
 
 type Lang = 'KO' | 'JA' | 'EN'
 
@@ -15,6 +16,10 @@ const T = {
   mastering: { KO: '고급 마스터링', JA: '詳細マスタリング', EN: 'Advanced mastering' },
   quick: { KO: '마스터링', JA: 'マスタリング', EN: 'Mastering' },
   timing: { KO: '가사 시간 편집', JA: '歌詞タイミング編集', EN: 'Edit lyric timing' },
+  art: { KO: '앨범아트 만들기 · 올리기', JA: 'アルバムアート', EN: 'Album art' },
+  stem: { KO: '스템 분리 (보컬/악기)', JA: 'ステム分離', EN: 'Split stems' },
+  stemView: { KO: '스템 보기', JA: 'ステムを見る', EN: 'View stems' },
+  stemBusy: { KO: '스템 분리 중…', JA: '分離中…', EN: 'Splitting…' },
   up: { KO: '재생목록에서 한 칸 앞으로', JA: '1つ前へ', EN: 'Move up' },
   down: { KO: '재생목록에서 한 칸 뒤로', JA: '1つ後ろへ', EN: 'Move down' },
   lrcOut: { KO: 'LRC 내보내기', JA: 'LRC を書き出す', EN: 'Export LRC' },
@@ -47,6 +52,11 @@ export interface TrackMenuProps {
   onMastering: () => void
   onQuickMaster: () => void
   onEditTiming: () => void
+  onAlbumArt: () => void
+  onStem: () => void
+  /** 밀리크레딧 — 모르면 undefined(「유료」만 보인다) */
+  artMilli?: number | null
+  stemMilli?: number | null
   /** 재생목록 보기에서만 넘긴다 */
   onMove?: (dir: -1 | 1) => void
   onDownload: () => void
@@ -64,6 +74,7 @@ export default function TrackMenu(p: TrackMenuProps) {
   const wrap = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const area = useRef<HTMLTextAreaElement>(null)
+  const stemStatus = p.item.form?.stems?.status as string | undefined
   const hasLrc = Array.isArray(p.item.form?.lrc) && p.item.form.lrc.length > 0
 
   useEffect(() => {
@@ -103,6 +114,13 @@ export default function TrackMenu(p: TrackMenuProps) {
           <button role="menuitem" className={row} onClick={() => { p.onRestorePrompt(); close() }}>{T.restore[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onQuickMaster(); close() }}>{T.quick[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onMastering(); close() }}>{T.mastering[l]}</button>
+          <button role="menuitem" className={`${row} flex items-center gap-2`} onClick={() => { p.onAlbumArt(); close() }}>
+            {T.art[l]} <PriceBadge milli={p.artMilli} className="ml-auto" />
+          </button>
+          <button role="menuitem" className={`${row} flex items-center gap-2`} onClick={() => { p.onStem(); close() }}>
+            {stemStatus === 'done' ? T.stemView[l] : stemStatus === 'processing' ? T.stemBusy[l] : T.stem[l]}
+            {stemStatus === 'done' || stemStatus === 'processing' ? null : <PriceBadge milli={p.stemMilli} className="ml-auto" />}
+          </button>
           <button role="menuitem" className={row} onClick={() => { p.onEditTiming(); close() }}>{T.timing[l]}</button>
           <button role="menuitem" className={row} onClick={() => { fileRef.current?.click(); close() }}>{T.lrc[l]}</button>
           {hasLrc && <button role="menuitem" className={row} onClick={() => {

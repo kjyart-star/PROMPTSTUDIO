@@ -343,6 +343,36 @@ export async function createSunoTask(
   return { ok: false, message: SUNO_UNAVAILABLE_MESSAGE, attempts }
 }
 
+/**
+ * 스템 분리(보컬/악기 2트랙) 접수 — **APIPASS 전용**이다(`suno/vocal-separation`, 입력은 APIPASS 작업 id 와
+ * 그 결과의 audioId). kie 로 만든 곡은 이 경로로 못 나눈다.
+ * 문서: https://apipass.dev/model/suno/suno_vocal-separation (2026-11-01 확인)
+ */
+export async function createStemTask(parentTaskRef: string, audioId: string): Promise<SunoCreateOutcome> {
+  const { channel, ref } = parseTaskRef(parentTaskRef)
+  if (channel !== 'apipass') {
+    return { ok: false, message: '이 곡은 스템 분리를 지원하지 않는 경로로 만들어졌어요.', attempts: [{ channel, reason: '스템 미지원 채널' }] }
+  }
+  const cred = await providerCredential('apipass')
+  if (!cred.key || !cred.enabled) {
+    return { ok: false, message: SUNO_UNAVAILABLE_MESSAGE, attempts: [{ channel: 'apipass', reason: !cred.key ? '키 없음' : '사용 꺼짐' }] }
+  }
+  try {
+    const { status, body } = await callChannel(
+      'apipass',
+      `${BASE_URL.apipass()}/jobs/createTask`,
+      { method: 'POST', headers: authHeaders(cred.key), body: JSON.stringify({ model: 'suno/vocal-separation', input: { taskId: ref, audioId } }) },
+      CREATE_TIMEOUT_MS,
+    )
+    const taskId = str(body?.data?.taskId)
+    if (status < 400 && Number(body?.code) === 200 && taskId) return { ok: true, taskRef: `apipass:${taskId}`, channel: 'apipass' }
+    return { ok: false, message: SUNO_UNAVAILABLE_MESSAGE, attempts: [{ channel: 'apipass', reason: `${status} ${str(body?.message)}` }] }
+  } catch (err) {
+    const reason = err instanceof ChannelError ? `${err.status || '-'} ${err.message}` : '알 수 없는 실패'
+    return { ok: false, message: SUNO_UNAVAILABLE_MESSAGE, attempts: [{ channel: 'apipass', reason }] }
+  }
+}
+
 /** 작업 id 에서 채널을 읽는다. 접두사가 없으면 2채널 이전에 만든 것이라 apipass 다. */
 export function parseTaskRef(taskRef: string): { channel: SunoChannelId; ref: string } {
   const sep = taskRef.indexOf(':')
