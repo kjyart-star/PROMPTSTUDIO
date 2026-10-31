@@ -940,6 +940,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [timingItem, setTimingItem] = useState<any | null>(null)
   const [queueCount, setQueueCount] = useState(0)
   const [historyVersion, setHistoryVersion] = useState(0)
+  const [trashView, setTrashView] = useState(false)
+  const [trashCount, setTrashCount] = useState(0)
   const [artItem, setArtItem] = useState<any | null>(null)
   const [stemItem, setStemItem] = useState<any | null>(null)
   const [artMilli, setArtMilli] = useState<number | null | undefined>(undefined)
@@ -1236,6 +1238,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     check()
     return () => { dead = true; if (timer) clearTimeout(timer) }
   }, [user, currentTab])
+
+  /* 사이드바 「휴지통 (N)」 개수 — 지우거나 복원할 때마다 한 번만 다시 센다 */
+  useEffect(() => {
+    if (!user) return
+    let dead = false
+    fetch('/api/song-history?trash=1').then((r) => (r.ok ? r.json() : [])).then((d) => { if (!dead) setTrashCount(Array.isArray(d) ? d.length : 0) }).catch(() => {})
+    return () => { dead = true }
+  }, [user, trashRefreshKey, historyVersion])
 
   useEffect(() => {
     if (!user) return
@@ -1808,7 +1818,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         folderActions={folderActions}
         activePlaylistId={libraryQuery.playlistId ?? null}
         queueCount={queueCount}
-        onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
+        trashCount={trashCount}
+        trashActive={currentTab === 'library' && trashView}
+        onOpenTrash={() => { setCurrentTab('library'); setTrashView(true) }}
+        onPickPlaylist={(id) => { setTrashView(false); setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
           <div className={`w-full p-6 pb-8${currentTab === 'suno' || currentTab === 'studio' ? ' flex-1 min-h-0 flex flex-col xl:pb-4' : ''}`}>
@@ -1822,6 +1835,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   initialTitle={resultParts.title}
                   initialNegativePrompt={resultParts.negativePrompt}
                   renderTrackMenu={buildTrackMenu}
+                  onTrashTrack={(item) => setDeleteConfirmId(item.id)}
                   historyVersion={historyVersion}
                 />
               </WideFit>
@@ -1845,7 +1859,17 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
               </div>
             )}
 
-            {currentTab === 'library' && (
+            {currentTab === 'library' && trashView && (
+              <WideFit><div className="w-full space-y-4 pb-10">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-bold text-white">휴지통 ({trashCount})</h2>
+                  <button type="button" onClick={() => setTrashView(false)} className="ml-auto px-3 py-1.5 rounded-xl border border-[#262626] bg-[#161616] text-xs font-bold text-zinc-300 hover:text-primary cursor-pointer">← 보관함으로</button>
+                </div>
+                <LibraryTrash defaultOpen uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'} refreshKey={trashRefreshKey} onRestored={() => { fetchSongHistory(); setTrashRefreshKey((k) => k + 1) }} />
+              </div></WideFit>
+            )}
+
+            {currentTab === 'library' && !trashView && (
               <WideFit><div className="w-full flex items-start gap-4">
               <div className="flex-1 min-w-0 space-y-5 pb-10">
                 <StudioHero
@@ -2152,6 +2176,18 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           {isLarge && (
                             <button
                               type="button"
+                              aria-label={uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash'}
+                              title={item.is_published ? (uiLanguage === 'KO' ? '공개된 곡은 휴지통으로 보낼 수 없습니다' : 'Published tracks cannot be moved to trash') : (uiLanguage === 'KO' ? '휴지통으로 이동' : 'Move to trash')}
+                              disabled={!!item.is_published}
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item.id) }}
+                              className="absolute right-1 top-1 z-10 w-6 h-6 rounded-md bg-black/70 text-zinc-200 hover:text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none cursor-pointer disabled:opacity-0 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {isLarge && (
+                            <button
+                              type="button"
                               aria-label={uiLanguage === 'KO' ? '재생' : 'Play'}
                               onClick={(e) => { e.stopPropagation(); playHistoryTrack(item) }}
                               className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-primary text-black flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none cursor-pointer"
@@ -2227,6 +2263,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   if (user && libraryDetailTrack) updateHistoryItem(libraryDetailTrack.id, { liked: !libraryDetailTrack.liked })
                 }}
                 onDownload={() => libraryDetailTrack && downloadHistoryTrack(libraryDetailTrack)}
+                onTrash={libraryDetailTrack ? () => setDeleteConfirmId(libraryDetailTrack.id) : undefined}
                 onLoadIntoForm={() => {
                   if (!libraryDetailTrack) return
                   openHistoryItem(libraryDetailTrack, 'all')

@@ -51,14 +51,17 @@ export default function LibraryTrash({
   uiLanguage,
   refreshKey,
   onRestored,
+  defaultOpen = false,
 }: {
   uiLanguage: Lang
   /** 보관함에서 곡을 지울 때마다 바뀌어 목록을 다시 읽게 한다 */
   refreshKey: number
   onRestored: () => void
+  /** 사이드바 「휴지통」으로 연 화면에서는 처음부터 펼쳐 둔다 */
+  defaultOpen?: boolean
 }) {
   const lang = uiLanguage
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const [items, setItems] = useState<any[]>([])
   const [confirm, setConfirm] = useState<{ id: string | null } | null>(null)
   const [error, setError] = useState('')

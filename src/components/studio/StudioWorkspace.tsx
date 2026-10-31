@@ -24,6 +24,10 @@ interface StudioWorkspaceProps {
   onPickPlaylist?: (id: string | null) => void
   /** 생성 중인 곡 수 — 「음악 생성」 탭 숫자 배지와 안내 띠 */
   queueCount?: number
+  /** 사이드바 「휴지통 (N)」 */
+  trashCount?: number
+  trashActive?: boolean
+  onOpenTrash?: () => void
   childrenLeft?: React.ReactNode
 }
 
@@ -40,6 +44,9 @@ export function StudioWorkspace({
   activePlaylistId = null,
   onPickPlaylist,
   queueCount = 0,
+  trashCount = 0,
+  trashActive = false,
+  onOpenTrash,
   childrenLeft
 }: StudioWorkspaceProps) {
   // Playback & Timeline State
@@ -136,6 +143,19 @@ export function StudioWorkspace({
               total={history.length}
               {...folderActions}
             />
+          )}
+
+          {onOpenTrash && (
+            <button
+              type="button"
+              onClick={onOpenTrash}
+              aria-pressed={trashActive}
+              className={`ml-3 pl-2 mb-1 py-1.5 pr-2 rounded-lg flex items-center gap-2 text-[11px] font-bold cursor-pointer border-l border-white/[0.06] ${trashActive ? 'text-red-300 bg-red-500/10' : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'}`}
+            >
+              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">휴지통</span>
+              <span className="ml-auto font-mono text-[10px] text-zinc-500">{trashCount}</span>
+            </button>
           )}
 
           {/* 4. AI 커버 스튜디오 */}

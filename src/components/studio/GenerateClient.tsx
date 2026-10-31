@@ -29,12 +29,15 @@ interface GenerateClientProps {
   renderTrackMenu?: (item: any, buttonClass: string, iconClass: string) => React.ReactNode
   /** 메뉴 동작으로 곡이 바뀌면 올라가는 번호 — 목록을 다시 읽는다 */
   historyVersion?: number
+  /** 상세 패널의 「휴지통으로 이동」 */
+  onTrashTrack?: (item: any) => void
 }
 
 export function GenerateClient({ 
   user, 
   renderTrackMenu,
   historyVersion = 0,
+  onTrashTrack,
   historyId,
   initialPrompt = '',
   initialStyle = '',
@@ -1255,6 +1258,7 @@ export function GenerateClient({
         onLikeToggle={() => detailTrack && handleLikeToggle(detailTrack)}
         onDownload={() => detailTrack && handleDownloadTrack(detailTrack.audio_url, detailTrack.title, detailTrack.image_url)}
         onLoadIntoForm={() => detailTrack && handleSelectTrack(detailTrack)}
+        onTrash={onTrashTrack && detailTrack ? () => onTrashTrack(detailTrack) : undefined}
         durationSlot={detailTrack?.audio_url ? <AudioDuration url={detailTrack.audio_url} /> : null}
       />
 

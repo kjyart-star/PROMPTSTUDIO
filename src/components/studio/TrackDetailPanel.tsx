@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  Music, X, ChevronLeft, ChevronRight, Copy, Check,
+  Music, X, ChevronLeft, ChevronRight, Copy, Check, Trash2,
   Play, Pause, Heart, Download, Globe, Wand2
 } from 'lucide-react'
 
@@ -17,6 +17,8 @@ interface TrackDetailPanelProps {
   onLikeToggle: () => void
   onDownload: () => void
   onLoadIntoForm: () => void
+  /** 휴지통으로 보내기 — 넘기지 않으면 버튼이 없다. 공개된 곡은 눌리지 않는다 */
+  onTrash?: () => void
   durationSlot?: React.ReactNode
 }
 
@@ -59,6 +61,7 @@ export function TrackDetailPanel({
   onLikeToggle,
   onDownload,
   onLoadIntoForm,
+  onTrash,
   durationSlot
 }: TrackDetailPanelProps) {
   const [copied, setCopied] = useState<'style' | 'lyrics' | null>(null)
@@ -268,6 +271,19 @@ export function TrackDetailPanel({
           <Wand2 className="w-3.5 h-3.5" />
           {t(uiLanguage, '이 설정으로 다시 만들기', 'この設定で作り直す', 'Rebuild with these settings')}
         </button>
+
+        {onTrash && (
+          <button
+            type="button"
+            onClick={onTrash}
+            disabled={!!track.is_published}
+            title={track.is_published ? t(uiLanguage, '쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다', '公開中の曲はゴミ箱へ移動できません', 'Published tracks cannot be moved to trash') : undefined}
+            className="w-full py-2 rounded-xl border border-red-500/40 text-xs font-bold text-red-400 flex items-center justify-center gap-2 hover:bg-red-500/10 transition-colors motion-reduce:transition-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-red-500/60"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            {t(uiLanguage, '휴지통으로 이동', 'ゴミ箱へ移動', 'Move to trash')}
+          </button>
+        )}
 
         {/* 정보 카드 — 무엇으로 만들었는지. 남아 있는 값이 하나도 없으면 카드째 생략한다. */}
         {metaRows.length > 0 && (
