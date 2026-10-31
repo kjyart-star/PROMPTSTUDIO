@@ -166,14 +166,16 @@ describe('ImmersivePlayer', () => {
     expect(usePlayerStore.getState().volume).toBe(0.35)
   })
 
-  it('카세트 디자인에도 같은 볼륨 조절이 있다', () => {
+  it('카세트 디자인에도 같은 볼륨 조절(로터리 노브)이 있다', () => {
     const t = trk('1')
     usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, volume: 0.5, isMuted: false })
     render(<ImmersivePlayer />)
     fireEvent.click(screen.getByText('카세트'))
-    const ctl = within(screen.getByTestId('cassette-player')).getByTestId('volume-control')
-    fireEvent.change(within(ctl).getByLabelText('볼륨'), { target: { value: '90' } })
-    expect(usePlayerStore.getState().volume).toBe(0.9)
+    const knob = within(screen.getByTestId('cassette-player')).getByRole('slider', { name: '볼륨' })
+    fireEvent.keyDown(knob, { key: 'ArrowUp' })
+    expect(usePlayerStore.getState().volume).toBe(0.55)
+    fireEvent.wheel(knob, { deltaY: 100 })
+    expect(usePlayerStore.getState().volume).toBe(0.5)
   })
 
   it('볼륨 표시(HUD)는 신호가 오면 1.2초 떴다가 사라진다', () => {

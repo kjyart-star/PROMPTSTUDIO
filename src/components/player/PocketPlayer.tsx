@@ -232,8 +232,8 @@ export function PocketPlayer({ reduced }: { reduced: boolean }) {
 
 export const PK_CSS = `
 .pk-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 16px}
-.pk-stage{position:relative;perspective:1100px}
-.pk-dev{--pw:min(300px,calc((100vh - 330px) / 1.72));position:relative;width:var(--pw);height:calc(var(--pw) * 1.72);border-radius:calc(var(--pw) * .09);padding:calc(var(--pw) * .06);display:flex;flex-direction:column;align-items:center;gap:calc(var(--pw) * .06);transform:rotateY(-7deg) rotateX(3deg);transform-style:preserve-3d;
+.pk-stage{position:relative}
+.pk-dev{--pw:min(300px,calc((100vh - 330px) / 1.72));position:relative;width:var(--pw);height:calc(var(--pw) * 1.72);border-radius:calc(var(--pw) * .09);padding:calc(var(--pw) * .06);display:flex;flex-direction:column;align-items:center;gap:calc(var(--pw) * .06);
  background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,rgba(0,0,0,.035) 1px 2px),linear-gradient(135deg,var(--b1),var(--b2) 45%,var(--b3));
  box-shadow:inset 0 0 0 1.5px var(--edge),inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 4px rgba(0,0,0,.25),-10px 0 18px -10px rgba(0,0,0,.4),0 28px 36px rgba(0,0,0,.55)}
 .pk-silver{--b1:#e9ebee;--b2:#c3c7cc;--b3:#a9aeb4;--edge:#8f949a;--wheel:#f7f7f6;--ink:#6a6e74}
@@ -281,5 +281,5 @@ export const PK_CSS = `
 .pk-dots button[aria-pressed=true]{outline:2px solid #fff;outline-offset:2px}
 .pk-snd{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,255,255,.14);color:#fff;cursor:pointer}
 .pk-snd.is-on{background:rgba(255,255,255,.3)}
-@media (prefers-reduced-motion:reduce){.pk-prog i,.pk-vol{transition:none;animation:none}.pk-dev{transform:none}}
+@media (prefers-reduced-motion:reduce){.pk-prog i,.pk-vol{transition:none;animation:none}}
 `;

@@ -28,32 +28,34 @@ const PAPERS = [
 const hashOf = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
 const FONT = "'Nanum Pen Script','Gamja Flower','Hi Melody','Segoe Print','Bradley Hand','Comic Sans MS',cursive";
 const R_MIN = 14, R_MAX = 26;
-const LEDS = 14, SEGS = 7;
+const SEGS = 20;
+const SCALE = [['-40', 4], ['-20', 28], ['-10', 52], ['-6', 66], ['-3', 78], ['0', 88], ['+3', 98]] as const;
 
+/** 세그먼트 LED 레벨미터(L/R 2줄) — 어택 빠르게·감쇠 부드럽게, 피크 LED 는 잠깐 붙잡았다가 천천히 떨어진다 */
 function Leds({ playing, reduced }: { playing: boolean; reduced: boolean }) {
   const getFrequencyData = usePlayerStore((s) => s.getFrequencyData);
-  const cols = useRef<(HTMLSpanElement | null)[]>([]);
-  const level = useRef<number[]>(new Array(LEDS).fill(0));
-  const peak = useRef<number[]>(new Array(LEDS).fill(0));
-  const hold = useRef<number[]>(new Array(LEDS).fill(0));
+  const rows = useRef<(HTMLSpanElement | null)[]>([]);
+  const level = useRef([0, 0]);
+  const peak = useRef([0, 0]);
+  const hold = useRef([0, 0]);
   useEffect(() => {
     let raf = 0;
     const paint = (t: number) => {
       const data = playing ? getFrequencyData?.() : null;
-      const bins = data ? binSpectrum(data, LEDS) : null;
-      for (let i = 0; i < LEDS; i++) {
-        const want = !playing ? 0 : bins ? bins[i] : reduced ? 0.3 : 0.25 + 0.2 * (1 + Math.sin(t / 240 + i * 0.8));
-        level.current[i] += (want - level.current[i]) * (want > level.current[i] ? 0.55 : 0.09); // 어택 빠르게, 감쇠 부드럽게
-        const lvl = Math.min(1, level.current[i] * 1.2);
-        // 피크 LED: 올라가면 잠깐 붙잡았다가 천천히 떨어진다
-        if (lvl >= peak.current[i]) { peak.current[i] = lvl; hold.current[i] = 28; }
-        else if (hold.current[i] > 0) hold.current[i]--;
-        else peak.current[i] = Math.max(lvl, peak.current[i] - 0.012);
-        const el = cols.current[i];
-        if (el) {
-          el.style.setProperty('--lit', (lvl * SEGS).toFixed(2));
-          el.style.setProperty('--peak', String(Math.max(1, Math.ceil(peak.current[i] * SEGS))));
+      const bins = data ? binSpectrum(data, 24) : null;
+      for (let r = 0; r < 2; r++) {
+        let want = 0;
+        if (playing) {
+          if (bins) { let sum = 0, wsum = 0; for (let i = 0; i < 24; i++) { const w = r === 0 ? 1.4 - i / 24 : 0.6 + i / 24; sum += bins[i] * w; wsum += w; } want = (sum / wsum) * 2.1; }
+          else want = reduced ? 0.4 : 0.35 + 0.25 * Math.sin(t / (210 + r * 70)) * Math.cos(t / 530);
         }
+        level.current[r] += (want - level.current[r]) * (want > level.current[r] ? 0.5 : 0.07);
+        const lvl = Math.max(0, Math.min(1, level.current[r]));
+        if (lvl >= peak.current[r]) { peak.current[r] = lvl; hold.current[r] = 30; }
+        else if (hold.current[r] > 0) hold.current[r]--;
+        else peak.current[r] = Math.max(lvl, peak.current[r] - 0.008);
+        const el = rows.current[r];
+        if (el) { el.style.setProperty('--lit', (lvl * SEGS).toFixed(2)); el.style.setProperty('--peak', String(Math.max(1, Math.ceil(peak.current[r] * SEGS)))); }
       }
       raf = requestAnimationFrame(paint);
     };
@@ -61,12 +63,53 @@ function Leds({ playing, reduced }: { playing: boolean; reduced: boolean }) {
     return () => cancelAnimationFrame(raf);
   }, [playing, getFrequencyData, reduced]);
   return (
-    <div className="cs-leds" aria-hidden="true">
-      {Array.from({ length: LEDS }, (_, i) => (
-        <span key={i} ref={(el) => { cols.current[i] = el; }} className="cs-ledcol">
-          {Array.from({ length: SEGS }, (_, k) => <i key={k} style={{ ['--k' as any]: k }} />)}
-        </span>
+    <div className="cs-meter" aria-hidden="true">
+      {['L', 'R'].map((ch, r) => (
+        <div key={ch} className="cs-mrow">
+          <b className="cs-eng">{ch}</b>
+          <span ref={(el) => { rows.current[r] = el; }} className="cs-seg">
+            {Array.from({ length: SEGS }, (_, k) => <i key={k} style={{ ['--k' as any]: k }} />)}
+          </span>
+        </div>
       ))}
+      <div className="cs-scale">{SCALE.map(([t, x]) => <span key={t} style={{ left: `${x}%` }}>{t}</span>)}<em>dB</em></div>
+    </div>
+  );
+}
+
+/** 볼륨 로터리 노브 — 위아래로 드래그, 휠, ↑/↓ 키로 조절하고 누르면 음소거 */
+function DeckKnob() {
+  const volume = usePlayerStore((s) => s.volume);
+  const isMuted = usePlayerStore((s) => s.isMuted);
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ y: number; v: number; moved: boolean } | null>(null);
+  const shown = isMuted ? 0 : volume;
+  const set = (v: number) => usePlayerStore.getState().setVolume(Math.min(1, Math.max(0, Math.round(v * 100) / 100)));
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => { e.preventDefault(); e.stopPropagation(); const st = usePlayerStore.getState(); set((st.isMuted ? 0 : st.volume) + (e.deltaY < 0 ? 0.05 : -0.05)); };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+  const angle = -135 + 270 * shown;
+  return (
+    <div className="cs-knobbox">
+      <div
+        ref={ref} className="cs-knob" role="slider" tabIndex={0} aria-label="볼륨" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(shown * 100)}
+        onPointerDown={(e) => { drag.current = { y: e.clientY, v: shown, moved: false }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* jsdom */ } }}
+        onPointerMove={(e) => { const d = drag.current; if (!d) return; const dy = d.y - e.clientY; if (Math.abs(dy) > 3) d.moved = true; if (d.moved) set(d.v + dy / 140); }}
+        onPointerUp={() => { const d = drag.current; drag.current = null; if (d && !d.moved) usePlayerStore.getState().toggleMute(); }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); set(shown + (e.key === 'ArrowUp' ? 0.05 : -0.05)); usePlayerStore.getState().bumpVolumeHud(); }
+        }}
+      >
+        <svg viewBox="0 0 100 100" className="cs-ticks" aria-hidden="true">
+          {Array.from({ length: 11 }, (_, i) => { const a = (-135 + i * 27) * Math.PI / 180; return <line key={i} x1={50 + 41 * Math.sin(a)} y1={50 - 41 * Math.cos(a)} x2={50 + 47 * Math.sin(a)} y2={50 - 47 * Math.cos(a)} stroke={i <= shown * 10 + 0.01 ? '#e4b34a' : '#7b7d83'} strokeWidth={i % 5 === 0 ? 2.2 : 1.3} strokeLinecap="round" />; })}
+        </svg>
+        <span className="cs-cap" style={{ transform: `rotate(${angle}deg)` }}><i /></span>
+      </div>
+      <b className="cs-eng">{isMuted ? 'MUTE' : 'VOL'}</b>
     </div>
   );
 }
@@ -240,7 +283,8 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
 
   const dur = duration || currentTrack?.duration_sec || 0;
   const progress = dur ? currentTime / dur : 0;
-  const counter = String(Math.min(999, Math.floor(currentTime))).padStart(3, '0');
+  const [zero, setZero] = useState(0);
+  const counter = String(Math.min(999, Math.max(0, Math.floor(currentTime - zero)))).padStart(3, '0');
 
   const [pressed, setPressed] = useState<'rew' | 'ff' | null>(null);
   const hold = useRef<{ t?: ReturnType<typeof setTimeout>; i?: ReturnType<typeof setInterval>; down?: boolean }>({});
@@ -297,18 +341,22 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
           <div className={`cs-lid${open ? ' is-open' : ''}`} aria-hidden="true" />
         </div>
         <div className="cs-panel">
-          <div className="cs-counter" aria-label="카운터"><span className="cs-cnt">{counter}</span></div>
+          <i className="cs-screw cs-s1" /><i className="cs-screw cs-s2" /><i className="cs-screw cs-s3" /><i className="cs-screw cs-s4" />
+          <div className="cs-cntbox">
+            <div className="cs-counter" aria-label="카운터"><span className="cs-cnt">{counter}</span></div>
+            <button type="button" className="cs-reset" onClick={() => setZero(usePlayerStore.getState().currentTime)} aria-label="카운터 리셋"><span>RESET</span></button>
+          </div>
           <Leds playing={isPlaying} reduced={reduced} />
-          <div className="cs-vol">
-            <button type="button" className={`cs-tog${isShuffle ? ' is-on' : ''}`} onClick={toggleShuffle} aria-pressed={isShuffle} aria-label={isShuffle ? '셔플 끄기' : '셔플 켜기'} title="셔플 (S)"><i /><Shuffle size={13} /></button>
-            <button type="button" className={`cs-tog${repeatMode !== 'off' ? ' is-on' : ''}`} onClick={toggleRepeatMode} aria-label={repeatMode === 'one' ? '반복: 한 곡' : repeatMode === 'all' ? '반복: 전체' : '반복: 끔'} title="반복 (R)"><i />{repeatMode === 'one' ? <Repeat1 size={13} /> : <Repeat size={13} />}</button>
-            <VolumeControl variant="deck" />
+          <DeckKnob />
+          <div className="cs-tgrow">
+            <div className="cs-tgw"><button type="button" className={`cs-tog${isShuffle ? ' is-on' : ''}`} onClick={toggleShuffle} aria-pressed={isShuffle} aria-label={isShuffle ? '셔플 끄기' : '셔플 켜기'} title="셔플 (S)"><i /><Shuffle size={11} /></button><b className="cs-eng">SHUFFLE</b></div>
+            <div className="cs-tgw"><button type="button" className={`cs-tog${repeatMode !== 'off' ? ' is-on' : ''}`} onClick={toggleRepeatMode} aria-label={repeatMode === 'one' ? '반복: 한 곡' : repeatMode === 'all' ? '반복: 전체' : '반복: 끔'} title="반복 (R)"><i />{repeatMode === 'one' ? <Repeat1 size={11} /> : <Repeat size={11} />}</button><b className="cs-eng">REPEAT</b></div>
           </div>
           <div className="cs-keys" role="group" aria-label="카세트 버튼">
-            <button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="이전 곡" title="짧게: 이전 곡 · 길게: 되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={endHold(goPrev)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goPrev, 'rew')}><SkipBack size={16} /></button>
-            <button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '일시정지' : '재생'} aria-pressed={isPlaying} onClick={playPause}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
-            <button type="button" className={`cs-key${pressed === 'ff' ? ' is-down' : ''}`} aria-label="다음 곡" title="짧게: 다음 곡 · 길게: 빨리감기" onPointerDown={startHold(5, 'ff')} onPointerUp={endHold(goNext)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goNext, 'ff')}><SkipForward size={16} /></button>
-            <button type="button" className="cs-key" aria-label="정지" onClick={stop}><Square size={15} /></button>
+            <div className="cs-kw"><button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="이전 곡" title="짧게: 이전 곡 · 길게: 되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={endHold(goPrev)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goPrev, 'rew')}><SkipBack size={13} /></button><b className="cs-eng">PREV</b></div>
+            <div className="cs-kw"><button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '일시정지' : '재생'} aria-pressed={isPlaying} onClick={playPause}><i className={`cs-kled${isPlaying ? ' is-on' : ''}`} />{isPlaying ? <Pause size={13} /> : <Play size={13} />}</button><b className="cs-eng">PLAY</b></div>
+            <div className="cs-kw"><button type="button" className={`cs-key${pressed === 'ff' ? ' is-down' : ''}`} aria-label="다음 곡" title="짧게: 다음 곡 · 길게: 빨리감기" onPointerDown={startHold(5, 'ff')} onPointerUp={endHold(goNext)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goNext, 'ff')}><SkipForward size={13} /></button><b className="cs-eng">NEXT</b></div>
+            <div className="cs-kw"><button type="button" className="cs-key" aria-label="정지" onClick={stop}><Square size={12} /></button><b className="cs-eng">STOP</b></div>
           </div>
         </div>
       </div>
@@ -342,7 +390,7 @@ export const CS_CSS = `
 .cs-flow-ff{animation:cs-flow .09s linear infinite}
 .cs-flow-rew{animation:cs-flow .09s linear infinite reverse}
 @keyframes cs-flow{from{transform:translateX(0)}to{transform:translateX(-18px)}}
-@media (max-width:980px){.cs-spk{position:relative;width:var(--sw);height:calc(var(--sw) * 1.95);flex:none;margin-bottom:2px}
+.cs-spk{position:relative;width:var(--sw);height:calc(var(--sw) * 1.95);flex:none;margin-bottom:2px}
 .cs-spk-body{position:absolute;inset:0;border-radius:7px 7px 5px 5px;background:repeating-linear-gradient(88deg,rgba(0,0,0,.0) 0 5px,rgba(20,8,2,.16) 5px 6px),linear-gradient(100deg,#4d2f19,#7b4b2a 28%,#5a3720 55%,#3f2514 80%,#5e3a22);box-shadow:inset 0 1px 0 rgba(255,220,170,.28),inset 0 -2px 4px rgba(0,0,0,.5),inset 2px 0 3px rgba(255,200,140,.12),0 24px 22px -8px rgba(0,0,0,.65);padding:7%}
 .cs-baffle{position:relative;width:100%;height:100%;border-radius:4px;background:linear-gradient(180deg,#1b1816,#0f0d0c);box-shadow:inset 0 2px 6px rgba(0,0,0,.85),0 1px 0 rgba(255,220,170,.12)}
 .cs-tweeter{position:absolute;left:50%;top:9%;width:34%;aspect-ratio:1;margin-left:-17%;border-radius:50%;background:radial-gradient(circle,#2b2724 0 38%,#0c0b0a 40% 60%,#3a342f 62% 70%,#0c0b0a 72%);box-shadow:0 0 0 2px #1d1a18,0 1px 0 rgba(255,255,255,.1)}
@@ -354,22 +402,50 @@ export const CS_CSS = `
 .cs-led{position:absolute;left:50%;bottom:4%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#e9742b;box-shadow:0 0 6px #e9742b}
 .cs-spk-shadow{position:absolute;left:-6%;right:-6%;bottom:-7px;height:14px;background:radial-gradient(ellipse at 50% 30%,rgba(0,0,0,.6),transparent 70%);pointer-events:none}
 @media (max-width:768px){.cs-spk{display:none}.cs-set{--cw:min(88vw,540px,calc(44vh * 1.6))}}
-.cs-panel{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:10px 14px;align-items:center;padding:12px 14px 14px;border-radius:4px 4px 14px 14px;background:linear-gradient(180deg,#3a3a3f,#232326 40%,#1a1a1d);border:1px solid rgba(255,255,255,.12);border-top:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
-.cs-counter{padding:5px 8px;border-radius:5px;background:#0b0c0a;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.12)}
-.cs-cnt{font:700 22px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:#e8dfc4;text-shadow:0 0 6px rgba(232,223,196,.35)}
-.cs-leds{display:flex;gap:3px;justify-content:flex-end;height:36px;align-items:flex-end}
-.cs-ledcol{--lit:0;display:flex;flex-direction:column-reverse;gap:2px;width:100%;max-width:14px;height:100%}
-.cs-ledcol i{position:relative;flex:1;border-radius:1px;background:#262826}
-.cs-ledcol i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 5px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 2.2),1)}
-.cs-ledcol i::after{content:'';position:absolute;inset:0;border-radius:1px;background:#fff6dc;box-shadow:0 0 6px #ffe9a8;opacity:clamp(0,calc(1 - (var(--peak) - 1 - var(--k)) * (var(--peak) - 1 - var(--k)) * 1000),1)}
-.cs-ledcol i:nth-child(1){--c:#3fd36b}.cs-ledcol i:nth-child(2){--c:#3fd36b}.cs-ledcol i:nth-child(3){--c:#3fd36b}.cs-ledcol i:nth-child(4){--c:#9bd93a}.cs-ledcol i:nth-child(5){--c:#e4d234}.cs-ledcol i:nth-child(6){--c:#ef8a2c}.cs-ledcol i:nth-child(7){--c:#e5412f}
-.cs-vol{grid-column:1/-1;justify-self:end;display:flex;align-items:center;gap:10px}
-.cs-tog{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:5px;color:#b9b4a6;background:linear-gradient(180deg,#34343a,#222226);box-shadow:0 2px 0 #0d0d0f,inset 0 1px 0 rgba(255,255,255,.12);cursor:pointer;font-size:11px}
-.cs-tog i{width:6px;height:6px;border-radius:50%;background:#3a2a22;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.cs-panel{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"cnt meter knob" "cnt tg knob" "keys keys keys";gap:8px 16px;align-items:center;padding:14px 22px 12px;border-radius:2px 2px 12px 12px;
+ background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,#34353a,#222327 30%,#17181b);
+ border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 1px 0 0 rgba(255,255,255,.05),inset 0 -2px 3px rgba(0,0,0,.5)}
+.cs-screw{position:absolute;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8d8d4,#6a6a66);box-shadow:0 1px 1px rgba(0,0,0,.7)}
+.cs-screw::after{content:'';position:absolute;left:1px;right:1px;top:3px;height:1px;background:#3a3a37;transform:rotate(-28deg)}
+.cs-s1{left:6px;top:6px}.cs-s2{right:6px;top:6px}.cs-s3{left:6px;bottom:6px}.cs-s4{right:6px;bottom:6px}
+.cs-eng{font:600 8.5px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.2em;color:#9a9ca3;text-shadow:0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.06);text-transform:uppercase}
+.cs-cntbox{grid-area:cnt;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.cs-counter{padding:5px 9px;border-radius:3px;background:linear-gradient(180deg,#050605,#10120f);box-shadow:inset 0 2px 5px rgba(0,0,0,.95),0 1px 0 rgba(255,255,255,.14),0 0 0 2px #0d0e10}
+.cs-cnt{font:700 22px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.16em;color:#ffd48a;text-shadow:0 0 7px rgba(255,190,90,.5)}
+.cs-reset{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:#9a9ca3}
+.cs-reset::before{content:'';width:22px;height:11px;border-radius:2px;background:linear-gradient(180deg,#55575d,#26272b);box-shadow:0 2px 0 #09090a,inset 0 1px 0 rgba(255,255,255,.25);transition:transform .08s}
+.cs-reset:active::before{transform:translateY(1.5px);box-shadow:0 .5px 0 #09090a,inset 0 1px 2px rgba(0,0,0,.5)}
+.cs-reset span{font:600 8.5px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.2em;text-shadow:0 -1px 0 rgba(0,0,0,.7)}
+.cs-meter{grid-area:meter;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cs-mrow{display:flex;align-items:center;gap:7px}
+.cs-seg{--lit:0;--peak:1;flex:1;display:flex;gap:2px;height:8px;padding:2px;border-radius:2px;background:#07080a;box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.1)}
+.cs-seg i{position:relative;flex:1;border-radius:1px;background:#1b1d1c}
+.cs-seg i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 4px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 2.2),1)}
+.cs-seg i::after{content:'';position:absolute;inset:0;border-radius:1px;background:#fff3d0;box-shadow:0 0 5px #ffe3a0;opacity:clamp(0,calc(1 - (var(--peak) - 1 - var(--k)) * (var(--peak) - 1 - var(--k)) * 1000),1)}
+.cs-seg i{--c:#3fd36b}.cs-seg i:nth-child(n+13){--c:#a8d93a}.cs-seg i:nth-child(n+16){--c:#ecc733}.cs-seg i:nth-child(n+18){--c:#ef7d2c}.cs-seg i:nth-child(n+20){--c:#e5412f}
+.cs-scale{position:relative;height:10px;margin-left:19px}
+.cs-scale span{position:absolute;transform:translateX(-50%);font:600 7.5px/1 ui-sans-serif,system-ui,sans-serif;color:#85878e;text-shadow:0 -1px 0 rgba(0,0,0,.7)}
+.cs-scale em{position:absolute;right:-1px;top:0;font:600 7.5px/1 ui-sans-serif,sans-serif;font-style:normal;color:#85878e;letter-spacing:.1em;display:none}
+.cs-knobbox{grid-area:knob;display:flex;flex-direction:column;align-items:center;gap:5px}
+.cs-knob{position:relative;width:62px;height:62px;border-radius:50%;cursor:ns-resize;touch-action:none;outline:none;user-select:none;-webkit-user-select:none}
+.cs-ticks{position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px)}
+.cs-cap{position:absolute;inset:11px;border-radius:50%;background:conic-gradient(from 0deg,#2a2b2f,#5c5e65,#2a2b2f 25%,#6a6c73 50%,#2a2b2f 75%,#5c5e65,#2a2b2f);box-shadow:0 5px 8px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 1px rgba(255,255,255,.3);will-change:transform}
+.cs-cap::before{content:'';position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#8e9097,#3b3c41 60%,#222327);box-shadow:inset 0 -1px 2px rgba(0,0,0,.5)}
+.cs-cap i{position:absolute;left:50%;top:5px;width:2.5px;height:11px;margin-left:-1.25px;border-radius:2px;background:#ffd48a;box-shadow:0 0 5px rgba(255,190,90,.8)}
+.cs-knob:focus-visible{box-shadow:0 0 0 2px #fff}
+.cs-tgrow{grid-area:tg;display:flex;gap:18px;align-items:flex-end;padding-left:19px}
+.cs-tgw,.cs-kw{display:flex;flex-direction:column;align-items:center;gap:5px}
+.cs-tog{position:relative;display:grid;place-items:center;width:46px;height:20px;border-radius:2px 2px 1px 1px;color:#c3c6cc;cursor:pointer;background:linear-gradient(180deg,#505258,#25262a 60%,#17181b);box-shadow:0 3px 0 #08080a,0 4px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.28);transition:transform .08s,box-shadow .08s}
+.cs-tog i{position:absolute;right:5px;top:4px;width:4px;height:4px;border-radius:50%;background:#3a2418;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.cs-tog.is-on{transform:translateY(2px);box-shadow:0 1px 0 #08080a,inset 0 1px 2px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12);color:#fff}
 .cs-tog.is-on i{background:#ffb347;box-shadow:0 0 6px #ff9a1f}
-.cs-tog.is-on{color:#fff;transform:translateY(1px);box-shadow:0 1px 0 #0d0d0f,inset 0 2px 3px rgba(0,0,0,.4)}
-.cs-keys{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cs-key{height:46px;border-radius:5px 5px 3px 3px;display:grid;place-items:center;color:#222;cursor:pointer;background:linear-gradient(180deg,#d9d6cf,#aaa69d 55%,#8f8b82);box-shadow:0 5px 0 #4a4843,0 7px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7);transition:transform .08s ease-out,box-shadow .08s ease-out;will-change:transform}
-.cs-key.is-down{transform:translateY(4px);box-shadow:0 1px 0 #4a4843,0 2px 3px rgba(0,0,0,.6),inset 0 2px 4px rgba(0,0,0,.35);background:linear-gradient(180deg,#b9b5ac,#9a968d)}
+.cs-keys{grid-area:keys;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:2px}
+.cs-key{position:relative;width:100%;height:26px;display:grid;place-items:center;border-radius:2px 2px 1px 1px;color:#d4d7dd;cursor:pointer;background:linear-gradient(180deg,#61636a,#2c2d31 55%,#141518);box-shadow:0 4px 0 #060607,0 6px 6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.4),inset 1px 0 0 rgba(255,255,255,.1);transition:transform .07s ease-out,box-shadow .07s ease-out;will-change:transform}
+.cs-key svg{filter:drop-shadow(0 -1px 0 rgba(0,0,0,.7))}
+.cs-key.is-down{transform:translateY(3px);box-shadow:0 1px 0 #060607,0 1px 2px rgba(0,0,0,.6),inset 0 2px 3px rgba(0,0,0,.55);background:linear-gradient(180deg,#27282c,#1a1b1e)}
+.cs-kled{position:absolute;right:6px;top:5px;width:4px;height:4px;border-radius:50%;background:#173a1d;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.cs-kled.is-on{background:#55f07a;box-shadow:0 0 6px #3fe068}
 .cs-key:focus-visible{outline:2px solid #fff;outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.cs-p-in,.cs-p-out,.cs-flow,`;
+@media (max-width:560px){.cs-panel{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"cnt meter" "knob tg" "keys keys";padding:12px 16px}.cs-tgrow{padding-left:0}}
+@media (prefers-reduced-motion:reduce){.cs-p-in,.cs-p-out,.cs-flow{animation:none}.cs-key,.cs-tog,.cs-lid,.cs-reset::before{transition:none}}
+`;
