@@ -12,6 +12,8 @@ import { GENRE_TRANSLATIONS } from '@/lib/constants/genres'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import LibraryTrash from './LibraryTrash'
+import LibraryToolbar from './LibraryToolbar'
+import { filterLibrary, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
@@ -919,6 +921,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const { balance: creditBalance, prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [trashRefreshKey, setTrashRefreshKey] = useState(0)
+  const [libraryQuery, setLibraryQuery] = useState<LibraryQuery>({ query: '', kind: 'all', sort: 'newest' })
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -931,6 +935,21 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     if (!deleteConfirmId) return
     await deleteHistoryItem(deleteConfirmId)
     setDeleteConfirmId(null)
+  }
+
+  const visibleHistory = useMemo(() => filterLibrary(history, libraryQuery), [history, libraryQuery])
+  const toggleSelected = (id: string) => setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  const selectedItems = history.filter((h) => selectedIds.includes(h.id))
+  const trashSelected = async () => {
+    const targets = selectedItems.filter((h) => !h.is_published)
+    if (!targets.length) return
+    const msg = uiLanguage === 'KO' ? `${targets.length}곡을 휴지통으로 옮길까요? 30일 동안 보관되며 복원할 수 있습니다.` : uiLanguage === 'JA' ? `${targets.length}曲をゴミ箱へ移動しますか？30日間保管されます。` : `Move ${targets.length} tracks to trash? Kept for 30 days.`
+    if (!window.confirm(msg)) return
+    for (const t of targets) await deleteHistoryItem(t.id)
+    setSelectedIds([])
+  }
+  const downloadSelected = async () => {
+    for (const t of selectedItems) await downloadHistoryTrack(t)
   }
 
   /** 보관함 카드 액션 — 「음악 생성」 탭과 같은 PUT /api/song-history/{id} 를 그대로 쓴다 */
@@ -1764,8 +1783,22 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     </button>
                   </div>
                 </StudioHero>
+                <LibraryToolbar
+                  uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+                  value={libraryQuery}
+                  onChange={setLibraryQuery}
+                  total={history.length}
+                  shown={visibleHistory.length}
+                  selectedCount={selectedIds.length}
+                  allSelected={visibleHistory.length > 0 && visibleHistory.every((h) => selectedIds.includes(h.id))}
+                  onToggleAll={() => setSelectedIds(visibleHistory.every((h) => selectedIds.includes(h.id)) ? [] : visibleHistory.map((h) => h.id))}
+                  onClear={() => setSelectedIds([])}
+                  onDownload={downloadSelected}
+                  onTrash={trashSelected}
+                  hasPublishedSelected={selectedItems.some((h) => h.is_published)}
+                />
                 <div className={`grid ${LIBRARY_GRID_CLASS[libraryViewSize]}`}>
-                  {history.map((item) => {
+                  {visibleHistory.map((item) => {
                     const isSmall = libraryViewSize === 'small'
                     const isLarge = libraryViewSize === 'large'
                     const btnClass = isSmall ? 'w-6 h-6' : isLarge ? 'w-9 h-9' : 'w-7 h-7'
@@ -1949,6 +1982,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           ) : (
                             <Music className={`text-primary/60 ${isLarge ? 'w-8 h-8' : isSmall ? 'w-4 h-4' : 'w-6 h-6'}`} />
                           )}
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelected(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={uiLanguage === 'KO' ? `${item.title || '곡'} 선택` : 'Select'}
+                            className="absolute left-1 top-1 w-4 h-4 accent-[#d4f000] cursor-pointer z-10"
+                          />
                           {currentTrack?.id === item.id && isPlaying && (
                             <span
                               aria-hidden
