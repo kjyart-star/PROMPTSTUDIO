@@ -17,11 +17,15 @@ import type { Track } from '@/types/music';
 
 type View = 'now' | 'list';
 const VIEW_KEY = 'cm.immersive-view';
+const DESIGN_KEY = 'cm.immersive-design';
+type Design = 'lyrics' | 'card' | 'persp' | 'arc';
+const NOW_DESIGNS: Design[] = ['lyrics', 'card'];
+const LIST_DESIGNS: Design[] = ['persp', 'arc'];
 
 const T = {
-  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간' },
-  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section' },
-  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート' },
+  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', persp: '원근형', arc: '원통형' },
+  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', persp: 'Perspective', arc: 'Arc' },
+  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', persp: '遠近', arc: '円筒' },
 } as const;
 
 function fmt(sec: number) {
@@ -120,6 +124,21 @@ export function ImmersivePlayer() {
   const reduced = usePrefersReducedMotion();
   const [lang, setLang] = useState<'KO' | 'EN' | 'JA'>('KO');
   const [view, setView] = useState<View>('now');
+  const [designs, setDesigns] = useState<{ now: Design; list: Design }>({ now: 'lyrics', list: 'persp' });
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(DESIGN_KEY) || '{}');
+      setDesigns({
+        now: NOW_DESIGNS.includes(raw.now) ? raw.now : 'lyrics',
+        list: LIST_DESIGNS.includes(raw.list) ? raw.list : 'persp',
+      });
+    } catch { /* ignore */ }
+  }, []);
+  const pickDesign = (d: Design) => {
+    const next = NOW_DESIGNS.includes(d) ? { ...designs, now: d } : { ...designs, list: d };
+    setDesigns(next);
+    try { localStorage.setItem(DESIGN_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  };
   const closeRef = useRef<HTMLButtonElement>(null);
   const lyricBoxRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Record<number, HTMLElement | null>>({});
@@ -179,7 +198,7 @@ export function ImmersivePlayer() {
   const pos = Math.max(0, queueIndex) + 1;
 
   return (
-    <div className="imm-root" role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
+    <div className={`imm-root${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
       <style>{IMM_CSS + PCF_CSS}</style>
       <img className="imm-bg" src={cover} alt="" aria-hidden="true" />
       <div className="imm-veil" aria-hidden="true" />
@@ -188,6 +207,11 @@ export function ImmersivePlayer() {
         <div className="imm-tabs" role="tablist" aria-label={t.view}>
           <button role="tab" aria-selected={view === 'now'} onClick={() => pickView('now')}><Mic2 size={15} />{t.now}</button>
           <button role="tab" aria-selected={view === 'list'} onClick={() => pickView('list')}><GalleryHorizontal size={15} />{t.list}</button>
+        </div>
+        <div className="imm-designs" role="group" aria-label={t.design}>
+          {(view === 'now' ? NOW_DESIGNS : LIST_DESIGNS).map((d) => (
+            <button key={d} aria-pressed={designs[view === 'now' ? 'now' : 'list'] === d} onClick={() => pickDesign(d)}>{t[d]}</button>
+          ))}
         </div>
         <button ref={closeRef} className="imm-close" onClick={() => setImmersiveOpen(false)} aria-label={t.close} title={t.close}>
           <X size={20} />
@@ -236,7 +260,7 @@ export function ImmersivePlayer() {
           </section>
         </main>
       ) : (
-        <PlaylistCoverflow reduced={reduced} listLabel={t.list} />
+        <PlaylistCoverflow reduced={reduced} listLabel={t.list} variant={designs.list === 'arc' ? 'arc' : 'persp'} />
       )}
 
       <footer className="imm-bottom">
@@ -269,10 +293,14 @@ const IMM_CSS = `
 .imm-bg{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;filter:blur(70px) saturate(1.5) brightness(.85);transform:scale(1.1)}
 .imm-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,13,.25),rgba(13,13,13,.78) 85%)}
 .imm-root>*:not(.imm-bg):not(.imm-veil){position:relative}
-.imm-top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px}
+.imm-top{display:flex;justify-content:flex-start;align-items:center;padding:16px 20px}
 .imm-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px)}
 .imm-tabs button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:7px;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);cursor:pointer}
 .imm-tabs button[aria-selected=true]{background:rgba(255,255,255,.92);color:#111}
+.imm-designs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);margin-left:auto;margin-right:12px}
+.imm-designs button{padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:rgba(255,255,255,.65);cursor:pointer}
+.imm-designs button[aria-pressed=true]{background:rgba(255,255,255,.22);color:#fff}
+.imm-framed .imm-now{margin:0 clamp(16px,4vw,64px) 8px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
 .imm-close{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);cursor:pointer}
 .imm-close:hover{background:rgba(255,255,255,.22)}
 .imm-now{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,5vw,80px);align-items:center;padding:0 clamp(20px,6vw,96px)}

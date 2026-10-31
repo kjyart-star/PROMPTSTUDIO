@@ -85,6 +85,20 @@ describe('ImmersivePlayer', () => {
     expect(playTrack).not.toHaveBeenCalled()
   })
 
+  it('디자인을 고르면 기억하고 다시 열 때 그 디자인으로 열린다', () => {
+    const q = [trk('1'), trk('2'), trk('3')]
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[1], queue: q, queueIndex: 1 })
+    const r = render(<ImmersivePlayer />)
+    fireEvent.click(screen.getByText('원통형'))
+    expect(document.querySelector('.pcf-arc')).toBeTruthy()
+    r.unmount()
+    render(<ImmersivePlayer />)
+    expect(document.querySelector('.pcf-arc')).toBeTruthy()
+    fireEvent.click(screen.getByText('지금 재생'))
+    fireEvent.click(screen.getByText('카드형'))
+    expect(document.querySelector('.imm-framed')).toBeTruthy()
+  })
+
   it('Esc 로 닫힌다', () => {
     const t = trk('1')
     usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })

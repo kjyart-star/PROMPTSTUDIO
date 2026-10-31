@@ -23,7 +23,9 @@ export function styleLine(t?: Track | null): string {
 const VISIBLE_NEXT = 4;
 const STEP = 0.44; // 다음 커버가 앞 커버보다 오른쪽으로 밀리는 정도(커버 한 변 기준)
 
-export function PlaylistCoverflow({ reduced, listLabel }: { reduced: boolean; listLabel: string }) {
+export type CoverflowVariant = 'persp' | 'arc';
+
+export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { reduced: boolean; listLabel: string; variant?: CoverflowVariant }) {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const queue = usePlayerStore((s) => s.queue);
   const queueIndex = usePlayerStore((s) => s.queueIndex);
@@ -51,9 +53,11 @@ export function PlaylistCoverflow({ reduced, listLabel }: { reduced: boolean; li
 
   if (!currentTrack) return null;
   const base = Math.max(0, queueIndex);
-  const cards = Array.from({ length: VISIBLE_NEXT + 1 }, (_, off) => ({ off, track: queue[base + off] ?? (off === 0 ? currentTrack : undefined) }))
+  const arc = variant === 'arc';
+  const offs = arc ? [-3, -2, -1, 0, 1, 2, 3] : [0, 1, 2, 3, 4];
+  const cards = offs.map((off) => ({ off, track: queue[base + off] ?? (off === 0 ? currentTrack : undefined) }))
     .filter((c): c is { off: number; track: Track } => !!c.track);
-  const span = cards.length - 1;
+  const span = arc ? 6 : cards.length - 1;
   const artist = (currentTrack as any).album?.artist?.name ?? '';
   const total = queue.length || 1;
   const pos = base + 1;
@@ -62,9 +66,14 @@ export function PlaylistCoverflow({ reduced, listLabel }: { reduced: boolean; li
   return (
     <main className="pcf-wrap" data-testid="playlist-coverflow">
       <p className="pcf-style" title={style}>{style || (currentTrack as any).album?.title || listLabel}</p>
-      <div className="pcf-stage" style={{ ['--span' as any]: span }} role="list">
+      <div className={`pcf-stage${arc ? ' pcf-arc' : ''}`} style={{ ['--span' as any]: span }} role="list">
         {cards.map(({ off, track }) => {
-          const tf = reduced
+          const a = Math.abs(off);
+          const tf = arc
+            ? (reduced
+              ? `translateX(calc(var(--s) * ${off * 0.5})) scale(${1 - a * 0.1})`
+              : `translateX(calc(var(--s) * ${off * 0.5})) rotateY(${-off * 42}deg) scale(${1 - a * 0.08})`)
+            : reduced
             ? `translateX(calc(var(--s) * ${off * STEP})) scale(${1 - off * 0.1})`
             : `translateX(calc(var(--s) * ${off * STEP})) rotateY(${off === 0 ? 0 : -38}deg) scale(${1 - off * 0.1})`;
           return (
@@ -72,11 +81,12 @@ export function PlaylistCoverflow({ reduced, listLabel }: { reduced: boolean; li
               key={`${track.id}-${off}`}
               role="listitem"
               type="button"
-              className={`pcf-card${off > 2 ? ' pcf-far' : ''}`}
-              style={{ transform: tf, zIndex: 10 - off, opacity: 1 - off * 0.14 }}
+              className={`pcf-card${a > 2 ? ' pcf-far' : ''}`}
+              style={{ transform: tf, zIndex: 10 - a, opacity: 1 - a * 0.14 }}
               aria-label={track.title}
               aria-current={off === 0 ? 'true' : undefined}
               onClick={() => (off === 0 ? togglePlay() : goTo(base + off))}
+              data-off={off}
             >
               <img src={coverOf(track)} alt="" />
               <img className="pcf-refl" src={coverOf(track)} alt="" aria-hidden="true" />
@@ -94,6 +104,8 @@ export const PCF_CSS = `
 .pcf-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;text-align:center;min-width:0}
 .pcf-style{max-width:min(90vw,640px);margin:0 0 clamp(10px,2.4vh,22px);font-size:12px;letter-spacing:.12em;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcf-stage{--s:min(34vw,36vh,320px);position:relative;width:calc(var(--s) * (1 + .44 * var(--span)));height:var(--s);perspective:1200px;perspective-origin:30% 40%;margin:0 auto}
+.pcf-stage.pcf-arc{width:calc(var(--s) * 4);perspective-origin:50% 40%}
+.pcf-arc .pcf-card{left:calc(50% - var(--s) / 2);transform-origin:center}
 .pcf-card{position:absolute;left:0;top:0;width:var(--s);height:var(--s);padding:0;background:none;cursor:pointer;transform-origin:left center;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .55s}
 .pcf-card>img:first-child{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;box-shadow:0 24px 50px rgba(0,0,0,.5)}
 .pcf-refl{position:absolute;left:0;top:102%;width:100%;height:100%;object-fit:cover;border-radius:14px;transform:scaleY(-1);opacity:.22;mask-image:linear-gradient(0deg,#000,transparent 38%);-webkit-mask-image:linear-gradient(0deg,#000,transparent 38%);pointer-events:none}
@@ -102,6 +114,7 @@ export const PCF_CSS = `
 @media (max-width:820px){
   .pcf-stage{--s:min(46vw,30vh,240px);width:calc(var(--s) * (1 + .44 * min(var(--span), 2)))}
   .pcf-far{display:none}
+  .pcf-stage.pcf-arc{width:calc(var(--s) * 2.6)}
 }
 @media (prefers-reduced-motion:reduce){.pcf-card{transition:none}}
 `;
