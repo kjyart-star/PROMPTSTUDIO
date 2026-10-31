@@ -1,4 +1,4 @@
-import { lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { ChartClient } from '@/components/chart/ChartClient'
 import { withBase } from '@/lib/basePath'
@@ -153,6 +153,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
           composer: song.form?.composer || '',
           arranger: song.form?.arranger || '',
           lyrics: lyricsOfItem(song),
+          lrc: lrcOfItem(song),
           style_prompt: song.prompt || song.form?.prompt || '',
           album: playlist ? {
             id: playlist.id,

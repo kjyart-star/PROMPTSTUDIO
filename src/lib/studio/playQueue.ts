@@ -1,5 +1,5 @@
 import { withBase } from '@/lib/basePath'
-import { lyricsOfItem, styleOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem, styleOfItem } from '@/lib/studio/lyricsOf'
 import type { Track } from '@/types/music'
 
 /** 곡 기록(song_history 행)에서 재생 주소로 쓸 값 — 없으면 재생할 수 없는 곡 */
@@ -25,6 +25,7 @@ export function historyItemToTrack(item: any, opts: QueueOpts, fileUrl?: string,
     raw_file_url: /^https?:/i.test(path) ? undefined : path,
     duration_sec: 180,
     lyrics: lyricsOfItem(item, all) || null,
+    lrc: lrcOfItem(item, all),
     style_prompt: styleOfItem(item) || null,
     album_id: 'studio-generated',
     image_url: cover,

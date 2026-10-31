@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildTimedLyrics, activeLineIndex } from './lyricTiming'
+import type { Span } from './vocalSpans'
 
 describe('buildTimedLyrics', () => {
   it('시간표가 있으면 정확 모드로 그대로 쓴다', () => {
@@ -33,5 +34,35 @@ describe('activeLineIndex', () => {
     const t = lines[2].start + 0.1
     expect(lines[activeLineIndex(lines, t)].text).toBe('둘')
     expect(lines[activeLineIndex(lines, 999)].text).toBe('셋')
+  })
+})
+
+describe('음원 분석 기반 추정', () => {
+  const LY = '[Intro]\n[Verse 1]\n하나 둘 셋 넷 다섯\n여섯 일곱 여덟 아홉\n\n[Chorus]\n후렴 후렴 후렴 후렴\n후렴 둘째 줄입니다\n\n[Outro]'
+  const starts = (spans?: Span[]) => buildTimedLyrics(LY, 120, spans ? { spans } : undefined).lines.filter((l) => l.kind === 'line').map((l) => l.start)
+
+  it('전주가 20초면 첫 줄이 전주 안(20초 전)에 놓이지 않는다', () => {
+    const st = starts([{ start: 20, end: 110 }])
+    expect(st[0]).toBeGreaterThanOrEqual(20)
+    expect(st.every((v) => v >= 20 && v <= 110)).toBe(true)
+  })
+  it('간주(노래 없는 구간)에는 가사가 놓이지 않는다', () => {
+    const spans = [{ start: 5, end: 40 }, { start: 70, end: 110 }]
+    const st = starts(spans)
+    expect(st.every((v) => spans.some((s) => v >= s.start && v <= s.end))).toBe(true)
+    expect(st.some((v) => v >= 70)).toBe(true) // 뒷 구간에도 배치된다
+  })
+  it('분석 근거가 있으면 basis=audio, 없으면 length', () => {
+    expect(buildTimedLyrics(LY, 120, { spans: [{ start: 3, end: 100 }] }).basis).toBe('audio')
+    expect(buildTimedLyrics(LY, 120).basis).toBe('length')
+  })
+  it('저장된 시간표(lrc)가 있으면 그대로 쓴다', () => {
+    const r = buildTimedLyrics(LY, 120, { lrc: [{ t: 3, text: 'a' }, { t: 9, text: 'b' }], spans: [{ start: 20, end: 100 }] })
+    expect(r.mode).toBe('exact')
+    expect(r.lines.map((l) => l.start)).toEqual([3, 9])
+  })
+  it('줄 없이 끝에 남은 [Outro] 표지는 노래 뒤쪽을 비워 둔다', () => {
+    const st = starts([{ start: 0, end: 100 }])
+    expect(st[st.length - 1]).toBeLessThan(90)
   })
 })

@@ -1,4 +1,4 @@
-import { lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { HomeClient } from '@/components/home/HomeClient'
 import { Track, Album, Artist } from '@/types/music'
@@ -150,6 +150,7 @@ export default async function PublicHomePage() {
       composer: song.form?.composer || '',
       arranger: song.form?.arranger || '',
       lyrics: lyricsOfItem(song),
+      lrc: lrcOfItem(song),
       style_prompt: song.prompt || song.form?.prompt || '',
       has_lrc: Array.isArray(song.form?.lrc) && song.form.lrc.length > 0,
       is_mastered: song.form?.kind === 'mastering',

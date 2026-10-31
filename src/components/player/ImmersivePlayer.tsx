@@ -10,6 +10,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Clock, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
+import { useLyricSync } from './useLyricSync';
+import { LyricSyncBar, SYNC_LABELS, SYNC_CSS } from './LyricSyncBar';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
@@ -123,8 +125,13 @@ export function ImmersivePlayer() {
   }, [isImmersiveOpen, setImmersiveOpen]);
 
   const dur = duration || currentTrack?.duration_sec || 0;
-  const timed = useMemo(() => buildTimedLyrics(currentTrack?.lyrics, dur), [currentTrack?.lyrics, dur]);
-  const active = timed.mode === 'none' ? -1 : activeLineIndex(timed.lines, currentTime);
+  const sync = useLyricSync(currentTrack, isImmersiveOpen && view === 'now' && designs.now === 'lyrics');
+  const timed = useMemo(
+    () => buildTimedLyrics(currentTrack?.lyrics, dur, { lrc: sync.lrc, spans: sync.spans }),
+    [currentTrack?.lyrics, dur, sync.lrc, sync.spans],
+  );
+  // 오프셋이 +면 가사가 그만큼 먼저 나온다(가사 빠르게)
+  const active = timed.mode === 'none' ? -1 : activeLineIndex(timed.lines, currentTime + sync.offset);
 
   useEffect(() => {
     const box = lyricBoxRef.current;
@@ -155,7 +162,7 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}${!clockLay.hidden ? ` imm-clock-on imm-clock-${clockLay.pos}` : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
+      <style>{IMM_CSS + SYNC_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
@@ -216,13 +223,26 @@ export function ImmersivePlayer() {
                         className={cls}
                         style={{ opacity: i === active ? 1 : Math.max(0.16, 0.6 - d * 0.14) }}
                         aria-current={i === active ? 'true' : undefined}
-                        onClick={() => { if (!isNaN(l.start)) seek(l.start); }}
+                        onClick={() => { if (!isNaN(l.start)) seek(Math.max(0, l.start - sync.offset)); }}
                       >{l.text}</p>
                     );
                   })}
                   <div className="imm-pad" />
                 </div>
-                {timed.mode === 'estimated' && <p className="imm-est">{t.est}</p>}
+                {(timed.mode === 'estimated' || timed.mode === 'exact') && (
+                  <LyricSyncBar
+                    labels={SYNC_LABELS[lang]}
+                    mode={timed.mode}
+                    basis={timed.basis}
+                    offset={sync.offset}
+                    onOffset={sync.setOffset}
+                    align={sync.align}
+                    onAlign={() => {
+                      sync.runAlign(currentTrack.lyrics ? timed.lines.filter((l) => l.kind === 'line').map((l) => l.text) : [], dur);
+                    }}
+                    canAlignAgain={sync.hasLocalLrc}
+                  />
+                )}
               </>
             )}
           </section>

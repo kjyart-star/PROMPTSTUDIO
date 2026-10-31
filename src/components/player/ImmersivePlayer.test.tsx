@@ -37,6 +37,42 @@ describe('ImmersivePlayer', () => {
     expect(screen.getByText('둘').getAttribute('aria-current')).toBe('true')
   })
 
+  it('저장된 가사 시간표(track.lrc)가 있으면 추정 없이 그 시간대로 강조한다', () => {
+    const t = trk('1', { lyrics: '하나\n둘\n셋', lrc: [{ t: 2, text: '하나' }, { t: 30, text: '둘' }, { t: 60, text: '셋' }] })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 31, duration: 120 })
+    render(<ImmersivePlayer />)
+    expect(screen.queryByText('가사 시간 추정')).toBeNull()
+    expect(screen.getByText('둘').getAttribute('aria-current')).toBe('true')
+  })
+
+  it('「가사 빠르게」 0.25초 단위로 줄이 먼저 넘어가고, 곡별로 기억한다', () => {
+    const t = trk('1', { lyrics: '[00:01.00]하나\n[00:10.00]둘' })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 9.6, duration: 120 })
+    const { unmount } = render(<ImmersivePlayer />)
+    expect(screen.getByText('하나').getAttribute('aria-current')).toBe('true')
+    const faster = screen.getByRole('button', { name: '가사 빠르게' })
+    fireEvent.click(faster); fireEvent.click(faster) // +0.5초 → 10.1초 취급
+    expect(screen.getByText('둘').getAttribute('aria-current')).toBe('true')
+    expect(screen.getByText('+0.50s')).toBeTruthy()
+    unmount()
+    render(<ImmersivePlayer />) // 다시 열어도 기억
+    expect(screen.getByText('+0.50s')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '가사 느리게' }))
+    expect(screen.getByText('+0.25s')).toBeTruthy()
+  })
+
+  it('시간 추정 곡에는 「가사 자동 맞추기」 버튼이 있고, 시간표 곡에는 없다', () => {
+    const est = trk('1', { lyrics: '가나다라마\n바사아자차' })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: est, queue: [est], queueIndex: 0, currentTime: 1, duration: 120 })
+    const { unmount } = render(<ImmersivePlayer />)
+    expect(screen.getByRole('button', { name: '가사 자동 맞추기' })).toBeTruthy()
+    unmount()
+    const ex = trk('2', { lyrics: '[00:01.00]하나\n[00:10.00]둘' })
+    usePlayerStore.setState({ currentTrack: ex, queue: [ex] })
+    render(<ImmersivePlayer />)
+    expect(screen.queryByRole('button', { name: '가사 자동 맞추기' })).toBeNull()
+  })
+
   it('가사가 없으면 안내 문구', () => {
     const t = trk('1')
     usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })

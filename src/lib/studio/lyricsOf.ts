@@ -29,3 +29,21 @@ export function styleOfItem(item: any): string {
   const v = item?.prompt || item?.form?.style || item?.genre || '';
   return typeof v === 'string' ? v.trim() : '';
 }
+
+/** 곡 기록에 저장된 가사 시간표(form.lrc). 마스터링본만 원곡 시간표를 물려받는다(재생성한 v2 등은 소리가 달라 물려받지 않는다) */
+export function lrcOfItem(item: any, all?: any[]): { t: number; text: string }[] | null {
+  const own = (x: any) => (Array.isArray(x?.form?.lrc) && x.form.lrc.length >= 2 ? (x.form.lrc as { t: number; text: string }[]) : null);
+  const mine = own(item);
+  if (mine || !all?.length || item?.form?.kind !== 'mastering') return mine;
+  const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));
+  let cur = item;
+  for (let i = 0; i < 4; i++) {
+    const pid = cur?.form?.source_id || cur?.form?.parent_id || cur?.parent_id;
+    const parent = pid ? byId.get(pid) : null;
+    if (!parent) break;
+    const l = own(parent);
+    if (l) return l;
+    cur = parent;
+  }
+  return null;
+}

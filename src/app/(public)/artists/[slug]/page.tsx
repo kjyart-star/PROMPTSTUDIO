@@ -1,4 +1,4 @@
-import { lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { ArtistClient } from '@/components/artist/ArtistClient'
 import { Artist, Album, Track } from '@/types/music'
@@ -213,6 +213,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
       created_at: song.created_at,
       status: 'published',
       lyrics: lyricsOfItem(song),
+      lrc: lrcOfItem(song),
       image_url: song.image_url || '',
       lyricist: song.form?.lyricist || song.lyricist || '',
       composer: song.form?.composer || song.composer || '',

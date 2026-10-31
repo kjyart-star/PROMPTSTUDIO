@@ -1,4 +1,4 @@
-import { lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { LibraryClient } from '@/components/library/LibraryClient'
 import { Track } from '@/types/music'
@@ -80,6 +80,7 @@ export default async function LibraryPage() {
         composer: song.form?.composer || '',
         arranger: song.form?.arranger || '',
         lyrics: lyricsOfItem(song),
+        lrc: lrcOfItem(song),
         style_prompt: song.prompt || song.form?.prompt || '',
         album: playlist ? {
           id: playlist.id,
