@@ -129,3 +129,49 @@ describe('GenerateClient 곡 목록 행 휴지통 아이콘', () => {
     expect(onTrash).not.toHaveBeenCalled()
   })
 })
+
+describe('GenerateClient 배치(수노식 Create)', () => {
+  beforeEach(() => { localStorage.setItem('language', 'ko') })
+
+  it('곡 목록은 날짜별로 묶이고, 한 행에 64px 썸네일·제목·스타일·아이콘 줄이 있다', async () => {
+    const { findByText, getAllByTestId, getByText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    await findByText('Song A')
+    await findByText('10월 2일')
+    const rows = getAllByTestId('gen-song-row')
+    expect(rows).toHaveLength(2)
+    // 2026-10-02 · 10-01 은 서로 다른 날짜 묶음
+    expect(getByText('10월 2일')).toBeTruthy()
+    expect(getByText('10월 1일')).toBeTruthy()
+    expect(rows[0].querySelector('.w-16.h-16')).not.toBeNull()
+    expect(rows[0].textContent).toContain('pop')
+    expect(rows[0].querySelector('[aria-label="다운로드"]')).not.toBeNull()
+    expect(rows[0].querySelector('[aria-label="공개로 설정"]')).not.toBeNull()
+  })
+
+  it('간단/상세 토글: 간단이면 스타일·제목 칸이 숨고 곡 설명 칸만 남는다', async () => {
+    const { getByRole, queryByLabelText, getByLabelText, findByLabelText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    expect(await findByLabelText('스타일')).toBeTruthy()
+    fireEvent.click(getByRole('radio', { name: '간단' }))
+    expect(queryByLabelText('스타일')).toBeNull()
+    expect(queryByLabelText('곡 제목')).toBeNull()
+    expect(getByLabelText('곡 설명')).toBeTruthy()
+  })
+
+  it('더 많은 설정은 접혀 있다가 펼치면 보컬·제외 스타일·강도 슬라이더가 나온다', async () => {
+    const { getByText, queryByLabelText, getByLabelText, findByText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    fireEvent.click(await findByText('더 많은 설정'))
+    expect(getByLabelText('빼고 싶은 스타일')).toBeTruthy()
+    expect(getByLabelText('스타일 강도')).toBeTruthy()
+    expect(getByText('남성')).toBeTruthy()
+  })
+
+  it('스타일 칩을 누르면 스타일 칸에 붙고 칩은 사라진다', async () => {
+    const { getByText, getByLabelText, queryByText, findByLabelText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    await findByLabelText('스타일')
+    fireEvent.click(getByText('+ City Pop'))
+    expect((getByLabelText('스타일') as HTMLTextAreaElement).value).toBe('City Pop')
+    fireEvent.click(getByText('+ Jazz'))
+    expect((getByLabelText('스타일') as HTMLTextAreaElement).value).toBe('City Pop, Jazz')
+    expect(queryByText('+ City Pop')).toBeNull()
+  })
+})

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2, Trash2 } from 'lucide-react'
+import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2, ChevronDown, Trash2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { AudioDuration } from './StudioAudioDuration'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -12,11 +12,14 @@ import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
-import { StudioHero } from './StudioHero'
+import { groupSongsByDay } from './songDayGroups'
 import LyricsHelper from './LyricsHelper'
 import GenerateQueue from './GenerateQueue'
 import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
+
+/** 스타일 칸 아래 빠른 추가 칩 — 영문 태그가 모델에 가장 잘 먹힌다 */
+const STYLE_CHIPS = ['K-Pop', 'City Pop', 'R&B', 'Hip Hop', 'Ballad', 'Lo-fi', 'Acoustic', 'EDM', 'Rock', 'Jazz']
 
 interface GenerateClientProps {
   user: any
@@ -88,6 +91,7 @@ export function GenerateClient({
   const [profile, setProfile] = useState<any>(null)
   const [detailTrackId, setDetailTrackId] = useState<string | null>(null)
   const [detailCollapsed, setDetailCollapsed] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
 
   const [generateForm, setGenerateForm] = useState({
     modelProvider: 'suno',
@@ -663,119 +667,116 @@ export function GenerateClient({
   }
   const detailTrack = detailTrackId ? historyList.find((h: any) => h.id === detailTrackId) || null : null
 
+  const L = (ko: string, ja: string, en: string) => (uiLanguage === 'KO' ? ko : uiLanguage === 'JA' ? ja : en)
+  const dayGroups = groupSongsByDay(topCompletedSongs, uiLanguage)
+  const styleChips = STYLE_CHIPS.filter(
+    (chip) => !generateForm.style.toLowerCase().split(',').map((s) => s.trim()).includes(chip.toLowerCase()),
+  )
+  const addStyleChip = (chip: string) => {
+    const cur = generateForm.style.trim().replace(/,\s*$/, '')
+    updateFormData('style', cur ? `${cur}, ${chip}` : chip)
+  }
+  const fieldClass = 'w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-[13px] text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary/60'
+  const sectionLabel = 'text-[13px] font-semibold text-zinc-200'
+  const switchBtn = (on: boolean, onClick: () => void, label: string) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onClick}
+      className={`w-9 h-5 rounded-full transition-colors motion-reduce:transition-none flex items-center px-0.5 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/60 ${on ? 'bg-primary' : 'bg-zinc-800'}`}
+    >
+      <span className={`w-4 h-4 rounded-full bg-black transition-transform motion-reduce:transition-none ${on ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+  )
+  const slider = (key: 'styleWeight' | 'weirdness' | 'audioWeight', label: string, hint: string) => (
+    <div className="space-y-1" title={hint}>
+      <div className="flex justify-between text-[12px]">
+        <label htmlFor={`gen-${key}`} className="text-zinc-300">{label}</label>
+        <span className="font-mono text-primary">{generateForm[key]}</span>
+      </div>
+      <input
+        id={`gen-${key}`}
+        type="range" min="0" max="1" step="0.1"
+        value={generateForm[key]}
+        onChange={e => updateFormData(key, parseFloat(e.target.value))}
+        className="w-full accent-primary cursor-pointer"
+      />
+    </div>
+  )
+
   return (
     <div className="w-full pb-10 xl:pb-0 flex items-start gap-4 xl:flex-1 xl:min-h-0 xl:h-full">
-      <div className="flex-1 min-w-0 space-y-6 xl:flex xl:flex-col xl:space-y-0 xl:gap-6 xl:h-full xl:min-h-0">
-      <StudioHero
-        badge={
-          <>
-            <Disc className="w-3.5 h-3.5" />
-            <span>Suno V4 ~ V5.5 Engine</span>
-          </>
-        }
-        title={
-          uiLanguage === 'KO' ? (
-            <>음악 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">생성 인터페이스</span></>
-          ) : uiLanguage === 'JA' ? (
-            <>音楽 <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">生成インターフェース</span></>
-          ) : (
-            <>MUSIC <span className="text-primary drop-shadow-[0_0_15px_rgba(var(--cm-brand-rgb),0.4)]">GENERATION</span></>
-          )
-        }
-        desc={
-          uiLanguage === 'KO'
-            ? '가사와 스타일 프롬프트를 넣고 Suno 모델 버전·인스트루멘탈 여부를 골라 음원을 만듭니다.'
-            : uiLanguage === 'JA'
-            ? '歌詞とスタイルプロンプトを入力し、Sunoのモデルバージョンやインストゥルメンタル設定を選んで音源を生成します。'
-            : 'Feed lyrics and a style prompt, pick the Suno model version and instrumental mode, then render the track.'
-        }
-        bg="/studio/hero-gen.webp"
-      />
+      <div className="flex-1 min-w-0 space-y-3 xl:flex xl:flex-col xl:space-y-0 xl:gap-3 xl:h-full xl:min-h-0">
+      {/* 큰 배너 대신 한 줄 제목 */}
+      <div className="flex items-center justify-between gap-3 shrink-0">
+        <h1 className="text-lg font-bold text-white">{L('음악 만들기', '音楽を作る', 'Create music')}</h1>
+        <span className="text-[12px] text-primary bg-primary/10 border border-primary/30 px-2.5 py-0.5 rounded-full font-semibold truncate max-w-[60%]">{status}</span>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] min-[1280px]:grid-cols-[420px_minmax(0,1fr)] min-[1440px]:grid-cols-[450px_minmax(0,1fr)] gap-4 items-start xl:items-stretch xl:flex-1 xl:min-h-0">
-        {/* Left Column: Input Settings (5칸 또는 6칸) */}
-        <div className="space-y-5 cm-panel-console bg-[#111111] p-5 rounded-2xl border border-[#1e1e1e] shadow-xl lg:sticky lg:top-0 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto xl:static xl:max-h-none xl:min-h-0 custom-scrollbar">
-          <div className="flex justify-between items-center border-b border-[#1e1e1e] pb-3">
-            <h2 className="text-sm font-bold text-zinc-200">{uiLanguage === 'KO' ? '입력 설정 (Input)' : uiLanguage === 'JA' ? '入力設定' : 'Input Settings'}</h2>
-          </div>
-          
-          <div className="space-y-4">
-            {/* AI Engine Selection */}
-            <div className="space-y-2 pb-2 border-b border-[#1e1e1e]">
-              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? 'AI 엔진 선택 (AI Engine)' : uiLanguage === 'JA' ? 'AIエンジンを選択' : 'Select AI Engine'}</label>
-              <div className="flex gap-2 flex-wrap">
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-[1440px]:grid-cols-[380px_minmax(0,1fr)] min-[2000px]:grid-cols-[420px_minmax(0,1fr)] gap-3 items-start xl:items-stretch xl:flex-1 xl:min-h-0">
+        {/* 왼쪽: 입력 패널 */}
+        <div data-testid="gen-input-panel" className="cm-panel-console bg-[#111111] rounded-xl border border-[#1e1e1e] flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-10rem)] xl:static xl:max-h-none xl:min-h-0">
+          {/* 간단/상세 + 모델 */}
+          <div className="flex items-center justify-between gap-2 p-3 border-b border-[#1e1e1e] shrink-0">
+            <div role="radiogroup" aria-label={L('입력 방식', '入力方式', 'Input mode')} className="flex p-0.5 rounded-lg bg-[#0a0a0a] border border-[#1f1f1f]">
+              {[
+                { on: false, label: L('간단', 'シンプル', 'Simple') },
+                { on: true, label: L('상세', '詳細', 'Advanced') },
+              ].map((m) => (
                 <button
-                  onClick={() => updateFormData('modelProvider', 'suno')}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all shadow-sm ${
-                    (!generateForm.modelProvider || generateForm.modelProvider === 'suno')
-                      ? 'bg-primary text-black border border-primary'
-                      : 'bg-[#0a0a0a] text-zinc-400 border border-[#1a1a1a] hover:border-zinc-700'
-                  }`}
+                  key={m.label}
+                  type="button"
+                  role="radio"
+                  aria-checked={generateForm.customMode === m.on}
+                  onClick={() => updateFormData('customMode', m.on)}
+                  className={`px-3 py-1 rounded-md text-[12px] font-semibold transition-colors motion-reduce:transition-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/60 ${generateForm.customMode === m.on ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                  Suno (v4~v5.5)
+                  {m.label}
                 </button>
+              ))}
+            </div>
+            <select
+              aria-label={L('모델 버전', 'モデルバージョン', 'Model version')}
+              value={generateForm.modelVersion}
+              onChange={e => updateFormData('modelVersion', e.target.value)}
+              className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2 py-1 text-[12px] font-semibold text-zinc-200 focus:outline-none focus:border-primary/60 cursor-pointer"
+            >
+              {SUNO_MODEL_VERSIONS.map(v => (
+                <option key={v.value} value={v.value}>{v.label.replace(/^Suno\s*/, '')}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-4">
+            {/* 가사(간단 모드에선 곡 설명) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="gen-prompt" className={`${sectionLabel} ${generateForm.instrumentalOnly ? 'text-zinc-600' : ''}`}>
+                  {generateForm.customMode ? L('가사', '歌詞', 'Lyrics') : L('곡 설명', '曲の説明', 'Song description')}
+                </label>
+                <span className="flex items-center gap-2 text-[12px] text-zinc-400">
+                  {L('연주곡', 'インスト', 'Instrumental')}
+                  {switchBtn(generateForm.instrumentalOnly, () => updateFormData('instrumentalOnly', !generateForm.instrumentalOnly), L('연주곡만 만들기', 'インストのみ', 'Instrumental only'))}
+                </span>
               </div>
-            </div>
-
-            {/* Model Version */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '모델 버전 (Model Version)' : uiLanguage === 'JA' ? 'モデルバージョン' : 'Model Version'}</label>
-              <select 
-                value={generateForm.modelVersion} 
-                onChange={e => updateFormData('modelVersion', e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
-              >
-                {SUNO_MODEL_VERSIONS.map(v => (
-                  <option key={v.value} value={v.value}>{v.label}</option>
-                ))}
-              </select>
-              <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? 'Suno 모델 버전입니다. V5.5가 최신 기본값입니다.' : uiLanguage === 'JA' ? 'Sunoモデルバージョン。V5.5が最新のデフォルトです。' : 'Suno model version. V5.5 is the latest default.'}</p>
-            </div>
-
-            {/* Custom Mode Toggle */}
-            <div className="flex justify-between items-center py-2 border-b border-[#1a1a1a]">
-              <div>
-                <label className="text-xs font-bold text-zinc-200 block">{uiLanguage === 'KO' ? '커스텀 모드 (Custom Mode)' : uiLanguage === 'JA' ? 'カスタムモード' : 'Custom Mode'}</label>
-                <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '커스텀 모드를 활성화합니다. 활성화 시 스타일과 제목을 직접 입력합니다.' : uiLanguage === 'JA' ? 'カスタムモードを有効にして、スタイルとタイトルを手動で入力します。' : 'Enable custom mode to enter style and title manually.'}</p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => updateFormData('customMode', !generateForm.customMode)}
-                className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 cursor-pointer ${generateForm.customMode ? 'bg-primary' : 'bg-zinc-800'}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-black transition-transform ${generateForm.customMode ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-
-            {/* Instrumental Only Toggle */}
-            <div className="flex justify-between items-center py-2 border-b border-[#1a1a1a]">
-              <div>
-                <label className="text-xs font-bold text-zinc-200 block">{uiLanguage === 'KO' ? '연주곡만 생성 (Inst Only)' : uiLanguage === 'JA' ? 'インストゥルメンタルのみ' : 'Instrumental Only'}</label>
-                <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '보컬 없이 악기 연주만 있는 음악을 생성합니다.' : uiLanguage === 'JA' ? 'ボーカルなしのインストゥルメンタル音楽を生成します。' : 'Generate instrumental music without vocals.'}</p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => updateFormData('instrumentalOnly', !generateForm.instrumentalOnly)}
-                className={`w-11 h-6 rounded-full transition-colors flex items-center px-1 cursor-pointer ${generateForm.instrumentalOnly ? 'bg-primary' : 'bg-zinc-800'}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-black transition-transform ${generateForm.instrumentalOnly ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-
-            {/* Prompt / Lyrics */}
-            <div className="space-y-1">
-              <label className={`text-xs font-bold ${generateForm.instrumentalOnly ? 'text-zinc-600' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : uiLanguage === 'JA' ? 'プロンプト / 歌詞' : 'Prompt / Lyrics'}</label>
-              <textarea 
+              <textarea
+                id="gen-prompt"
                 ref={promptAreaRef}
                 value={generateForm.instrumentalOnly ? '' : generateForm.prompt}
                 onChange={e => updateFormData('prompt', e.target.value)}
                 disabled={generateForm.instrumentalOnly}
-                placeholder={generateForm.instrumentalOnly ? (uiLanguage === 'KO' ? '연주곡만 생성 옵션이 켜져있어 가사를 입력할 수 없습니다.' : uiLanguage === 'JA' ? 'インストゥルメンタルのみのオプションがオンのため、歌詞は入力できません。' : 'Disabled for Instrumental Only') : ''}
-                rows={5}
-                className={`w-full rounded-xl p-3 text-xs outline-none resize-y min-h-[7rem] max-h-[40rem] custom-scrollbar transition-colors font-mono ${
-                  generateForm.instrumentalOnly 
-                    ? 'bg-[#0a0a0a]/50 border border-[#1a1a1a] text-zinc-600 cursor-not-allowed opacity-60' 
-                    : 'bg-[#0a0a0a] border border-[#1a1a1a] text-zinc-200 focus:border-primary/60'
+                placeholder={generateForm.instrumentalOnly
+                  ? L('연주곡은 가사 없이 만들어요.', 'インストは歌詞なしで作ります。', 'Instrumental tracks have no lyrics.')
+                  : generateForm.customMode
+                    ? L('직접 쓴 가사를 넣거나 비워 두세요.', '歌詞を入力してください。', 'Write your own lyrics.')
+                    : L('어떤 곡을 원하는지 적어 주세요. 예: 비 오는 밤 드라이브에 어울리는 시티팝', 'どんな曲が欲しいか書いてください。', 'Describe the song you want.')}
+                rows={6}
+                className={`w-full rounded-lg px-3 py-2 text-[13px] leading-relaxed outline-none resize-y min-h-[8rem] max-h-[40rem] custom-scrollbar transition-colors font-mono ${
+                  generateForm.instrumentalOnly
+                    ? 'bg-[#0a0a0a]/50 border border-[#1f1f1f] text-zinc-600 cursor-not-allowed opacity-60'
+                    : 'bg-[#0a0a0a] border border-[#1f1f1f] text-zinc-200 focus:border-primary/60'
                 }`}
               />
               {!generateForm.instrumentalOnly && (
@@ -789,180 +790,161 @@ export function GenerateClient({
                   }}
                 />
               )}
-              <p className={`text-[10px] ${generateForm.instrumentalOnly ? 'text-zinc-600' : 'text-zinc-500'}`}>{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : uiLanguage === 'JA' ? '生成したい音楽の歌詞または説明。カスタムモードがオフのときに必須です。' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
             </div>
 
             {generateForm.customMode && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '스타일 (Style)' : uiLanguage === 'JA' ? 'スタイル' : 'Style'}</label>
-                <input 
-                  type="text"
+              <div className="space-y-1.5">
+                <label htmlFor="gen-style" className={sectionLabel}>{L('스타일', 'スタイル', 'Styles')}</label>
+                <textarea
+                  id="gen-style"
                   value={generateForm.style}
                   onChange={e => updateFormData('style', e.target.value)}
-                  placeholder="예: 80s City Pop, Groovy Slap Bass, Bright Synth"
-                  className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60"
+                  placeholder="80s City Pop, Groovy Slap Bass, Bright Synth"
+                  rows={2}
+                  className={`${fieldClass} resize-y min-h-[3.5rem]`}
                 />
-                <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '음악 스타일 및 장르입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : uiLanguage === 'JA' ? '音楽のスタイルとジャンル。カスタムモードがオンのときに必須です。' : 'Music style and genre. Required when Custom Mode is on.'}</p>
+                {styleChips.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {styleChips.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => addStyleChip(chip)}
+                        className="px-2.5 py-1 rounded-full bg-[#181818] border border-[#262626] text-[12px] text-zinc-300 hover:border-primary/50 hover:text-white transition-colors motion-reduce:transition-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/60"
+                      >
+                        + {chip}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {generateForm.customMode && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '곡 제목 (Title)' : uiLanguage === 'JA' ? 'タイトル' : 'Title'}</label>
-                <input 
+              <div className="space-y-1.5">
+                <label htmlFor="gen-title" className={sectionLabel}>{L('곡 제목', 'タイトル', 'Title')}</label>
+                <input
+                  id="gen-title"
                   type="text"
                   value={generateForm.title}
                   onChange={e => updateFormData('title', e.target.value)}
-                  placeholder="예: Neon City Lights"
-                  className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 font-bold focus:outline-none focus:border-primary/60"
+                  placeholder={L('예: 네온 시티', '例: Neon City Lights', 'e.g. Neon City Lights')}
+                  className={`${fieldClass} font-semibold`}
                 />
-                <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '음악의 제목입니다. 커스텀 모드가 켜져있을 때 필수입니다.' : uiLanguage === 'JA' ? '音楽のタイトル。カスタムモードがオンのときに必須です。' : 'Title of the music. Required when Custom Mode is on.'}</p>
               </div>
             )}
 
-            {/* Vocal Gender */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '보컬 성별 (Vocal Gender)' : uiLanguage === 'JA' ? 'ボーカルの性別' : 'Vocal Gender'}</label>
-              <div className="flex gap-2">
-                <button 
-                  type="button"
-                  onClick={() => updateFormData('vocalGender', 'Male')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Male' ? 'bg-primary text-black border-primary' : 'bg-[#0a0a0a] text-zinc-400 border-[#1a1a1a] hover:border-zinc-700'}`}
-                >
-                  {uiLanguage === 'KO' ? '남성 보컬' : uiLanguage === 'JA' ? '男性' : 'Male'}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => updateFormData('vocalGender', 'Female')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${generateForm.vocalGender === 'Female' ? 'bg-primary text-black border-primary' : 'bg-[#0a0a0a] text-zinc-400 border-[#1a1a1a] hover:border-zinc-700'}`}
-                >
-                  {uiLanguage === 'KO' ? '여성 보컬' : uiLanguage === 'JA' ? '女性' : 'Female'}
-                </button>
-              </div>
-              <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '생성할 보컬의 성별을 선택합니다.' : uiLanguage === 'JA' ? '生成するボーカルの性別を選択します。' : 'Select the gender of the vocal to generate.'}</p>
-            </div>
-
-            {/* Negative Tags */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-300">{uiLanguage === 'KO' ? '제외할 태그 (Negative Tags)' : uiLanguage === 'JA' ? 'ネガティブタグ' : 'Negative Tags'}</label>
-              <input 
-                type="text"
-                value={generateForm.negativeTags}
-                onChange={e => updateFormData('negativeTags', e.target.value)}
-                placeholder={uiLanguage === 'KO' ? '시끄러운, 헤비메탈, 스크리밍...' : uiLanguage === 'JA' ? 'ノイジー、ヘビーメタル、スクリーミング...' : 'Noisy, heavy metal, screaming...'}
-                className="w-full bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-primary/60 placeholder-zinc-700"
-              />
-              <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '생성할 음악에서 제외하고 싶은 장르, 스타일 및 요소를 적습니다.' : uiLanguage === 'JA' ? '除外するジャンル、スタイル、要素。' : 'Genres, styles, and elements to exclude.'}</p>
-            </div>
-
-            {/* Weights Sliders */}
-            <div className="space-y-4 pt-2">
-              <div className="space-y-1.5 bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
-                <div className="flex justify-between text-xs">
-                  <label className="font-bold text-zinc-300">{uiLanguage === 'KO' ? '스타일 강도 (Style Weight)' : uiLanguage === 'JA' ? 'スタイルウェイト' : 'Style Weight'}</label>
-                  <span className="font-mono font-bold text-primary">{generateForm.styleWeight}</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.1" 
-                  value={generateForm.styleWeight} 
-                  onChange={e => updateFormData('styleWeight', parseFloat(e.target.value))}
-                  className="w-full accent-primary cursor-pointer"
-                />
-                <p className="text-[10px] text-zinc-500">{uiLanguage === 'KO' ? '스타일 지침 가중치입니다. 값이 높을수록 프롬프트 스타일을 엄격하게 따릅니다.' : uiLanguage === 'JA' ? 'スタイル指示の重み。値が高いほどプロンプトスタイルに厳密に従います。' : 'Weight for style instructions. Higher values strictly follow the prompt style.'}</p>
-              </div>
-
-              <div className="space-y-1.5 bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
-                <div className="flex justify-between text-xs">
-                  <label className="font-bold text-zinc-300">{uiLanguage === 'KO' ? '독창성 (Weirdness)' : uiLanguage === 'JA' ? '奇抜さ' : 'Weirdness'}</label>
-                  <span className="font-mono font-bold text-primary">{generateForm.weirdness}</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.1" 
-                  value={generateForm.weirdness} 
-                  onChange={e => updateFormData('weirdness', parseFloat(e.target.value))}
-                  className="w-full accent-primary cursor-pointer"
-                />
-                <p className="text-[10px] text-zinc-500">독창성과 실험적인 창의성 수준을 제어합니다.</p>
-              </div>
-
-              <div className="space-y-1.5 bg-[#0a0a0a] p-3 rounded-xl border border-[#1a1a1a]">
-                <div className="flex justify-between text-xs">
-                  <label className="font-bold text-zinc-300">오디오 영향도 (Audio Weight)</label>
-                  <span className="font-mono font-bold text-primary">{generateForm.audioWeight}</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.1" 
-                  value={generateForm.audioWeight} 
-                  onChange={e => updateFormData('audioWeight', parseFloat(e.target.value))}
-                  className="w-full accent-primary cursor-pointer"
-                />
-                <p className="text-[10px] text-zinc-500">음악 생성 시 원본 오디오 소스가 미치는 가중치 영향도입니다.</p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#1e1e1e]">
-              <button 
+            {/* 더 많은 설정 — 접어 둔다 */}
+            <div className="border-t border-[#1e1e1e] pt-3">
+              <button
                 type="button"
-                onClick={() => setGenerateForm({
-                  modelProvider: 'suno',
-                  modelVersion: SUNO_DEFAULT_MODEL_VERSION,
-                  customMode: true,
-                  instrumentalOnly: false,
-                  prompt: '',
-                  style: '',
-                  title: '',
-                  vocalGender: 'Female',
-                  negativeTags: '',
-                  styleWeight: 0.5,
-                  weirdness: 0.3,
-                  audioWeight: 0.5
-                })}
-                className="px-4 py-2.5 bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] rounded-xl text-xs font-bold text-zinc-300 transition-colors cursor-pointer"
+                onClick={() => setMoreOpen(v => !v)}
+                aria-expanded={moreOpen}
+                className="w-full flex items-center justify-between text-[13px] font-semibold text-zinc-300 hover:text-white cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
               >
-                초기화
+                {L('더 많은 설정', 'その他の設定', 'More options')}
+                <ChevronDown className={`w-4 h-4 transition-transform motion-reduce:transition-none ${moreOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button 
-                type="button"
-                onClick={handleGenerate}
-                disabled={isMusicGenerating}
-                className="px-6 py-2.5 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-xl text-xs font-extrabold transition-all disabled:opacity-50 shadow-md shadow-yellow-950/40 cursor-pointer"
-              >
-                생성하기{costSuffix}
-              </button>
+              {moreOpen && (
+                <div className="mt-3 space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[12px] text-zinc-300">{L('엔진', 'エンジン', 'Engine')}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateFormData('modelProvider', 'suno')}
+                      className={`px-2.5 py-1 rounded-lg text-[12px] font-semibold ${
+                        (!generateForm.modelProvider || generateForm.modelProvider === 'suno')
+                          ? 'bg-primary text-black border border-primary'
+                          : 'bg-[#0a0a0a] text-zinc-400 border border-[#1f1f1f] hover:border-zinc-700'
+                      }`}
+                    >
+                      Suno (v4~v5.5)
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[12px] text-zinc-300">{L('보컬', 'ボーカル', 'Vocal')}</span>
+                    <div className="flex gap-1.5">
+                      {(['Male', 'Female'] as const).map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => updateFormData('vocalGender', g)}
+                          aria-pressed={generateForm.vocalGender === g}
+                          className={`px-3 py-1 rounded-lg text-[12px] font-semibold border transition-colors motion-reduce:transition-none cursor-pointer ${generateForm.vocalGender === g ? 'bg-primary text-black border-primary' : 'bg-[#0a0a0a] text-zinc-400 border-[#1f1f1f] hover:border-zinc-700'}`}
+                        >
+                          {g === 'Male' ? L('남성', '男性', 'Male') : L('여성', '女性', 'Female')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="gen-negative" className="text-[12px] text-zinc-300">{L('빼고 싶은 스타일', '除外するスタイル', 'Exclude styles')}</label>
+                    <input
+                      id="gen-negative"
+                      type="text"
+                      value={generateForm.negativeTags}
+                      onChange={e => updateFormData('negativeTags', e.target.value)}
+                      placeholder={L('시끄러운, 헤비메탈, 스크리밍...', 'ノイジー、ヘビーメタル...', 'Noisy, heavy metal, screaming...')}
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  {slider('styleWeight', L('스타일 강도', 'スタイルウェイト', 'Style influence'), L('높을수록 스타일을 엄격하게 따릅니다.', '高いほどスタイルに厳密に従います。', 'Higher follows the style more strictly.'))}
+                  {slider('weirdness', L('독창성', '奇抜さ', 'Weirdness'), L('높을수록 실험적인 곡이 나옵니다.', '高いほど実験的になります。', 'Higher is more experimental.'))}
+                  {slider('audioWeight', L('오디오 영향도', 'オーディオウェイト', 'Audio influence'), L('원본 오디오가 결과에 미치는 정도입니다.', '元の音声の影響度です。', 'How much the source audio counts.'))}
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* 만들기 버튼 — 늘 보이게 아래 고정 */}
+          <div className="flex gap-2 p-3 border-t border-[#1e1e1e] shrink-0">
+            <button
+              type="button"
+              onClick={() => setGenerateForm({
+                modelProvider: 'suno',
+                modelVersion: SUNO_DEFAULT_MODEL_VERSION,
+                customMode: true,
+                instrumentalOnly: false,
+                prompt: '',
+                style: '',
+                title: '',
+                vocalGender: 'Female',
+                negativeTags: '',
+                styleWeight: 0.5,
+                weirdness: 0.3,
+                audioWeight: 0.5
+              })}
+              className="px-3 py-2 bg-[#161616] hover:bg-[#1e1e1e] border border-[#232323] rounded-lg text-[13px] font-semibold text-zinc-300 transition-colors motion-reduce:transition-none cursor-pointer"
+            >
+              초기화
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={isMusicGenerating}
+              className="flex-1 px-4 py-2 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-lg text-[13px] font-bold transition-all motion-reduce:transition-none disabled:opacity-50 cursor-pointer"
+            >
+              생성하기{costSuffix}
+            </button>
           </div>
         </div>
 
-        {/* Right Column: Generation & Output (6칸) */}
-        <div className="min-w-0 space-y-6 cm-panel-console bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl relative flex flex-col justify-between xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
-          <div className="space-y-6 flex-1 flex flex-col">
-            <h2 className="text-sm font-bold text-zinc-200 border-b border-[#1e1e1e] pb-3 flex justify-between items-center shrink-0">
-              <span>{uiLanguage === 'KO' ? '진행 상태 및 완료된 곡' : uiLanguage === 'JA' ? 'ステータス & 完了したトラック' : 'Status & Completed Tracks'}</span>
-              <span className="text-xs text-primary bg-primary/10 border border-primary/30 px-2.5 py-0.5 rounded-full font-bold">{status}</span>
+        {/* 오른쪽: 진행 중 작업 + 날짜별 곡 목록 */}
+        <div data-testid="gen-song-list" className="min-w-0 cm-panel-console bg-[#111111] rounded-xl border border-[#1e1e1e] flex flex-col xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[#1e1e1e] shrink-0">
+            <h2 className="text-[14px] font-semibold text-zinc-200">
+              {L('내 곡', 'マイトラック', 'My songs')}
+              {topCompletedSongs.length > 0 && <span className="ml-1.5 text-zinc-500 font-normal">{topCompletedSongs.length}</span>}
             </h2>
-
-            {/* Empty standby banner (참고 이미지 스타일) */}
-            {activeTasks.length === 0 && !isMusicGenerating && topCompletedSongs.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 min-h-[300px]">
-                <div className="w-16 h-16 rounded-full bg-[#0a0a0a] border border-[#1a1a1a] flex items-center justify-center shadow-lg">
-                  <Music className="w-7 h-7 text-zinc-500" />
-                </div>
-                <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
-                  좌측의 입력 정보를 바탕으로 실제 오디오 생성을 시작합니다.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={isMusicGenerating}
-                  className="px-6 py-3 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-yellow-950/40 cursor-pointer flex items-center gap-2"
-                >
-                  <Disc className="w-4 h-4 fill-current text-black animate-spin-slow" />
-                  <span>Suno 음악 생성 시작하기{costSuffix}</span>
-                </button>
-              </div>
+            {topCompletedSongs.length > 0 && (
+              <span className="text-[12px] text-zinc-500 hidden sm:inline">{L('누르면 재생 · 지팡이는 설정 불러오기', 'クリックで再生 · 杖で設定をロード', 'Click to play · wand loads settings')}</span>
             )}
+          </div>
 
+          <div className="px-2 pb-3 pt-2 space-y-2 flex-1 flex flex-col">
             <GenerateQueue
               uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
               tasks={activeTasks}
@@ -971,101 +953,101 @@ export function GenerateClient({
               onDismiss={dismissFailed}
             />
 
-            {/* Completed Songs History List */}
             {topCompletedSongs.length > 0 ? (
-              <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase text-zinc-400 tracking-wider flex justify-between items-center">
-                  <span>{uiLanguage === 'KO' ? `🎵 생성 완료된 곡 목록 (최근 ${topCompletedSongs.length}곡)` : uiLanguage === 'JA' ? `🎵 完了した曲 (最近 ${topCompletedSongs.length}件)` : `🎵 Completed Songs (Recent ${topCompletedSongs.length})`}</span>
-                  <span className="text-[9px] text-zinc-500 font-normal normal-case">{uiLanguage === 'KO' ? '* 클릭 시 재생 · 지팡이 아이콘으로 옵션/가사 불러오기' : uiLanguage === 'JA' ? '* クリックで再生 · ワンドアイコンでオプション/歌詞をロード' : '* Click to play · wand icon loads options/lyrics'}</span>
-                </p>
-                
-                <div className="space-y-2">
-                  {topCompletedSongs.map((track) => {
-                    const isSelected = currentHistoryId === track.id
-                    const isCurrentPlaying = currentTrack?.id === track.id && isPlaying
-                    const styleSnippet = track.prompt || track.form?.style || ''
-                    const displayStyle = styleSnippet.length > 35 ? styleSnippet.slice(0, 32) + '...' : styleSnippet
-                    
-                    return (
-                      <div 
-                        key={track.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => playListTrack(track)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            // 전역 스페이스 단축키(PersistentPlayer)와 이중 토글되어 깜박이므로 여기서 끊는다
-                            e.stopPropagation()
-                            if (e.repeat) return
-                            playListTrack(track)
-                          }
-                        }}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none group/item focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-                          isSelected
-                            ? 'bg-primary/10 border-primary/40 shadow-lg shadow-emerald-500/15'
-                            : 'bg-black/25 border-zinc-800/40 hover:bg-white/[0.02] hover:border-zinc-700/50'
-                        }`}
-                      >
-                        {/* 재생 중이면 썸네일 위에 이퀄라이저가 뜬다 — 홈 카드와 같은 표시(대표 지시 2026-09-05) */}
-                        <div className="relative w-11 h-11 shrink-0">
-                          {track.image_url ? (
-                            <img src={track.image_url} alt="Cover" className="w-11 h-11 rounded-lg object-cover shadow-md" />
-                          ) : (
-                            <div className="w-11 h-11 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800">
-                              <Music className="w-5 h-5 text-zinc-700" />
-                            </div>
-                          )}
-                          {isCurrentPlaying && (
-                            <span
-                              aria-hidden
-                              className="absolute inset-0 rounded-lg bg-black/60 flex items-end justify-center gap-[2.5px] pb-3"
-                            >
-                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-1 motion-reduce:animate-none" />
-                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-2 motion-reduce:animate-none" />
-                              <span className="w-[3px] h-4 bg-[#a0e813] shadow-[0_0_8px_rgba(160,232,19,0.6)] rounded-sm animate-eq-3 motion-reduce:animate-none" />
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="min-w-0 flex-1 text-left">
-                          <p className={`text-xs font-bold truncate group-hover/item:text-primary transition-colors ${
-                            isSelected ? 'text-primary font-black' : 'text-white'
-                          }`}>{track.title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-zinc-400 font-mono font-bold shrink-0">
+              dayGroups.map((group) => (
+                <section key={group.key} aria-label={group.label}>
+                  <h3 className="px-2 pt-2 pb-1 text-[12px] font-semibold text-zinc-500">{group.label}</h3>
+                  <div>
+                    {group.items.map((track: any) => {
+                      const isSelected = currentHistoryId === track.id
+                      const isDetail = detailTrackId === track.id
+                      const isCurrentPlaying = currentTrack?.id === track.id && isPlaying
+                      const styleText = track.prompt || track.form?.style || ''
+                      const versionLabel = track.form?.modelVersion
+                        ? (SUNO_MODEL_VERSIONS.find(v => v.value === normalizeSunoModelVersion(track.form.modelVersion))?.label || '').replace(/^Suno\s*/, '')
+                        : ''
+                      const iconBtn = 'w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.06] transition-colors motion-reduce:transition-none cursor-pointer shrink-0 focus-visible:ring-2 focus-visible:ring-primary/60'
+
+                      return (
+                        <div
+                          key={track.id}
+                          role="button"
+                          tabIndex={0}
+                          data-testid="gen-song-row"
+                          onClick={() => playListTrack(track)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              // 전역 스페이스 단축키(PersistentPlayer)와 이중 토글되어 깜박이므로 여기서 끊는다
+                              e.stopPropagation()
+                              if (e.repeat) return
+                              playListTrack(track)
+                            }
+                          }}
+                          className={`flex items-center gap-3 px-2 py-2.5 rounded-lg transition-colors motion-reduce:transition-none cursor-pointer select-none group/item focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                            isSelected || isDetail ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'
+                          }`}
+                        >
+                          {/* 64px 썸네일 + 길이. 재생 중이면 이퀄라이저, 올려 두면 재생 표시 */}
+                          <div className="relative w-16 h-16 shrink-0">
+                            {track.image_url ? (
+                              <img src={track.image_url} alt="" className="w-16 h-16 rounded-md object-cover" />
+                            ) : (
+                              <div className="w-16 h-16 rounded-md bg-zinc-900 flex items-center justify-center border border-zinc-800">
+                                <Music className="w-6 h-6 text-zinc-700" />
+                              </div>
+                            )}
+                            {isCurrentPlaying ? (
+                              <span aria-hidden className="absolute inset-0 rounded-md bg-black/60 flex items-end justify-center gap-[2.5px] pb-4">
+                                <span className="w-[3px] h-4 bg-[#a0e813] rounded-sm animate-eq-1 motion-reduce:animate-none" />
+                                <span className="w-[3px] h-4 bg-[#a0e813] rounded-sm animate-eq-2 motion-reduce:animate-none" />
+                                <span className="w-[3px] h-4 bg-[#a0e813] rounded-sm animate-eq-3 motion-reduce:animate-none" />
+                              </span>
+                            ) : (
+                              <span aria-hidden className="absolute inset-0 rounded-md bg-black/50 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity motion-reduce:transition-none">
+                                <Play className="w-5 h-5 text-white fill-current" />
+                              </span>
+                            )}
+                            <span className="absolute right-1 bottom-1 px-1 rounded bg-black/75 text-[11px] leading-4 font-mono text-zinc-100">
                               <AudioDuration url={track.audio_url} />
                             </span>
-                            <span className="text-zinc-700 text-[10px] shrink-0">•</span>
-                            <p className="text-[10px] text-zinc-500 truncate flex-1">{displayStyle || 'Suno Generated'}</p>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          {/* 옵션/가사 불러오기 */}
-                          <button
-                            onClick={() => handleSelectTrack(track)}
-                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-                            title={uiLanguage === 'KO' ? '옵션/가사 불러오기' : uiLanguage === 'JA' ? 'オプション/歌詞をロード' : 'Load options/lyrics'}
-                          >
-                            <Wand2 className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-primary' : 'text-zinc-500 hover:text-primary'}`} />
-                          </button>
 
-                          {/* 공개 여부 설정 */}
-                          <button
-                            onClick={() => handlePublishToggle(track)}
-                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-                            title={track.is_published ? (uiLanguage === 'KO' ? '비공개로 설정' : uiLanguage === 'JA' ? '非公開にする' : 'Make Private') : (uiLanguage === 'KO' ? '공개로 설정' : uiLanguage === 'JA' ? '公開する' : 'Make Public')}
-                          >
-                            <Globe 
-                              className={`w-3.5 h-3.5 ${
-                                track.is_published 
-                                  ? 'text-emerald-400' 
-                                  : 'text-zinc-500 hover:text-zinc-300'
-                              }`} 
-                            />
-                          </button>
-
+                          <div className="min-w-0 flex-1 text-left">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <p className={`text-[14px] font-semibold truncate ${isSelected ? 'text-primary' : 'text-white'}`}>{track.title}</p>
+                              {versionLabel && (
+                                <span className="shrink-0 px-1.5 rounded border border-zinc-700 text-[11px] leading-4 font-semibold text-zinc-400">{versionLabel}</span>
+                              )}
+                            </div>
+                            <p className="text-[12px] text-zinc-500 truncate mt-0.5">{styleText || L('스타일 없음', 'スタイルなし', 'No style')}</p>
+                            {/* 작은 아이콘 줄 — 좋아요·불러오기·공개·폴더·내려받기 */}
+                            <div className="flex items-center gap-0.5 mt-1 -ml-1.5" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                aria-label={L('좋아요', 'いいね', 'Like')}
+                                aria-pressed={!!track.liked}
+                                onClick={() => handleLikeToggle(track)}
+                                className={iconBtn}
+                                title={L('좋아요', 'いいね', 'Like')}
+                              >
+                                <Heart className={`w-3.5 h-3.5 ${track.liked ? 'text-primary fill-current' : 'text-zinc-500 hover:text-primary'}`} />
+                              </button>
+                              <button
+                                onClick={() => handleSelectTrack(track)}
+                                className={iconBtn}
+                                aria-label={L('옵션/가사 불러오기', 'オプション/歌詞をロード', 'Load options/lyrics')}
+                                title={L('옵션/가사 불러오기', 'オプション/歌詞をロード', 'Load options/lyrics')}
+                              >
+                                <Wand2 className={`w-3.5 h-3.5 ${isSelected ? 'text-primary' : 'text-zinc-500 hover:text-primary'}`} />
+                              </button>
+                              <button
+                                onClick={() => handlePublishToggle(track)}
+                                className={iconBtn}
+                                aria-label={track.is_published ? L('비공개로 설정', '非公開にする', 'Make Private') : L('공개로 설정', '公開する', 'Make Public')}
+                                title={track.is_published ? L('비공개로 설정', '非公開にする', 'Make Private') : L('공개로 설정', '公開する', 'Make Public')}
+                              >
+                                <Globe className={`w-3.5 h-3.5 ${track.is_published ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`} />
+                              </button>
                           {/* 플레이리스트 등록 */}
                           <div className="relative">
                             <button
@@ -1181,79 +1163,64 @@ export function GenerateClient({
                               </>
                             )}
                           </div>
+                              <button
+                                aria-label={L('다운로드', 'ダウンロード', 'Download')}
+                                onClick={() => handleDownloadTrack(track.audio_url, track.title, track.image_url)}
+                                className={iconBtn}
+                                title={L('다운로드', 'ダウンロード', 'Download')}
+                              >
+                                <Download className="w-3.5 h-3.5 text-zinc-500 hover:text-primary" />
+                              </button>
+                              {/* 휴지통 — 다른 아이콘과 같은 크기. 공개 곡은 비활성, 누르면 확인 창 */}
+                              {onTrashTrack && (
+                                <button
+                                  type="button"
+                                  onClick={() => onTrashTrack(track)}
+                                  disabled={!!track.is_published}
+                                  aria-label={L('휴지통으로 이동', 'ゴミ箱へ移動', 'Move to trash')}
+                                  title={track.is_published
+                                    ? L('쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다', '公開中の曲はゴミ箱へ移動できません', 'Published tracks cannot be moved to trash')
+                                    : L('휴지통으로 이동', 'ゴミ箱へ移動', 'Move to trash')}
+                                  className={`${iconBtn} disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-red-400" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
 
-                          {renderTrackMenu?.(track, 'w-7 h-7 rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60', 'w-3.5 h-3.5')}
-
-                          {/* 휴지통 — 다른 아이콘과 같은 크기. 공개 곡은 비활성, 누르면 확인 창 */}
-                          {onTrashTrack && (
+                          {/* 오른쪽 끝: 재생 · ⋯ */}
+                          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <button
-                              type="button"
-                              onClick={() => onTrashTrack(track)}
-                              disabled={!!track.is_published}
-                              aria-label={uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash'}
-                              title={track.is_published
-                                ? (uiLanguage === 'KO' ? '쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다' : uiLanguage === 'JA' ? '公開中の曲はゴミ箱へ移動できません' : 'Published tracks cannot be moved to trash')
-                                : (uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash')}
-                              className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                              aria-label={isCurrentPlaying ? L('일시정지', '一時停止', 'Pause') : L('재생', '再生', 'Play')}
+                              onClick={() => playListTrack(track)}
+                              className="h-8 w-8 rounded-full bg-primary text-black flex items-center justify-center shrink-0 hover:opacity-90 active:scale-95 transition-all motion-reduce:transition-none cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/60"
                             >
-                              <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-red-400 transition-colors" />
+                              {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
                             </button>
-                          )}
-
-                          {/* 좋아요 버튼 */}
-                          <button
-                            aria-label={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
-                            onClick={() => handleLikeToggle(track)}
-                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer group/heart shrink-0"
-                            title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
-                          >
-                            <Heart 
-                              className={`w-3.5 h-3.5 transition-all duration-200 active:scale-125 ${
-                                track.liked 
-                                  ? 'text-primary fill-current' 
-                                  : 'text-zinc-500 hover:text-primary group-hover/heart:scale-105'
-                              }`} 
-                            />
-                          </button>
-
-                          {/* 다운로드 버튼 */}
-                          <button
-                            aria-label={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
-                            onClick={() => handleDownloadTrack(track.audio_url, track.title, track.image_url)}
-                            className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
-                            title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
-                          >
-                            <Download className="w-3.5 h-3.5 text-zinc-500 hover:text-primary transition-colors" />
-                          </button>
-
-                          {/* 재생 버튼 */}
-                          <button
-                            aria-label={uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}
-                            onClick={() => playListTrack(track)}
-                            className="h-8 w-8 rounded-full bg-primary text-black flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                          >
-                            {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-                          </button>
+                            {renderTrackMenu?.(track, 'w-8 h-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60', 'w-4 h-4')}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+                      )
+                    })}
+                  </div>
+                </section>
+              ))
             ) : (
               !isMusicGenerating && activeTasks.length === 0 && (
-                <div className="flex flex-col items-center justify-start pt-12 pb-6 space-y-4">
-                  <div className="w-16 h-16 bg-surface-container-high rounded-full flex items-center justify-center mb-2">
-                    <Music className="w-8 h-8 text-on-surface-variant" />
-                  </div>
-                  <p className="text-sm text-on-surface text-center">{uiLanguage === 'KO' ? '좌측의 입력 정보를 바탕으로\n실제 오디오 생성을 시작합니다.' : uiLanguage === 'JA' ? '左側の入力オプションに\n基づいて音声を生成します。' : 'Based on the input information on the left,\nactual audio generation will start.'}</p>
-                  <button 
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3 min-h-[280px]">
+                  <Music className="w-8 h-8 text-zinc-600" />
+                  <p className="text-[13px] text-zinc-400 max-w-xs leading-relaxed">
+                    {L('왼쪽에 가사나 곡 설명을 넣고 만들면 여기에 곡이 쌓여요.', '左に歌詞や説明を入れて作成すると、ここに曲が並びます。', 'Fill in the left panel and create — your songs show up here.')}
+                  </p>
+                  <button
+                    type="button"
                     onClick={handleGenerate}
                     disabled={isMusicGenerating}
-                    className="w-full py-4 bg-primary hover:bg-primary text-[#090909] font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0"
+                    className="px-5 py-2 bg-primary hover:opacity-90 active:scale-[0.99] text-black rounded-lg text-[13px] font-bold transition-all motion-reduce:transition-none cursor-pointer flex items-center gap-2"
                   >
-                    <Disc className="w-5 h-5" />
-                    {(uiLanguage === 'KO' ? 'Suno 음악 생성 시작하기' : uiLanguage === 'JA' ? 'Suno音楽生成を開始' : 'Start Suno Music Generation') + costSuffix}
+                    <Disc className="w-4 h-4" />
+                    {L('음악 만들기', '音楽を作る', 'Create music')}{costSuffix}
                   </button>
                 </div>
               )
