@@ -40,6 +40,7 @@ export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { r
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return; // Shift+방향키는 공용 단축키(이전·다음 곡)
       const el = e.target as HTMLElement | null;
       if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return; // 진행바 방향키는 그대로 둔다
       e.preventDefault();

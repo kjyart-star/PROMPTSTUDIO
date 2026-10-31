@@ -18,6 +18,8 @@ interface PlayerState {
   isNowPlayingOpen: boolean;
   /** 전체 화면 「지금 재생」 */
   isImmersiveOpen: boolean;
+  isShortcutHelpOpen: boolean;
+  setShortcutHelpOpen: (open: boolean) => void;
   setImmersiveOpen: (open: boolean) => void;
 
   // Shuffle & Repeat state
@@ -87,6 +89,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   hasLoggedPlay: false,
   isNowPlayingOpen: false,
   isImmersiveOpen: false,
+  isShortcutHelpOpen: false,
+  setShortcutHelpOpen: (open) => set({ isShortcutHelpOpen: open }),
   setImmersiveOpen: (open) => set({ isImmersiveOpen: open }),
   isShuffle: false,
   repeatMode: 'off',

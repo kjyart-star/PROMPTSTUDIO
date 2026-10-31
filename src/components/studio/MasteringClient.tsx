@@ -222,6 +222,7 @@ export function MasteringClient() {
 
   return (
     <div
+      data-own-shortcuts
       className="ms w-full flex flex-col"
       onDragOver={e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDropActive(true) } }}
       onDragLeave={e => { if (e.currentTarget === e.target) setDropActive(false) }}

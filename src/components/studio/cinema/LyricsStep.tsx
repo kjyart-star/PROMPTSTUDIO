@@ -100,7 +100,7 @@ export function LyricsStep({ tracks, active, onActive, onChange, onSeek }: {
   })
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" {...(tap ? { 'data-own-shortcuts': '' } : {})}>
       <p className="text-xs text-zinc-400">가사 원문은 그대로 두고, 노래에 맞춰 줄마다 시작 시간을 찾습니다. 맞지 않는 줄은 표시되고, 시간을 직접 고칠 수 있어요.</p>
       <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="곡 선택">
         {tracks.map((t, i) => (

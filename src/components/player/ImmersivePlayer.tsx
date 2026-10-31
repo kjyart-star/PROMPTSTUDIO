@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
@@ -213,6 +213,9 @@ export function ImmersivePlayer() {
             <button key={d} aria-pressed={designs[view === 'now' ? 'now' : 'list'] === d} onClick={() => pickDesign(d)}>{t[d]}</button>
           ))}
         </div>
+        <button className="imm-close imm-help" onClick={() => usePlayerStore.getState().setShortcutHelpOpen(true)} aria-label="단축키 안내 (?)" title="단축키 안내 (?)">
+          <HelpCircle size={18} />
+        </button>
         <button ref={closeRef} className="imm-close" onClick={() => setImmersiveOpen(false)} aria-label={t.close} title={t.close}>
           <X size={20} />
         </button>
@@ -302,6 +305,7 @@ const IMM_CSS = `
 .imm-designs button[aria-pressed=true]{background:rgba(255,255,255,.22);color:#fff}
 .imm-framed .imm-now{margin:0 clamp(16px,4vw,64px) 8px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
 .imm-close{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);cursor:pointer}
+.imm-help{margin-right:8px}
 .imm-close:hover{background:rgba(255,255,255,.22)}
 .imm-now{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,5vw,80px);align-items:center;padding:0 clamp(20px,6vw,96px)}
 .imm-left{display:flex;flex-direction:column;align-items:flex-start;min-width:0}

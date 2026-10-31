@@ -10,6 +10,8 @@ import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
 import { ImmersivePlayer } from './ImmersivePlayer';
+import { ShortcutHelp } from './ShortcutHelp';
+import { handlePlayerShortcut } from './playerShortcuts';
 import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
 import { withCorsCacheKey, bustCorsCacheKey } from '@/lib/audio/corsUrl';
 import { Disc, DiscStyles } from './Disc';
@@ -289,59 +291,10 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
     }
   }, [seekTrigger]);
 
-  // 스페이스바 전역 단축키 (재생/정지 토글)
+  // 전역 단축키 (유튜브·스포티파이 관례) — 키 목록은 playerShortcuts.ts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-      if (activeEl) {
-        const tagName = activeEl.tagName.toLowerCase();
-        if (
-          tagName === 'input' ||
-          tagName === 'textarea' ||
-          tagName === 'select' ||
-          activeEl.hasAttribute('contenteditable') ||
-          activeEl.getAttribute('contenteditable') === 'true'
-        ) {
-          return;
-        }
-      }
-
-      if (e.code === 'Space' || e.key === ' ') {
-        e.preventDefault();
-        if (e.repeat) return;
-        const state = usePlayerStore.getState();
-        if (!state.currentTrack) return;
-        state.togglePlay();
-        // 포커스된 버튼이 키 뗄 때 한 번 더 눌리는 것(이중 토글) 방지
-        const ae = document.activeElement as HTMLElement | null;
-        if (ae && (ae.tagName === 'BUTTON' || ae.getAttribute('role') === 'button')) ae.blur();
-      } else if (e.code === 'ArrowUp' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const state = usePlayerStore.getState();
-        const newVol = Math.min(1.0, state.volume + 0.05);
-        state.setVolume(newVol);
-      } else if (e.code === 'ArrowDown' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        const state = usePlayerStore.getState();
-        const newVol = Math.max(0.0, state.volume - 0.05);
-        state.setVolume(newVol);
-      } else if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (audioRef.current) {
-          const newTime = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + 5);
-          audioRef.current.currentTime = newTime;
-          const state = usePlayerStore.getState();
-          state.seek(newTime);
-        }
-      } else if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (audioRef.current) {
-          const newTime = Math.max(0, audioRef.current.currentTime - 5);
-          audioRef.current.currentTime = newTime;
-          const state = usePlayerStore.getState();
-          state.seek(newTime);
-        }
-      }
+      handlePlayerShortcut(e, audioRef);
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -741,6 +694,7 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
       {/* Mini Player PiP Window */}
       <MiniPlayerPip isOpen={isPipOpen} onClose={() => setIsPipOpen(false)} />
       <ImmersivePlayer />
+      <ShortcutHelp />
     </>
   );
 }
