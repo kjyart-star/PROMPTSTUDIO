@@ -82,4 +82,11 @@ describe('플레이어 단축키', () => {
     act(() => { fireEvent.keyDown(window, { key: 'Escape' }) })
     expect(screen.queryByTestId('shortcut-help')).toBeNull()
   })
+  it('C 는 전체 화면이 열려 있을 때만 시계를 토글한다', () => {
+    const got = vi.fn(); window.addEventListener('cm:clock-toggle', got)
+    expect(press('c')).toBe(false); expect(got).not.toHaveBeenCalled()
+    usePlayerStore.setState({ isImmersiveOpen: true })
+    expect(press('c')).toBe(true); expect(got).toHaveBeenCalledTimes(1)
+    window.removeEventListener('cm:clock-toggle', got)
+  })
 })

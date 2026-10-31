@@ -23,6 +23,7 @@ export const SHORTCUT_GROUPS: { title: string; items: { keys: string; label: str
   ] },
   { title: '화면', items: [
     { keys: 'F', label: '지금 재생 전체 화면 열기 · 닫기' },
+    { keys: 'C', label: '시계 보이기 · 숨기기 (전체 화면)' },
     { keys: 'Esc', label: '닫기' },
     { keys: '?', label: '이 단축키 안내' },
   ] },
@@ -89,6 +90,7 @@ export function handlePlayerShortcut(e: KeyboardEvent, audioRef: RefObject<HTMLA
   if (lower === 'm') { e.preventDefault(); st.toggleMute(); st.bumpVolumeHud(); return true; }
   if (lower === 's') { e.preventDefault(); st.toggleShuffle(); return true; }
   if (lower === 'r') { e.preventDefault(); st.toggleRepeatMode(); return true; }
+  if (lower === 'c') { if (!st.isImmersiveOpen) return false; e.preventDefault(); window.dispatchEvent(new CustomEvent('cm:clock-toggle')); return true; }
   if (lower === 'f') { e.preventDefault(); st.setImmersiveOpen(!st.isImmersiveOpen); blurButton(); return true; }
   if (/^[0-9]$/.test(key)) {
     e.preventDefault();

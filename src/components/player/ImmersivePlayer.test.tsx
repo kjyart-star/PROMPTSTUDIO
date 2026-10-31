@@ -323,4 +323,33 @@ describe('ImmersivePlayer', () => {
       expect(JSON.parse(localStorage.getItem('cm.pocket')!).theme).toBe('gray')
     })
   })
+
+  describe('시계', () => {
+    const open = () => {
+      const t = trk('1')
+      usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })
+      render(<ImmersivePlayer />)
+    }
+    it('시각과 날짜가 보이고, 위치·형식 설정이 localStorage 에 저장된다', () => {
+      open()
+      const clock = screen.getByTestId('clock-widget')
+      expect(clock.className).toContain('clk-p-tl')
+      expect(within(clock).getByText(/월 .*일/)).toBeTruthy()
+      fireEvent.click(screen.getByLabelText('시계 설정'))
+      fireEvent.click(screen.getByText('오른쪽 아래'))
+      fireEvent.click(screen.getByText('24시간'))
+      expect(screen.getByTestId('clock-widget').className).toContain('clk-p-br')
+      const saved = JSON.parse(localStorage.getItem('cm.clock')!)
+      expect(saved.pos).toBe('br'); expect(saved.h24).toBe(true)
+    })
+    it('숨기기와 C 단축키로 다시 보인다', () => {
+      open()
+      fireEvent.click(screen.getByLabelText('시계 설정'))
+      fireEvent.click(screen.getByText(/시계 숨기기/))
+      expect(screen.queryByTestId('clock-widget')).toBeNull()
+      expect(JSON.parse(localStorage.getItem('cm.clock')!).hidden).toBe(true)
+      act(() => { window.dispatchEvent(new CustomEvent('cm:clock-toggle')) })
+      expect(screen.getByTestId('clock-widget')).toBeTruthy()
+    })
+  })
 })

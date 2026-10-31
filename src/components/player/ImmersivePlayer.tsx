@@ -6,8 +6,8 @@
  * 코드는 쿠키뮤직에서 새로 작성했다.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Clock, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { withBase } from '@/lib/basePath';
@@ -15,6 +15,7 @@ import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
 import { CassettePlayer, CS_CSS } from './CassettePlayer';
 import { LpDisc } from './LpDisc';
+import { ClockWidget, CLOCK_EVENT } from './ClockWidget';
 import { PocketPlayer, PK_CSS } from './PocketPlayer';
 import { SpectrumCanvas, SPEC_CSS } from './SpectrumCanvas';
 import { useCoverColor } from './coverColor';
@@ -96,6 +97,8 @@ export function ImmersivePlayer() {
     setDesigns(next);
     try { localStorage.setItem(DESIGN_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   };
+  const [clockLay, setClockLay] = useState<{ hidden: boolean; pos: string }>({ hidden: false, pos: 'tl' });
+  const onClock = useCallback((c: { hidden: boolean; pos: string }) => setClockLay(c), []);
   const closeRef = useRef<HTMLButtonElement>(null);
   const lyricBoxRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Record<number, HTMLElement | null>>({});
@@ -167,7 +170,7 @@ export function ImmersivePlayer() {
   const pos = Math.max(0, queueIndex) + 1;
 
   return (
-    <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
+    <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}${!clockLay.hidden ? ` imm-clock-on imm-clock-${clockLay.pos}` : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
       <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
@@ -183,6 +186,9 @@ export function ImmersivePlayer() {
             <button key={d} aria-pressed={designs[view === 'now' ? 'now' : 'list'] === d} onClick={() => pickDesign(d)}>{t[d]}</button>
           ))}
         </div>
+        <button className="imm-close imm-help" onClick={() => window.dispatchEvent(new CustomEvent(CLOCK_EVENT))} aria-label="시계 보이기·숨기기 (C)" title="시계 보이기·숨기기 (C)">
+          <Clock size={17} />
+        </button>
         <button className="imm-close imm-help" onClick={() => usePlayerStore.getState().setShortcutHelpOpen(true)} aria-label="단축키 안내 (?)" title="단축키 안내 (?)">
           <HelpCircle size={18} />
         </button>
@@ -241,6 +247,8 @@ export function ImmersivePlayer() {
         <PlaylistCoverflow reduced={reduced} listLabel={t.list} variant={designs.list === 'arc' ? 'arc' : 'persp'} />
       )}
 
+      <ClockWidget onLayout={onClock} />
+
       <footer className="imm-bottom">
         <SpectrumCanvas mode={view === 'list' ? 'mirror' : designs.now === 'card' ? 'line' : 'thin'} playing={isPlaying} reduced={reduced} color={coverColor} glow={view === 'list' ? 0.4 : designs.now === 'card' ? 0.7 : 0.5} />
         <div className="imm-seekrow">
@@ -282,7 +290,7 @@ const IMM_CSS = `
 .imm-in{animation:imm-open .42s cubic-bezier(.2,.8,.2,1) both}
 .imm-out{animation:imm-close .28s ease-in both;pointer-events:none}
 .imm-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,13,.25),rgba(13,13,13,.78) 85%)}
-.imm-root>*:not(.imm-bgwrap):not(.imm-veil):not(.cs-woodbg){position:relative}
+.imm-root>*:not(.imm-bgwrap):not(.imm-veil):not(.cs-woodbg):not(.clk){position:relative}
 .imm-top{display:flex;justify-content:flex-start;align-items:center;padding:16px 20px}
 .imm-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px)}
 .imm-tabs button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:7px;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);cursor:pointer}
@@ -323,6 +331,8 @@ const IMM_CSS = `
 .imm-ctrl .imm-mode{width:38px;height:38px;color:rgba(255,255,255,.55);position:relative}
 .imm-ctrl .imm-mode.is-on{color:#fff}
 .imm-ctrl .imm-mode.is-on::after{content:'';position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fff}
+.imm-clock-tc .imm-now,.imm-clock-tc .cs-wrap,.imm-clock-tc .pk-wrap,.imm-clock-tc .pcf-wrap,.imm-clock-tc .ccf-wrap{padding-top:96px}
+@media (max-width:820px){.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .imm-now,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .cs-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .pk-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .pcf-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .ccf-wrap{padding-top:70px}}
 .imm-vol{position:absolute;right:0;top:50%;transform:translateY(-50%)}
 .imm-cassette .imm-vol{display:none}
 @media (max-width:820px){.imm-vol .vol-ctl input{width:64px}}
