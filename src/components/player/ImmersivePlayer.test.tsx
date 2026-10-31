@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, act, within } from '@testing-library/react'
 import { ImmersivePlayer } from './ImmersivePlayer'
+import { VolumeHud } from './VolumeControl'
 import { usePlayerStore } from '@/stores/playerStore'
 
 const trk = (id: string, extra: any = {}) =>
@@ -108,6 +109,7 @@ describe('ImmersivePlayer', () => {
     const deck = within(screen.getByTestId('cassette-player'))
     fireEvent.click(deck.getByLabelText('재생'))
     expect(togglePlay).toHaveBeenCalledTimes(1)
+    expect(deck.getByLabelText('재생').className).not.toContain('is-down')
     fireEvent.click(deck.getByLabelText('빨리감기'))
     expect(seek).toHaveBeenLastCalledWith(30)
   })
@@ -145,5 +147,83 @@ describe('ImmersivePlayer', () => {
     render(<ImmersivePlayer />)
     act(() => { fireEvent.keyDown(window, { key: 'Escape' }) })
     expect(usePlayerStore.getState().isImmersiveOpen).toBe(false)
+  })
+
+  it('볼륨: 슬라이더·아이콘(음소거)·휠이 하단 플레이어와 같은 상태를 바꾸고 localStorage 에 기억한다', () => {
+    const t = trk('1')
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, volume: 0.8, isMuted: false })
+    render(<ImmersivePlayer />)
+    const ctl = screen.getByTestId('volume-control')
+    fireEvent.change(within(ctl).getByLabelText('볼륨'), { target: { value: '30' } })
+    expect(usePlayerStore.getState().volume).toBe(0.3)
+    expect(JSON.parse(localStorage.getItem('cm.volume')!).v).toBe(0.3)
+    fireEvent.click(within(ctl).getByLabelText('음소거'))
+    expect(usePlayerStore.getState().isMuted).toBe(true)
+    expect(within(ctl).getByLabelText('음소거 해제')).toBeTruthy()
+    fireEvent.click(within(ctl).getByLabelText('음소거 해제'))
+    fireEvent.wheel(ctl, { deltaY: -100 })
+    expect(usePlayerStore.getState().volume).toBe(0.35)
+  })
+
+  it('카세트 디자인에도 같은 볼륨 조절이 있다', () => {
+    const t = trk('1')
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, volume: 0.5, isMuted: false })
+    render(<ImmersivePlayer />)
+    fireEvent.click(screen.getByText('카세트'))
+    const ctl = within(screen.getByTestId('cassette-player')).getByTestId('volume-control')
+    fireEvent.change(within(ctl).getByLabelText('볼륨'), { target: { value: '90' } })
+    expect(usePlayerStore.getState().volume).toBe(0.9)
+  })
+
+  it('볼륨 표시(HUD)는 신호가 오면 1.2초 떴다가 사라진다', () => {
+    vi.useFakeTimers()
+    try {
+      usePlayerStore.setState({ volume: 0.55, isMuted: false, volumeHudTick: 0 })
+      render(<VolumeHud />)
+      expect(screen.queryByTestId('volume-hud')).toBeNull()
+      act(() => { usePlayerStore.getState().bumpVolumeHud() })
+      expect(screen.getByTestId('volume-hud').textContent).toContain('55%')
+      act(() => { vi.advanceTimersByTime(1300) })
+      expect(screen.queryByTestId('volume-hud')).toBeNull()
+    } finally { vi.useRealTimers() }
+  })
+
+  it('카세트: 재생 → 일시정지 → 재생, 정지 → 재생, Space 가 실제 재생 상태와 같이 움직인다', () => {
+    const t = trk('1')
+    const seek = vi.fn()
+    const togglePlay = vi.fn(() => usePlayerStore.setState((s) => ({ isPlaying: !s.isPlaying })))
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, isPlaying: false, togglePlay, seek, currentTime: 15, duration: 120 })
+    render(<ImmersivePlayer />)
+    fireEvent.click(screen.getByText('카세트'))
+    const deck = within(screen.getByTestId('cassette-player'))
+    const btn = () => deck.getByLabelText(usePlayerStore.getState().isPlaying ? '일시정지' : '재생')
+    fireEvent.click(btn())
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+    expect(btn().className).toContain('is-down')
+    fireEvent.click(btn()) // 일시정지
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+    expect(btn().className).not.toContain('is-down')
+    fireEvent.click(btn()) // 다시 재생
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+    // 정지 → 처음으로, 멈춤 → 다시 재생
+    fireEvent.click(deck.getByLabelText('정지'))
+    expect(seek).toHaveBeenLastCalledWith(0)
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+    fireEvent.click(btn())
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
+
+  it('다른 디자인에서도 공용 재생 버튼으로 일시정지 후 다시 재생된다', () => {
+    const t = trk('1')
+    const togglePlay = vi.fn(() => usePlayerStore.setState((s) => ({ isPlaying: !s.isPlaying })))
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t, trk('2')], queueIndex: 0, isPlaying: true, togglePlay })
+    render(<ImmersivePlayer />)
+    for (const name of ['지금 재생', '카드형', '재생목록', '원통형', '커버플로']) {
+      fireEvent.click(screen.getByText(name))
+      fireEvent.click(screen.getByLabelText('일시정지'))
+      expect(usePlayerStore.getState().isPlaying).toBe(false)
+      fireEvent.click(screen.getByLabelText('재생'))
+      expect(usePlayerStore.getState().isPlaying).toBe(true)
+    }
   })
 })

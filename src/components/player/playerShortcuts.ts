@@ -84,9 +84,9 @@ export function handlePlayerShortcut(e: KeyboardEvent, audioRef: RefObject<HTMLA
   if (key === 'ArrowUp' || key === 'ArrowDown') {
     e.preventDefault();
     const v = Math.round((st.volume + (key === 'ArrowUp' ? 0.05 : -0.05)) * 100) / 100;
-    st.setVolume(Math.min(1, Math.max(0, v))); return true;
+    st.setVolume(Math.min(1, Math.max(0, v))); st.bumpVolumeHud(); return true;
   }
-  if (lower === 'm') { e.preventDefault(); st.toggleMute(); return true; }
+  if (lower === 'm') { e.preventDefault(); st.toggleMute(); st.bumpVolumeHud(); return true; }
   if (lower === 's') { e.preventDefault(); st.toggleShuffle(); return true; }
   if (lower === 'r') { e.preventDefault(); st.toggleRepeatMode(); return true; }
   if (lower === 'f') { e.preventDefault(); st.setImmersiveOpen(!st.isImmersiveOpen); blurButton(); return true; }

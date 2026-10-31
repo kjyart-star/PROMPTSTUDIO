@@ -6,7 +6,7 @@ import {
   Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart, PanelRight, Music, Maximize2
 } from 'lucide-react';
-import { usePlayerStore } from '@/stores/playerStore';
+import { usePlayerStore, hydrateVolume } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
 import { ImmersivePlayer } from './ImmersivePlayer';
@@ -16,6 +16,7 @@ import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl';
 import { withCorsCacheKey, bustCorsCacheKey } from '@/lib/audio/corsUrl';
 import { LpDisc } from './LpDisc';
+import { VolumeHud } from './VolumeControl';
 import { withBase } from '@/lib/basePath'
 
 // hasMobileNav — 이 화면에 모바일 하단 내비(md:hidden, h-24)가 있으면 true.
@@ -38,6 +39,7 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
   } = usePlayerStore();
 
   const toggleInfo = () => { if (hasSidePanel) setNowPlayingOpen(!isNowPlayingOpen); else setImmersiveOpen(true); };
+  useEffect(() => { hydrateVolume(); }, []);
   const [isLiked, setIsLiked] = useState(false);
   const [isPipOpen, setIsPipOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
@@ -698,6 +700,7 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
       <MiniPlayerPip isOpen={isPipOpen} onClose={() => setIsPipOpen(false)} />
       <ImmersivePlayer />
       <ShortcutHelp />
+      <VolumeHud />
     </>
   );
 }

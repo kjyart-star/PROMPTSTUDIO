@@ -16,6 +16,7 @@ import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
 import { CassettePlayer, CS_CSS } from './CassettePlayer';
 import { LpDisc } from './LpDisc';
+import { VolumeControl, VOL_CTL_CSS } from './VolumeControl';
 import type { Track } from '@/types/music';
 
 type View = 'now' | 'list';
@@ -223,7 +224,7 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS}</style>
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS}</style>
       {bgPrev && bgPrev !== cover && <img key={`p-${bgPrev}`} className="imm-bg" src={bgPrev} alt="" aria-hidden="true" />}
       <img key={cover} className={`imm-bg${bgPrev ? ' imm-bg-fade' : ''}`} src={cover} alt="" aria-hidden="true" />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
@@ -314,6 +315,7 @@ export function ImmersivePlayer() {
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
           </button>
           <button onClick={next} aria-label={t.next}><SkipForward size={22} /></button>
+          <div className="imm-vol"><VolumeControl /></div>
         </div>
       </footer>
     </div>
@@ -375,7 +377,10 @@ const IMM_CSS = `
 .imm-seekrow input{flex:1;height:4px;-webkit-appearance:none;appearance:none;border-radius:2px;cursor:pointer;background:linear-gradient(90deg,#fff var(--p,0%),rgba(255,255,255,.22) var(--p,0%))}
 .imm-seekrow input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff}
 .imm-seekrow input::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff}
-.imm-ctrl{display:flex;justify-content:center;align-items:center;gap:28px;margin-top:10px}
+.imm-vol{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+.imm-cassette .imm-vol{display:none}
+@media (max-width:820px){.imm-vol .vol-ctl input{width:64px}}
+.imm-ctrl{position:relative;display:flex;justify-content:center;align-items:center;gap:28px;margin-top:10px}
 .imm-ctrl button{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;cursor:pointer;color:#fff}
 .imm-ctrl .imm-play{width:56px;height:56px;background:#fff;color:#111}
 .imm-root button:focus-visible,.imm-seekrow input:focus-visible{outline:2px solid #fff;outline-offset:3px}

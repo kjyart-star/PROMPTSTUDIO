@@ -3,6 +3,18 @@
 import { create } from 'zustand';
 import type { Track } from '@/types/music';
 
+const VOLUME_KEY = 'cm.volume';
+function saveVolume(v: number, m: boolean) {
+  try { localStorage.setItem(VOLUME_KEY, JSON.stringify({ v, m })); } catch { /* private mode */ }
+}
+/** 저장된 볼륨을 읽어 적용한다(마운트 때 한 번). 표시(HUD)는 띄우지 않는다. */
+export function hydrateVolume() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(VOLUME_KEY) || 'null');
+    if (raw && typeof raw.v === 'number') usePlayerStore.setState({ volume: Math.min(1, Math.max(0, raw.v)), isMuted: !!raw.m });
+  } catch { /* ignore */ }
+}
+
 interface PlayerState {
   currentTrack: Track | null;
   queue: Track[];
@@ -37,6 +49,9 @@ interface PlayerState {
   prev: () => void;
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
+  /** 볼륨 표시(HUD)를 다시 띄우라는 신호 — 키보드 조작에서만 올린다 */
+  volumeHudTick: number;
+  bumpVolumeHud: () => void;
   toggleMute: () => void;
   /** persist=false 는 화면 폭 때문에 접는 경우 — 사용자의 선택을 덮어쓰지 않는다 */
   setNowPlayingOpen: (open: boolean, persist?: boolean) => void;
@@ -195,8 +210,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ currentTime: time, seekTrigger: Date.now() });
   },
 
-  setVolume: (volume) => set({ volume, isMuted: volume === 0 }),
-  toggleMute: () => set((s) => ({ isMuted: !s.isMuted })),
+  volumeHudTick: 0,
+  bumpVolumeHud: () => set((s) => ({ volumeHudTick: s.volumeHudTick + 1 })),
+  setVolume: (volume) => {
+    set({ volume, isMuted: volume === 0 });
+    saveVolume(volume, volume === 0);
+  },
+  toggleMute: () => {
+    set((s) => ({ isMuted: !s.isMuted }));
+    const s = get(); saveVolume(s.volume, s.isMuted);
+  },
   setNowPlayingOpen: (open, persist = true) => {
     if (persist && typeof window !== 'undefined') {
       try { localStorage.setItem(NOW_PLAYING_KEY, open ? '1' : '0'); } catch { /* private mode */ }

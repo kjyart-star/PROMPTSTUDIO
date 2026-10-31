@@ -44,6 +44,7 @@ describe('플레이어 단축키', () => {
   it('↑/↓ 볼륨 5%, M 음소거, S 셔플, R 반복, F 전체 화면', () => {
     press('ArrowUp'); expect(usePlayerStore.getState().volume).toBe(0.55)
     press('ArrowDown'); press('ArrowDown'); expect(usePlayerStore.getState().volume).toBe(0.45)
+    expect(usePlayerStore.getState().volumeHudTick).toBeGreaterThan(0)
     press('m'); expect(usePlayerStore.getState().isMuted).toBe(true)
     press('s'); expect(usePlayerStore.getState().isShuffle).toBe(true)
     press('r'); expect(usePlayerStore.getState().repeatMode).toBe('all')

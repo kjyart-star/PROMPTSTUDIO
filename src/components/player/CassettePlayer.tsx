@@ -12,6 +12,7 @@ import { Play, Pause, Square, Rewind, FastForward } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { useSpinRamp } from './useSpinRamp';
+import { VolumeControl } from './VolumeControl';
 import type { Track } from '@/types/music';
 
 const PAPERS = [
@@ -185,8 +186,9 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
     if (e.detail !== 0) return; // 마우스는 pointerdown 에서 처리, 키보드 활성화만 여기서
     jump(d * 2); setPressed(key); setTimeout(() => setPressed(null), 160);
   };
-  const play = () => { if (!isPlaying) togglePlay(); };
-  const stop = () => { if (isPlaying) togglePlay(); seek(0); };
+  // 실제 데크처럼: 두 번째 버튼은 재생/일시정지 토글, 눌림은 재생 중일 때만. 정지는 처음으로 돌아가 멈춘다.
+  const playPause = () => togglePlay();
+  const stop = () => { if (usePlayerStore.getState().isPlaying) togglePlay(); seek(0); };
 
   if (!shown) return null;
   return (
@@ -199,11 +201,12 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
         <div className="cs-panel">
           <div className="cs-counter" aria-label="카운터"><span className="cs-cnt">{counter}</span></div>
           <Leds playing={isPlaying} reduced={reduced} />
+          <div className="cs-vol"><VolumeControl variant="deck" /></div>
           <div className="cs-keys" role="group" aria-label="카세트 버튼">
             <button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={stopHold} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(-5, 'rew')}><Rewind size={16} /></button>
-            <button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '재생 중' : '재생'} aria-pressed={isPlaying} onClick={play}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
+            <button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '일시정지' : '재생'} aria-pressed={isPlaying} onClick={playPause}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
             <button type="button" className={`cs-key${pressed === 'ff' ? ' is-down' : ''}`} aria-label="빨리감기" onPointerDown={startHold(5, 'ff')} onPointerUp={stopHold} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(5, 'ff')}><FastForward size={16} /></button>
-            <button type="button" className={`cs-key${!isPlaying ? ' is-down' : ''}`} aria-label="정지" aria-pressed={!isPlaying} onClick={stop}><Square size={15} /></button>
+            <button type="button" className="cs-key" aria-label="정지" onClick={stop}><Square size={15} /></button>
           </div>
         </div>
       </div>
@@ -234,6 +237,7 @@ export const CS_CSS = `
 .cs-ledcol i{position:relative;flex:1;border-radius:1px;background:#262826}
 .cs-ledcol i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 5px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 1000),1)}
 .cs-ledcol i:nth-child(1){--c:#3fd36b}.cs-ledcol i:nth-child(2){--c:#3fd36b}.cs-ledcol i:nth-child(3){--c:#3fd36b}.cs-ledcol i:nth-child(4){--c:#9bd93a}.cs-ledcol i:nth-child(5){--c:#e4d234}.cs-ledcol i:nth-child(6){--c:#ef8a2c}.cs-ledcol i:nth-child(7){--c:#e5412f}
+.cs-vol{grid-column:1/-1;justify-self:end}
 .cs-keys{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .cs-key{height:46px;border-radius:5px 5px 3px 3px;display:grid;place-items:center;color:#222;cursor:pointer;background:linear-gradient(180deg,#d9d6cf,#aaa69d 55%,#8f8b82);box-shadow:0 5px 0 #4a4843,0 7px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7);transition:transform .08s ease-out,box-shadow .08s ease-out;will-change:transform}
 .cs-key.is-down{transform:translateY(4px);box-shadow:0 1px 0 #4a4843,0 2px 3px rgba(0,0,0,.6),inset 0 2px 4px rgba(0,0,0,.35);background:linear-gradient(180deg,#b9b5ac,#9a968d)}
