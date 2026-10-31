@@ -1,6 +1,10 @@
 import type { Box, Palette, VizShapeId } from './types'
 
 export const VIZ_SHAPES: { id: VizShapeId; name: string; circular: boolean; recommended?: boolean }[] = [
+  { id: 'bars-slim', name: '슬림 막대', circular: false },
+  { id: 'bars-round', name: '라운드 막대', circular: false },
+  { id: 'bars-mirror', name: '대칭 막대', circular: false },
+  { id: 'blocks', name: '디지털 블록', circular: false },
   { id: 'dots', name: '도트', circular: false },
   { id: 'bars-reflect', name: '막대와 반사', circular: false },
   { id: 'wave-line', name: '단선 파형', circular: false },
@@ -77,6 +81,53 @@ export function drawViz(ctx: CanvasRenderingContext2D, shape: VizShapeId, palett
   const midY = b.y + b.h / 2
 
   switch (shape) {
+    case 'bars-slim': {
+      const n = 96, step = b.w / n, w = Math.max(1, step * 0.42), base = b.y + b.h
+      for (let i = 0; i < n; i++) {
+        const u = (i + 0.5) / n
+        const h = smp(u) * b.h
+        ctx.fillStyle = colorAt(palette, u)
+        ctx.fillRect(b.x + i * step + (step - w) / 2, base - h, w, h)
+      }
+      break
+    }
+    case 'bars-round': {
+      const n = 40, step = b.w / n, w = Math.max(2, step * 0.56), base = b.y + b.h - w / 2
+      ctx.lineWidth = w
+      for (let i = 0; i < n; i++) {
+        const u = (i + 0.5) / n
+        const h = Math.max(0.5, smp(u) * (b.h - w))
+        const x = b.x + (i + 0.5) * step
+        ctx.strokeStyle = colorAt(palette, u)
+        ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base - h); ctx.stroke()
+      }
+      break
+    }
+    case 'bars-mirror': {
+      const n = 56, step = b.w / n, w = Math.max(1, step * 0.55)
+      for (let i = 0; i < n; i++) {
+        const u = (i + 0.5) / n
+        const h = smp(u) * b.h * 0.5
+        ctx.fillStyle = colorAt(palette, u)
+        ctx.fillRect(b.x + i * step + (step - w) / 2, midY - h, w, h * 2)
+      }
+      break
+    }
+    case 'blocks': {
+      const cols = 28, rows = 12, step = b.w / cols, cw = step * 0.78, rh = b.h / rows, bh = rh * 0.7
+      for (let c = 0; c < cols; c++) {
+        const u = (c + 0.5) / cols
+        const lit = Math.max(1, Math.round(smp(u) * rows))
+        const x = b.x + c * step + (step - cw) / 2
+        for (let r = 0; r < rows; r++) {
+          ctx.globalAlpha = r < lit ? 1 : 0.1
+          ctx.fillStyle = colorAt(palette, r < lit ? Math.min(1, r / (rows - 1) * 0.6 + u * 0.4) : u)
+          ctx.fillRect(x, b.y + b.h - (r + 1) * rh + (rh - bh) / 2, cw, bh)
+        }
+      }
+      ctx.globalAlpha = 1
+      break
+    }
     case 'dots': {
       const cols = 32, step = b.w / cols, r = Math.max(1.2, Math.min(step * 0.3, b.h / 24))
       const rows = Math.max(1, Math.floor(b.h / (r * 2.8)))

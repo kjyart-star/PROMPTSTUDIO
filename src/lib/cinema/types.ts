@@ -1,13 +1,17 @@
 /**
  * 플레이리스트 시네마 — 공용 타입.
- * 구조: 장면 템플릿(레이아웃) × 형태(visualizer 12종) × 색상(팔레트) 세 축이 서로 독립이다.
+ * 구조: 장면 템플릿(레이아웃) × 형태(visualizer 16종) × 색상(팔레트) 세 축이 서로 독립이다.
  * 미리보기·썸네일·내보내기가 모두 같은 draw 함수를 쓴다(가짜 이미지 금지).
  * 참고: boks-music 「PLAYLIST CINEMA」 화면의 구성(화면 구성 아이디어만 참고, 코드 복사 없음).
  */
 
 export type VizShapeId =
+  | 'bars-slim' | 'bars-round' | 'bars-mirror' | 'blocks'
   | 'dots' | 'bars-reflect' | 'wave-line' | 'wave-dual' | 'area-soft' | 'area-mirror'
   | 'ribbon' | 'ring-bars' | 'ring-line' | 'ring-dual' | 'radial-dots' | 'ring-oval'
+
+export type FontStyle = 'auto' | 'serif' | 'sans' | 'hand'
+export type LyricLines = 'auto' | 'one' | 'three'
 
 export interface Palette {
   id: string
@@ -51,6 +55,10 @@ export interface CinemaFrame {
   level: number
   shape: VizShapeId
   palette: Palette
+  /** 사용자가 고른 글꼴(없으면 템플릿 기본) */
+  fontStyle?: FontStyle
+  /** 가사 줄 수(없으면 템플릿 기본) */
+  lyricLines?: LyricLines
 }
 
 export interface CinemaTemplate {
@@ -63,6 +71,10 @@ export interface CinemaTemplate {
   defaultShape: VizShapeId
   /** 한 프레임을 그린다. ctx 는 (0,0)~(f.w,f.h) 를 가득 채워야 한다 */
   draw(ctx: CanvasRenderingContext2D, f: CinemaFrame): void
+  /** 미리 불러 둘 배경 사진 이름(public/cinema/scenes/<이름>.webp). prepareScene 이 불러 둔다 */
+  assets?: string[]
+  /** 장면 전용 서체(Noto Serif KR 등)를 쓰면 true */
+  fonts?: boolean
 }
 
 export interface AspectDef { id: '16:9' | '9:16' | '1:1' | '4:3'; label: string; ratio: number }

@@ -3,6 +3,14 @@ import type { CinemaFrame, Box } from './types'
 
 export const FONT = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif'
 
+/** 사용자가 고른 글꼴(글자 탭) → 실제 서체. 'auto' 면 템플릿 기본 */
+export const STYLE_FONT: Record<'serif' | 'sans' | 'hand', string> = {
+  serif: '"Noto Serif KR", "Nanum Myeongjo", AppleMyungjo, serif',
+  sans: `"IBM Plex Sans KR", ${FONT}`,
+  hand: '"Nanum Pen Script", "Noto Serif KR", cursive',
+}
+export const userFont = (f: Pick<CinemaFrame, 'fontStyle'>, base: string) => (f.fontStyle && f.fontStyle !== 'auto' ? STYLE_FONT[f.fontStyle] : base)
+
 export function hash(s: string): number {
   let h = 2166136261
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
@@ -134,10 +142,10 @@ export interface LyricBlockOpts {
  */
 export function drawLyricBlock(ctx: CanvasRenderingContext2D, f: CinemaFrame, o: LyricBlockOpts) {
   if (f.kind !== 'lyrics' || !f.lines.length) return
-  const around = o.around ?? 1
+  const around = f.lyricLines === 'one' ? 0 : f.lyricLines === 'three' ? 1 : (o.around ?? 1)
   const align = o.align ?? 'center'
   const color = o.color ?? '#fff'
-  const font = o.font ?? FONT
+  const font = userFont(f, o.font ?? FONT)
   const weight = o.weight ?? 700
   const act = f.activeIndex
   // 줄 전환 보간: 현재 줄 시작 후 0.35초 동안 0→1

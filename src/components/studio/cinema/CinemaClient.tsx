@@ -3,13 +3,13 @@
  * 쿠키뮤직 스튜디오 「플레이리스트 영상」 — 재생목록(여러 곡)을 하나의 음악 영상으로.
  * 영상은 전부 이 브라우저에서 만든다(WebCodecs + Canvas, 서버 렌더·비용 없음). 크레딧을 쓰지 않는다.
  * 화면 구성 아이디어는 boks-music 「PLAYLIST CINEMA」 를 참고했고 코드는 복사하지 않았다(직접 구현).
- * 구조: 장면 템플릿 × 형태(visualizer 12종) × 색상 — 세 축은 독립(src/lib/cinema).
+ * 구조: 장면 템플릿 × 형태(visualizer 16종) × 색상 — 세 축은 독립(src/lib/cinema).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, X, ArrowUp, ArrowDown, Loader2, Download, FileAudio, Library, Save, Trash2, AlertTriangle, Clapperboard } from 'lucide-react'
 import { TEMPLATES } from '@/lib/cinema/templates'
 import { VIZ_SHAPES } from '@/lib/cinema/viz'
-import { PALETTES, getPalette } from '@/lib/cinema/palettes'
+import { PALETTES, resolvePalette } from '@/lib/cinema/palettes'
 import { ASPECTS } from '@/lib/cinema/types'
 import { FPS_OPTIONS, LUFS_OPTIONS, RESOLUTIONS, estimateBytes, formatClock, outputSize } from '@/lib/cinema/output'
 import { initialLyrics } from '@/lib/cinema/lyrics'
@@ -28,18 +28,8 @@ const readLS = <T,>(k: string, d: T): T => { try { const v = localStorage.getIte
 
 const STALL_MS = 20000
 
-function Section({ n, title, children, hint }: { n: string; title: string; children: React.ReactNode; hint?: string }) {
-  return (
-    <section className="rounded-xl border border-outline-variant bg-surface-container-low p-4 space-y-3">
-      <header className="flex flex-wrap items-baseline gap-x-2">
-        <span className="text-xs font-black text-emerald-300 tabular-nums shrink-0">{n}</span>
-        <h3 className="text-sm font-bold text-white whitespace-nowrap">{title}</h3>
-        {hint && <span className="text-[11px] text-zinc-500">{hint}</span>}
-      </header>
-      {children}
-    </section>
-  )
-}
+const FONT_STYLES = [['auto', '템플릿 기본'], ['serif', '명조'], ['sans', '고딕'], ['hand', '손글씨']] as const
+const LYRIC_LINES = [['auto', '템플릿 기본'], ['one', '한 줄만'], ['three', '앞뒤 줄 함께']] as const
 
 const chip = (on: boolean) => `px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${on ? 'bg-white text-black border-white' : 'border-white/15 text-zinc-300 hover:border-white/40'}`
 
@@ -59,6 +49,9 @@ export default function CinemaClient() {
   const [stalled, setStalled] = useState(false)
   const [result, setResult] = useState<{ url: string; name: string; seconds: number; width: number; height: number; bytes: number; audioCodec: string; saved: boolean; limited: number } | null>(null)
   const [error, setError] = useState('')
+  const [tab, setTab] = useState<'scene' | 'viz' | 'text' | 'lyrics' | 'export'>('scene')
+  /** 카드에 마우스를 올린 동안만 미리보기에 덮어 보여 줄 설정 */
+  const [hover, setHover] = useState<Partial<FullSettings> | null>(null)
   const [coverBmp, setCoverBmp] = useState<ImageBitmap | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -68,8 +61,8 @@ export default function CinemaClient() {
   // 개발 중에만: 브라우저 콘솔에서 템플릿 시트·렌더 검증을 돌릴 수 있게 노출
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return
-    void Promise.all([import('@/lib/cinema/frame'), import('./thumbs'), import('@/lib/cinema/render'), import('./devSheet')]).then(([f, t, r, d]) => {
-      ;(window as unknown as { __cinema: unknown }).__cinema = { TEMPLATES, VIZ_SHAPES, PALETTES, makeFrame: f.makeFrame, drawFrame: f.drawFrame, sampleBars: t.sampleBars, SAMPLE_LINES: t.SAMPLE_LINES, renderCinema: r.renderCinema, sheet: d.sheet, testWav: d.testWav }
+    void Promise.all([import('@/lib/cinema/frame'), import('./thumbs'), import('@/lib/cinema/render'), import('./devSheet'), import('@/lib/cinema/spectrum')]).then(([f, t, r, d, sp]) => {
+      ;(window as unknown as { __cinema: unknown }).__cinema = { TEMPLATES, VIZ_SHAPES, PALETTES, makeFrame: f.makeFrame, drawFrame: f.drawFrame, sampleBars: t.sampleBars, SAMPLE_LINES: t.SAMPLE_LINES, renderCinema: r.renderCinema, sheet: d.sheet, testWav: d.testWav, prepareScene: f.prepareScene, decodeToChannels: r.decodeToChannels, createSpectrumAnalyzer: sp.createSpectrumAnalyzer, resolvePalette }
     })
   }, [])
   useEffect(() => {
@@ -80,7 +73,7 @@ export default function CinemaClient() {
   useEffect(() => { if (hydrated) { try { localStorage.setItem(LS_SETTINGS, JSON.stringify(settings)) } catch {} } }, [settings, hydrated])
   const set = useCallback(<K extends keyof FullSettings>(k: K, v: FullSettings[K]) => setSettings(s => ({ ...s, [k]: v })), [])
 
-  const palette = getPalette(settings.paletteId)
+  const palette = resolvePalette(settings)
   const rendering = !!progress && progress.phase !== undefined && !result && !error && !!abortRef.current
 
   // 썸네일에 쓸 커버: 첫 곡 커버(없으면 시드 그림)
@@ -141,7 +134,7 @@ export default function CinemaClient() {
     setError(''); setResult(null)
     if (!tracks.length) { setError('곡을 하나 이상 골라 주세요.'); return }
     if (!webCodecsSupported()) { setError('이 브라우저는 영상 만들기를 지원하지 않아요. 최신 크롬이나 엣지에서 열어 주세요.'); return }
-    if (settings.kind === 'lyrics' && tracks.some(t => !t.lyrics.lines.length)) { setError('가사가 없는 곡이 있어요. 04 가사 확인에서 가사를 붙여 넣거나, 경음악 영상으로 바꿔 주세요.'); return }
+    if (settings.kind === 'lyrics' && tracks.some(t => !t.lyrics.lines.length)) { setError('가사가 없는 곡이 있어요. 가사 탭에서 가사를 붙여 넣거나, 경음악 영상으로 바꿔 주세요.'); return }
     const name = (settings.name.trim() || tracks[0].title || '플레이리스트 영상').replace(/[\\/:*?"<>|]/g, '_')
     let fileStream: FileSystemWritableFileStream | undefined
     if (settings.saveMode === 'file' && canFilePicker) {
@@ -179,17 +172,117 @@ export default function CinemaClient() {
   const needLyrics = settings.kind === 'lyrics'
   const lyricsBad = needLyrics && tracks.some(t => !t.lyrics.lines.length)
 
+  const TABS = [['scene', '장면'], ['viz', '스펙트럼'], ['text', '글자'], ['lyrics', '가사'], ['export', '내보내기']] as const
+  const previewSettings = hover ? { ...settings, ...hover } : settings
+
   return (
-    <div className="p-4 md:p-6 space-y-4 cinema-root">
-      <div className="flex flex-wrap items-center gap-x-2">
+    <div className="p-3 md:p-4 cinema-root">
+      <div className="flex flex-wrap items-center gap-x-2 mb-3">
         <Clapperboard className="w-5 h-5 text-emerald-300" />
         <h2 className="text-lg font-black text-white whitespace-nowrap">플레이리스트 영상</h2>
-        <span className="text-xs text-zinc-400">음악을, 하나의 장면으로 — 재생목록을 한 편의 영상으로 만들어요. 무료예요.</span>
+        <span className="text-xs text-zinc-400">재생목록을 한 편의 영상으로 만들어요. 바꾸는 즉시 미리보기에 보이고, 영상도 똑같이 나와요. 무료예요.</span>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,520px)] items-start">
-        <div className="space-y-4 min-w-0 order-2 xl:order-1">
-          <Section n="01" title="재생목록" hint="영상에 넣을 곡을 순서대로 고르세요">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,62fr)_minmax(320px,38fr)] items-start">
+        {/* 왼쪽: 늘 보이는 큰 미리보기 + 곡 띠 */}
+        <div className="sticky top-0 z-20 min-w-0 space-y-2 bg-[#0d0f12] md:bg-transparent pb-2 md:pb-0">
+          <CinemaPreview tracks={tracks} settings={previewSettings} index={Math.min(active, Math.max(0, tracks.length - 1))} onIndex={setActive} seekRequest={seek}
+            onAspect={a => set('aspect', a)} />
+          <div className="flex flex-wrap gap-1.5" data-testid="cinema-song-strip">
+            {tracks.map((t, i) => (
+              <button key={t.id} type="button" onClick={() => setActive(i)} className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs max-w-[220px] ${i === active ? 'border-emerald-400/70 bg-emerald-400/10 text-white' : 'border-white/10 text-zinc-300 hover:border-white/30'}`}>
+                {t.song?.image_url ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.song.image_url} alt="" className="w-6 h-6 rounded object-cover" /> : <span className="w-6 h-6 rounded bg-white/10 grid place-items-center text-[10px] tabular-nums">{String(i + 1).padStart(2, '0')}</span>}
+                <span className="truncate">{t.title}</span>
+              </button>
+            ))}
+            <button type="button" onClick={() => setTab('lyrics')} className="flex items-center gap-1 rounded-lg border border-dashed border-white/20 px-2 py-1 text-xs text-zinc-300 hover:border-white/40"><Plus className="w-3.5 h-3.5" />곡 추가</button>
+          </div>
+        </div>
+
+        {/* 오른쪽: 설정 탭(패널 안에서만 스크롤), 맨 아래 「영상 만들기」 고정 */}
+        <div className="min-w-0 rounded-xl border border-outline-variant bg-surface-container-low flex flex-col md:sticky md:top-0 md:h-[calc(100vh-21.5rem)] md:min-h-[480px]">
+          <div className="flex flex-wrap border-b border-white/10 px-1" role="tablist" aria-label="설정">
+            {TABS.map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+                className={`px-3 py-2.5 text-xs font-bold border-b-2 -mb-px ${tab === id ? 'border-emerald-400 text-white' : 'border-transparent text-zinc-400 hover:text-zinc-200'}`}>{label}</button>
+            ))}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+            <div hidden={tab !== 'scene'} className="space-y-3">
+              <div className="flex gap-2">
+                <button type="button" className={chip(settings.kind === 'lyrics')} onClick={() => set('kind', 'lyrics')}>가사 영상</button>
+                <button type="button" className={chip(settings.kind === 'instrumental')} onClick={() => set('kind', 'instrumental')}>경음악 영상</button>
+              </div>
+              <p className="text-[11px] text-zinc-500">{needLyrics ? '싱크 가사를 화면에 띄워요. 가사 시간이 없으면 길이 비례로 추정해 「가사 시간 추정」을 표시해요.' : '가사 없이 커버와 음악 반응 화면만 보여 줘요.'}</p>
+              <p className="text-[11px] text-zinc-500">카드에 마우스를 올리면 미리보기에서 잠깐 보여 주고, 누르면 바뀌어요.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="장면 템플릿">
+              {TEMPLATES.map(t => (
+                <button key={t.id} type="button" role="radio" aria-checked={settings.templateId === t.id}
+                  onClick={() => { setHover(null); setSettings(s => ({ ...s, templateId: t.id, shape: s.templateId === t.id ? s.shape : t.defaultShape })) }}
+                  onMouseEnter={() => setHover({ templateId: t.id, shape: settings.templateId === t.id ? settings.shape : t.defaultShape })} onMouseLeave={() => setHover(null)}
+                  className={`text-left rounded-lg overflow-hidden border-2 transition-colors ${settings.templateId === t.id ? 'border-emerald-400' : 'border-transparent hover:border-white/30'} bg-black/30`}>
+                  <TemplateThumb templateId={t.id} shape={t.id === settings.templateId ? settings.shape : t.defaultShape} palette={palette} cover={coverBmp} kind={settings.kind} title={first?.title ?? ''} className="w-full block aspect-video" />
+                  <div className="px-2 py-1.5"><div className="text-xs font-bold text-white truncate">{t.name}</div><div className="text-[10px] text-zinc-500 leading-snug line-clamp-2">{t.blurb}</div></div>
+                </button>
+              ))}
+            </div>
+
+            </div>
+
+            <div hidden={tab !== 'viz'} className="space-y-3">
+              <h4 className="text-xs font-bold text-zinc-300">형태</h4>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="스펙트럼 형태">
+              {VIZ_SHAPES.map(v => (
+                <button key={v.id} type="button" role="radio" aria-checked={settings.shape === v.id} onClick={() => { setHover(null); set('shape', v.id) }} onMouseEnter={() => setHover({ shape: v.id })} onMouseLeave={() => setHover(null)}
+                  className={`relative rounded-lg border-2 p-1 bg-black/40 ${settings.shape === v.id ? 'border-emerald-400' : 'border-transparent hover:border-white/30'}`}>
+                  <VizThumb shape={v.id} palette={palette} className="w-full block aspect-video" />
+                  <div className="text-[11px] text-zinc-200 text-center pb-0.5">{v.name}</div>
+                  {v.recommended && <span className="absolute top-1 right-1 text-[9px] font-bold px-1 rounded bg-emerald-400 text-black">추천</span>}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-zinc-500">형태 예시 · 영상에서는 실제 음악에 반응합니다</p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-xs font-bold text-zinc-300">색상</h4>
+              <select value={settings.colorMode === 'solid' || settings.colorMode === 'gradient' ? settings.colorMode : settings.paletteId === 'rainbow' ? 'rainbow' : 'palette'}
+                onChange={e => { const v = e.target.value; setSettings(s => v === 'rainbow' ? { ...s, colorMode: 'palette', paletteId: 'rainbow' } : { ...s, colorMode: v as 'palette' | 'solid' | 'gradient' }) }}
+                className="sel-cin" aria-label="색상 방식">
+                <option value="rainbow">레인보우</option>
+                <option value="palette">팔레트</option>
+                <option value="solid">단색</option>
+                <option value="gradient">그라데이션</option>
+              </select>
+              {(settings.colorMode === 'solid' || settings.colorMode === 'gradient') && (
+                <>
+                  <input type="color" value={settings.customColors?.[0] ?? '#f2d6a8'} onChange={e => setSettings(s => ({ ...s, customColors: [e.target.value, s.customColors?.[1] ?? '#7aa7ff'] }))} className="h-7 w-10 rounded border border-white/15 bg-transparent" aria-label={settings.colorMode === 'solid' ? '색' : '시작 색'} />
+                  {settings.colorMode === 'gradient' && <input type="color" value={settings.customColors?.[1] ?? '#7aa7ff'} onChange={e => setSettings(s => ({ ...s, customColors: [s.customColors?.[0] ?? '#f2d6a8', e.target.value] }))} className="h-7 w-10 rounded border border-white/15 bg-transparent" aria-label="끝 색" />}
+                </>
+              )}
+            </div>
+            {(settings.colorMode ?? 'palette') === 'palette' && <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="색상">
+              {PALETTES.map(p => (
+                <button key={p.id} type="button" role="radio" aria-checked={settings.paletteId === p.id} onClick={() => set('paletteId', p.id)}
+                  className={`flex items-center gap-2 rounded-lg border-2 px-2 py-1 ${settings.paletteId === p.id ? 'border-emerald-400' : 'border-white/10 hover:border-white/30'}`}>
+                  <span className="w-10 h-4 rounded" style={{ background: `linear-gradient(90deg, ${p.colors.join(',')})` }} />
+                  <span className="text-xs text-zinc-200">{p.name}</span>
+                </button>
+              ))}
+            </div>}
+            </div>
+
+            <div hidden={tab !== 'text'} className="space-y-3">
+              <label className="fld-cin"><span>타이틀 문구 <em>(다음 영상에도 유지돼요)</em></span><input value={settings.headline} onChange={e => set('headline', e.target.value)} placeholder="화면 위쪽에 작게 들어가요 (예: COOKIEMUSIC)" maxLength={40} className="inp-cin" /></label>
+              <div className="fld-cin"><span>글꼴 <em>(실사 장면 템플릿의 제목·가사)</em></span>
+                <div className="flex flex-wrap gap-1.5">{FONT_STYLES.map(([id, label]) => <button key={id} type="button" className={chip((settings.fontStyle ?? 'auto') === id)} onClick={() => set('fontStyle', id)}>{label}</button>)}</div>
+              </div>
+              <div className="fld-cin"><span>가사 표시 방식</span>
+                <div className="flex flex-wrap gap-1.5">{LYRIC_LINES.map(([id, label]) => <button key={id} type="button" className={chip((settings.lyricLines ?? 'auto') === id)} onClick={() => set('lyricLines', id)}>{label}</button>)}</div>
+              </div>
+            </div>
+
+            <div hidden={tab !== 'lyrics'} className="space-y-3">
+              <h4 className="text-xs font-bold text-zinc-300">곡 순서</h4>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={openLib} className="btn-cin"><Library className="w-3.5 h-3.5" />보관함에서 고르기</button>
               <button type="button" onClick={() => fileRef.current?.click()} className="btn-cin"><FileAudio className="w-3.5 h-3.5" />내 파일 추가</button>
@@ -226,54 +319,15 @@ export default function CinemaClient() {
                 ))}
               </ol>
             )}
-          </Section>
-
-          <Section n="02" title="영상 종류">
-            <div className="flex gap-2">
-              <button type="button" className={chip(settings.kind === 'lyrics')} onClick={() => set('kind', 'lyrics')}>가사 영상</button>
-              <button type="button" className={chip(settings.kind === 'instrumental')} onClick={() => set('kind', 'instrumental')}>경음악 영상</button>
-            </div>
-            <p className="text-[11px] text-zinc-500">{needLyrics ? '싱크 가사를 화면에 띄워요. 가사 시간이 없으면 길이 비례로 추정해 「가사 시간 추정」을 표시해요.' : '가사 없이 커버와 음악 반응 화면만 보여 줘요.'}</p>
-          </Section>
-
-          <Section n="03" title="장면 분위기" hint="템플릿 × 형태 × 색상을 따로 고를 수 있어요">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="장면 템플릿">
-              {TEMPLATES.map(t => (
-                <button key={t.id} type="button" role="radio" aria-checked={settings.templateId === t.id}
-                  onClick={() => setSettings(s => ({ ...s, templateId: t.id, shape: s.templateId === t.id ? s.shape : t.defaultShape }))}
-                  className={`text-left rounded-lg overflow-hidden border-2 transition-colors ${settings.templateId === t.id ? 'border-emerald-400' : 'border-transparent hover:border-white/30'} bg-black/30`}>
-                  <TemplateThumb templateId={t.id} shape={t.id === settings.templateId ? settings.shape : t.defaultShape} palette={palette} cover={coverBmp} kind={settings.kind} title={first?.title ?? ''} className="w-full block aspect-video" />
-                  <div className="px-2 py-1.5"><div className="text-xs font-bold text-white">{t.name}</div><div className="text-[10px] text-zinc-500 leading-snug">{t.blurb}</div></div>
-                </button>
-              ))}
+              {needLyrics && tracks.length > 0 && (
+                <>
+                  <h4 className="text-xs font-bold text-zinc-300 pt-2">가사 시간 확인</h4>
+                  <LyricsStep tracks={tracks} active={Math.min(active, tracks.length - 1)} onActive={setActive} onChange={patchTrack} onSeek={(i, t) => { setActive(i); setSeek({ nonce: Date.now(), t }) }} />
+                </>
+              )}
             </div>
 
-            <h4 className="text-xs font-bold text-zinc-300 pt-2">형태</h4>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="스펙트럼 형태">
-              {VIZ_SHAPES.map(v => (
-                <button key={v.id} type="button" role="radio" aria-checked={settings.shape === v.id} onClick={() => set('shape', v.id)}
-                  className={`relative rounded-lg border-2 p-1 bg-black/40 ${settings.shape === v.id ? 'border-emerald-400' : 'border-transparent hover:border-white/30'}`}>
-                  <VizThumb shape={v.id} palette={palette} className="w-full block aspect-video" />
-                  <div className="text-[11px] text-zinc-200 text-center pb-0.5">{v.name}</div>
-                  {v.recommended && <span className="absolute top-1 right-1 text-[9px] font-bold px-1 rounded bg-emerald-400 text-black">추천</span>}
-                </button>
-              ))}
-            </div>
-            <p className="text-[11px] text-zinc-500">형태 예시 · 영상에서는 실제 음악에 반응합니다</p>
-
-            <h4 className="text-xs font-bold text-zinc-300 pt-2">색상</h4>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="색상">
-              {PALETTES.map(p => (
-                <button key={p.id} type="button" role="radio" aria-checked={settings.paletteId === p.id} onClick={() => set('paletteId', p.id)}
-                  className={`flex items-center gap-2 rounded-lg border-2 px-2 py-1 ${settings.paletteId === p.id ? 'border-emerald-400' : 'border-white/10 hover:border-white/30'}`}>
-                  <span className="w-10 h-4 rounded" style={{ background: `linear-gradient(90deg, ${p.colors.join(',')})` }} />
-                  <span className="text-xs text-zinc-200">{p.name}</span>
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          <Section n="04" title="영상 설정">
+            <div hidden={tab !== 'export'} className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <select value="" onChange={e => { if (e.target.value) loadPreset(e.target.value) }} className="sel-cin" aria-label="저장한 설정 불러오기">
                 <option value="">저장한 설정 불러오기{Object.keys(presets).length ? '' : ' (없음)'}</option>
@@ -284,11 +338,10 @@ export default function CinemaClient() {
               <datalist id="cinema-presets">{Object.keys(presets).map(n => <option key={n} value={n} />)}</datalist>
               <button type="button" disabled={!presetName.trim()} onClick={savePreset} className="btn-cin"><Save className="w-3.5 h-3.5" />현재 설정 저장</button>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <label className="fld-cin"><span>영상 이름</span><input value={settings.name} onChange={e => set('name', e.target.value)} placeholder="비워 두면 첫 곡 제목" className="inp-cin" /></label>
-              <label className="fld-cin"><span>타이틀 문구 <em>(다음 영상에도 유지돼요)</em></span><input value={settings.headline} onChange={e => set('headline', e.target.value)} placeholder="화면 위쪽에 작게 들어가요" maxLength={40} className="inp-cin" /></label>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <div className="fld-cin"><span>화면 비율</span><div className="flex flex-wrap gap-1.5">{ASPECTS.map(a => <button key={a.id} type="button" className={chip(settings.aspect === a.id)} onClick={() => set('aspect', a.id)}>{a.label}</button>)}</div></div>
               <div className="fld-cin"><span>해상도</span><div className="flex flex-wrap gap-1.5">{RESOLUTIONS.map(r => <button key={r.id} type="button" className={chip(settings.shortSide === r.id)} onClick={() => set('shortSide', r.id)}>{r.label}</button>)}</div></div>
               <div className="fld-cin"><span>프레임</span><div className="flex gap-1.5">{FPS_OPTIONS.map(f => <button key={f} type="button" className={chip(settings.fps === f)} onClick={() => set('fps', f)}>{f}fps</button>)}</div></div>
@@ -312,15 +365,9 @@ export default function CinemaClient() {
               </label>
             </div>
             <p className="text-[11px] text-zinc-500">{outW}×{outH} · {settings.fps}fps · 예상 용량 약 {sizeMb >= 1024 ? `${(sizeMb / 1024).toFixed(1)}GB` : `${Math.max(1, Math.round(sizeMb))}MB`}</p>
-          </Section>
-
-          {needLyrics && tracks.length > 0 && (
-            <Section n="05" title="가사 확인">
-              <LyricsStep tracks={tracks} active={Math.min(active, tracks.length - 1)} onActive={setActive} onChange={patchTrack} onSeek={(i, t) => { setActive(i); setSeek({ nonce: Date.now(), t }) }} />
-            </Section>
-          )}
-
-          <Section n={needLyrics ? '06' : '05'} title="영상 만들기">
+            </div>
+          </div>
+          <div className="border-t border-white/10 p-3 space-y-2">
             {lyricsBad && <p className="text-xs text-amber-300 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />가사가 없는 곡이 있어요. 가사 확인에서 채우거나 경음악 영상으로 바꿔 주세요.</p>}
             {!rendering ? (
               <button type="button" onClick={() => void start()} disabled={!tracks.length || !hydrated} className="px-5 py-2.5 rounded-lg font-bold text-sm text-black bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40" data-testid="cinema-start">
@@ -349,11 +396,7 @@ export default function CinemaClient() {
               </div>
             )}
             {notice && <p className="text-xs text-zinc-400">{notice}</p>}
-          </Section>
-        </div>
-
-        <div className="order-1 xl:order-2 xl:sticky xl:top-3 min-w-0">
-          <CinemaPreview tracks={tracks} settings={settings} index={Math.min(active, Math.max(0, tracks.length - 1))} onIndex={setActive} seekRequest={seek} />
+          </div>
         </div>
       </div>
     </div>

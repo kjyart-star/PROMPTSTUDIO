@@ -20,3 +20,16 @@ export function paletteGradient(ctx: CanvasRenderingContext2D, palette: Palette,
   palette.colors.forEach((c, i) => g.addColorStop(n === 1 ? 0 : i / (n - 1), c))
   return g
 }
+
+export type ColorMode = 'palette' | 'solid' | 'gradient'
+
+/** 설정 → 실제로 쓸 팔레트. 단색·그라데이션은 사용자가 고른 색으로 만든다(미리보기·내보내기 공용) */
+export function resolvePalette(s: { paletteId: string; colorMode?: ColorMode; customColors?: string[] }): Palette {
+  const hex = (c: string | undefined, d: string) => (c && /^#[0-9a-f]{6}$/i.test(c) ? c : d)
+  if (s.colorMode === 'solid') { const c = hex(s.customColors?.[0], '#f2d6a8'); return { id: 'custom-solid', name: '단색', colors: [c], accent: c } }
+  if (s.colorMode === 'gradient') {
+    const a = hex(s.customColors?.[0], '#f2d6a8'), b = hex(s.customColors?.[1], '#7aa7ff')
+    return { id: 'custom-gradient', name: '그라데이션', colors: [a, b], accent: a }
+  }
+  return getPalette(s.paletteId)
+}

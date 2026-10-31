@@ -1,7 +1,7 @@
 /** 개발 전용: 템플릿 여러 장을 한 장의 시트로 그려 화면에 덮어 보여 준다(콘솔에서 __cinema.sheet(...)). */
 import { TEMPLATES } from '@/lib/cinema/templates'
 import { PALETTES } from '@/lib/cinema/palettes'
-import { makeFrame, drawFrame } from '@/lib/cinema/frame'
+import { makeFrame, drawFrame, prepareScene } from '@/lib/cinema/frame'
 import { sampleBars, SAMPLE_LINES } from './thumbs'
 import type { VizShapeId } from '@/lib/cinema/types'
 
@@ -15,6 +15,7 @@ export async function sheet(o: { W?: number; H?: number; cols?: number; ids?: st
     const g = x.createLinearGradient(0, 0, 600, 600); g.addColorStop(0, '#e0457b'); g.addColorStop(.5, '#7a3cff'); g.addColorStop(1, '#12c2e9'); x.fillStyle = g; x.fillRect(0, 0, 600, 600)
     cover = await createImageBitmap(cv)
   }
+  for (const id of ids) await prepareScene(id, '여름밤의 노래쿠키뮤직 플레이리스트' + SAMPLE_LINES.map(l => l.text).join(''))
   const rows = Math.ceil(ids.length / cols)
   const sh = document.createElement('canvas'); sh.width = W * cols; sh.height = H * rows
   const sx = sh.getContext('2d')!

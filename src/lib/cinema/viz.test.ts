@@ -19,7 +19,7 @@ const DRAW = /^(fillRect|arc|stroke|fill)\(/
 const mk = (f: (i: number) => number) => Float32Array.from({ length: 64 }, (_, i) => f(i))
 
 describe('viz', () => {
-  it('12종', () => { expect(VIZ_SHAPES).toHaveLength(12); expect(VIZ_SHAPES.filter(v => isCircular(v.id))).toHaveLength(5) })
+  it('16종', () => { expect(VIZ_SHAPES).toHaveLength(16); expect(VIZ_SHAPES.filter(v => isCircular(v.id))).toHaveLength(5) })
   for (const s of VIZ_SHAPES) {
     it(`${s.id} 그리기·결정성·빈 입력`, () => {
       const bars = mk(i => (Math.sin(i / 5) + 1) / 2)

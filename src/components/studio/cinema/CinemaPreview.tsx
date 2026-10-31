@@ -4,19 +4,24 @@
  * 소리는 디코드한 버퍼를 AudioBufferSource 로 재생해 화면 시계를 오디오 시계에 맞춘다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Play, Pause, SkipBack, SkipForward, Loader2 } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Loader2, Maximize2, Minimize2 } from 'lucide-react'
 import { decodeToChannels, type CinemaSettings } from '@/lib/cinema/render'
 import { createSpectrumAnalyzer, type SpectrumAnalyzer } from '@/lib/cinema/spectrum'
-import { getPalette } from '@/lib/cinema/palettes'
-import { makeFrame, drawFrame } from '@/lib/cinema/frame'
+import { resolvePalette } from '@/lib/cinema/palettes'
+import { makeFrame, drawFrame, prepareScene } from '@/lib/cinema/frame'
 import { ASPECTS } from '@/lib/cinema/types'
 import { formatClock } from '@/lib/cinema/output'
-import { loadAudioBlob, loadCoverBlob, type CTrack } from './model'
+import { loadAudioBlob, loadCoverBlob, loadSampleCoverBlob, type CTrack } from './model'
+import { SAMPLE_LINES, sampleBars } from './thumbs'
 
 interface Loaded { id: string; channels: Float32Array[]; spec: SpectrumAnalyzer; cover: ImageBitmap | null }
 
-export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }: {
+const QUICK_ASPECTS = ['16:9', '9:16', '1:1'] as const
+
+export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, onAspect }: {
   tracks: CTrack[]; settings: CinemaSettings; index: number; onIndex: (i: number) => void
+  /** 미리보기 위 비율 전환(16:9·9:16·1:1) */
+  onAspect?: (a: CinemaSettings['aspect']) => void
   /** 가사 확인 단계에서 특정 시각으로 보내고 싶을 때(nonce 로 같은 값 재요청 가능) */
   seekRequest?: { nonce: number; t: number } | null
 }) {
@@ -39,18 +44,50 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }:
   const tracksRef = useRef(tracks); tracksRef.current = tracks
 
   const aspect = ASPECTS.find(a => a.id === settings.aspect)?.ratio ?? 16 / 9
-  const W = aspect >= 1 ? 960 : Math.round(960 * aspect), H = aspect >= 1 ? Math.round(960 / aspect) : 960
+  // 표시 크기 × 기기 픽셀 비율로 그린다(늘려 보여 주면 글자·파형이 뭉개진다). 세로로 긴 비율은 화면 높이의 72% 까지만
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [disp, setDisp] = useState({ w: 960, h: 540, dpr: 1 })
+  const [full, setFull] = useState(false)
+  useEffect(() => {
+    const el = boxRef.current; if (!el) return
+    const measure = () => {
+      const isFull = typeof document !== 'undefined' && document.fullscreenElement === el
+      setFull(isFull)
+      const cw = (el.clientWidth || 960) - (isFull ? 0 : 24)
+      const maxH = isFull ? window.innerHeight - 110 : Math.max(200, window.innerHeight * (window.innerWidth < 768 ? 0.4 : 0.55))
+      const w = Math.min(cw, maxH * aspect), h = w / aspect
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      setDisp(d => (Math.abs(d.w - w) < 1 && Math.abs(d.h - h) < 1 && d.dpr === dpr ? d : { w, h, dpr }))
+    }
+    measure()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(el); window.addEventListener('resize', measure); document.addEventListener('fullscreenchange', measure)
+    return () => { ro?.disconnect(); window.removeEventListener('resize', measure); document.removeEventListener('fullscreenchange', measure) }
+  }, [aspect])
+  const k = Math.min(1, 2560 / Math.max(disp.w * disp.dpr, disp.h * disp.dpr))
+  const W = Math.max(2, Math.round(disp.w * disp.dpr * k)), H = Math.max(2, Math.round(disp.h * disp.dpr * k))
 
+  // 곡이 없을 때 보여 줄 예시 화면(예시 커버·예시 가사)
+  const demoRef = useRef<ImageBitmap | null>(null)
   const draw = useCallback((t: number) => {
     const c = canvasRef.current, tr = trackRef.current, L = loadedRef.current
-    if (!c || !tr) return
+    if (!c) return
     const ctx = c.getContext('2d'); if (!ctx) return
     const s = settingsRef.current
+    if (!tr) {
+      const f = makeFrame({
+        w: c.width, h: c.height, t: 7.4, trackIndex: 0, trackCount: 3, title: '여름밤의 노래', headline: s.headline, coverSeed: 'demo',
+        cover: demoRef.current, kind: s.kind, lyrics: { lines: SAMPLE_LINES, mode: 'exact' }, duration: 200, bars: sampleBars(1.3), level: 0.5,
+        shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines,
+      })
+      drawFrame(ctx, s.templateId, f)
+      return
+    }
     const sp = L && L.id === tr.id ? L.spec.at(t) : { bars: new Float32Array(64).fill(0.08), level: 0 }
     const f = makeFrame({
       w: c.width, h: c.height, t, trackIndex: indexRef.current, trackCount: tracksRef.current.length, title: tr.title, headline: s.headline,
       coverSeed: tr.id + tr.title, cover: L && L.id === tr.id ? L.cover : null, kind: s.kind, lyrics: tr.lyrics, duration: tr.duration,
-      bars: sp.bars, level: sp.level, shape: s.shape, palette: getPalette(s.paletteId),
+      bars: sp.bars, level: sp.level, shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines,
     })
     drawFrame(ctx, s.templateId, f)
   }, [])
@@ -85,7 +122,11 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }:
   useEffect(() => {
     stop(); posRef.current = 0; setPos(0); setError('')
     loadedRef.current = null; setLoaded(null)
-    if (!track) { const c = canvasRef.current; c?.getContext('2d')?.clearRect(0, 0, c.width, c.height); return }
+    if (!track) {
+      draw(0)
+      if (!demoRef.current) void loadSampleCoverBlob(0).then(b => (b ? createImageBitmap(b) : null)).then(bm => { if (bm) { demoRef.current = bm; if (!trackRef.current) draw(0) } }).catch(() => {})
+      return
+    }
     let dead = false
     setLoading(true)
     ;(async () => {
@@ -123,6 +164,14 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }:
   // 설정·가사가 바뀌면 멈춘 상태에서도 다시 그린다
   useEffect(() => { if (!srcRef.current) draw(posRef.current) }, [settings, track, loaded, draw, W, H])
 
+  // 장면 템플릿의 배경 사진·서체를 불러오면 다시 그린다
+  const sceneText = track ? track.title + settings.headline + track.lyrics.lines.map(l => l.text).join('') : settings.headline
+  useEffect(() => {
+    let dead = false
+    void prepareScene(settings.templateId, sceneText, !!settings.fontStyle && settings.fontStyle !== 'auto').then(() => { if (!dead && !srcRef.current) draw(posRef.current) })
+    return () => { dead = true }
+  }, [settings.templateId, settings.fontStyle, sceneText, draw])
+
   useEffect(() => {
     if (!seekRequest || !track) return
     const t = Math.max(0, seekRequest.t)
@@ -137,10 +186,21 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }:
   const seek = (t: number) => { posRef.current = t; setPos(t); if (playing) playFrom(t); else draw(t) }
 
   return (
-    <div className="rounded-xl border border-outline-variant bg-black/40 p-3">
-      <div className="relative mx-auto flex items-center justify-center bg-black rounded-lg overflow-hidden" style={{ aspectRatio: String(aspect), maxHeight: 420, width: aspect >= 1 ? '100%' : undefined, height: aspect < 1 ? 420 : undefined }}>
+    <div className={`rounded-xl border border-outline-variant bg-black/40 p-3 ${full ? 'flex flex-col justify-center bg-black' : ''}`} ref={boxRef}>
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {onAspect && QUICK_ASPECTS.map(a => (
+          <button key={a} type="button" onClick={() => onAspect(a)} aria-pressed={settings.aspect === a}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold border ${settings.aspect === a ? 'bg-white text-black border-white' : 'border-white/15 text-zinc-300 hover:border-white/40'}`}>{a}</button>
+        ))}
+        <span className="flex-1" />
+        <button type="button" onClick={() => { const el = boxRef.current; if (!el) return; if (document.fullscreenElement) void document.exitFullscreen(); else void el.requestFullscreen?.() }}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold border border-white/15 text-zinc-300 hover:border-white/40">
+          {full ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}{full ? '전체 화면 닫기' : '전체 화면 보기'}
+        </button>
+      </div>
+      <div className="relative mx-auto bg-black rounded-lg overflow-hidden" style={{ width: disp.w, height: disp.h }}>
         <canvas ref={canvasRef} width={W} height={H} className="w-full h-full block" data-testid="cinema-preview-canvas" />
-        {!track && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">곡을 고르면 여기에서 미리 볼 수 있어요.</div>}
+        {!track && <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-[11px] text-zinc-200">예시 화면이에요. 곡을 추가하면 실제 음악으로 재생돼요.</div>}
         {loading && <div className="absolute inset-0 grid place-items-center bg-black/50"><Loader2 className="w-6 h-6 animate-spin text-zinc-300" /></div>}
         {error && <div className="absolute inset-x-0 bottom-0 bg-red-950/80 text-red-200 text-xs px-3 py-2">{error}</div>}
       </div>
@@ -154,7 +214,7 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }:
         <input type="range" min={0} max={Math.max(1, track?.duration ?? 1)} step={0.1} value={Math.min(pos, track?.duration ?? 1)} onChange={e => seek(Number(e.target.value))} className="flex-1 accent-emerald-400" aria-label="재생 위치" />
         <span className="tabular-nums w-10">{formatClock(track?.duration ?? 0)}</span>
       </div>
-      <p className="mt-1 text-[11px] text-zinc-500">음원을 분석해 그립니다. 미리보기는 곡 음량 맞추기가 적용되기 전 소리예요.</p>
+      {!full && <p className="mt-1 text-[11px] text-zinc-500">실제 음원을 분석해 그립니다. 미리보기는 곡 음량 맞추기가 적용되기 전 소리예요.</p>}
     </div>
   )
 }

@@ -5,12 +5,12 @@
  *  - 가려진 탭: rAF 를 쓰지 않고 인코더 큐 신호(dequeue)로만 진행하므로 멈추지 않는다.
  */
 import { Muxer, ArrayBufferTarget, FileSystemWritableFileStreamTarget } from 'mp4-muxer'
-import { ASPECTS, type VizShapeId } from './types'
-import { getPalette } from './palettes'
+import { ASPECTS, type FontStyle, type LyricLines, type VizShapeId } from './types'
+import { resolvePalette, type ColorMode } from './palettes'
 import { createSpectrumAnalyzer } from './spectrum'
 import { gainToTarget } from './loudness'
 import type { CinemaLyrics } from './lyrics'
-import { makeFrame, drawFrame } from './frame'
+import { makeFrame, drawFrame, prepareScene } from './frame'
 import { avcCodecString, outputSize, videoBitrate, type ShortSide } from './output'
 
 export interface CinemaTrackInput {
@@ -32,6 +32,13 @@ export interface CinemaSettings {
   templateId: string
   shape: VizShapeId
   paletteId: string
+  /** 색상 방식(없으면 팔레트). 단색·그라데이션은 customColors 를 쓴다 */
+  colorMode?: ColorMode
+  customColors?: string[]
+  /** 글꼴(실사 장면 템플릿 제목·가사, 가사는 전 템플릿) */
+  fontStyle?: FontStyle
+  /** 가사 표시 줄 수 */
+  lyricLines?: LyricLines
   headline: string
   kind: 'lyrics' | 'instrumental'
 }
@@ -98,7 +105,7 @@ export async function renderCinema(o: {
   const { tracks, settings: s, signal } = o
   if (!tracks.length) throw new Error('곡을 하나 이상 골라 주세요.')
   const { w, h } = outputSize(s.aspect, s.shortSide)
-  const palette = getPalette(s.paletteId)
+  const palette = resolvePalette(s)
   const fps = s.fps
   const frameUs = 1e6 / fps
   const progress = (phase: RenderProgress['phase'], fraction: number, message: string) => o.onProgress({ phase, fraction: Math.min(1, Math.max(0, fraction)), message, at: Date.now() })
@@ -152,6 +159,8 @@ export async function renderCinema(o: {
       if (t.cover) { try { bmp = await createImageBitmap(t.cover) } catch { bmp = null } }
       covers.set(t.id, bmp)
     }
+    // 배경 사진·서체를 다 불러 둔 뒤 그린다(미리보기와 같은 화면)
+    await prepareScene(s.templateId, [s.headline, ...tracks.map(t => t.title + t.lyrics.lines.map(l => l.text).join(''))].join(''), !!s.fontStyle && s.fontStyle !== 'auto')
     for (let loop = 0; loop < s.loops; loop++) {
       for (let ti = 0; ti < tracks.length; ti++) {
         check()
@@ -191,7 +200,7 @@ export async function renderCinema(o: {
           const frame = makeFrame({
             w, h, t: tt, trackIndex: ti, trackCount: tracks.length, title: tr.title, headline: s.headline,
             coverSeed: tr.id + tr.title, cover, kind: s.kind, lyrics: tr.lyrics, duration: dur,
-            bars: sp.bars, level: sp.level, shape: s.shape, palette,
+            bars: sp.bars, level: sp.level, shape: s.shape, palette, fontStyle: s.fontStyle, lyricLines: s.lyricLines,
           })
           drawFrame(ctx, s.templateId, frame)
           const vf = new VideoFrame(canvas as CanvasImageSource, { timestamp: Math.round(globalFrame * frameUs), duration: Math.round(frameUs) })
