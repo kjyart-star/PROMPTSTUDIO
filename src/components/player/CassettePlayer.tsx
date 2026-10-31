@@ -283,8 +283,6 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   useBands(setRef, isPlaying, reduced);
   const color = useCoverColor((shown as any)?.album?.cover_url || (shown as any)?.image_url);
   const flow: Flow = pressed === 'ff' ? 'ff' : pressed === 'rew' ? 'rew' : isPlaying ? 'play' : 'off';
-  const cover = (shown as any)?.album?.cover_url || (shown as any)?.image_url || withBase('/default-album.png');
-  const artistName = (shown as any)?.album?.artist?.name ?? '';
 
   if (!shown) return null;
   const open = phase === 'opening' || phase === 'out' || phase === 'in';
@@ -293,7 +291,7 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
       <div className="cs-glow" aria-hidden="true" style={{ background: `radial-gradient(ellipse 55% 50% at 50% 48%, ${rgba(color, 0.42, '255,176,96')}, transparent 70%)` }} />
       <div className="cs-set" ref={setRef}>
       <Speaker side="l" />
-      <div className={`cs-deck${isPlaying && !reduced ? ' is-running' : ''}${phase === 'closing' ? ' is-click' : ''}`}>
+      <div className={`cs-deck`}>
         <div className="cs-bay">
           <Cassette track={shown} progress={progress} playing={isPlaying} reduced={reduced} phase={phase} flow={flow} color={color} />
           <div className={`cs-lid${open ? ' is-open' : ''}`} aria-hidden="true" />
@@ -315,10 +313,6 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
         </div>
       </div>
       <Speaker side="r" />
-      <aside key={shown.id} className="cs-jcard" aria-hidden="true">
-        <img src={cover} alt="" draggable={false} />
-        <div className="cs-jspine"><b>{shown.title}</b><span>{artistName}</span></div>
-      </aside>
       </div>
     </main>
   );
@@ -343,22 +337,12 @@ export const CS_CSS = `
 @keyframes cs-insert{0%{transform:translateY(-38%) rotateX(18deg);opacity:0}55%{opacity:1}80%{transform:translateY(3%)}100%{transform:none;opacity:1}}
 .cs-glow{position:absolute;inset:0;pointer-events:none;transition:background .8s}
 .cs-deck{position:relative}
-.cs-deck.is-running{animation:cs-hum .21s linear infinite}
-@keyframes cs-hum{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(.5px,.3px,0)}50%{transform:translate3d(-.3px,-.2px,0)}75%{transform:translate3d(.3px,-.3px,0)}100%{transform:translate3d(0,0,0)}}
-.cs-deck.is-click{animation:cs-clack .22s ease-out}
-@keyframes cs-clack{0%{transform:translateY(0)}35%{transform:translateY(3px)}100%{transform:translateY(0)}}
 .cs-flow{animation:cs-flow .5s linear infinite;animation-play-state:paused}
 .cs-flow-play{animation-play-state:running}
 .cs-flow-ff{animation:cs-flow .09s linear infinite}
 .cs-flow-rew{animation:cs-flow .09s linear infinite reverse}
 @keyframes cs-flow{from{transform:translateX(0)}to{transform:translateX(-18px)}}
-.cs-jcard{position:absolute;right:calc(var(--sw) * .12);bottom:-5%;width:calc(var(--sw) * .8);transform:perspective(700px) rotateY(-22deg) rotate(5deg);transform-origin:left bottom;border-radius:4px;background:rgba(235,238,240,.16);backdrop-filter:blur(2px);border:1px solid rgba(255,255,255,.3);box-shadow:0 18px 30px rgba(0,0,0,.55),inset 0 0 0 3px rgba(255,255,255,.06);padding:5px;animation:imm-rise .6s .6s cubic-bezier(.2,.8,.2,1) both;pointer-events:none;z-index:4}
-.cs-jcard img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px}
-.cs-jspine{margin-top:5px;font:400 14px/1.1 'Nanum Pen Script','Gamja Flower','Segoe Print','Bradley Hand',cursive;color:#f0e8d2;display:flex;flex-direction:column;gap:1px}
-.cs-jspine b{font-weight:400;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.cs-jspine span{opacity:.7;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-@media (max-width:980px){.cs-jcard{display:none}}
-.cs-spk{position:relative;width:var(--sw);height:calc(var(--sw) * 1.95);flex:none;margin-bottom:2px}
+@media (max-width:980px){.cs-spk{position:relative;width:var(--sw);height:calc(var(--sw) * 1.95);flex:none;margin-bottom:2px}
 .cs-spk-body{position:absolute;inset:0;border-radius:7px 7px 5px 5px;background:repeating-linear-gradient(88deg,rgba(0,0,0,.0) 0 5px,rgba(20,8,2,.16) 5px 6px),linear-gradient(100deg,#4d2f19,#7b4b2a 28%,#5a3720 55%,#3f2514 80%,#5e3a22);box-shadow:inset 0 1px 0 rgba(255,220,170,.28),inset 0 -2px 4px rgba(0,0,0,.5),inset 2px 0 3px rgba(255,200,140,.12),0 24px 22px -8px rgba(0,0,0,.65);padding:7%}
 .cs-baffle{position:relative;width:100%;height:100%;border-radius:4px;background:linear-gradient(180deg,#1b1816,#0f0d0c);box-shadow:inset 0 2px 6px rgba(0,0,0,.85),0 1px 0 rgba(255,220,170,.12)}
 .cs-tweeter{position:absolute;left:50%;top:9%;width:34%;aspect-ratio:1;margin-left:-17%;border-radius:50%;background:radial-gradient(circle,#2b2724 0 38%,#0c0b0a 40% 60%,#3a342f 62% 70%,#0c0b0a 72%);box-shadow:0 0 0 2px #1d1a18,0 1px 0 rgba(255,255,255,.1)}
@@ -388,5 +372,4 @@ export const CS_CSS = `
 .cs-key{height:46px;border-radius:5px 5px 3px 3px;display:grid;place-items:center;color:#222;cursor:pointer;background:linear-gradient(180deg,#d9d6cf,#aaa69d 55%,#8f8b82);box-shadow:0 5px 0 #4a4843,0 7px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7);transition:transform .08s ease-out,box-shadow .08s ease-out;will-change:transform}
 .cs-key.is-down{transform:translateY(4px);box-shadow:0 1px 0 #4a4843,0 2px 3px rgba(0,0,0,.6),inset 0 2px 4px rgba(0,0,0,.35);background:linear-gradient(180deg,#b9b5ac,#9a968d)}
 .cs-key:focus-visible{outline:2px solid #fff;outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.cs-p-in,.cs-p-out,.cs-deck.is-running,.cs-deck.is-click,.cs-flow,.cs-jcard{animation:none}.cs-key,.cs-lid{transition:none}}
-`;
+@media (prefers-reduced-motion:reduce){.cs-p-in,.cs-p-out,.cs-flow,`;
