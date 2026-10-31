@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
 import { ImmersivePlayer } from './ImmersivePlayer';
+import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
 import { Disc, DiscStyles } from './Disc';
 import { withBase } from '@/lib/basePath'
 
@@ -169,10 +170,13 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
   const loadedTrackIdRef = useRef<string | null>(null);
   // 곡 전환 중 우리가 낸 pause 는 사용자의 정지가 아니다 — onPause 가 isPlaying 을 끄지 못하게 한다.
   const switchingRef = useRef(false);
+  // 스펙트럼 분석용 crossOrigin 로 불러오다 실패하면 한 번만 분석 없이 다시 불러온다(소리 유지가 우선).
+  const corsFallbackRef = useRef(false);
 
   useEffect(() => {
     if (!audioRef.current || !currentTrack) return;
     resignedRef.current = false;
+    corsFallbackRef.current = false;
 
     let isCurrent = true;
     // 이전 곡이 새 src 가 붙을 때까지 계속 울리거나 되살아나지 않게 먼저 멈춘다.
@@ -183,6 +187,9 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
     const play = (u: string) => {
       if (!isCurrent || !audioRef.current) return;
       loadedTrackIdRef.current = currentTrack.id;
+      // 실제 스펙트럼 분석은 CORS 로 불러온 음원에서만 가능하다. 이미 분석 노드가 붙은 요소는 항상 CORS 로 불러야 무음이 안 된다.
+      if (/^https?:/.test(u)) audioRef.current.crossOrigin = 'anonymous';
+      else if (!getSpectrumTap(audioRef.current)) audioRef.current.removeAttribute('crossorigin');
       audioRef.current.src = u;
       audioRef.current.load();
       if (isPlaying) {
@@ -379,9 +386,28 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
       <audio
         ref={audioRef}
         onPlay={() => _setIsPlaying(true)}
+        onPlaying={(e) => {
+          const el = e.currentTarget;
+          const tap = getSpectrumTap(el);
+          if (tap) { tap.resume(); return; }
+          void attachSpectrumTap(el).then((t) => { if (t) _setGetFrequencyData(t.getFrequencyData); });
+        }}
         onLoadStart={() => { switchingRef.current = false; }}
         onPause={() => { if (!switchingRef.current) _setIsPlaying(false); }}
-        onError={() => {
+        onError={(e) => {
+          const el = e.currentTarget;
+          // CORS 거부(또는 캐시된 비-CORS 응답) 때문에 실패한 것이면 crossOrigin 없이 한 번 다시 — 분석만 포기하고 재생은 살린다.
+          if (el.crossOrigin === 'anonymous' && !getSpectrumTap(el) && !corsFallbackRef.current && el.src) {
+            corsFallbackRef.current = true;
+            const at = el.currentTime || 0;
+            const resumePlay = usePlayerStore.getState().isPlaying;
+            el.removeAttribute('crossorigin');
+            el.src = el.src;
+            el.load();
+            if (at > 0) el.addEventListener('loadedmetadata', () => { el.currentTime = at; }, { once: true });
+            if (resumePlay) el.play().catch(() => _setIsPlaying(false));
+            return;
+          }
           switchingRef.current = false;
           _setIsPlaying(false);
           showPlaybackError(lang === 'KO' ? '음원 재생에 실패했습니다.' : lang === 'JA' ? '再生に失敗しました。' : 'Playback failed.');

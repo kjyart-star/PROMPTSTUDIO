@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
+import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { withBase } from '@/lib/basePath';
 import type { Track } from '@/types/music';
@@ -62,12 +63,18 @@ function usePrefersReducedMotion() {
 const BAR_COUNT = 48;
 
 function Visualizer({ track, playing, reduced }: { track: Track | null; playing: boolean; reduced: boolean }) {
+  const getFrequencyData = usePlayerStore((s) => s.getFrequencyData);
+  const live = useRef<number[]>(new Array(BAR_COUNT).fill(0));
   const shape = useMemo(() => barShape(track, BAR_COUNT), [track]);
   const refs = useRef<(HTMLSpanElement | null)[]>([]);
   useEffect(() => {
     const paint = (t: number) => {
+      // 실제 음원 분석값이 있으면 그대로, 없으면(분석 불가·정지) 곡 고유 모양으로 대체
+      const data = playing ? getFrequencyData?.() : null;
+      const bins = data ? binSpectrum(data, BAR_COUNT, live.current) : null;
       refs.current.forEach((el, i) => {
         if (!el) return;
+        if (bins) { el.style.transform = `scaleY(${Math.min(1, Math.max(0.06, bins[i] * 1.15))})`; return; }
         const wob = playing && !reduced ? 0.55 + 0.45 * Math.sin(t / 260 + i * 0.9) * Math.cos(t / 610 + i * 0.37) : 0.6;
         el.style.transform = `scaleY(${Math.max(0.08, shape[i] * wob)})`;
       });
@@ -78,7 +85,7 @@ function Visualizer({ track, playing, reduced }: { track: Track | null; playing:
     const loop = (t: number) => { paint(t); raf = requestAnimationFrame(loop); };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [shape, playing, reduced]);
+  }, [shape, playing, reduced, getFrequencyData]);
   return (
     <div className="imm-bars" aria-hidden="true">
       {shape.map((_, i) => (
