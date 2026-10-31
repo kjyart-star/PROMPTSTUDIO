@@ -99,3 +99,33 @@ describe('GenerateClient 재생은 서버 서명 주소로', () => {
     expect((usePlayerStore.getState().currentTrack as any).raw_file_url).toBe('audio/a.mp3')
   })
 })
+
+describe('GenerateClient 곡 목록 행 휴지통 아이콘', () => {
+  it('행마다 휴지통 아이콘이 있고 누르면 확인 단계로 넘기며 곡은 재생되지 않는다', async () => {
+    const onTrash = vi.fn()
+    const { findByText, getAllByLabelText, container } = render(
+      <GenerateClient user={{ id: 'u', email: 'u@x.y' }} onTrashTrack={onTrash} />,
+    )
+    await findByText('Song A')
+    const btns = getAllByLabelText(/휴지통으로 이동|Move to trash/)
+    expect(btns).toHaveLength(2)
+    fireEvent.click(btns[0])
+    expect(onTrash).toHaveBeenCalledTimes(1)
+    expect(onTrash.mock.calls[0][0].id).toBe('a')
+    expect(usePlayerStore.getState().currentTrack).toBeNull()
+    // 상세 패널에는 큰 휴지통 버튼이 없다
+    expect(container.textContent).not.toMatch(/휴지통으로 이동/)
+  })
+
+  it('공개 곡의 휴지통 아이콘은 비활성이다', async () => {
+    const pub = [{ ...rows[0], is_published: true }, rows[1]]
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => pub })))
+    const onTrash = vi.fn()
+    const { findByText, getAllByLabelText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} onTrashTrack={onTrash} />)
+    await findByText('Song A')
+    const btns = getAllByLabelText(/휴지통으로 이동|Move to trash/) as HTMLButtonElement[]
+    expect(btns.filter((b) => b.disabled)).toHaveLength(1)
+    fireEvent.click(btns.find((b) => b.disabled)!)
+    expect(onTrash).not.toHaveBeenCalled()
+  })
+})

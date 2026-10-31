@@ -12,21 +12,7 @@ const panel = (track: any, onTrash?: () => void) => render(
 )
 
 describe('휴지통 진입점', () => {
-  it('상세 패널의 「휴지통으로 이동」이 동작한다', () => {
-    const onTrash = vi.fn()
-    panel({ id: 'a', title: '곡', is_published: false }, onTrash)
-    fireEvent.click(screen.getAllByText('휴지통으로 이동')[0])
-    expect(onTrash).toHaveBeenCalled()
-  })
-  it('공개된 곡은 상세 패널 휴지통 버튼이 비활성이다', () => {
-    const onTrash = vi.fn()
-    panel({ id: 'a', title: '곡', is_published: true }, onTrash)
-    const bs = screen.getAllByText('휴지통으로 이동').map((e) => e.closest('button') as HTMLButtonElement)
-    expect(bs.every((b) => b.disabled)).toBe(true)
-    fireEvent.click(bs[0])
-    expect(onTrash).not.toHaveBeenCalled()
-  })
-  it('onTrash 를 넘기지 않으면 버튼이 없다', () => {
+  it('상세 패널은 onTrash 를 넘기지 않으면 휴지통 버튼이 없다(보관함·음악 생성 탭은 넘기지 않는다)', () => {
     panel({ id: 'a', title: '곡' })
     expect(screen.queryByText('휴지통으로 이동')).toBeNull()
   })

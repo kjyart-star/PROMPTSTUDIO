@@ -2263,7 +2263,6 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   if (user && libraryDetailTrack) updateHistoryItem(libraryDetailTrack.id, { liked: !libraryDetailTrack.liked })
                 }}
                 onDownload={() => libraryDetailTrack && downloadHistoryTrack(libraryDetailTrack)}
-                onTrash={libraryDetailTrack ? () => setDeleteConfirmId(libraryDetailTrack.id) : undefined}
                 onLoadIntoForm={() => {
                   if (!libraryDetailTrack) return
                   openHistoryItem(libraryDetailTrack, 'all')

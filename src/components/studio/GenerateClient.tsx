@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2 } from 'lucide-react'
+import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2, Trash2 } from 'lucide-react'
 import { usePlayerStore } from '@/stores/playerStore'
 import { AudioDuration } from './StudioAudioDuration'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -29,7 +29,7 @@ interface GenerateClientProps {
   renderTrackMenu?: (item: any, buttonClass: string, iconClass: string) => React.ReactNode
   /** 메뉴 동작으로 곡이 바뀌면 올라가는 번호 — 목록을 다시 읽는다 */
   historyVersion?: number
-  /** 상세 패널의 「휴지통으로 이동」 */
+  /** 곡 목록 행의 휴지통 아이콘 */
   onTrashTrack?: (item: any) => void
 }
 
@@ -1184,6 +1184,22 @@ export function GenerateClient({
 
                           {renderTrackMenu?.(track, 'w-7 h-7 rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60', 'w-3.5 h-3.5')}
 
+                          {/* 휴지통 — 다른 아이콘과 같은 크기. 공개 곡은 비활성, 누르면 확인 창 */}
+                          {onTrashTrack && (
+                            <button
+                              type="button"
+                              onClick={() => onTrashTrack(track)}
+                              disabled={!!track.is_published}
+                              aria-label={uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash'}
+                              title={track.is_published
+                                ? (uiLanguage === 'KO' ? '쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다' : uiLanguage === 'JA' ? '公開中の曲はゴミ箱へ移動できません' : 'Published tracks cannot be moved to trash')
+                                : (uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash')}
+                              className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-red-400 transition-colors" />
+                            </button>
+                          )}
+
                           {/* 좋아요 버튼 */}
                           <button
                             aria-label={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
@@ -1258,7 +1274,6 @@ export function GenerateClient({
         onLikeToggle={() => detailTrack && handleLikeToggle(detailTrack)}
         onDownload={() => detailTrack && handleDownloadTrack(detailTrack.audio_url, detailTrack.title, detailTrack.image_url)}
         onLoadIntoForm={() => detailTrack && handleSelectTrack(detailTrack)}
-        onTrash={onTrashTrack && detailTrack ? () => onTrashTrack(detailTrack) : undefined}
         durationSlot={detailTrack?.audio_url ? <AudioDuration url={detailTrack.audio_url} /> : null}
       />
 
