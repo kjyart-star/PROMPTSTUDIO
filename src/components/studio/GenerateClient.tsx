@@ -9,6 +9,7 @@ import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
+import { historyItemToTrack, buildHistoryQueue, queueWithPlayable } from '@/lib/studio/playQueue'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
@@ -460,28 +461,16 @@ export function GenerateClient({
       togglePlay()
       return
     }
-    const playable = (await resolveStudioAudioUrl(track.audio_url)) || track.audio_url
-    const trackToPlay = {
-      id: track.id,
-      title: track.title,
-      file_url: playable,
-      raw_file_url: /^https?:/i.test(track.audio_url) ? undefined : track.audio_url,
-      duration_sec: 180,
-      album_id: 'studio-generated',
-      image_url: track.image_url || withBase('/default-album.png'),
-      album: {
-        id: 'studio-generated',
-        title: 'Studio Generation',
-        cover_url: track.image_url || withBase('/default-album.png'),
-        artist: {
-          name: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
-          slug: user?.email?.split('@')[0] || 'ai-generator',
-          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
-          bio: 'AI Artist'
-        }
-      }
+    const qOpts = {
+      artistName: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
+      slug: user?.email?.split('@')[0] || 'ai-generator',
+      avatarUrl: profile?.avatar_url,
     }
-    playTrack(trackToPlay as any, [trackToPlay] as any[])
+    const playable = (await resolveStudioAudioUrl(track.audio_url)) || track.audio_url
+    const trackToPlay = historyItemToTrack(track, qOpts, playable)
+    // 보이는 목록 전체를 대기열로 — 누른 곡부터 재생, 나머지는 차례가 될 때 주소를 받는다
+    const visible = dayGroups.flatMap((g: any) => g.items)
+    playTrack(trackToPlay, queueWithPlayable(buildHistoryQueue(visible, qOpts), trackToPlay))
   }
 
   const handleSelectTrack = (track: any) => {

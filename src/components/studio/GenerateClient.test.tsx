@@ -57,6 +57,25 @@ describe('GenerateClient 곡 행 클릭', () => {
   })
 })
 
+describe('GenerateClient 대기열', () => {
+  it('목록에서 곡을 재생하면 대기열 길이가 목록과 같고 누른 곡이 현재 위치이며, 휴지통·주소 없는 곡은 빠진다', async () => {
+    const withExtras = [
+      ...rows,
+      { id: 'c', title: 'Song C', status: 'completed', audio_url: 'audio/c.mp3', trashed_at: '2026-10-03', created_at: '2026-10-01', form: {} },
+      { id: 'd', title: 'Song D', status: 'completed', audio_url: '', created_at: '2026-10-01', form: {} },
+    ]
+    vi.stubGlobal('fetch', vi.fn(async (u: string) => ({ ok: true, json: async () => (String(u).includes('signed-url') ? { signedUrl: 'https://x.test/s' } : withExtras) })))
+    const { findByText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    fireEvent.click((await findByText('Song B')).closest('[role=button]') as HTMLElement)
+    await waitFor(() => expect(usePlayerStore.getState().currentTrack?.id).toBe('b'))
+    const { queue, queueIndex } = usePlayerStore.getState()
+    expect(queue.map((t) => t.id)).toEqual(['a', 'b'])
+    expect(queue[queueIndex].id).toBe('b')
+    // 다음 곡은 아직 주소를 받지 않은 저장소 경로(지연 해석)
+    expect(queue[0].file_url).toBe('audio/a.mp3')
+  })
+})
+
 describe('GenerateClient 곡 ⋯ 메뉴', () => {
   it('곡마다 ⋯ 메뉴가 있고 간단 마스터링으로 들어간다, 아이콘 버튼엔 aria-label 이 있다', async () => {
     const onQuick = vi.fn()

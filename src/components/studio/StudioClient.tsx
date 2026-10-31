@@ -32,6 +32,7 @@ import { StudioWorkspace } from './StudioWorkspace'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
+import { historyItemToTrack, buildHistoryQueue, queueWithPlayable } from '@/lib/studio/playQueue'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
@@ -1028,28 +1029,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     // 하단 플레이어는 file_url 을 읽는다 — audio_url 로 넘기면 재생되지 않는다
     // 저장소 경로는 서버 서명 주소로 바꿔 넘긴다(브라우저 직접 서명은 관리자만 된다). 못 받으면 경로 그대로.
     const playable = (await resolveStudioAudioUrl(audioUrl)) || audioUrl
-    const cover = item.image_url || withBase('/default-album.png')
-    const trackToPlay = {
-      id: item.id,
-      title: item.title || 'Untitled Track',
-      file_url: playable,
-      raw_file_url: /^https?:/i.test(audioUrl) ? undefined : audioUrl,
-      duration_sec: 180,
-      album_id: 'studio-generated',
-      image_url: cover,
-      album: {
-        id: 'studio-generated',
-        title: 'Studio Generation',
-        cover_url: cover,
-        artist: {
-          name: item.artist || profile?.display_name || user?.email?.split('@')[0] || 'AI Studio',
-          slug: user?.email?.split('@')[0] || 'ai-generator',
-          avatar_url: profile?.avatar_url || withBase('/default-album.png'),
-          bio: 'AI Artist'
-        }
-      }
+    const qOpts = {
+      artistName: profile?.display_name || user?.email?.split('@')[0] || 'AI Studio',
+      slug: user?.email?.split('@')[0] || 'ai-generator',
+      avatarUrl: profile?.avatar_url,
     }
-    playTrack(trackToPlay as any, [trackToPlay] as any[])
+    const trackToPlay = historyItemToTrack(item, qOpts, playable)
+    // 보관함에 보이는 목록(필터·정렬 적용) 전체를 대기열로
+    playTrack(trackToPlay, queueWithPlayable(buildHistoryQueue(visibleHistory, qOpts), trackToPlay))
   }
 
   /** 곡 ⋯ 메뉴 — 보관함 카드와 「음악 생성」 탭 곡 목록이 같은 메뉴를 쓴다 */

@@ -13,6 +13,7 @@ import { ImmersivePlayer } from './ImmersivePlayer';
 import { ShortcutHelp } from './ShortcutHelp';
 import { handlePlayerShortcut } from './playerShortcuts';
 import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
+import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl';
 import { withCorsCacheKey, bustCorsCacheKey } from '@/lib/audio/corsUrl';
 import { Disc, DiscStyles } from './Disc';
 import { withBase } from '@/lib/basePath'
@@ -242,8 +243,11 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
         return;
       }
 
-      // 스토리지 경로 그대로면(옛 캐시 등) 서명부터 한다.
+      // 스토리지 경로 그대로면(옛 캐시·대기열의 다음 곡) 서명부터 한다 — 서버 서명 라우트가 먼저, 안 되면 예전 방식.
       if (url) {
+        const served = await resolveStudioAudioUrl(url);
+        if (!isCurrent) return;
+        if (served) { play(served); return; }
         try {
           const supabase = createClient();
           const { data, error } = await supabase.storage

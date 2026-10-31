@@ -59,6 +59,24 @@ describe('PersistentPlayer', () => {
     unsub()
   })
 
+  it('다음 곡으로 넘어가면 그 곡 차례에 서버 서명 라우트로 주소를 받아 cors=1 로 붙인다', async () => {
+    const fetchMock = vi.fn(async (u: string) => ({ ok: true, json: async () => ({ signedUrl: `https://x.test/signed/${decodeURIComponent(u.split('file_path=')[1])}` }) }))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<PersistentPlayer />)
+    const a = { ...track('a'), file_url: 'https://x.test/signed/audio/a.mp3' }
+    act(() => usePlayerStore.getState().playTrack(a, [a, track('b'), track('c')]))
+    await wait(60)
+    expect(fetchMock).not.toHaveBeenCalled()
+    act(() => usePlayerStore.getState().next())
+    await wait(60)
+    expect(usePlayerStore.getState().currentTrack?.id).toBe('b')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/tracks/signed-url?file_path=audio%2Fb.mp3')
+    expect(srcSets[srcSets.length - 1]).toContain('https://x.test/signed/audio/b.mp3')
+    expect(srcSets[srcSets.length - 1]).toContain('cors=1')
+    vi.unstubAllGlobals()
+  })
+
   it('재생 중 timeupdate 가 와도 src 가 다시 설정되지 않는다', async () => {
     const { container } = render(<PersistentPlayer />)
     act(() => usePlayerStore.getState().playTrack(track('a')))
