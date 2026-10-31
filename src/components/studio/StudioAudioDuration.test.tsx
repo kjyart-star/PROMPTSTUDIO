@@ -17,7 +17,7 @@ describe('AudioDuration (스튜디오)', () => {
     const { container, rerender } = render(<AudioDuration url="audio/p1.mp3" />)
     expect(container.textContent).toBe('-:-')
     await waitFor(() => expect(container.textContent).toBe('3:05'))
-    expect(srcs).toContain('https://x.test/s.mp3')
+    expect(srcs).toContain('https://x.test/s.mp3?cors=1')
     // 같은 url 로 다시 그려도 새로 불러오지 않는다
     const n = srcs.length
     rerender(<AudioDuration url="audio/p1.mp3" />)
