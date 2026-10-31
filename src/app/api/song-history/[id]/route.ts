@@ -12,12 +12,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed } = body
+    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
       .from('song_history')
-      .select('user_id')
+      .select('user_id, form')
       .eq('id', id)
       .single()
 
@@ -54,6 +54,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (playlist_id !== undefined) updateData.playlist_id = playlist_id
       if (liked !== undefined) updateData.liked = liked
       if (trashed === false) updateData.trashed_at = null // 휴지통에서 복원
+      if (typeof title === 'string' && title.trim()) updateData.title = title.trim().slice(0, 200)
+      if (typeof lyrics === 'string') updateData.lyrics = lyrics.slice(0, 20000)
+      if (lrc !== undefined) {
+        // 가사 시간표(LRC/SRT 를 읽은 결과) — form.lrc 에 보관, null 이면 지운다
+        const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
+        if (lrc === null) delete base.lrc
+        else if (Array.isArray(lrc)) base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
+        updateData.form = base
+      }
       if (image_url !== undefined) updateData.image_url = image_url
       if (video_url !== undefined) updateData.video_url = video_url
       if (genre !== undefined) updateData.genre = genre

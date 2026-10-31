@@ -5,6 +5,8 @@ export interface LibraryQuery {
   query: string
   kind: LibraryKind
   sort: LibrarySort
+  /** 재생목록(폴더) 한정 — 없으면 전체 */
+  playlistId?: string | null
 }
 
 /** 연주곡 여부 — 생성 때 켠 「연주곡만」 값, 없으면 가사가 비었는지로 본다 */
@@ -17,6 +19,7 @@ export function isInstrumental(item: any): boolean {
 export function filterLibrary<T extends Record<string, any>>(items: T[], q: LibraryQuery): T[] {
   const needle = q.query.trim().toLowerCase()
   const out = items.filter((item) => {
+    if (q.playlistId && item.playlist_id !== q.playlistId) return false
     if (q.kind === 'instrumental' && !isInstrumental(item)) return false
     if (q.kind === 'vocal' && isInstrumental(item)) return false
     if (!needle) return true

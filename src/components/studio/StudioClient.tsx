@@ -13,7 +13,8 @@ import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
 import LibraryTrash from './LibraryTrash'
 import LibraryToolbar from './LibraryToolbar'
-import { filterLibrary, type LibraryQuery } from './libraryFilter'
+import TrackMenu from './TrackMenu'
+import { filterLibrary, isInstrumental, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
@@ -1688,6 +1689,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         userCredits={creditBalance ?? 0}
         user={user}
         history={history}
+        playlists={playlists}
+        activePlaylistId={libraryQuery.playlistId ?? null}
+        onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
           <div className="w-full p-6 pb-8">
@@ -1809,6 +1813,28 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       setLibraryPlaylistMenuId(null)
                       updateHistoryItem(item.id, { playlist_id: playlistId })
                     }
+                    const trackMenu = (
+                      <TrackMenu
+                        uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+                        item={item}
+                        playlists={playlists}
+                        signedIn={!!user}
+                        buttonClass={baseBtn}
+                        iconClass={iconClass}
+                        onUpdate={(payload) => updateHistoryItem(item.id, payload)}
+                        onRestorePrompt={() => { openHistoryItem(item, 'all'); setCurrentTab('studio') }}
+                        onPublish={() => { if (item.is_published) updateHistoryItem(item.id, { is_published: false }); else setCurrentTab('suno') }}
+                        onMastering={() => setCurrentTab('mastering')}
+                        onDownload={() => downloadHistoryTrack(item)}
+                        onTrash={() => setDeleteConfirmId(item.id)}
+                      />
+                    )
+                    const kindLabel = isInstrumental(item)
+                      ? (uiLanguage === 'KO' ? '경음악' : uiLanguage === 'JA' ? 'インスト' : 'Instrumental')
+                      : (uiLanguage === 'KO' ? '보컬' : uiLanguage === 'JA' ? 'ボーカル' : 'Vocal')
+                    const stemBadge = item.form?.stems ? (
+                      <span className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-primary">{uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'}</span>
+                    ) : null
                     /* 관리 액션 — 되돌리기·공개·플레이리스트·삭제 */
                     const manageActions = (
                       <>
@@ -1974,7 +2000,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       >
                         <div
                           className={`bg-[#0a0a0a] flex items-center justify-center shrink-0 overflow-hidden border border-[#1a1a1a] relative ${
-                            isLarge ? 'w-full aspect-square rounded-xl' : isSmall ? 'w-9 h-9 rounded-md' : 'w-14 h-14 rounded-lg'
+                            isLarge ? 'w-full aspect-[4/3] rounded-lg' : isSmall ? 'w-9 h-9 rounded-md' : 'w-14 h-14 rounded-lg'
                           }`}
                         >
                           {item.image_url ? (
@@ -2003,18 +2029,18 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             </span>
                           )}
                           {isLarge && (
-                            <div
-                              /* 타블렛엔 hover 가 없다 — 포인터가 없는 기기에선 항상 보인다 */
-                              className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 py-2 bg-black/60"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {playbackActions}
+                            <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 px-2 py-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                              <span className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-zinc-100">{kindLabel}</span>
+                              {stemBadge}
+                              <span className="ml-auto font-mono text-[11px] text-zinc-100">
+                                {(item.audio_url || item.stream_url) ? <AudioDuration url={item.audio_url || item.stream_url} /> : '-:-'}
+                              </span>
                             </div>
                           )}
                         </div>
                         {/* 「중간」은 제목이 한 글자로 짜부라지지 않게 최소 폭을 준다 — 자리가 모자라면 액션이 아랫줄로 접힌다 */}
                         <div className={`flex-1 ${isSmall || isLarge ? 'min-w-0' : 'min-w-[7rem]'}`}>
-                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}</h4>
+                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}{!isLarge && item.form?.stems && <span className="ml-1.5 align-middle px-1 py-0.5 rounded bg-primary/15 text-[9px] text-primary">{uiLanguage === 'KO' ? '스템' : 'Stems'}</span>}</h4>
                           {!isSmall && (
                             <p className="text-zinc-500 truncate mt-0.5 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
                           )}
@@ -2025,20 +2051,28 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         {/* 「크게」는 커버 위에 재생 액션만 얹고, 관리 액션은 카드 아래 한 줄로 내린다 —
                             7개를 오버레이에 다 넣으면 넘친다(대표 지시 2026-09-05). */}
                         {isLarge && (
-                          <div className="flex items-center justify-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                            {manageActions}
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={() => setCurrentTab('cover')}
+                              className="text-[11px] font-bold text-primary hover:underline cursor-pointer truncate"
+                            >
+                              {uiLanguage === 'KO' ? '커버 만들기 →' : uiLanguage === 'JA' ? 'カバーを作る →' : 'Make a cover →'}
+                            </button>
+                            <div className="ml-auto flex items-center gap-1">{playbackActions}{trackMenu}</div>
                           </div>
                         )}
                         {isSmall && (
                           <div className="flex items-center shrink-0 gap-1" onClick={(e) => e.stopPropagation()}>
                             {manageActions}
+                            {trackMenu}
                             {playbackActions}
                           </div>
                         )}
                         {/* 「중간」은 카드 폭이 좁다 — 관리·재생 두 줄로 나눠 넘치지 않게 한다 */}
                         {!isSmall && !isLarge && (
                           <div className="flex flex-col items-end shrink-0 gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-1">{manageActions}</div>
+                            <div className="flex items-center gap-1">{manageActions}{trackMenu}</div>
                             <div className="flex items-center gap-1">{playbackActions}</div>
                           </div>
                         )}

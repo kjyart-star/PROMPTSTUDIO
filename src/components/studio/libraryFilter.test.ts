@@ -23,6 +23,10 @@ describe('filterLibrary', () => {
     expect(filterLibrary(items, q({ kind: 'vocal' })).map((i) => i.id)).toEqual(['3', '1'])
     expect(isInstrumental({ lyrics: '  ' })).toBe(true)
   })
+  it('재생목록(폴더)로 좁힌다', () => {
+    const withPl = [{ ...items[0], playlist_id: 'p1' }, items[1]]
+    expect(filterLibrary(withPl, q({ playlistId: 'p1' })).map((i) => i.id)).toEqual(['1'])
+  })
   it('원본 배열은 바뀌지 않는다', () => {
     const copy = [...items]
     filterLibrary(items, q({ sort: 'title' }))

@@ -12,6 +12,7 @@ import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
+import LyricsHelper from './LyricsHelper'
 import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
@@ -46,6 +47,7 @@ export function GenerateClient({
   const [activeAudio, setActiveAudio] = useState<{ url: string, image: string, is_published?: boolean } | null>(null)
   const [generatedTracks, setGeneratedTracks] = useState<any[]>([])
   const [activeTasks, setActiveTasks] = useState<any[]>([])
+  const promptAreaRef = useRef<HTMLTextAreaElement>(null)
   const pollInFlight = useRef(false)
   const generationInFlight = useRef(false)
   const [historyList, setHistoryList] = useState<any[]>([])
@@ -734,6 +736,7 @@ export function GenerateClient({
             <div className="space-y-1">
               <label className={`text-xs font-bold ${generateForm.instrumentalOnly ? 'text-zinc-600' : 'text-zinc-300'}`}>{uiLanguage === 'KO' ? '프롬프트 / 가사 (Prompt)' : uiLanguage === 'JA' ? 'プロンプト / 歌詞' : 'Prompt / Lyrics'}</label>
               <textarea 
+                ref={promptAreaRef}
                 value={generateForm.instrumentalOnly ? '' : generateForm.prompt}
                 onChange={e => updateFormData('prompt', e.target.value)}
                 disabled={generateForm.instrumentalOnly}
@@ -745,6 +748,17 @@ export function GenerateClient({
                     : 'bg-[#0a0a0a] border border-[#1a1a1a] text-zinc-200 focus:border-primary/60'
                 }`}
               />
+              {!generateForm.instrumentalOnly && (
+                <LyricsHelper
+                  uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+                  value={generateForm.prompt}
+                  getCursor={() => promptAreaRef.current?.selectionStart ?? generateForm.prompt.length}
+                  onChange={(next, pos) => {
+                    updateFormData('prompt', next)
+                    if (pos !== undefined) requestAnimationFrame(() => { promptAreaRef.current?.focus(); promptAreaRef.current?.setSelectionRange(pos, pos) })
+                  }}
+                />
+              )}
               <p className={`text-[10px] ${generateForm.instrumentalOnly ? 'text-zinc-600' : 'text-zinc-500'}`}>{uiLanguage === 'KO' ? '생성하고자 하는 음악의 가사 또는 묘사입니다. 커스텀 모드가 꺼져있을 때 필수입니다.' : uiLanguage === 'JA' ? '生成したい音楽の歌詞または説明。カスタムモードがオフのときに必須です。' : 'Lyrics or description of the music you want to generate. Required when Custom Mode is off.'}</p>
             </div>
 
