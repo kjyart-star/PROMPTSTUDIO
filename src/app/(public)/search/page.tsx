@@ -1,3 +1,4 @@
+import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { SearchClient } from '@/components/search/SearchClient'
 import { parsePlaylistDescription } from '@/lib/utils'
@@ -71,7 +72,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
       lyricist: song.form?.lyricist || '',
       composer: song.form?.composer || '',
       arranger: song.form?.arranger || '',
-      lyrics: song.lyrics || '',
+      lyrics: lyricsOfItem(song),
       style_prompt: song.prompt || song.form?.prompt || '',
       image_url: song.image_url || '',
       album: playlist ? {

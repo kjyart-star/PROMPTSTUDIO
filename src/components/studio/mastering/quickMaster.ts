@@ -1,3 +1,4 @@
+import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { withBase } from '@/lib/basePath'
 import { createClient } from '@/lib/supabase/client'
 import { analyzeAudio } from '@/lib/mastering/analyze'
@@ -65,7 +66,7 @@ export async function quickMaster(
   const save = await fetch(withBase('/api/song-history'), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      title, prompt: song.prompt ?? '', lyrics: song.lyrics ?? '', genre: song.genre ?? '',
+      title, prompt: song.prompt ?? '', lyrics: lyricsOfItem(song), genre: song.genre ?? '',
       image_url: song.image_url ?? '', audio_url: up.path, status: 'completed', is_published: false,
       notes: `마스터링본 · ${rep.integrated.toFixed(1)} LUFS · ${rep.truePeak.toFixed(1)} dBTP`,
       form: { ...(song.form?.instrumentalOnly !== undefined ? { instrumentalOnly: song.form.instrumentalOnly } : {}), kind: 'mastering', source_id: song.id, target_lufs: res.targetLufs, ceiling: opt.tp, tone: opt.tone },

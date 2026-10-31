@@ -3,6 +3,7 @@
 /**
  * 마스터링 화면의 동작(디코드·분석·렌더·내보내기·레퍼런스·앨범·세션). 화면 컴포넌트는 이 함수만 부른다.
  */
+import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { create } from 'zustand'
 import { withBase } from '@/lib/basePath'
 import { createClient } from '@/lib/supabase/client'
@@ -644,7 +645,7 @@ export async function saveToLibrary() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: `${t.meta.title || t.title} (마스터링)`,
-        prompt: s?.prompt ?? '', lyrics: s?.lyrics ?? '', genre: s?.genre ?? '',
+        prompt: s?.prompt ?? '', lyrics: lyricsOfItem(s), genre: s?.genre ?? '',
         image_url: t.meta.coverUrl ?? s?.image_url ?? '',
         audio_url: up.path, status: 'completed', is_published: false,
         notes: `마스터링본 · ${rep.integrated.toFixed(1)} LUFS · ${rep.truePeak.toFixed(1)} dBTP`,

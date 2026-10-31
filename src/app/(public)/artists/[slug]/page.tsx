@@ -1,3 +1,4 @@
+import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { ArtistClient } from '@/components/artist/ArtistClient'
 import { Artist, Album, Track } from '@/types/music'
@@ -211,7 +212,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
       album_id: song.playlist_id || 'loose',
       created_at: song.created_at,
       status: 'published',
-      lyrics: song.lyrics || '',
+      lyrics: lyricsOfItem(song),
       image_url: song.image_url || '',
       lyricist: song.form?.lyricist || song.lyricist || '',
       composer: song.form?.composer || song.composer || '',
