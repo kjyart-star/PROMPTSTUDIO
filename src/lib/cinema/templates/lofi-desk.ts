@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { fitText, mmss } from '../helpers'
 import { isInst, isTall, rng, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf, coverEl } from './_scene'
 
 /** 늦은 밤 스탠드 불빛 아래 책상. 액자에 넣은 커버, 창밖 도시 불빛이 천천히 켜졌다 꺼진다 */
 export const lofiDesk: CinemaTemplate = {
@@ -58,7 +58,7 @@ export const lofiDesk: CinemaTemplate = {
     scrim(ctx, f, h * 0.72, h, tn.deep, 0.85)
     softViz(ctx, f, tall ? { x: w * 0.1, y: h * 0.27, w: w * 0.8, h: u * 0.08 } : { x: w * 0.6, y: h * 0.07, w: w * 0.34, h: u * 0.07 },
       { x: cx - side * 0.62, y: cover.y + cover.h / 2 - side * 0.62, w: side * 1.24, h: side * 1.24 }, 0.55)
-    standingCover(ctx, f, cover, { light: 1, kind: 'frame', warm: [255, 196, 120], shadow: 0.65 })
+    coverEl(ctx, cover, () => standingCover(ctx, f, cover, { light: 1, kind: 'frame', warm: [255, 196, 120], shadow: 0.65 }))
 
     const ink = tn.ink
     const lx = tall ? w / 2 : u * 0.07

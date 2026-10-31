@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { drawCover, fitText, mmss } from '../helpers'
 import { isInst, isTall, rng, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, trackNoLatin, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, trackNoLatin, vignette, tf, coverEl } from './_scene'
 
 /** 새벽 도시를 달리는 차 뒷좌석 창밖. 천천히 흘러가는 거리, 스쳐 가는 불빛, 시네마 비율 띠 */
 export const nightDrive: CinemaTemplate = {
@@ -63,7 +63,7 @@ export const nightDrive: CinemaTemplate = {
     if (tall) {
       const cy = h * 0.74
       ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = u * 0.05
-      drawCover(ctx, f, { x: w / 2 - thumb / 2, y: cy - thumb, w: thumb, h: thumb }, u * 0.01)
+      coverEl(ctx, { x: w / 2 - thumb / 2, y: cy - thumb, w: thumb, h: thumb }, () => drawCover(ctx, f, { x: w / 2 - thumb / 2, y: cy - thumb, w: thumb, h: thumb }, u * 0.01))
       ctx.restore()
       shadowText(ctx, trackNoLatin(f), w / 2, cy + u * 0.07, w * 0.8, u * 0.045, { font: LATIN, color: rgba(tn.glow), align: 'center', baseline: 'middle' })
       shadowText(ctx, f.trackTitle, w / 2, cy + u * 0.14, w * 0.86, u * 0.068, { font: tf(f, SERIF), weight: 300, color: rgba(ink), align: 'center', baseline: 'middle', minSize: 12 })
@@ -75,7 +75,7 @@ export const nightDrive: CinemaTemplate = {
     } else {
       const bh = Math.max(bar, u * 0.16)
       ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = u * 0.03
-      drawCover(ctx, f, { x: lx, y: lowY - thumb / 2, w: thumb, h: thumb }, u * 0.006)
+      coverEl(ctx, { x: lx, y: lowY - thumb / 2, w: thumb, h: thumb }, () => drawCover(ctx, f, { x: lx, y: lowY - thumb / 2, w: thumb, h: thumb }, u * 0.006))
       ctx.restore()
       const tx = lx + thumb + u * 0.035
       fitText(ctx, f.trackTitle, tx, lowY, w * 0.42, Math.min(u * 0.05, bh * 0.34), { font: tf(f, SERIF), weight: 300, color: rgba(ink), baseline: 'middle', minSize: 10 })

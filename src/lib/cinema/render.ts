@@ -5,7 +5,7 @@
  *  - 가려진 탭: rAF 를 쓰지 않고 인코더 큐 신호(dequeue)로만 진행하므로 멈추지 않는다.
  */
 import { Muxer, ArrayBufferTarget, FileSystemWritableFileStreamTarget } from 'mp4-muxer'
-import { ASPECTS, type FontStyle, type LyricLines, type VizShapeId } from './types'
+import { ASPECTS, type FontStyle, type Layout, type LyricLines, type VizShapeId } from './types'
 import { resolvePalette, type ColorMode } from './palettes'
 import { createSpectrumAnalyzer } from './spectrum'
 import { gainToTarget } from './loudness'
@@ -39,6 +39,8 @@ export interface CinemaSettings {
   fontStyle?: FontStyle
   /** 가사 표시 줄 수 */
   lyricLines?: LyricLines
+  /** 템플릿별 요소 조정값(미리보기에서 직접 옮기고 키운 값) */
+  layouts?: Record<string, Layout>
   headline: string
   kind: 'lyrics' | 'instrumental'
 }
@@ -200,7 +202,7 @@ export async function renderCinema(o: {
           const frame = makeFrame({
             w, h, t: tt, trackIndex: ti, trackCount: tracks.length, title: tr.title, headline: s.headline,
             coverSeed: tr.id + tr.title, cover, kind: s.kind, lyrics: tr.lyrics, duration: dur,
-            bars: sp.bars, level: sp.level, shape: s.shape, palette, fontStyle: s.fontStyle, lyricLines: s.lyricLines,
+            bars: sp.bars, level: sp.level, shape: s.shape, palette, fontStyle: s.fontStyle, lyricLines: s.lyricLines, layout: s.layouts?.[s.templateId],
           })
           drawFrame(ctx, s.templateId, frame)
           const vf = new VideoFrame(canvas as CanvasImageSource, { timestamp: Math.round(globalFrame * frameUs), duration: Math.round(frameUs) })

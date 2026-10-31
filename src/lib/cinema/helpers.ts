@@ -1,5 +1,6 @@
 /** 템플릿 공용 그리기 도구. 모든 템플릿은 여기 함수로 커버·글자·가사를 그린다. */
 import type { CinemaFrame, Box } from './types'
+import { curAdj, curKey, textKey, withEl, activeFrame } from './layout'
 
 export const FONT = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif'
 
@@ -24,7 +25,19 @@ export function seedColors(seed: string): [string, string] {
 }
 
 /** 박스 안에 커버를 꽉 차게(cover-fit) 그린다. 이미지가 없으면 시드 그라데이션. 둥근 모서리 r(px). */
+let ownShadow = false
+/** 커버 그림자를 직접 그리는 그리기(탁자 위 커버 등)는 이 동안 drawCover 의 그림자 조정을 끈다 */
+export function withOwnCoverShadow(fn: () => void) { ownShadow = true; try { fn() } finally { ownShadow = false } }
+
 export function drawCover(ctx: CanvasRenderingContext2D, f: Pick<CinemaFrame, 'cover' | 'coverSeed'>, b: Box, r = 0) {
+  const a = curKey() === 'cover' ? curAdj() : undefined
+  if (a?.radius !== undefined) r = a.radius * Math.min(b.w, b.h)
+  if (a?.shadow && !ownShadow) {
+    ctx.save()
+    ctx.shadowColor = `rgba(0,0,0,${0.75 * a.shadow})`; ctx.shadowBlur = Math.min(b.w, b.h) * 0.12 * a.shadow; ctx.shadowOffsetY = Math.min(b.w, b.h) * 0.03 * a.shadow
+    ctx.fillStyle = '#000'; roundRectPath(ctx, b.x, b.y, b.w, b.h, r); ctx.fill()
+    ctx.restore()
+  }
   ctx.save()
   roundRectPath(ctx, b.x, b.y, b.w, b.h, r)
   ctx.clip()
@@ -95,15 +108,30 @@ export function fitText(
   ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, size: number,
   opts: { weight?: number | string; color?: string; align?: CanvasTextAlign; baseline?: CanvasTextBaseline; minSize?: number; font?: string } = {},
 ): number {
-  const { weight = 700, color = '#fff', align = 'left', baseline = 'alphabetic', minSize = 8, font = FONT } = opts
+  const { weight = 700, align = 'left', baseline = 'alphabetic', minSize = 8 } = opts
+  // 직접 조정: 곡 제목·타이틀 문구는 자동으로 요소가 된다(템플릿 코드 그대로)
+  const auto = textKey(text)
+  const adj = auto ? activeFrame()?.layout?.[auto] : curKey() && curKey() !== 'cover' ? curAdj() : undefined
+  const font = adj?.font && adj.font !== 'auto' ? STYLE_FONT[adj.font] : (opts.font ?? FONT)
+  const color = adj?.color ?? opts.color ?? '#fff'
   let s = size
   ctx.font = `${weight} ${s}px ${font}`
   let tw = ctx.measureText(text).width
   while (tw > maxW && s > minSize) { s -= 1; ctx.font = `${weight} ${s}px ${font}`; tw = ctx.measureText(text).width }
   let out = text
   if (tw > maxW) { while (out.length > 1 && ctx.measureText(out + '…').width > maxW) out = out.slice(0, -1); out += '…'; tw = ctx.measureText(out).width }
-  ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = baseline
-  ctx.fillText(out, x, y)
+  const paint = () => {
+    ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = baseline
+    if (adj?.shadow) {
+      ctx.save(); ctx.shadowColor = `rgba(0,0,0,${0.8 * adj.shadow})`; ctx.shadowBlur = s * 0.5 * adj.shadow; ctx.shadowOffsetY = s * 0.06 * adj.shadow
+      ctx.fillText(out, x, y); ctx.restore()
+    } else ctx.fillText(out, x, y)
+  }
+  if (auto) {
+    const bx = align === 'center' ? x - tw / 2 : align === 'right' || align === 'end' ? x - tw : x
+    const top = baseline === 'middle' ? y - s * 0.6 : baseline === 'top' || baseline === 'hanging' ? y : y - s * 0.85
+    withEl(ctx, auto, { x: bx, y: top, w: tw, h: s * 1.2 }, paint)
+  } else paint()
   return tw
 }
 
@@ -144,8 +172,18 @@ export function drawLyricBlock(ctx: CanvasRenderingContext2D, f: CinemaFrame, o:
   if (f.kind !== 'lyrics' || !f.lines.length) return
   const around = f.lyricLines === 'one' ? 0 : f.lyricLines === 'three' ? 1 : (o.around ?? 1)
   const align = o.align ?? 'center'
-  const color = o.color ?? '#fff'
-  const font = userFont(f, o.font ?? FONT)
+  const lineH0 = o.size * 1.55
+  const bx = align === 'center' ? o.cx - o.maxW / 2 : align === 'right' || align === 'end' ? o.cx - o.maxW : o.cx
+  withEl(ctx, 'lyrics', { x: bx, y: o.cy - lineH0 * (around + 0.6), w: o.maxW, h: lineH0 * (around * 2 + 1.2) }, () => paintLyricBlock(ctx, f, o, around))
+  if (f.lyricsEstimated) drawEstimatedBadge(ctx, f)
+}
+
+function paintLyricBlock(ctx: CanvasRenderingContext2D, f: CinemaFrame, o: LyricBlockOpts, around: number) {
+  const adj = curKey() === 'lyrics' ? curAdj() : undefined
+  const align = o.align ?? 'center'
+  const color = adj?.color ?? o.color ?? '#fff'
+  const font = adj?.font && adj.font !== 'auto' ? STYLE_FONT[adj.font] : userFont(f, o.font ?? FONT)
+  if (adj?.shadow) { ctx.save(); ctx.shadowColor = `rgba(0,0,0,${0.8 * adj.shadow})`; ctx.shadowBlur = o.size * 0.5 * adj.shadow }
   const weight = o.weight ?? 700
   const act = f.activeIndex
   // 줄 전환 보간: 현재 줄 시작 후 0.35초 동안 0→1
@@ -168,14 +206,14 @@ export function drawLyricBlock(ctx: CanvasRenderingContext2D, f: CinemaFrame, o:
     const alpha = isCur ? 1 : 0.45 * Math.max(0, Math.min(1, around + 1 - dist))
     ctx.font = `${weight} ${sz}px ${font}`
     ctx.globalAlpha = alpha
-    ctx.fillStyle = isCur ? (o.accent ?? color) : color
+    ctx.fillStyle = isCur ? (adj?.color ?? o.accent ?? color) : color
     let text = f.lines[idx].text
     while (text.length > 2 && ctx.measureText(text).width > o.maxW) text = text.slice(0, -1)
     if (text !== f.lines[idx].text) text += '…'
     ctx.fillText(text, o.cx, o.cy + rel * lineH)
   }
   ctx.restore()
-  if (f.lyricsEstimated) drawEstimatedBadge(ctx, f)
+  if (adj?.shadow) ctx.restore()
 }
 
 export function drawEstimatedBadge(ctx: CanvasRenderingContext2D, f: CinemaFrame, x?: number, y?: number) {

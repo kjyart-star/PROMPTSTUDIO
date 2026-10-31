@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { fitText, mmss } from '../helpers'
 import { isInst, isTall, rng, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, scrim, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf, coverEl } from './_scene'
 
 /** 오후 햇살이 드는 카페 테이블. 작은 스피커와 커피 옆에 싱글 슬리브가 서 있고 햇살 속 먼지가 떠다닌다 */
 export const cafeTable: CinemaTemplate = {
@@ -47,7 +47,7 @@ export const cafeTable: CinemaTemplate = {
     scrim(ctx, f, tall ? h * 0.6 : h * 0.66, h, tn.deep, 0.88)
     softViz(ctx, f, tall ? { x: w * 0.1, y: h * 0.63, w: w * 0.8, h: u * 0.08 } : { x: w * 0.56, y: h * 0.925, w: w * 0.38, h: u * 0.05 },
       { x: cx - side * 0.58, y: cover.y + side / 2 - side * 0.58, w: side * 1.16, h: side * 1.16 }, 0.6)
-    standingCover(ctx, f, cover, { light: -1, kind: 'sleeve', warm: [255, 222, 170], shadow: 0.5 })
+    coverEl(ctx, cover, () => standingCover(ctx, f, cover, { light: -1, kind: 'sleeve', warm: [255, 222, 170], shadow: 0.5 }))
 
     if (tall) {
       const y0 = h * 0.72

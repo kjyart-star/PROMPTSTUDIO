@@ -13,6 +13,12 @@ export type VizShapeId =
 export type FontStyle = 'auto' | 'serif' | 'sans' | 'hand'
 export type LyricLines = 'auto' | 'one' | 'three'
 
+/** 직접 조정할 수 있는 화면 요소 */
+export type ElKey = 'headline' | 'title' | 'lyrics' | 'cover' | 'viz' | 'progress'
+/** 요소 조정값. dx·dy 는 화면 폭·높이 비율, scale 은 배율. 글자는 font·color·shadow, 커버는 radius·shadow */
+export interface ElAdjust { dx?: number; dy?: number; scale?: number; font?: FontStyle; color?: string; shadow?: number; radius?: number }
+export type Layout = Partial<Record<ElKey, ElAdjust>>
+
 export interface Palette {
   id: string
   name: string
@@ -59,6 +65,10 @@ export interface CinemaFrame {
   fontStyle?: FontStyle
   /** 가사 줄 수(없으면 템플릿 기본) */
   lyricLines?: LyricLines
+  /** 이 템플릿의 요소 조정값(없으면 템플릿 그대로) */
+  layout?: Layout
+  /** 미리보기가 넘기면 그린 요소의 화면 박스를 채워 준다(선택·드래그용) */
+  hits?: Partial<Record<ElKey, Box>>
 }
 
 export interface CinemaTemplate {

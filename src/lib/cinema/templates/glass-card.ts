@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { drawEstimatedBadge, fitText, mmss } from '../helpers'
 import { isInst, isTall, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverBlur, coverTones, glassPanel, grain, hairline, ofCount, perspectiveCover, rgba, serifLyrics, softViz, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverBlur, coverTones, glassPanel, grain, hairline, ofCount, perspectiveCover, rgba, serifLyrics, softViz, vignette, tf, coverEl } from './_scene'
 
 /** 커버 색으로 물든 공간에 비스듬히 선 3D 커버와 반투명 유리 카드 */
 export const glassCard: CinemaTemplate = {
@@ -45,21 +45,22 @@ export const glassCard: CinemaTemplate = {
 
     // 3D 커버(천천히 좌우로 돈다) + 바닥 반사 + 접지 그림자
     const ang = (tall ? 0 : 0.3) + 0.16 * Math.sin((f.t / 16) * Math.PI * 2)
-    const sh = ctx.createRadialGradient(cx, floorY, 0, cx, floorY, size * 0.6)
-    sh.addColorStop(0, 'rgba(4,4,6,0.55)'); sh.addColorStop(1, 'rgba(4,4,6,0)')
-    ctx.save(); ctx.translate(cx, floorY); ctx.scale(1, 0.12); ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.restore()
-    const cb = perspectiveCover(ctx, f, cx, cy, size, ang, { reflect: 0.22, fade: tn.deep })
-    // 표면 광택이 천천히 지나간다
-    ctx.save()
-    ctx.beginPath(); cb.quad.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.clip()
-    const k = ((f.t / 9) % 1) * 2.4 - 0.7
-    const sx = cb.x + cb.w * k
-    const sg = ctx.createLinearGradient(sx - size * 0.3, cb.y, sx + size * 0.3, cb.y + cb.h)
-    sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.14)'); sg.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = sg; ctx.fillRect(cb.x, cb.y, cb.w, cb.h)
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.stroke()
-    ctx.restore()
-
+    coverEl(ctx, { x: cx - size / 2, y: cy - size / 2, w: size, h: size }, () => {
+      const sh = ctx.createRadialGradient(cx, floorY, 0, cx, floorY, size * 0.6)
+      sh.addColorStop(0, 'rgba(4,4,6,0.55)'); sh.addColorStop(1, 'rgba(4,4,6,0)')
+      ctx.save(); ctx.translate(cx, floorY); ctx.scale(1, 0.12); ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+      const cb = perspectiveCover(ctx, f, cx, cy, size, ang, { reflect: 0.22, fade: tn.deep })
+      // 표면 광택이 천천히 지나간다
+      ctx.save()
+      ctx.beginPath(); cb.quad.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.clip()
+      const k = ((f.t / 9) % 1) * 2.4 - 0.7
+      const sx = cb.x + cb.w * k
+      const sg = ctx.createLinearGradient(sx - size * 0.3, cb.y, sx + size * 0.3, cb.y + cb.h)
+      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.14)'); sg.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.fillStyle = sg; ctx.fillRect(cb.x, cb.y, cb.w, cb.h)
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.stroke()
+      ctx.restore()
+    })
     // 유리 카드
     const ink = tn.ink
     const card = tall

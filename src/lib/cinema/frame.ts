@@ -1,4 +1,5 @@
-import type { CinemaFrame, FontStyle, LyricLines, Palette, VizShapeId } from './types'
+import type { Box, CinemaFrame, ElKey, FontStyle, Layout, LyricLines, Palette, VizShapeId } from './types'
+import { beginFrame, endFrame } from './layout'
 import { activeIndexAt, type CinemaLyrics } from './lyrics'
 import { getTemplate } from './templates'
 import { loadFonts, loadPlate } from './scene'
@@ -14,6 +15,7 @@ export interface FrameInput {
   bars: Float32Array; level: number
   shape: VizShapeId; palette: Palette
   fontStyle?: FontStyle; lyricLines?: LyricLines
+  layout?: Layout; hits?: Partial<Record<ElKey, Box>>
 }
 
 /** 미리보기·썸네일·내보내기가 모두 이 함수로 한 프레임 입력을 만든다 */
@@ -25,14 +27,15 @@ export function makeFrame(i: FrameInput): CinemaFrame {
     kind: i.kind, lines, activeIndex: activeIndexAt(lines, i.t),
     lyricsEstimated: i.kind === 'lyrics' && (i.lyrics.mode === 'estimated' || i.lyrics.mode === 'auto'),
     duration: i.duration, bars: i.bars, level: i.level, shape: i.shape, palette: i.palette,
-    fontStyle: i.fontStyle, lyricLines: i.lyricLines,
+    fontStyle: i.fontStyle, lyricLines: i.lyricLines, layout: i.layout, hits: i.hits,
   }
 }
 
 export function drawFrame(ctx: CanvasRenderingContext2D, templateId: string, f: CinemaFrame) {
   ctx.save()
   ctx.clearRect(0, 0, f.w, f.h)
-  getTemplate(templateId).draw(ctx, f)
+  beginFrame(f)
+  try { getTemplate(templateId).draw(ctx, f) } finally { endFrame() }
   ctx.restore()
 }
 

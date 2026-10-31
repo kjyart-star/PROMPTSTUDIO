@@ -18,7 +18,7 @@ export interface CTrack {
 export const DEFAULT_SETTINGS: CinemaSettings & { name: string; saveMode: 'download' | 'file' } = {
   name: '',
   aspect: '16:9', shortSide: 1080, fps: 30, loops: 1, lufsTarget: -14,
-  templateId: 'cinema-flow', shape: 'ring-line', paletteId: 'rainbow', colorMode: 'palette', customColors: ['#f2d6a8', '#7aa7ff'], fontStyle: 'auto', lyricLines: 'auto',
+  templateId: 'cinema-flow', shape: 'ring-line', paletteId: 'rainbow', colorMode: 'palette', customColors: ['#f2d6a8', '#7aa7ff'], fontStyle: 'auto', lyricLines: 'auto', layouts: {},
   headline: '', kind: 'lyrics', saveMode: 'download',
 }
 export type FullSettings = typeof DEFAULT_SETTINGS

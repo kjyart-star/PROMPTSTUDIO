@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { drawCover, fitText, mmss } from '../helpers'
 import { isInst, isTall, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverTones, grain, hairline, rgba, roundRect, serifLyrics, softViz, trackNoLatin, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverTones, grain, hairline, rgba, roundRect, serifLyrics, softViz, trackNoLatin, vignette, tf, coverEl } from './_scene'
 
 /** 어두운 방, 라이트박스 위를 천천히 지나가는 35mm 필름. 칸마다 커버가 조금씩 다른 노출로 찍혀 있다 */
 export const filmStrip: CinemaTemplate = {
@@ -20,58 +20,60 @@ export const filmStrip: CinemaTemplate = {
     // 라이트박스(긴 쪽을 따라 필름이 흐른다). 로컬 좌표: 세로로 긴 상자
     const L = tall ? { x: 0, y: h * 0.06, w: w, h: h * 0.4 } : { x: w * 0.07, y: 0, w: w * 0.38, h: h }
     const boxLong = tall ? L.w : L.h, boxShort = tall ? L.h : L.w
-    ctx.save()
-    if (tall) { ctx.translate(L.x, L.y + L.h); ctx.rotate(-Math.PI / 2) } else ctx.translate(L.x, L.y)
-    // 로컬: x 0..boxShort, y 0..boxLong
-    const lb = ctx.createRadialGradient(boxShort / 2, boxLong / 2, 0, boxShort / 2, boxLong / 2, boxLong * 0.62)
-    lb.addColorStop(0, 'rgba(250,244,232,0.98)'); lb.addColorStop(0.7, 'rgba(232,222,204,0.9)'); lb.addColorStop(1, 'rgba(200,190,172,0.0)')
-    ctx.fillStyle = lb; ctx.fillRect(0, 0, boxShort, boxLong)
-    // 필름: 살짝 기울어진 띠
-    const fw = Math.min(boxShort * 0.72, u * 0.5)
-    const frameH = fw * 0.72
-    const pitch = frameH + fw * 0.08
-    ctx.translate(boxShort / 2, boxLong / 2); ctx.rotate(-0.035)
-    const sx = -fw / 2
-    const span = boxLong * 1.3
-    const scroll = (f.t * pitch / 3.2) % pitch
-    // 필름 베이스
-    ctx.shadowColor = 'rgba(30,18,8,0.45)'; ctx.shadowBlur = u * 0.03
-    ctx.fillStyle = 'rgba(52,30,14,0.94)'
-    ctx.fillRect(sx, -span / 2, fw, span)
-    ctx.shadowColor = 'transparent'
-    const edge = fw * 0.13
-    const n = Math.ceil(span / pitch) + 2
-    for (let i = -1; i < n; i++) {
-      const y = -span / 2 + i * pitch + scroll
-      // 칸 사진(칸마다 노출·위치가 조금 다르다)
-      const fx = sx + edge, fwi = fw - edge * 2
-      const idx = i - Math.floor((f.t / 3.2))
-      const ex = ((idx % 4) + 4) % 4
+    coverEl(ctx, L, () => {
       ctx.save()
-      ctx.beginPath(); ctx.rect(fx, y, fwi, frameH); ctx.clip()
-      const zoom = 1.15 + ex * 0.08
-      drawCover(ctx, f, { x: fx - fwi * (zoom - 1) * (ex % 2 ? 0.2 : 0.8), y: y - frameH * (zoom - 1) / 2, w: fwi * zoom, h: fwi * zoom * 1 })
-      ctx.fillStyle = ex === 0 ? 'rgba(255,220,170,0.10)' : ex === 2 ? 'rgba(20,10,0,0.22)' : 'rgba(255,170,90,0.08)'
-      ctx.fillRect(fx, y, fwi, frameH)
-      ctx.restore()
-      // 구멍(빛이 통과)
-      const hh = pitch / 4
-      for (let k = 0; k < 4; k++) {
-        const hy = y - fw * 0.04 + k * hh + hh * 0.3
-        for (const hx of [sx + edge * 0.3, sx + fw - edge * 0.7]) {
-          ctx.fillStyle = 'rgba(248,240,226,0.95)'
-          roundRect(ctx, hx, hy, edge * 0.4, hh * 0.42, edge * 0.08); ctx.fill()
+      if (tall) { ctx.translate(L.x, L.y + L.h); ctx.rotate(-Math.PI / 2) } else ctx.translate(L.x, L.y)
+      // 로컬: x 0..boxShort, y 0..boxLong
+      const lb = ctx.createRadialGradient(boxShort / 2, boxLong / 2, 0, boxShort / 2, boxLong / 2, boxLong * 0.62)
+      lb.addColorStop(0, 'rgba(250,244,232,0.98)'); lb.addColorStop(0.7, 'rgba(232,222,204,0.9)'); lb.addColorStop(1, 'rgba(200,190,172,0.0)')
+      ctx.fillStyle = lb; ctx.fillRect(0, 0, boxShort, boxLong)
+      // 필름: 살짝 기울어진 띠
+      const fw = Math.min(boxShort * 0.72, u * 0.5)
+      const frameH = fw * 0.72
+      const pitch = frameH + fw * 0.08
+      ctx.translate(boxShort / 2, boxLong / 2); ctx.rotate(-0.035)
+      const sx = -fw / 2
+      const span = boxLong * 1.3
+      const scroll = (f.t * pitch / 3.2) % pitch
+      // 필름 베이스
+      ctx.shadowColor = 'rgba(30,18,8,0.45)'; ctx.shadowBlur = u * 0.03
+      ctx.fillStyle = 'rgba(52,30,14,0.94)'
+      ctx.fillRect(sx, -span / 2, fw, span)
+      ctx.shadowColor = 'transparent'
+      const edge = fw * 0.13
+      const n = Math.ceil(span / pitch) + 2
+      for (let i = -1; i < n; i++) {
+        const y = -span / 2 + i * pitch + scroll
+        // 칸 사진(칸마다 노출·위치가 조금 다르다)
+        const fx = sx + edge, fwi = fw - edge * 2
+        const idx = i - Math.floor((f.t / 3.2))
+        const ex = ((idx % 4) + 4) % 4
+        ctx.save()
+        ctx.beginPath(); ctx.rect(fx, y, fwi, frameH); ctx.clip()
+        const zoom = 1.15 + ex * 0.08
+        drawCover(ctx, f, { x: fx - fwi * (zoom - 1) * (ex % 2 ? 0.2 : 0.8), y: y - frameH * (zoom - 1) / 2, w: fwi * zoom, h: fwi * zoom * 1 })
+        ctx.fillStyle = ex === 0 ? 'rgba(255,220,170,0.10)' : ex === 2 ? 'rgba(20,10,0,0.22)' : 'rgba(255,170,90,0.08)'
+        ctx.fillRect(fx, y, fwi, frameH)
+        ctx.restore()
+        // 구멍(빛이 통과)
+        const hh = pitch / 4
+        for (let k = 0; k < 4; k++) {
+          const hy = y - fw * 0.04 + k * hh + hh * 0.3
+          for (const hx of [sx + edge * 0.3, sx + fw - edge * 0.7]) {
+            ctx.fillStyle = 'rgba(248,240,226,0.95)'
+            roundRect(ctx, hx, hy, edge * 0.4, hh * 0.42, edge * 0.08); ctx.fill()
+          }
         }
+        // 가장자리 번호(일반 숫자만)
+        ctx.save()
+        ctx.translate(sx + fw - edge * 0.12, y + frameH * 0.5); ctx.rotate(Math.PI / 2)
+        ctx.font = `600 ${Math.max(7, edge * 0.26)}px ${SANS}`
+        ctx.fillStyle = 'rgba(232,160,70,0.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+        ctx.fillText(`${(((idx % 36) + 36) % 36) + 1}`, 0, 0)
+        ctx.restore()
       }
-      // 가장자리 번호(일반 숫자만)
-      ctx.save()
-      ctx.translate(sx + fw - edge * 0.12, y + frameH * 0.5); ctx.rotate(Math.PI / 2)
-      ctx.font = `600 ${Math.max(7, edge * 0.26)}px ${SANS}`
-      ctx.fillStyle = 'rgba(232,160,70,0.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-      ctx.fillText(`${(((idx % 36) + 36) % 36) + 1}`, 0, 0)
       ctx.restore()
-    }
-    ctx.restore()
+    })
     // 할레이션(밝은 상자 둘레가 붉게 번진다)
     ctx.save()
     ctx.globalCompositeOperation = 'screen'

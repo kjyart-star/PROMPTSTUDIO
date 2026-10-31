@@ -13,13 +13,19 @@ import { ASPECTS } from '@/lib/cinema/types'
 import { formatClock } from '@/lib/cinema/output'
 import { loadAudioBlob, loadCoverBlob, loadSampleCoverBlob, type CTrack } from './model'
 import { SAMPLE_LINES, sampleBars } from './thumbs'
+import { EditOverlay, type AdjustPhase } from './EditOverlay'
+import type { Box, ElAdjust, ElKey } from '@/lib/cinema/types'
 
 interface Loaded { id: string; channels: Float32Array[]; spec: SpectrumAnalyzer; cover: ImageBitmap | null }
 
 const QUICK_ASPECTS = ['16:9', '9:16', '1:1'] as const
 
-export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, onAspect }: {
+export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, onAspect, selected = null, onSelect, onAdjust }: {
   tracks: CTrack[]; settings: CinemaSettings; index: number; onIndex: (i: number) => void
+  /** 직접 편집: 고른 요소, 고르기·풀기, 조정값 바꾸기(끄면 편집 없음) */
+  selected?: ElKey | null
+  onSelect?: (k: ElKey | null) => void
+  onAdjust?: (k: ElKey, adj: ElAdjust, phase: AdjustPhase) => void
   /** 미리보기 위 비율 전환(16:9·9:16·1:1) */
   onAspect?: (a: CinemaSettings['aspect']) => void
   /** 가사 확인 단계에서 특정 시각으로 보내고 싶을 때(nonce 로 같은 값 재요청 가능) */
@@ -69,6 +75,8 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, o
 
   // 곡이 없을 때 보여 줄 예시 화면(예시 커버·예시 가사)
   const demoRef = useRef<ImageBitmap | null>(null)
+  /** 마지막으로 그린 프레임의 요소 박스(캔버스 픽셀) — 선택·드래그용 */
+  const hitsRef = useRef<Partial<Record<ElKey, Box>> | null>(null)
   const draw = useCallback((t: number) => {
     const c = canvasRef.current, tr = trackRef.current, L = loadedRef.current
     if (!c) return
@@ -78,18 +86,20 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, o
       const f = makeFrame({
         w: c.width, h: c.height, t: 7.4, trackIndex: 0, trackCount: 3, title: '여름밤의 노래', headline: s.headline, coverSeed: 'demo',
         cover: demoRef.current, kind: s.kind, lyrics: { lines: SAMPLE_LINES, mode: 'exact' }, duration: 200, bars: sampleBars(1.3), level: 0.5,
-        shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines,
+        shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines, layout: s.layouts?.[s.templateId], hits: {},
       })
       drawFrame(ctx, s.templateId, f)
+      hitsRef.current = f.hits ?? null
       return
     }
     const sp = L && L.id === tr.id ? L.spec.at(t) : { bars: new Float32Array(64).fill(0.08), level: 0 }
     const f = makeFrame({
       w: c.width, h: c.height, t, trackIndex: indexRef.current, trackCount: tracksRef.current.length, title: tr.title, headline: s.headline,
       coverSeed: tr.id + tr.title, cover: L && L.id === tr.id ? L.cover : null, kind: s.kind, lyrics: tr.lyrics, duration: tr.duration,
-      bars: sp.bars, level: sp.level, shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines,
+      bars: sp.bars, level: sp.level, shape: s.shape, palette: resolvePalette(s), fontStyle: s.fontStyle, lyricLines: s.lyricLines, layout: s.layouts?.[s.templateId], hits: {},
     })
     drawFrame(ctx, s.templateId, f)
+    hitsRef.current = f.hits ?? null
   }, [])
 
   const stop = useCallback(() => {
@@ -200,7 +210,8 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, o
       </div>
       <div className="relative mx-auto bg-black rounded-lg overflow-hidden" style={{ width: disp.w, height: disp.h }}>
         <canvas ref={canvasRef} width={W} height={H} className="w-full h-full block" data-testid="cinema-preview-canvas" />
-        {!track && <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-[11px] text-zinc-200">예시 화면이에요. 곡을 추가하면 실제 음악으로 재생돼요.</div>}
+        {onSelect && onAdjust && <EditOverlay hitsRef={hitsRef} canvasW={W} canvasH={H} selected={selected} layout={settings.layouts?.[settings.templateId] ?? {}} onSelect={onSelect} onAdjust={onAdjust} />}
+        {!track && <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-black/60 px-2 py-1 text-[11px] text-zinc-200">예시 화면이에요. 곡을 추가하면 실제 음악으로 재생돼요.</div>}
         {loading && <div className="absolute inset-0 grid place-items-center bg-black/50"><Loader2 className="w-6 h-6 animate-spin text-zinc-300" /></div>}
         {error && <div className="absolute inset-x-0 bottom-0 bg-red-950/80 text-red-200 text-xs px-3 py-2">{error}</div>}
       </div>
@@ -214,7 +225,7 @@ export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest, o
         <input type="range" min={0} max={Math.max(1, track?.duration ?? 1)} step={0.1} value={Math.min(pos, track?.duration ?? 1)} onChange={e => seek(Number(e.target.value))} className="flex-1 accent-emerald-400" aria-label="재생 위치" />
         <span className="tabular-nums w-10">{formatClock(track?.duration ?? 0)}</span>
       </div>
-      {!full && <p className="mt-1 text-[11px] text-zinc-500">실제 음원을 분석해 그립니다. 미리보기는 곡 음량 맞추기가 적용되기 전 소리예요.</p>}
+      {!full && <p className="mt-1 text-[11px] text-zinc-500">화면의 글자·커버·스펙트럼을 눌러 고르고 끌어서 옮겨요. 모서리를 끌면 크기가 바뀌어요. 실제 음원을 분석해 그리고, 미리보기 소리는 음량 맞추기 전 소리예요.</p>}
     </div>
   )
 }

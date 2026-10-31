@@ -1,6 +1,7 @@
 /** 템플릿 내부 공용 도구(레이아웃 판정·팔레트 그라데이션·진행바·가사/제목 자리). 템플릿끼리 import 하지 않고 여기만 쓴다. */
 import type { Box, CinemaFrame } from '../types'
 import { FONT, clamp01, drawLyricBlock, fitText, progressOf, roundRectPath } from '../helpers'
+import { withEl } from '../layout'
 
 export { FONT }
 
@@ -26,6 +27,9 @@ export function paletteGrad(ctx: CanvasRenderingContext2D, f: CinemaFrame, x0: n
 
 /** 곡 진행바(팔레트 그라데이션). track 은 빈 부분 색 */
 export function progressBar(ctx: CanvasRenderingContext2D, f: CinemaFrame, b: Box, track = 'rgba(255,255,255,0.22)', knob = true) {
+  withEl(ctx, 'progress', { x: b.x, y: b.y - b.h * 1.5, w: b.w, h: b.h * 4 }, () => paintProgress(ctx, f, b, track, knob))
+}
+function paintProgress(ctx: CanvasRenderingContext2D, f: CinemaFrame, b: Box, track: string, knob: boolean) {
   const p = progressOf(f)
   ctx.save()
   ctx.fillStyle = track

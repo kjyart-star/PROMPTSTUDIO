@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { fitText, mmss } from '../helpers'
 import { isInst, isTall, rng, unit } from './_kit'
-import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf } from './_scene'
+import { LATIN, SANS, SERIF, coverTones, drawPlate, fallbackBackdrop, grain, hairline, rgba, serifLyrics, shadowText, softViz, standingCover, trackNoLatin, vignette, tf, coverEl } from './_scene'
 
 /** 비 오는 밤 창가. 창턱에 커버가 기대 서 있고 유리를 타고 빗방울이 흘러내린다 */
 export const rainWindow: CinemaTemplate = {
@@ -51,7 +51,7 @@ export const rainWindow: CinemaTemplate = {
     const cover = { x: cx - side / 2, y: baseY - side, w: side, h: side }
     softViz(ctx, f, tall ? { x: w * 0.12, y: cover.y - u * 0.17, w: w * 0.76, h: u * 0.08 } : { x: cover.x + side + u * 0.08, y: py(0.6), w: Math.min(w * 0.36, w - cover.x - side - u * 0.16), h: u * 0.08 },
       { x: cx - side * 0.56, y: cover.y + side / 2 - side * 0.56, w: side * 1.12, h: side * 1.12 }, 0.55)
-    standingCover(ctx, f, cover, { light: tall ? -0.5 : 0.6, kind: 'print', warm: [255, 206, 150] })
+    coverEl(ctx, cover, () => standingCover(ctx, f, cover, { light: tall ? -0.5 : 0.6, kind: 'print', warm: [255, 206, 150] }))
 
     vignette(ctx, f, 0.55, tn.deep)
 

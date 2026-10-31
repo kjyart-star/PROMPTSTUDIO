@@ -1,4 +1,5 @@
 import type { Box, Palette, VizShapeId } from './types'
+import { withEl } from './layout'
 
 export const VIZ_SHAPES: { id: VizShapeId; name: string; circular: boolean; recommended?: boolean }[] = [
   { id: 'bars-slim', name: '슬림 막대', circular: false },
@@ -57,7 +58,14 @@ function sample(bars: Float32Array, u: number, level: number): number {
 /** 원형 각도 → 좌우 대칭(이음매 없음) 샘플 위치 */
 const mirrorU = (a01: number) => (a01 < 0.5 ? a01 * 2 : (1 - a01) * 2)
 
+/** 스펙트럼 그리기. 장면 안에서는 「스펙트럼」 요소로 옮기고 키울 수 있다 */
 export function drawViz(ctx: CanvasRenderingContext2D, shape: VizShapeId, palette: Palette, bars: Float32Array, level: number, t: number, boxes: { bar: Box; ring: Box }) {
+  const r = boxes.ring, pad = Math.min(r.w, r.h) * 0.2
+  const box = isCircular(shape) ? { x: r.x - pad, y: r.y - pad, w: r.w + pad * 2, h: r.h + pad * 2 } : boxes.bar
+  withEl(ctx, 'viz', box, () => paintViz(ctx, shape, palette, bars, level, t, boxes))
+}
+
+function paintViz(ctx: CanvasRenderingContext2D, shape: VizShapeId, palette: Palette, bars: Float32Array, level: number, t: number, boxes: { bar: Box; ring: Box }) {
   ctx.save()
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'

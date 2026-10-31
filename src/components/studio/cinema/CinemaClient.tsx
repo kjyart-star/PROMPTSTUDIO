@@ -17,6 +17,9 @@ import { renderCinema, webCodecsSupported, RenderAbort, type CinemaTrackInput, t
 import { fetchLibrary } from '../mastering/actions'
 import type { LibrarySong } from '../mastering/store'
 import { CinemaPreview } from './CinemaPreview'
+import { ElementPanel } from './ElementPanel'
+import type { AdjustPhase } from './EditOverlay'
+import type { ElAdjust, ElKey, Layout } from '@/lib/cinema/types'
 import { LyricsStep } from './LyricsStep'
 import { TemplateThumb, VizThumb } from './thumbs'
 import { DEFAULT_SETTINGS, loadAudioBlob, loadCoverBlob, loadSampleCoverBlob, newId, probeDuration, type CTrack, type FullSettings } from './model'
@@ -52,6 +55,10 @@ export default function CinemaClient() {
   const [tab, setTab] = useState<'scene' | 'viz' | 'text' | 'lyrics' | 'export'>('scene')
   /** 카드에 마우스를 올린 동안만 미리보기에 덮어 보여 줄 설정 */
   const [hover, setHover] = useState<Partial<FullSettings> | null>(null)
+  /** 미리보기에서 고른 요소 */
+  const [selected, setSelected] = useState<ElKey | null>(null)
+  /** 실행 취소·다시 실행(템플릿별 조정값 묶음 단위) */
+  const hist = useRef<{ past: Record<string, Layout>[]; future: Record<string, Layout>[]; at: number }>({ past: [], future: [], at: 0 })
   const [coverBmp, setCoverBmp] = useState<ImageBitmap | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -172,6 +179,57 @@ export default function CinemaClient() {
   const needLyrics = settings.kind === 'lyrics'
   const lyricsBad = needLyrics && tracks.some(t => !t.lyrics.lines.length)
 
+  // ── 직접 조정 ──────────────────────────────
+  const layout: Layout = settings.layouts?.[settings.templateId] ?? {}
+  const layoutsRef = useRef(settings.layouts)
+  useEffect(() => { layoutsRef.current = settings.layouts }, [settings.layouts])
+  const snapshot = useCallback((force = false) => {
+    const h = hist.current, now = Date.now()
+    if (!force && now - h.at < 600) { h.at = now; return } // 슬라이더를 끄는 동안은 한 번만 쌓는다
+    h.at = now
+    h.past.push(layoutsRef.current ?? {}); if (h.past.length > 100) h.past.shift(); h.future = []
+  }, [])
+  const putAdj = useCallback((key: ElKey, adj: ElAdjust) => setSettings(s => {
+    const all = { ...(s.layouts ?? {}) }
+    const cur = { ...(all[s.templateId] ?? {}) }
+    const clean = Object.fromEntries(Object.entries(adj).filter(([, v]) => v !== undefined)) as ElAdjust
+    if (Object.keys(clean).length) cur[key] = clean; else delete cur[key]
+    all[s.templateId] = cur
+    return { ...s, layouts: all }
+  }), [])
+  const onAdjust = useCallback((key: ElKey, adj: ElAdjust, phase: AdjustPhase) => {
+    if (phase === 'start') snapshot(true)
+    else if (phase === 'move') putAdj(key, adj)
+  }, [snapshot, putAdj])
+  const patchSel = (p: Partial<ElAdjust>) => { if (!selected) return; snapshot(); putAdj(selected, { ...(layout[selected] ?? {}), ...p }) }
+  const undo = useCallback(() => { const h = hist.current; const prev = h.past.pop(); if (!prev) return; h.future.push(layoutsRef.current ?? {}); setSettings(s => ({ ...s, layouts: prev })) }, [])
+  const redo = useCallback(() => { const h = hist.current; const nx = h.future.pop(); if (!nx) return; h.past.push(layoutsRef.current ?? {}); setSettings(s => ({ ...s, layouts: nx })) }, [])
+  const resetTemplate = () => { snapshot(true); setSettings(s => { const all = { ...(s.layouts ?? {}) }; delete all[s.templateId]; return { ...s, layouts: all } }) }
+  useEffect(() => { setSelected(null) }, [settings.templateId])
+  // 키보드: 화살표 1px·Shift 10px, Esc 선택 풀기, Cmd/Ctrl+Z 실행 취소, Shift 더하면 다시 실행
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        if (!document.querySelector('.cinema-root')) return
+        e.preventDefault(); if (e.shiftKey) redo(); else undo(); return
+      }
+      if (!selected) return
+      if (e.key === 'Escape') { setSelected(null); return }
+      const step = e.shiftKey ? 10 : 1
+      const d = e.key === 'ArrowLeft' ? [-step, 0] : e.key === 'ArrowRight' ? [step, 0] : e.key === 'ArrowUp' ? [0, -step] : e.key === 'ArrowDown' ? [0, step] : null
+      if (!d) return
+      e.preventDefault(); e.stopPropagation()
+      const { w: ow, h: oh } = outputSize(settings.aspect, settings.shortSide)
+      const a = layout[selected] ?? {}
+      snapshot()
+      putAdj(selected, { ...a, dx: (a.dx ?? 0) + d[0] / ow, dy: (a.dy ?? 0) + d[1] / oh })
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [selected, layout, settings.aspect, settings.shortSide, undo, redo, snapshot, putAdj])
+
   const TABS = [['scene', '장면'], ['viz', '스펙트럼'], ['text', '글자'], ['lyrics', '가사'], ['export', '내보내기']] as const
   const previewSettings = hover ? { ...settings, ...hover } : settings
 
@@ -187,7 +245,7 @@ export default function CinemaClient() {
         {/* 왼쪽: 늘 보이는 큰 미리보기 + 곡 띠 */}
         <div className="sticky top-0 z-20 min-w-0 space-y-2 bg-[#0d0f12] md:bg-transparent pb-2 md:pb-0">
           <CinemaPreview tracks={tracks} settings={previewSettings} index={Math.min(active, Math.max(0, tracks.length - 1))} onIndex={setActive} seekRequest={seek}
-            onAspect={a => set('aspect', a)} />
+            onAspect={a => set('aspect', a)} selected={selected} onSelect={setSelected} onAdjust={onAdjust} />
           <div className="flex flex-wrap gap-1.5" data-testid="cinema-song-strip">
             {tracks.map((t, i) => (
               <button key={t.id} type="button" onClick={() => setActive(i)} className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs max-w-[220px] ${i === active ? 'border-emerald-400/70 bg-emerald-400/10 text-white' : 'border-white/10 text-zinc-300 hover:border-white/30'}`}>
@@ -203,12 +261,16 @@ export default function CinemaClient() {
         <div className="min-w-0 rounded-xl border border-outline-variant bg-surface-container-low flex flex-col md:sticky md:top-0 md:h-[calc(100vh-21.5rem)] md:min-h-[480px]">
           <div className="flex flex-wrap border-b border-white/10 px-1" role="tablist" aria-label="설정">
             {TABS.map(([id, label]) => (
-              <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-                className={`px-3 py-2.5 text-xs font-bold border-b-2 -mb-px ${tab === id ? 'border-emerald-400 text-white' : 'border-transparent text-zinc-400 hover:text-zinc-200'}`}>{label}</button>
+              <button key={id} type="button" role="tab" aria-selected={!selected && tab === id} onClick={() => { setSelected(null); setTab(id) }}
+                className={`px-3 py-2.5 text-xs font-bold border-b-2 -mb-px ${!selected && tab === id ? 'border-emerald-400 text-white' : 'border-transparent text-zinc-400 hover:text-zinc-200'}`}>{label}</button>
             ))}
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
-            <div hidden={tab !== 'scene'} className="space-y-3">
+            {selected && (
+              <ElementPanel el={selected} adj={layout[selected] ?? {}} onPatch={patchSel} onClose={() => setSelected(null)}
+                onUndo={undo} onRedo={redo} onResetTemplate={resetTemplate} settings={settings} setSettings={setSettings} />
+            )}
+            <div hidden={!!selected || tab !== 'scene'} className="space-y-3">
               <div className="flex gap-2">
                 <button type="button" className={chip(settings.kind === 'lyrics')} onClick={() => set('kind', 'lyrics')}>가사 영상</button>
                 <button type="button" className={chip(settings.kind === 'instrumental')} onClick={() => set('kind', 'instrumental')}>경음악 영상</button>
@@ -229,7 +291,14 @@ export default function CinemaClient() {
 
             </div>
 
-            <div hidden={tab !== 'viz'} className="space-y-3">
+            <div hidden={!!selected || tab !== 'viz'} className="space-y-3">
+              <div className="fld-cin"><span>위치·크기 <em>(미리보기에서 스펙트럼을 끌어서 옮길 수도 있어요)</em></span>
+                <div className="flex items-center gap-2">
+                  <input type="range" min={30} max={300} value={Math.round((layout.viz?.scale ?? 1) * 100)} onChange={e => { snapshot(); putAdj('viz', { ...(layout.viz ?? {}), scale: Number(e.target.value) / 100 }) }} className="flex-1 accent-emerald-400" aria-label="스펙트럼 크기" />
+                  <span className="text-[11px] tabular-nums w-10 text-right">{Math.round((layout.viz?.scale ?? 1) * 100)}%</span>
+                  <button type="button" className="btn-cin" onClick={() => { snapshot(true); putAdj('viz', {}) }}>원래대로</button>
+                </div>
+              </div>
               <h4 className="text-xs font-bold text-zinc-300">형태</h4>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="radiogroup" aria-label="스펙트럼 형태">
               {VIZ_SHAPES.map(v => (
@@ -271,7 +340,7 @@ export default function CinemaClient() {
             </div>}
             </div>
 
-            <div hidden={tab !== 'text'} className="space-y-3">
+            <div hidden={!!selected || tab !== 'text'} className="space-y-3">
               <label className="fld-cin"><span>타이틀 문구 <em>(다음 영상에도 유지돼요)</em></span><input value={settings.headline} onChange={e => set('headline', e.target.value)} placeholder="화면 위쪽에 작게 들어가요 (예: COOKIEMUSIC)" maxLength={40} className="inp-cin" /></label>
               <div className="fld-cin"><span>글꼴 <em>(실사 장면 템플릿의 제목·가사)</em></span>
                 <div className="flex flex-wrap gap-1.5">{FONT_STYLES.map(([id, label]) => <button key={id} type="button" className={chip((settings.fontStyle ?? 'auto') === id)} onClick={() => set('fontStyle', id)}>{label}</button>)}</div>
@@ -281,7 +350,7 @@ export default function CinemaClient() {
               </div>
             </div>
 
-            <div hidden={tab !== 'lyrics'} className="space-y-3">
+            <div hidden={!!selected || tab !== 'lyrics'} className="space-y-3">
               <h4 className="text-xs font-bold text-zinc-300">곡 순서</h4>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={openLib} className="btn-cin"><Library className="w-3.5 h-3.5" />보관함에서 고르기</button>
@@ -327,7 +396,7 @@ export default function CinemaClient() {
               )}
             </div>
 
-            <div hidden={tab !== 'export'} className="space-y-3">
+            <div hidden={!!selected || tab !== 'export'} className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <select value="" onChange={e => { if (e.target.value) loadPreset(e.target.value) }} className="sel-cin" aria-label="저장한 설정 불러오기">
                 <option value="">저장한 설정 불러오기{Object.keys(presets).length ? '' : ' (없음)'}</option>

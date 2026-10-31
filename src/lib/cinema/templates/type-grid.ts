@@ -1,7 +1,7 @@
 import type { CinemaTemplate } from '../types'
 import { drawCover, fitText, mmss, pad2 } from '../helpers'
 import { isInst, isTall, unit } from './_kit'
-import { LATIN, SANS, coverTones, grain, rgba, serifLyrics, softViz, tf } from './_scene'
+import { LATIN, SANS, coverTones, grain, rgba, serifLyrics, softViz, tf, coverEl } from './_scene'
 
 /** 커버 색 한 면 위에 큰 곡 번호와 단정한 글자 격자. 포스터처럼 정돈된 화면 */
 export const typeGrid: CinemaTemplate = {
@@ -33,9 +33,11 @@ export const typeGrid: CinemaTemplate = {
       const side = Math.min(h * 0.42, cw * 4)
       const cx = m + cw * 8
       const z = 1 + 0.06 * (0.5 + 0.5 * Math.sin(f.t / 12))
-      ctx.save(); ctx.beginPath(); ctx.rect(cx, m + u * 0.04, side, side); ctx.clip()
-      drawCover(ctx, f, { x: cx - side * (z - 1) / 2, y: m + u * 0.04 - side * (z - 1) / 2, w: side * z, h: side * z })
-      ctx.restore()
+      coverEl(ctx, { x: cx, y: m + u * 0.04, w: side, h: side }, () => {
+        ctx.save(); ctx.beginPath(); ctx.rect(cx, m + u * 0.04, side, side); ctx.clip()
+        drawCover(ctx, f, { x: cx - side * (z - 1) / 2, y: m + u * 0.04 - side * (z - 1) / 2, w: side * z, h: side * z })
+        ctx.restore()
+      })
       fitText(ctx, num, m - u * 0.02, h - m - u * 0.02, cw * 7, h * 0.66, { font: LATIN, weight: 400, color: rgba(ink, 0.92), minSize: 20 })
       fitText(ctx, f.trackTitle, m, m + u * 0.08, cw * 7, u * (inst ? 0.09 : 0.075), { font: tf(f, SANS), weight: 600, color: rgba(ink), minSize: 12 })
       fitText(ctx, f.headline || `${pad2(f.trackIndex + 1)} / ${pad2(f.trackCount)}`, m, m + u * 0.14, cw * 6, u * 0.028, { font: SANS, weight: 300, color: rgba(ink, 0.6) })
@@ -45,7 +47,7 @@ export const typeGrid: CinemaTemplate = {
     } else {
       const side = cw * 4
       const cy = h * 0.22
-      drawCover(ctx, f, { x: w - m - side, y: cy, w: side, h: side })
+      coverEl(ctx, { x: w - m - side, y: cy, w: side, h: side }, () => drawCover(ctx, f, { x: w - m - side, y: cy, w: side, h: side }))
       fitText(ctx, num, m - u * 0.02, cy - u * 0.02, w * 0.9, h * 0.22, { font: LATIN, color: rgba(ink, 0.92), minSize: 20 })
       fitText(ctx, f.trackTitle, m, cy + side + u * 0.14, w - m * 2, u * 0.085, { font: tf(f, SANS), weight: 600, color: rgba(ink), minSize: 12 })
       fitText(ctx, f.headline || `${pad2(f.trackIndex + 1)} / ${pad2(f.trackCount)}`, m, cy + side + u * 0.21, w - m * 2, u * 0.032, { font: SANS, weight: 300, color: rgba(ink, 0.6) })

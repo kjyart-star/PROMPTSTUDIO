@@ -4,8 +4,9 @@
  * 브라우저가 아닌 곳(테스트)에서는 캐시 캔버스를 만들 수 없으므로 단순한 대체 그림으로 그린다.
  */
 import type { Box, CinemaFrame } from '../types'
-import { STYLE_FONT, drawCover, drawLyricBlock, fitText, hash, paintCover, roundRectPath, userFont } from '../helpers'
+import { STYLE_FONT, drawCover, drawLyricBlock, fitText, hash, paintCover, roundRectPath, userFont, withOwnCoverShadow } from '../helpers'
 import { scenePlate } from '../scene'
+import { curAdj, curKey, withEl } from '../layout'
 import { drawViz } from '../viz'
 
 export const SERIF = STYLE_FONT.serif
@@ -232,12 +233,14 @@ export function contactShadow(ctx: Ctx2D, cx: number, cy: number, rx: number, ry
 export function standingCover(ctx: Ctx2D, f: CinemaFrame, b: Box, o: { light?: number; kind?: 'sleeve' | 'frame' | 'print'; warm?: RGB; shadow?: number } = {}) {
   const light = o.light ?? -1
   const kind = o.kind ?? 'sleeve'
+  const sa = curKey() === 'cover' ? curAdj()?.shadow : undefined
+  const shMul = sa === undefined ? 1 : sa
   const warm = o.warm ?? [255, 214, 160]
   const u = b.w
   // 바닥 접지 그림자 + 빛 반대편으로 길게 떨어지는 그림자
-  contactShadow(ctx, b.x + b.w / 2 - light * u * 0.08, b.y + b.h, b.w * 0.62, u * 0.05, o.shadow ?? 0.6)
+  contactShadow(ctx, b.x + b.w / 2 - light * u * 0.08, b.y + b.h, b.w * 0.62, u * 0.05, (o.shadow ?? 0.6) * shMul)
   ctx.save()
-  ctx.shadowColor = 'rgba(8,6,4,0.45)'; ctx.shadowBlur = u * 0.07; ctx.shadowOffsetX = -light * u * 0.05; ctx.shadowOffsetY = u * 0.02
+  ctx.shadowColor = `rgba(8,6,4,${0.45 * shMul})`; ctx.shadowBlur = u * 0.07; ctx.shadowOffsetX = -light * u * 0.05; ctx.shadowOffsetY = u * 0.02
   let face = b
   if (kind === 'frame') {
     const fw = u * 0.055
@@ -256,7 +259,7 @@ export function standingCover(ctx: Ctx2D, f: CinemaFrame, b: Box, o: { light?: n
     ctx.fillStyle = '#1a1612'; ctx.fillRect(b.x, b.y, b.w, b.h)
     ctx.shadowColor = 'transparent'
   }
-  drawCover(ctx, f, face, kind === 'print' ? u * 0.004 : 0)
+  withOwnCoverShadow(() => drawCover(ctx, f, face, kind === 'print' ? u * 0.004 : 0))
   ctx.restore()
   // 빛: 빛이 오는 쪽은 따뜻하게 밝고 반대쪽은 가라앉는다
   ctx.save()
@@ -346,6 +349,9 @@ export function serifLyrics(ctx: Ctx2D, f: CinemaFrame, o: { cx: number; cy: num
 
 /** 얇은 진행선 + 지금 위치 점 */
 export function hairline(ctx: Ctx2D, f: CinemaFrame, x: number, y: number, w: number, c: RGB, thick = 1.5) {
+  withEl(ctx, 'progress', { x, y: y - thick * 4, w, h: thick * 8 }, () => paintHairline(ctx, f, x, y, w, c, thick))
+}
+function paintHairline(ctx: Ctx2D, f: CinemaFrame, x: number, y: number, w: number, c: RGB, thick: number) {
   const p = f.duration > 0 ? Math.min(1, Math.max(0, f.t / f.duration)) : 0
   ctx.save()
   ctx.fillStyle = rgba(c, 0.22); ctx.fillRect(x, y - thick / 2, w, thick)
@@ -383,3 +389,6 @@ export function glassPanel(ctx: Ctx2D, f: CinemaFrame, b: Box, r: number, tn: To
 }
 
 export { roundRectPath as roundRect }
+
+/** 커버(와 그 그림자·액자)를 「커버」 요소로 묶어 그린다 */
+export const coverEl = (ctx: Ctx2D, box: Box, draw: () => void) => withEl(ctx, 'cover', box, draw)
