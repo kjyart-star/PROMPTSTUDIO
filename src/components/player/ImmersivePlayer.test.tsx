@@ -110,8 +110,9 @@ describe('ImmersivePlayer', () => {
     fireEvent.click(deck.getByLabelText('재생'))
     expect(togglePlay).toHaveBeenCalledTimes(1)
     expect(deck.getByLabelText('재생').className).not.toContain('is-down')
-    fireEvent.click(deck.getByLabelText('빨리감기'))
-    expect(seek).toHaveBeenLastCalledWith(30)
+    const next = vi.fn(); usePlayerStore.setState({ next })
+    fireEvent.click(deck.getByLabelText('다음 곡'))
+    expect(next).toHaveBeenCalledTimes(1)
   })
 
   it('닫아도 사라지는 움직임이 끝날 때까지는 화면이 남아 있다', () => {
@@ -225,5 +226,30 @@ describe('ImmersivePlayer', () => {
       fireEvent.click(screen.getByLabelText('재생'))
       expect(usePlayerStore.getState().isPlaying).toBe(true)
     }
+  })
+
+  it('카세트: 짧게 누르면 이전·다음 곡, 길게(0.5초+) 누르면 고속 이동', () => {
+    vi.useFakeTimers()
+    try {
+      const t = trk('1')
+      const next = vi.fn(), prev = vi.fn(), seek = vi.fn()
+      usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t, trk('2')], queueIndex: 0, isPlaying: true, next, prev, seek, currentTime: 20, duration: 120 })
+      render(<ImmersivePlayer />)
+      fireEvent.click(screen.getByText('지금 재생'))
+      fireEvent.click(screen.getByText('카세트'))
+      const deck = within(screen.getByTestId('cassette-player'))
+      const nextBtn = deck.getByLabelText('다음 곡')
+      fireEvent.pointerDown(nextBtn); fireEvent.pointerUp(nextBtn)
+      expect(next).toHaveBeenCalledTimes(1)
+      const prevBtn = deck.getByLabelText('이전 곡')
+      fireEvent.pointerDown(prevBtn); fireEvent.pointerUp(prevBtn)
+      expect(prev).toHaveBeenCalledTimes(1)
+      // 길게 누르기 → 곡 이동 없이 고속 이동
+      fireEvent.pointerDown(nextBtn)
+      act(() => { vi.advanceTimersByTime(900) })
+      fireEvent.pointerUp(nextBtn)
+      expect(next).toHaveBeenCalledTimes(1)
+      expect(seek).toHaveBeenCalled()
+    } finally { vi.useRealTimers() }
   })
 })

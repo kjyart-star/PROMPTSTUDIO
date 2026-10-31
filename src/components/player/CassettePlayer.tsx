@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, Square, Rewind, FastForward } from 'lucide-react';
+import { Play, Pause, Square, SkipBack, SkipForward } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { useSpinRamp } from './useSpinRamp';
@@ -202,23 +202,38 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   const counter = String(Math.min(999, Math.floor(currentTime))).padStart(3, '0');
 
   const [pressed, setPressed] = useState<'rew' | 'ff' | null>(null);
-  const hold = useRef<{ t?: ReturnType<typeof setTimeout>; i?: ReturnType<typeof setInterval> }>({});
+  const hold = useRef<{ t?: ReturnType<typeof setTimeout>; i?: ReturnType<typeof setInterval>; down?: boolean }>({});
   const jump = (d: number) => {
     const s = usePlayerStore.getState();
     const total = s.duration || dur || Infinity;
     seek(Math.max(0, Math.min(total, s.currentTime + d)));
   };
-  const stopHold = () => { clearTimeout(hold.current.t); clearInterval(hold.current.i); setPressed(null); };
+  const stopHold = () => { clearTimeout(hold.current.t); clearInterval(hold.current.i); hold.current.t = undefined; hold.current.i = undefined; setPressed(null); };
   useEffect(() => stopHold, []);
+  // 짧게 누르면 이전·다음 곡(이전 곡은 3초 넘게 들었으면 먼저 처음으로 — 스토어 prev 가 처리), 0.5초 넘게 누르면 고속 되감기·빨리감기
+  const heldFast = useRef(false);
   const startHold = (d: number, key: 'rew' | 'ff') => (e: React.PointerEvent) => {
     e.preventDefault();
-    setPressed(key); jump(d);
-    hold.current.t = setTimeout(() => { hold.current.i = setInterval(() => jump(d * 0.6), 140); }, 320);
+    heldFast.current = false; hold.current.down = true;
+    hold.current.t = setTimeout(() => {
+      heldFast.current = true;
+      setPressed(key);
+      hold.current.i = setInterval(() => jump(d * 2), 120);
+    }, 500);
   };
-  const keyClick = (d: number, key: 'rew' | 'ff') => (e: React.MouseEvent) => {
-    if (e.detail !== 0) return; // 마우스는 pointerdown 에서 처리, 키보드 활성화만 여기서
-    jump(d * 2); setPressed(key); setTimeout(() => setPressed(null), 160);
+  const endHold = (step: () => void) => () => {
+    const wasFast = heldFast.current;
+    const pending = !!hold.current.t;
+    stopHold();
+    if (!wasFast && pending && hold.current.down) step();
+    hold.current.down = false;
   };
+  const keyClick = (step: () => void, key: 'rew' | 'ff') => (e: React.MouseEvent) => {
+    if (e.detail !== 0) return; // 마우스는 pointer 이벤트에서 처리, 키보드 활성화만 여기서
+    step(); setPressed(key); setTimeout(() => setPressed(null), 160);
+  };
+  const goPrev = () => usePlayerStore.getState().prev();
+  const goNext = () => usePlayerStore.getState().next();
   // 실제 데크처럼: 두 번째 버튼은 재생/일시정지 토글, 눌림은 재생 중일 때만. 정지는 처음으로 돌아가 멈춘다.
   const playPause = () => togglePlay();
   const stop = () => { if (usePlayerStore.getState().isPlaying) togglePlay(); seek(0); };
@@ -243,9 +258,9 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
           <Leds playing={isPlaying} reduced={reduced} />
           <div className="cs-vol"><VolumeControl variant="deck" /></div>
           <div className="cs-keys" role="group" aria-label="카세트 버튼">
-            <button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={stopHold} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(-5, 'rew')}><Rewind size={16} /></button>
+            <button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="이전 곡" title="짧게: 이전 곡 · 길게: 되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={endHold(goPrev)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goPrev, 'rew')}><SkipBack size={16} /></button>
             <button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '일시정지' : '재생'} aria-pressed={isPlaying} onClick={playPause}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
-            <button type="button" className={`cs-key${pressed === 'ff' ? ' is-down' : ''}`} aria-label="빨리감기" onPointerDown={startHold(5, 'ff')} onPointerUp={stopHold} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(5, 'ff')}><FastForward size={16} /></button>
+            <button type="button" className={`cs-key${pressed === 'ff' ? ' is-down' : ''}`} aria-label="다음 곡" title="짧게: 다음 곡 · 길게: 빨리감기" onPointerDown={startHold(5, 'ff')} onPointerUp={endHold(goNext)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goNext, 'ff')}><SkipForward size={16} /></button>
             <button type="button" className="cs-key" aria-label="정지" onClick={stop}><Square size={15} /></button>
           </div>
         </div>
