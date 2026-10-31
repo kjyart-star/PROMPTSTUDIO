@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseLrc, parseSrt, parseTiming } from './lrc'
+import { parseLrc, parseSrt, parseTiming, toLrc } from './lrc'
 
 describe('가사 시간표', () => {
   it('LRC 파싱 · 다중 시간표 · 정렬', () => {
@@ -15,5 +15,9 @@ describe('가사 시간표', () => {
     expect(parseTiming('a.srt', '1\n00:00:01,000 --> 00:00:02,000\nhi')).toHaveLength(1)
     expect(parseTiming('a.lrc', '[00:01.00]hi')).toHaveLength(1)
     expect(parseTiming('a.txt', 'no timing')).toHaveLength(0)
+  })
+  it('LRC 로 내보내면 다시 읽힌다', () => {
+    const src = [{ t: 1.5, text: 'a' }, { t: 65.25, text: 'b' }]
+    expect(parseLrc(toLrc(src))).toEqual(src)
   })
 })

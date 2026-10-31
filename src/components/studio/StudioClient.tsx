@@ -14,6 +14,7 @@ import { GenerateClient } from './GenerateClient'
 import LibraryTrash from './LibraryTrash'
 import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
+import QuickMasterDialog from './QuickMasterDialog'
 import { filterLibrary, isInstrumental, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
@@ -924,6 +925,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [trashRefreshKey, setTrashRefreshKey] = useState(0)
   const [libraryQuery, setLibraryQuery] = useState<LibraryQuery>({ query: '', kind: 'all', sort: 'newest' })
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [quickMasterItem, setQuickMasterItem] = useState<any | null>(null)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -938,6 +940,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     setDeleteConfirmId(null)
   }
 
+  const masteredSourceIds = useMemo(() => new Set<string>(history.map((h: any) => h.form?.source_id).filter(Boolean)), [history])
   const visibleHistory = useMemo(() => filterLibrary(history, libraryQuery), [history, libraryQuery])
   const toggleSelected = (id: string) => setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   const selectedItems = history.filter((h) => selectedIds.includes(h.id))
@@ -1825,6 +1828,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         onRestorePrompt={() => { openHistoryItem(item, 'all'); setCurrentTab('studio') }}
                         onPublish={() => { if (item.is_published) updateHistoryItem(item.id, { is_published: false }); else setCurrentTab('suno') }}
                         onMastering={() => setCurrentTab('mastering')}
+                        onQuickMaster={() => setQuickMasterItem(item)}
                         onDownload={() => downloadHistoryTrack(item)}
                         onTrash={() => setDeleteConfirmId(item.id)}
                       />
@@ -1832,8 +1836,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     const kindLabel = isInstrumental(item)
                       ? (uiLanguage === 'KO' ? '경음악' : uiLanguage === 'JA' ? 'インスト' : 'Instrumental')
                       : (uiLanguage === 'KO' ? '보컬' : uiLanguage === 'JA' ? 'ボーカル' : 'Vocal')
-                    const stemBadge = item.form?.stems ? (
-                      <span className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-primary">{uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'}</span>
+                    const badgeList: string[] = [
+                      ...(item.form?.kind === 'mastering' ? [uiLanguage === 'KO' ? '마스터링 완료' : uiLanguage === 'JA' ? 'マスタリング済み' : 'Mastered'] : []),
+                      ...(masteredSourceIds.has(item.id) ? [uiLanguage === 'KO' ? '원곡' : uiLanguage === 'JA' ? '原曲' : 'Original'] : []),
+                      ...(Array.isArray(item.form?.lrc) && item.form.lrc.length ? ['LRC'] : []),
+                      ...(item.form?.stems ? [uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'] : []),
+                    ]
+                    const stemBadge = badgeList.length ? (
+                      <>{badgeList.map((b) => <span key={b} className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-primary">{b}</span>)}</>
                     ) : null
                     /* 관리 액션 — 되돌리기·공개·플레이리스트·삭제 */
                     const manageActions = (
@@ -2029,6 +2039,16 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                             </span>
                           )}
                           {isLarge && (
+                            <button
+                              type="button"
+                              aria-label={uiLanguage === 'KO' ? '재생' : 'Play'}
+                              onClick={(e) => { e.stopPropagation(); playHistoryTrack(item) }}
+                              className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-primary text-black flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity motion-reduce:transition-none cursor-pointer"
+                            >
+                              {currentTab === 'library' && currentTrack?.id === item.id && isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 ml-0.5 fill-current" />}
+                            </button>
+                          )}
+                          {isLarge && (
                             <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 px-2 py-1.5 bg-gradient-to-t from-black/80 to-transparent">
                               <span className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-zinc-100">{kindLabel}</span>
                               {stemBadge}
@@ -2040,7 +2060,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         </div>
                         {/* 「중간」은 제목이 한 글자로 짜부라지지 않게 최소 폭을 준다 — 자리가 모자라면 액션이 아랫줄로 접힌다 */}
                         <div className={`flex-1 ${isSmall || isLarge ? 'min-w-0' : 'min-w-[7rem]'}`}>
-                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}{!isLarge && item.form?.stems && <span className="ml-1.5 align-middle px-1 py-0.5 rounded bg-primary/15 text-[9px] text-primary">{uiLanguage === 'KO' ? '스템' : 'Stems'}</span>}</h4>
+                          <h4 className={`font-bold text-zinc-100 truncate group-hover:text-primary ${isLarge ? 'text-sm' : isSmall ? 'text-xs' : 'text-[13px]'}`}>{item.title || 'Untitled'}{!isLarge && badgeList.map((b) => <span key={b} className="ml-1.5 align-middle px-1 py-0.5 rounded bg-primary/15 text-[9px] text-primary">{b}</span>)}</h4>
                           {!isSmall && (
                             <p className="text-zinc-500 truncate mt-0.5 font-mono text-[11px]">{item.style || item.style_desc || 'AI Track'}</p>
                           )}
@@ -2892,6 +2912,15 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         }}
         uiLanguage={uiLanguage}
       />
+
+      {quickMasterItem && (
+        <QuickMasterDialog
+          song={quickMasterItem}
+          onClose={() => setQuickMasterItem(null)}
+          onDone={() => { fetchSongHistory() }}
+          onAdvanced={() => { setQuickMasterItem(null); setCurrentTab('mastering') }}
+        />
+      )}
 
       {deleteConfirmId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 sm:p-6" onClick={() => setDeleteConfirmId(null)}>

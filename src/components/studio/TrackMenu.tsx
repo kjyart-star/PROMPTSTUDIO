@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import LyricsHelper from './LyricsHelper'
-import { parseTiming, type TimedLine } from './lrc'
+import { parseTiming, toLrc, type TimedLine } from './lrc'
 
 type Lang = 'KO' | 'JA' | 'EN'
 
@@ -12,7 +12,9 @@ const T = {
   edit: { KO: '제목 · 가사 수정', JA: 'タイトル・歌詞を編集', EN: 'Edit title & lyrics' },
   lrc: { KO: 'LRC · SRT 올리기', JA: 'LRC・SRT をアップロード', EN: 'Upload LRC / SRT' },
   lrcClear: { KO: '가사 시간표 지우기', JA: '歌詞タイミングを削除', EN: 'Remove lyric timing' },
-  mastering: { KO: '마스터링', JA: 'マスタリング', EN: 'Mastering' },
+  mastering: { KO: '고급 마스터링', JA: '詳細マスタリング', EN: 'Advanced mastering' },
+  quick: { KO: '마스터링', JA: 'マスタリング', EN: 'Mastering' },
+  lrcOut: { KO: 'LRC 내보내기', JA: 'LRC を書き出す', EN: 'Export LRC' },
   restore: { KO: '프롬프트로 되돌리기', JA: 'プロンプトに戻す', EN: 'Restore to prompt' },
   publish: { KO: '공개하기 (음악 생성 탭)', JA: '公開する', EN: 'Publish' },
   unpublish: { KO: '비공개로 설정', JA: '非公開にする', EN: 'Make private' },
@@ -40,6 +42,7 @@ export interface TrackMenuProps {
   onRestorePrompt: () => void
   onPublish: () => void
   onMastering: () => void
+  onQuickMaster: () => void
   onDownload: () => void
   onTrash: () => void
 }
@@ -92,8 +95,14 @@ export default function TrackMenu(p: TrackMenuProps) {
         <div role="menu" className="absolute right-0 bottom-full mb-1 z-30 w-56 rounded-xl border border-[#262626] bg-[#141414] p-1 shadow-2xl shadow-black/70">
           <button role="menuitem" className={row} onClick={() => { setTitle(p.item.title || ''); setLyrics(p.item.lyrics || ''); setEditing(true); close() }}>{T.edit[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onRestorePrompt(); close() }}>{T.restore[l]}</button>
+          <button role="menuitem" className={row} onClick={() => { p.onQuickMaster(); close() }}>{T.quick[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onMastering(); close() }}>{T.mastering[l]}</button>
           <button role="menuitem" className={row} onClick={() => { fileRef.current?.click(); close() }}>{T.lrc[l]}</button>
+          {hasLrc && <button role="menuitem" className={row} onClick={() => {
+            const url = URL.createObjectURL(new Blob([toLrc(p.item.form.lrc)], { type: 'text/plain;charset=utf-8' }))
+            const a = document.createElement('a'); a.href = url; a.download = `${(p.item.title || 'lyrics').replace(/[\\/:*?"<>|]/g, '_')}.lrc`; a.click()
+            setTimeout(() => URL.revokeObjectURL(url), 1000); close()
+          }}>{T.lrcOut[l]}</button>}
           {hasLrc && <button role="menuitem" className={row} onClick={() => { p.onUpdate({ lrc: null }); close() }}>{T.lrcClear[l]}</button>}
           {p.signedIn && (
             <button role="menuitem" className={row} onClick={() => { p.onPublish(); close() }}>{p.item.is_published ? T.unpublish[l] : T.publish[l]}</button>

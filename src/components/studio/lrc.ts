@@ -36,3 +36,9 @@ export function parseTiming(fileName: string, raw: string): TimedLine[] {
   const isSrt = /\.srt$/i.test(fileName) || (/-->/.test(raw) && !/\[\d+:\d+/.test(raw))
   return (isSrt ? parseSrt(raw) : parseLrc(raw)).filter((l) => l.text || l.t >= 0)
 }
+
+const two = (n: number) => String(n).padStart(2, '0')
+/** 시간표 → LRC 텍스트 ([mm:ss.xx]가사) */
+export function toLrc(lines: TimedLine[]): string {
+  return lines.map((l) => `[${two(Math.floor(l.t / 60))}:${two(Math.floor(l.t % 60))}.${two(Math.floor((l.t % 1) * 100))}]${l.text}`).join('\n') + '\n'
+}

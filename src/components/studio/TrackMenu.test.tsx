@@ -11,7 +11,7 @@ const base = (over: any = {}) => ({
   playlists: [{ id: 'p1', title: '아침' }],
   signedIn: true,
   buttonClass: 'b', iconClass: 'i',
-  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onDownload: vi.fn(), onTrash: vi.fn(),
+  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onQuickMaster: vi.fn(), onDownload: vi.fn(), onTrash: vi.fn(),
   ...over,
 })
 
@@ -61,5 +61,27 @@ describe('TrackMenu', () => {
     ;(file as any).text = async () => '[00:01.00]안녕\n[00:05.00]반가워'
     fireEvent.change(input, { target: { files: [file] } })
     await waitFor(() => expect(p.onUpdate).toHaveBeenCalledWith({ lrc: [{ t: 1, text: '안녕' }, { t: 5, text: '반가워' }] }))
+  })
+
+  it('마스터링은 간단 창, 고급은 기존 화면으로 간다', () => {
+    const p = base()
+    render(<TrackMenu {...p} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    fireEvent.click(screen.getByText('마스터링'))
+    expect(p.onQuickMaster).toHaveBeenCalled()
+    fireEvent.click(screen.getByLabelText('더보기'))
+    fireEvent.click(screen.getByText('고급 마스터링'))
+    expect(p.onMastering).toHaveBeenCalled()
+  })
+
+  it('시간표가 있는 곡에만 LRC 내보내기가 보인다', () => {
+    const none = base()
+    const { unmount } = render(<TrackMenu {...none} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.queryByText('LRC 내보내기')).toBeNull()
+    unmount()
+    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc: [{ t: 1, text: 'x' }] } } })} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.getByText('LRC 내보내기')).toBeTruthy()
   })
 })
