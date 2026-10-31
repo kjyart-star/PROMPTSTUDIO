@@ -13,6 +13,8 @@ import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { useSpinRamp } from './useSpinRamp';
 import { VolumeControl } from './VolumeControl';
+import { useCoverColor, rgba } from './coverColor';
+import { withBase } from '@/lib/basePath';
 import type { Track } from '@/types/music';
 
 const PAPERS = [
@@ -32,6 +34,8 @@ function Leds({ playing, reduced }: { playing: boolean; reduced: boolean }) {
   const getFrequencyData = usePlayerStore((s) => s.getFrequencyData);
   const cols = useRef<(HTMLSpanElement | null)[]>([]);
   const level = useRef<number[]>(new Array(LEDS).fill(0));
+  const peak = useRef<number[]>(new Array(LEDS).fill(0));
+  const hold = useRef<number[]>(new Array(LEDS).fill(0));
   useEffect(() => {
     let raf = 0;
     const paint = (t: number) => {
@@ -39,10 +43,17 @@ function Leds({ playing, reduced }: { playing: boolean; reduced: boolean }) {
       const bins = data ? binSpectrum(data, LEDS) : null;
       for (let i = 0; i < LEDS; i++) {
         const want = !playing ? 0 : bins ? bins[i] : reduced ? 0.3 : 0.25 + 0.2 * (1 + Math.sin(t / 240 + i * 0.8));
-        level.current[i] += (want - level.current[i]) * (want > level.current[i] ? 0.6 : 0.15);
-        const lit = Math.round(Math.min(1, level.current[i] * 1.2) * SEGS);
+        level.current[i] += (want - level.current[i]) * (want > level.current[i] ? 0.55 : 0.09); // 어택 빠르게, 감쇠 부드럽게
+        const lvl = Math.min(1, level.current[i] * 1.2);
+        // 피크 LED: 올라가면 잠깐 붙잡았다가 천천히 떨어진다
+        if (lvl >= peak.current[i]) { peak.current[i] = lvl; hold.current[i] = 28; }
+        else if (hold.current[i] > 0) hold.current[i]--;
+        else peak.current[i] = Math.max(lvl, peak.current[i] - 0.012);
         const el = cols.current[i];
-        if (el) el.style.setProperty('--lit', String(lit));
+        if (el) {
+          el.style.setProperty('--lit', (lvl * SEGS).toFixed(2));
+          el.style.setProperty('--peak', String(Math.max(1, Math.ceil(peak.current[i] * SEGS))));
+        }
       }
       raf = requestAnimationFrame(paint);
     };
@@ -60,11 +71,17 @@ function Leds({ playing, reduced }: { playing: boolean; reduced: boolean }) {
   );
 }
 
-function Cassette({ track, progress, playing, reduced, phase }: { track: Track; progress: number; playing: boolean; reduced: boolean; phase: 'in' | 'out' | 'idle' }) {
+type Phase = 'idle' | 'opening' | 'out' | 'in' | 'closing';
+type Flow = 'play' | 'ff' | 'rew' | 'off';
+
+function Cassette({ track, progress, playing, reduced, phase, flow, color }: { track: Track; progress: number; playing: boolean; reduced: boolean; phase: Phase; flow: Flow; color: [number, number, number] | null }) {
   const left = useRef<SVGGElement>(null);
   const right = useRef<SVGGElement>(null);
-  useSpinRamp([left, right], playing && phase !== 'out', 130, reduced);
-  const pal = PAPERS[hashOf(track.id) % PAPERS.length];
+  const fast = flow === 'ff' || flow === 'rew';
+  useSpinRamp([left, right], (playing || fast) && phase !== 'out', flow === 'ff' ? 900 : flow === 'rew' ? -900 : 130, reduced);
+  const base = PAPERS[hashOf(track.id) % PAPERS.length];
+  const pal = color ? { ...base, stripe: `rgb(${color.join(',')})` } : base;
+  const cover = (track as any).album?.cover_url || (track as any).image_url || withBase('/default-album.png');
   const p = Math.min(1, Math.max(0, progress));
   const rL = Math.sqrt(R_MIN ** 2 + (R_MAX ** 2 - R_MIN ** 2) * (1 - p));
   const rR = Math.sqrt(R_MIN ** 2 + (R_MAX ** 2 - R_MIN ** 2) * p);
@@ -82,7 +99,7 @@ function Cassette({ track, progress, playing, reduced, phase }: { track: Track; 
     </g>
   );
   return (
-    <svg className={`cs-cassette cs-${phase}`} viewBox="0 0 400 250" role="img" aria-label={`${track.title} 카세트`}>
+    <svg className={`cs-cassette cs-p-${phase}`} viewBox="0 0 400 250" role="img" aria-label={`${track.title} 카세트`}>
       <defs>
         <linearGradient id="cs-body" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="rgba(70,70,76,.78)" /><stop offset=".5" stopColor="rgba(38,38,42,.82)" /><stop offset="1" stopColor="rgba(22,22,25,.88)" />
@@ -92,6 +109,9 @@ function Cassette({ track, progress, playing, reduced, phase }: { track: Track; 
         </linearGradient>
         <radialGradient id="cs-tape-sheen" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="rgba(255,235,210,.28)" /><stop offset="1" stopColor="rgba(0,0,0,.25)" /></radialGradient>
         <radialGradient id="cs-screw" cx=".35" cy=".3" r=".8"><stop offset="0" stopColor="#d8d6d0" /><stop offset="1" stopColor="#6c6a64" /></radialGradient>
+        <pattern id="cs-tape-tex" width="9" height="5" patternUnits="userSpaceOnUse">
+          <rect width="9" height="5" fill="#3b2517" /><rect x="0" y="0" width="3" height="5" fill="#523520" /><rect x="6" y="1" width="1.2" height="3" fill="#2a190e" />
+        </pattern>
         <clipPath id="cs-win"><rect x="106" y="74" width="188" height="62" rx="12" /></clipPath>
       </defs>
       <rect x="2" y="2" width="396" height="246" rx="16" fill="url(#cs-body)" stroke="rgba(255,255,255,.28)" strokeWidth="1.5" />
@@ -110,6 +130,13 @@ function Cassette({ track, progress, playing, reduced, phase }: { track: Track; 
       <foreignObject x="40" y="140" width="250" height="24">
         <div style={{ font: `400 18px/1 ${FONT}`, color: pal.ink, opacity: .85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{artist}</div>
       </foreignObject>
+ {/* 폴라로이드 스티커 — 앨범 커버 */}
+      <g transform="rotate(-5 66 100)">
+        <rect x="38" y="70" width="58" height="68" rx="2" fill="#fbf8ef" stroke="rgba(0,0,0,.25)" strokeWidth=".6" />
+        <image href={cover} x="42" y="74" width="50" height="50" preserveAspectRatio="xMidYMid slice" />
+        <rect x="42" y="74" width="50" height="50" fill="url(#cs-glass)" opacity=".5" />
+        <rect x="46" y="129" width="30" height="1.4" fill="rgba(0,0,0,.28)" />
+      </g>
       <circle cx="338" cy="150" r="13" fill="none" stroke={pal.ink} strokeWidth="1.6" opacity=".8" />
       <text x="338" y="156" textAnchor="middle" fontFamily={FONT} fontSize="19" fill={pal.ink} opacity=".9">A</text>
       <text x="300" y="155" textAnchor="end" fontFamily="ui-monospace,monospace" fontSize="8.5" letterSpacing="1.5" fill={pal.ink} opacity=".55">COOKIE TAPE · 90</text>
@@ -118,6 +145,9 @@ function Cassette({ track, progress, playing, reduced, phase }: { track: Track; 
       <g clipPath="url(#cs-win)">
         {reel(150, left, rL)}
         {reel(250, right, rR)}
+        <g className={`cs-flow cs-flow-${flow}`}>
+          <rect x="130" y="118" width="280" height="5" fill="url(#cs-tape-tex)" />
+        </g>
         <rect x="106" y="126" width="188" height="1.6" fill="#2a1a10" />
       </g>
       <rect x="106" y="74" width="188" height="62" rx="12" fill="url(#cs-glass)" />
@@ -144,15 +174,18 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
 
   // 곡이 바뀌면 카세트가 빠지고(out) 새 카세트가 들어온다(in)
   const [shown, setShown] = useState<Track | null>(currentTrack);
-  const [phase, setPhase] = useState<'in' | 'out' | 'idle'>('idle');
+  const [phase, setPhase] = useState<Phase>('idle');
   useEffect(() => {
     if (!currentTrack) return;
     if (!shown || shown.id === currentTrack.id) { if (!shown) setShown(currentTrack); return; }
     if (reduced) { setShown(currentTrack); return; }
-    setPhase('out');
-    const a = setTimeout(() => { setShown(currentTrack); setPhase('in'); }, 300);
-    const b = setTimeout(() => setPhase('idle'), 300 + 560);
-    return () => { clearTimeout(a); clearTimeout(b); };
+    // 약 1.2초: 문이 열리고 → 카세트가 튀어나오고 → 새 카세트가 미끄러져 들어가고 → 문이 딸깍 닫힌다
+    setPhase('opening');
+    const t1 = setTimeout(() => setPhase('out'), 280);
+    const t2 = setTimeout(() => { setShown(currentTrack); setPhase('in'); }, 560);
+    const t3 = setTimeout(() => setPhase('closing'), 980);
+    const t4 = setTimeout(() => setPhase('idle'), 1200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack?.id, reduced]);
 
@@ -190,13 +223,20 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   const playPause = () => togglePlay();
   const stop = () => { if (usePlayerStore.getState().isPlaying) togglePlay(); seek(0); };
 
+  const color = useCoverColor((shown as any)?.album?.cover_url || (shown as any)?.image_url);
+  const flow: Flow = pressed === 'ff' ? 'ff' : pressed === 'rew' ? 'rew' : isPlaying ? 'play' : 'off';
+  const cover = (shown as any)?.album?.cover_url || (shown as any)?.image_url || withBase('/default-album.png');
+  const artistName = (shown as any)?.album?.artist?.name ?? '';
+
   if (!shown) return null;
+  const open = phase === 'opening' || phase === 'out' || phase === 'in';
   return (
-    <main className="cs-wrap" data-testid="cassette-player">
-      <div className="cs-deck">
+    <main className="cs-wrap" data-testid="cassette-player" style={{ ['--cc' as any]: rgba(color, 1, '255,196,120') }}>
+      <div className="cs-glow" aria-hidden="true" style={{ background: `radial-gradient(ellipse 55% 50% at 50% 48%, ${rgba(color, 0.42, '255,176,96')}, transparent 70%)` }} />
+      <div className={`cs-deck${isPlaying && !reduced ? ' is-running' : ''}${phase === 'closing' ? ' is-click' : ''}`}>
         <div className="cs-bay">
-          <Cassette track={shown} progress={progress} playing={isPlaying} reduced={reduced} phase={phase} />
-          <div className="cs-lid" aria-hidden="true" />
+          <Cassette track={shown} progress={progress} playing={isPlaying} reduced={reduced} phase={phase} flow={flow} color={color} />
+          <div className={`cs-lid${open ? ' is-open' : ''}`} aria-hidden="true" />
         </div>
         <div className="cs-panel">
           <div className="cs-counter" aria-label="카운터"><span className="cs-cnt">{counter}</span></div>
@@ -210,6 +250,10 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
           </div>
         </div>
       </div>
+      <aside key={shown.id} className="cs-jcard" aria-hidden="true">
+        <img src={cover} alt="" draggable={false} />
+        <div className="cs-jspine"><b>{shown.title}</b><span>{artistName}</span></div>
+      </aside>
     </main>
   );
 }
@@ -222,25 +266,44 @@ export const CS_CSS = `
  linear-gradient(180deg,rgba(74,45,24,.9),rgba(42,25,13,.94));opacity:.86;mix-blend-mode:multiply}
 .cs-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 16px;perspective:1200px}
 .cs-deck{--cw:min(88vw,540px,calc(44vh * 1.6));width:var(--cw);display:flex;flex-direction:column;gap:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
-.cs-bay{position:relative;padding:3.2% 3.2% 2.6%;border-radius:14px 14px 4px 4px;background:linear-gradient(180deg,#2c2c30,#17171a);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 2px 8px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06);overflow:hidden}
+.cs-bay{position:relative;padding:3.2% 3.2% 2.6%;border-radius:14px 14px 4px 4px;background:linear-gradient(180deg,#2c2c30,#17171a);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 2px 8px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
 .cs-cassette{display:block;width:100%;height:auto;will-change:transform,opacity;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
-.cs-lid{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%,rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
-.cs-out{animation:cs-eject .3s cubic-bezier(.5,0,.9,.6) forwards}
-.cs-in{animation:cs-insert .56s cubic-bezier(.2,.8,.2,1) both}
+.cs-lid{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;transform-origin:50% 0;transition:transform .3s cubic-bezier(.3,.7,.2,1);background:linear-gradient(115deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%,rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.cs-lid.is-open{transform:perspective(900px) rotateX(-64deg)}
+.cs-p-out{animation:cs-eject .28s cubic-bezier(.5,0,.9,.6) forwards}
+.cs-p-in{animation:cs-insert .42s cubic-bezier(.2,.8,.2,1) both}
 @keyframes cs-eject{to{transform:translateY(-34%) rotateX(18deg);opacity:0}}
-@keyframes cs-insert{0%{transform:translateY(-38%) rotateX(18deg);opacity:0}55%{opacity:1}78%{transform:translateY(3%)}100%{transform:none;opacity:1}}
+@keyframes cs-insert{0%{transform:translateY(-38%) rotateX(18deg);opacity:0}55%{opacity:1}80%{transform:translateY(3%)}100%{transform:none;opacity:1}}
+.cs-glow{position:absolute;inset:0;pointer-events:none;transition:background .8s}
+.cs-deck{position:relative}
+.cs-deck.is-running{animation:cs-hum .21s linear infinite}
+@keyframes cs-hum{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(.5px,.3px,0)}50%{transform:translate3d(-.3px,-.2px,0)}75%{transform:translate3d(.3px,-.3px,0)}100%{transform:translate3d(0,0,0)}}
+.cs-deck.is-click{animation:cs-clack .22s ease-out}
+@keyframes cs-clack{0%{transform:translateY(0)}35%{transform:translateY(3px)}100%{transform:translateY(0)}}
+.cs-flow{animation:cs-flow .5s linear infinite;animation-play-state:paused}
+.cs-flow-play{animation-play-state:running}
+.cs-flow-ff{animation:cs-flow .09s linear infinite}
+.cs-flow-rew{animation:cs-flow .09s linear infinite reverse}
+@keyframes cs-flow{from{transform:translateX(0)}to{transform:translateX(-18px)}}
+.cs-jcard{position:absolute;right:max(2vw,calc(50% - var(--cw,540px) / 2 - 150px));bottom:calc(50% - var(--cw,540px) * .42);width:clamp(96px,11vw,150px);transform:perspective(700px) rotateY(-24deg) rotate(4deg);transform-origin:left bottom;border-radius:4px;background:rgba(235,238,240,.16);backdrop-filter:blur(2px);border:1px solid rgba(255,255,255,.3);box-shadow:0 18px 30px rgba(0,0,0,.55),inset 0 0 0 3px rgba(255,255,255,.06);padding:5px;animation:imm-rise .6s .6s cubic-bezier(.2,.8,.2,1) both;pointer-events:none}
+.cs-jcard img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px}
+.cs-jspine{margin-top:5px;font:400 14px/1.1 'Nanum Pen Script','Gamja Flower','Segoe Print','Bradley Hand',cursive;color:#f0e8d2;display:flex;flex-direction:column;gap:1px}
+.cs-jspine b{font-weight:400;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cs-jspine span{opacity:.7;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+@media (max-width:980px){.cs-jcard{display:none}}
 .cs-panel{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:10px 14px;align-items:center;padding:12px 14px 14px;border-radius:4px 4px 14px 14px;background:linear-gradient(180deg,#3a3a3f,#232326 40%,#1a1a1d);border:1px solid rgba(255,255,255,.12);border-top:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
 .cs-counter{padding:5px 8px;border-radius:5px;background:#0b0c0a;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.12)}
 .cs-cnt{font:700 22px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:#e8dfc4;text-shadow:0 0 6px rgba(232,223,196,.35)}
 .cs-leds{display:flex;gap:3px;justify-content:flex-end;height:36px;align-items:flex-end}
 .cs-ledcol{--lit:0;display:flex;flex-direction:column-reverse;gap:2px;width:100%;max-width:14px;height:100%}
 .cs-ledcol i{position:relative;flex:1;border-radius:1px;background:#262826}
-.cs-ledcol i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 5px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 1000),1)}
+.cs-ledcol i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 5px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 2.2),1)}
+.cs-ledcol i::after{content:'';position:absolute;inset:0;border-radius:1px;background:#fff6dc;box-shadow:0 0 6px #ffe9a8;opacity:clamp(0,calc(1 - (var(--peak) - 1 - var(--k)) * (var(--peak) - 1 - var(--k)) * 1000),1)}
 .cs-ledcol i:nth-child(1){--c:#3fd36b}.cs-ledcol i:nth-child(2){--c:#3fd36b}.cs-ledcol i:nth-child(3){--c:#3fd36b}.cs-ledcol i:nth-child(4){--c:#9bd93a}.cs-ledcol i:nth-child(5){--c:#e4d234}.cs-ledcol i:nth-child(6){--c:#ef8a2c}.cs-ledcol i:nth-child(7){--c:#e5412f}
 .cs-vol{grid-column:1/-1;justify-self:end}
 .cs-keys{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .cs-key{height:46px;border-radius:5px 5px 3px 3px;display:grid;place-items:center;color:#222;cursor:pointer;background:linear-gradient(180deg,#d9d6cf,#aaa69d 55%,#8f8b82);box-shadow:0 5px 0 #4a4843,0 7px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7);transition:transform .08s ease-out,box-shadow .08s ease-out;will-change:transform}
 .cs-key.is-down{transform:translateY(4px);box-shadow:0 1px 0 #4a4843,0 2px 3px rgba(0,0,0,.6),inset 0 2px 4px rgba(0,0,0,.35);background:linear-gradient(180deg,#b9b5ac,#9a968d)}
 .cs-key:focus-visible{outline:2px solid #fff;outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.cs-in,.cs-out{animation:none}.cs-key{transition:none}}
+@media (prefers-reduced-motion:reduce){.cs-p-in,.cs-p-out,.cs-deck.is-running,.cs-deck.is-click,.cs-flow,.cs-jcard{animation:none}.cs-key,.cs-lid{transition:none}}
 `;

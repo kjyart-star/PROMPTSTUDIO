@@ -20,13 +20,13 @@ export function useSpinRamp(refs: RefObject<HTMLElement | SVGElement | null>[], 
       s.last = now;
       const target = s.playing ? dps : 0;
       s.omega += (target - s.omega) * (1 - Math.exp(-dt * 1.7)); // 가속·감속 시정수 약 0.6초
-      if (!s.playing && s.omega < 0.4) s.omega = 0;
+      if (!s.playing && Math.abs(s.omega) < 0.4) s.omega = 0;
       s.angle = (s.angle + s.omega * dt) % 360;
       refs.forEach((r) => { if (r.current) r.current.style.transform = `rotate(${s.angle.toFixed(2)}deg)`; });
       counter?.forEach((r) => { if (r.current) r.current.style.transform = `rotate(${(-s.angle).toFixed(2)}deg)`; });
-      s.raf = s.omega > 0 || s.playing ? requestAnimationFrame(tick) : 0;
+      s.raf = s.omega !== 0 || s.playing ? requestAnimationFrame(tick) : 0;
     };
-    if (!s.raf && (playing || s.omega > 0)) { s.last = performance.now(); s.raf = requestAnimationFrame(tick); }
+    if (!s.raf && (playing || s.omega !== 0)) { s.last = performance.now(); s.raf = requestAnimationFrame(tick); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, reduced, dps]);
   useEffect(() => () => { if (st.current.raf) cancelAnimationFrame(st.current.raf); st.current.raf = 0; }, []);
