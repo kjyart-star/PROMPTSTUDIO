@@ -352,4 +352,18 @@ describe('ImmersivePlayer', () => {
       expect(screen.getByTestId('clock-widget')).toBeTruthy()
     })
   })
+
+  it('카드형은 가사를 숨기고 커버+LP 와 제목·순번·아티스트만 보이며, 진행 원(궤도)은 어디에도 없다', () => {
+    const t = trk('1', { lyrics: '첫째 줄입니다\n둘째 줄입니다', album: { title: '앨범', cover_url: '/c/1.png', artist: { name: '아티스트' } } })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 10, duration: 100 })
+    const { container } = render(<ImmersivePlayer />)
+    expect(screen.getByText('첫째 줄입니다')).toBeTruthy()          // 가사형은 그대로 가사
+    expect(container.querySelector('.imm-orbit')).toBeNull()
+    fireEvent.click(screen.getByText('카드형'))
+    expect(screen.queryByText('첫째 줄입니다')).toBeNull()
+    expect(screen.getByTestId('lp-disc')).toBeTruthy()
+    expect(screen.getByText('아티스트')).toBeTruthy()
+    expect(screen.getByText(/01 \/ 01 · 지금 재생 중/)).toBeTruthy()
+    expect(container.querySelector('.imm-orbit')).toBeNull()
+  })
 })

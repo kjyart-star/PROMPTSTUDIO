@@ -56,22 +56,6 @@ function usePrefersReducedMotion() {
   return r;
 }
 
-function Orbit({ progress, spinning }: { progress: number; spinning: boolean }) {
-  return (
-    <svg className="imm-orbit" viewBox="0 0 100 100" aria-hidden="true">
-      <circle className={spinning ? 'imm-orbit-dash imm-spin' : 'imm-orbit-dash'} cx="50" cy="50" r="48" />
-      <circle
-        className="imm-orbit-arc"
-        cx="50" cy="50" r="48"
-        pathLength={1}
-        strokeDasharray="1"
-        strokeDashoffset={1 - Math.min(1, Math.max(0, progress))}
-        transform="rotate(-90 50 50)"
-      />
-    </svg>
-  );
-}
-
 export function ImmersivePlayer() {
   const {
     isImmersiveOpen, setImmersiveOpen, currentTrack, queue, queueIndex,
@@ -206,7 +190,6 @@ export function ImmersivePlayer() {
           <section className="imm-left">
             <div className="imm-coverwrap">
               <LpDisc key={currentTrack.id} playing={isPlaying} label={cover} out={0.44} />
-              <Orbit progress={progress} spinning={isPlaying && !reduced} />
               <img className={`imm-cover imm-breathe${isPlaying ? '' : ' is-paused'}`} src={cover} alt="" />
             </div>
             <p key={`k${currentTrack.id}`} className="imm-kicker imm-swap">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')} · {t.playing}</p>
@@ -214,6 +197,7 @@ export function ImmersivePlayer() {
             {artist && <p key={`a${currentTrack.id}`} className="imm-artist imm-swap">{artist}</p>}
           </section>
 
+          {designs.now !== 'card' && (
           <section className="imm-right" aria-label="가사">
             {timed.lines.length === 0 ? (
               <p className="imm-nolyr">{t.noLyr}</p>
@@ -242,6 +226,7 @@ export function ImmersivePlayer() {
               </>
             )}
           </section>
+          )}
         </main>
       ) : (
         <PlaylistCoverflow reduced={reduced} listLabel={t.list} variant={designs.list === 'arc' ? 'arc' : 'persp'} />
@@ -298,19 +283,16 @@ const IMM_CSS = `
 .imm-designs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);margin-left:auto;margin-right:12px}
 .imm-designs button{padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:rgba(255,255,255,.65);cursor:pointer}
 .imm-designs button[aria-pressed=true]{background:rgba(255,255,255,.22);color:#fff}
-.imm-framed .imm-now{margin:0 clamp(16px,4vw,64px) 8px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
+.imm-framed .imm-now{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;text-align:center;margin:0 clamp(16px,4vw,64px) 8px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
 .imm-close{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);cursor:pointer}
 .imm-help{margin-right:8px}
 .imm-close:hover{background:rgba(255,255,255,.22)}
 .imm-now{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,5vw,80px);align-items:center;padding:0 clamp(20px,6vw,96px)}
+.imm-framed .imm-left{align-items:center;text-align:center}
+.imm-framed .imm-coverwrap{width:min(40vw,44vh,400px);margin:0 0 30px;transform:translateX(-21%)}
+.imm-framed .imm-left h2{order:1}.imm-framed .imm-kicker{order:2;margin-top:10px}.imm-framed .imm-artist{order:3}
 .imm-left{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
 .imm-coverwrap{position:relative;isolation:isolate;width:min(28vw,44vh,380px);aspect-ratio:1;margin:0 0 24px 14px}
-.imm-orbit{position:absolute;inset:-9%;width:118%;height:118%;overflow:visible}
-.imm-orbit circle{fill:none}
-.imm-orbit-dash{stroke:rgba(255,255,255,.28);stroke-width:.5;stroke-dasharray:.5 2.4;stroke-linecap:round;transform-origin:50% 50%}
-.imm-orbit-arc{stroke:#f4efe8;stroke-width:.9;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.imm-spin{animation:imm-rot 60s linear infinite}
-@keyframes imm-rot{to{transform:rotate(360deg)}}
 .imm-cover{width:100%;height:100%;object-fit:cover;border-radius:22px;box-shadow:0 30px 70px rgba(0,0,0,.55)}
 .imm-kicker{font-size:12px;letter-spacing:.18em;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
 .imm-title{font-size:clamp(28px,3.6vw,52px);line-height:1.1;font-weight:800;margin:8px 0 0;letter-spacing:-.02em;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -349,8 +331,6 @@ const IMM_CSS = `
   .imm-line{font-size:17px}
 }
 @media (prefers-reduced-motion:reduce){
-  .imm-spin{animation:none}
-  .imm-line,.imm-orbit-arc{transition:none}
-  .imm-in,.imm-out,.imm-swap,.imm-breathe{animation:none}
+    .imm-line,  .imm-in,.imm-out,.imm-swap,.imm-breathe{animation:none}
 }
 `;
