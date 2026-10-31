@@ -1266,7 +1266,7 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      const res = await fetch(`/api/song-history?id=${trackId}`, {
+      const res = await fetch(`/api/song-history?id=${trackId}&direct=1`, {
         method: 'DELETE'
       })
       if (res.ok) {

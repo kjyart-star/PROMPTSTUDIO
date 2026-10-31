@@ -410,7 +410,7 @@ export function GenerateClient({
           alert("음악 생성 요청 실패")
         }
         if (activeHistoryId && [400, 401, 402, 403, 404].includes(res.status)) {
-          await fetch(`/api/song-history?id=${activeHistoryId}`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
+          await fetch(`/api/song-history?id=${activeHistoryId}&rollback=1`, { method: 'DELETE' }).catch(err => console.error('Failed to rollback history item:', err))
         }
       }
     } catch (e) {

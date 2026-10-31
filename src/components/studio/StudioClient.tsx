@@ -11,6 +11,7 @@ import { GENRES } from '@/lib/constants'
 import { GENRE_TRANSLATIONS } from '@/lib/constants/genres'
 import { CoverClient } from './CoverClient'
 import { GenerateClient } from './GenerateClient'
+import LibraryTrash from './LibraryTrash'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
@@ -917,6 +918,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
   const { balance: creditBalance, prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [trashRefreshKey, setTrashRefreshKey] = useState(0)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -1625,7 +1627,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         const res = await fetch(`/api/song-history?id=${id}`, { method: 'DELETE' })
         if (res.ok) {
           setHistory(prev => prev.filter(item => item.id !== id))
-          setStatus(uiLanguage === 'KO' ? '서버 히스토리 항목을 삭제했습니다' : uiLanguage === 'JA' ? 'サーバー履歴アイテムを削除しました' : 'Deleted server history item')
+          setTrashRefreshKey(k => k + 1)
+          setStatus(uiLanguage === 'KO' ? '휴지통으로 옮겼습니다 (30일 보관)' : uiLanguage === 'JA' ? 'ゴミ箱へ移動しました (30日間保管)' : 'Moved to trash (kept for 30 days)')
         } else {
           const err = await res.json()
           console.error('Error deleting history on server:', err)
@@ -1868,8 +1871,11 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         )}
                         <button
                           onClick={() => setDeleteConfirmId(item.id)}
-                          title={uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除' : 'Delete'}
-                          className={`${baseBtn} text-zinc-400 hover:text-red-400 hover:border-red-500/40 focus-visible:ring-red-500/60`}
+                          disabled={!!item.is_published}
+                          title={item.is_published
+                            ? (uiLanguage === 'KO' ? '쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다' : uiLanguage === 'JA' ? '公開中の曲はゴミ箱へ移動できません' : 'Published tracks cannot be moved to trash')
+                            : (uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash')}
+                          className={`${baseBtn} text-zinc-400 hover:text-red-400 hover:border-red-500/40 focus-visible:ring-red-500/60 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-400 disabled:hover:border-[#262626]`}
                         >
                           <Trash2 className={iconClass} />
                         </button>
@@ -1999,6 +2005,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     )
                   })}
                 </div>
+                <LibraryTrash uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'} refreshKey={trashRefreshKey} onRestored={fetchSongHistory} />
               </div>
 
               <TrackDetailPanel
@@ -2816,10 +2823,10 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
           <div className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container-low/95 backdrop-blur-xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6">
               <h3 className="text-lg font-bold text-white mb-2">
-                {uiLanguage === 'KO' ? '삭제 확인' : uiLanguage === 'JA' ? '削除の確認' : 'Confirm Delete'}
+                {uiLanguage === 'KO' ? '휴지통으로 이동' : uiLanguage === 'JA' ? 'ゴミ箱へ移動' : 'Move to trash'}
               </h3>
               <p className="text-sm text-zinc-400">
-                {uiLanguage === 'KO' ? '정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.' : uiLanguage === 'JA' ? '本当に削除しますか？この操作は元に戻せません。' : 'Are you sure you want to delete? This action cannot be undone.'}
+                {uiLanguage === 'KO' ? '이 곡을 휴지통으로 옮깁니다. 30일 동안 보관되며 언제든 복원할 수 있습니다.' : uiLanguage === 'JA' ? 'この曲をゴミ箱へ移動します。30日間保管され、いつでも復元できます。' : 'This track moves to the trash. It is kept for 30 days and can be restored any time.'}
               </p>
             </div>
             <div className="border-t border-outline-variant/10 p-4 bg-surface-container-lowest/30 flex gap-3 justify-end">
@@ -2833,7 +2840,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 onClick={() => { confirmDelete(); setDeleteConfirmId(null); }}
                 className="px-5 py-2.5 text-xs font-extrabold text-white bg-[#FF2D55] hover:bg-red-500 active:scale-[0.98] rounded-xl transition-all shadow-lg shadow-red-500/20 cursor-pointer"
               >
-                {uiLanguage === 'KO' ? '삭제' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
+                {uiLanguage === 'KO' ? '휴지통으로' : uiLanguage === 'JA' ? 'ゴミ箱へ' : 'Move to trash'}
               </button>
             </div>
           </div>
