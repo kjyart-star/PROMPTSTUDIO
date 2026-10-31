@@ -1,5 +1,6 @@
 'use client'
 
+import { LpDisc } from '@/components/player/LpDisc'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -521,7 +522,12 @@ export function ChartClient({
  
                       {/* 곡 메타데이터 */}
                       <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
+                        <div className="relative isolate flex items-center gap-3">
+                          {isCurrent && (
+                            <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-14 w-14 -translate-y-1/2">
+                              <LpDisc playing={isPlaying} label={album?.cover_url} out={0.2} size={0.9} />
+                            </span>
+                          )}
                           <button
                             onClick={() => {
                               handlePlayTrack(track)

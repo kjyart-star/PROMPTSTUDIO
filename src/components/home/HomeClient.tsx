@@ -1,5 +1,6 @@
 'use client'
 
+import { LpDisc } from '@/components/player/LpDisc'
 import TrackBadges from '@/components/common/TrackBadges'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -818,7 +819,7 @@ export function HomeClient({
             return (
               <div
                 key={track.id}
-                className={`w-full min-w-0 overflow-hidden p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
+                className={`relative isolate w-full min-w-0 overflow-hidden p-3.5 border rounded-2xl flex items-center gap-4 transition-all duration-300 group cursor-pointer ${
                   isCurrent ? 'bg-primary/15 border-primary/40 shadow-lg' : 'bg-[#151821] border-white/[0.08] hover:border-white/20 hover:bg-[#1c202c] shadow-md'
                 }`}
                 onClick={() => {
@@ -826,6 +827,11 @@ export function HomeClient({
                   setNowPlayingOpen(true)
                 }}
               >
+                {isCurrent && (
+                  <span aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 h-[80px] w-[80px] -translate-y-1/2">
+                    <LpDisc playing={isPlaying} label={track.album?.cover_url} out={0.18} size={0.92} />
+                  </span>
+                )}
                 {/* Album Cover */}
                 <div 
                   className="relative w-[80px] h-[80px] rounded-xl overflow-hidden bg-surface-container-lowest shrink-0 border border-white/5 group/image"

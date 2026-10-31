@@ -13,19 +13,22 @@ import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
+import { CCF_CSS } from './ClassicCoverflow';
+import { CassettePlayer, CS_CSS } from './CassettePlayer';
+import { LpDisc } from './LpDisc';
 import type { Track } from '@/types/music';
 
 type View = 'now' | 'list';
 const VIEW_KEY = 'cm.immersive-view';
 const DESIGN_KEY = 'cm.immersive-design';
-type Design = 'lyrics' | 'card' | 'persp' | 'arc';
-const NOW_DESIGNS: Design[] = ['lyrics', 'card'];
+type Design = 'lyrics' | 'card' | 'cassette' | 'persp' | 'arc';
+const NOW_DESIGNS: Design[] = ['lyrics', 'card', 'cassette'];
 const LIST_DESIGNS: Design[] = ['persp', 'arc'];
 
 const T = {
-  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', persp: '원근형', arc: '원통형' },
-  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', persp: 'Perspective', arc: 'Arc' },
-  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', persp: '遠近', arc: '円筒' },
+  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', cassette: '카세트', persp: '커버플로', arc: '원통형' },
+  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', cassette: 'Cassette', persp: 'Cover Flow', arc: 'Arc' },
+  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', cassette: 'カセット', persp: 'カバーフロー', arc: '円筒' },
 } as const;
 
 function fmt(sec: number) {
@@ -189,7 +192,28 @@ export function ImmersivePlayer() {
     box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: reduced ? 'auto' : 'smooth' });
   }, [active, reduced, view, isImmersiveOpen]);
 
-  if (!isImmersiveOpen || !currentTrack) return null;
+  // 닫을 때도 사라지는 움직임이 끝난 뒤에 떼어 낸다
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (isImmersiveOpen) { setMounted(true); return; }
+    if (!mounted) return;
+    if (reduced) { setMounted(false); return; }
+    const id = setTimeout(() => setMounted(false), 280);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isImmersiveOpen, reduced]);
+
+  // 배경은 곡이 바뀔 때 이전 커버 위로 새 커버가 서서히 겹쳐 나타난다
+  const coverNow = currentTrack ? coverOf(currentTrack) : '';
+  const [bgPrev, setBgPrev] = useState('');
+  const bgCur = useRef(coverNow);
+  useEffect(() => {
+    if (coverNow && coverNow !== bgCur.current) { setBgPrev(bgCur.current); bgCur.current = coverNow; }
+    else if (coverNow) bgCur.current = coverNow;
+  }, [coverNow]);
+
+  if ((!isImmersiveOpen && !mounted) || !currentTrack) return null;
+  const closing = !isImmersiveOpen;
 
   const cover = coverOf(currentTrack);
   const progress = dur ? currentTime / dur : 0;
@@ -198,9 +222,11 @@ export function ImmersivePlayer() {
   const pos = Math.max(0, queueIndex) + 1;
 
   return (
-    <div className={`imm-root${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS}</style>
-      <img className="imm-bg" src={cover} alt="" aria-hidden="true" />
+    <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS}</style>
+      {bgPrev && bgPrev !== cover && <img key={`p-${bgPrev}`} className="imm-bg" src={bgPrev} alt="" aria-hidden="true" />}
+      <img key={cover} className={`imm-bg${bgPrev ? ' imm-bg-fade' : ''}`} src={cover} alt="" aria-hidden="true" />
+      {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
 
       <header className="imm-top">
@@ -221,16 +247,19 @@ export function ImmersivePlayer() {
         </button>
       </header>
 
-      {view === 'now' ? (
+      {view === 'now' && designs.now === 'cassette' ? (
+        <CassettePlayer reduced={reduced} />
+      ) : view === 'now' ? (
         <main className="imm-now">
           <section className="imm-left">
             <div className="imm-coverwrap">
+              <LpDisc key={currentTrack.id} playing={isPlaying} label={cover} out={0.44} />
               <Orbit progress={progress} spinning={isPlaying && !reduced} />
-              <img className="imm-cover" src={cover} alt="" />
+              <img className={`imm-cover imm-breathe${isPlaying ? '' : ' is-paused'}`} src={cover} alt="" />
             </div>
-            <p className="imm-kicker">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')} · {t.playing}</p>
-            <h2 className="imm-title">{currentTrack.title}</h2>
-            {artist && <p className="imm-artist">{artist}</p>}
+            <p key={`k${currentTrack.id}`} className="imm-kicker imm-swap">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')} · {t.playing}</p>
+            <h2 key={`t${currentTrack.id}`} className="imm-title imm-swap">{currentTrack.title}</h2>
+            {artist && <p key={`a${currentTrack.id}`} className="imm-artist imm-swap">{artist}</p>}
           </section>
 
           <section className="imm-right" aria-label="가사">
@@ -294,6 +323,17 @@ export function ImmersivePlayer() {
 const IMM_CSS = `
 .imm-root{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;color:#f4efe8;background:#0d0d0d;overflow:hidden;font-family:inherit}
 .imm-bg{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;filter:blur(70px) saturate(1.5) brightness(.85);transform:scale(1.1)}
+.imm-bg-fade{animation:imm-fadein .9s ease-out both}
+@keyframes imm-fadein{from{opacity:0}to{opacity:1}}
+@keyframes imm-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.imm-swap{animation:imm-rise .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes imm-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.imm-breathe{animation:imm-breathe 4.2s ease-in-out infinite;will-change:transform}
+.imm-breathe.is-paused{animation-play-state:paused}
+@keyframes imm-open{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes imm-close{from{opacity:1;transform:none}to{opacity:0;transform:scale(.94)}}
+.imm-in{animation:imm-open .42s cubic-bezier(.2,.8,.2,1) both}
+.imm-out{animation:imm-close .28s ease-in both;pointer-events:none}
 .imm-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,13,.25),rgba(13,13,13,.78) 85%)}
 .imm-root>*:not(.imm-bg):not(.imm-veil){position:relative}
 .imm-top{display:flex;justify-content:flex-start;align-items:center;padding:16px 20px}
@@ -309,11 +349,11 @@ const IMM_CSS = `
 .imm-close:hover{background:rgba(255,255,255,.22)}
 .imm-now{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,5vw,80px);align-items:center;padding:0 clamp(20px,6vw,96px)}
 .imm-left{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
-.imm-coverwrap{position:relative;width:min(34vw,44vh,420px);aspect-ratio:1;margin:0 0 24px 14px}
+.imm-coverwrap{position:relative;isolation:isolate;width:min(28vw,44vh,380px);aspect-ratio:1;margin:0 0 24px 14px}
 .imm-orbit{position:absolute;inset:-9%;width:118%;height:118%;overflow:visible}
 .imm-orbit circle{fill:none}
 .imm-orbit-dash{stroke:rgba(255,255,255,.28);stroke-width:.5;stroke-dasharray:.5 2.4;stroke-linecap:round;transform-origin:50% 50%}
-.imm-orbit-arc{stroke:#f4efe8;stroke-width:.9;stroke-linecap:round;transition:stroke-dashoffset .4s linear}
+.imm-orbit-arc{stroke:#f4efe8;stroke-width:.9;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
 .imm-spin{animation:imm-rot 60s linear infinite}
 @keyframes imm-rot{to{transform:rotate(360deg)}}
 .imm-cover{width:100%;height:100%;object-fit:cover;border-radius:22px;box-shadow:0 30px 70px rgba(0,0,0,.55)}
@@ -351,5 +391,6 @@ const IMM_CSS = `
 @media (prefers-reduced-motion:reduce){
   .imm-spin{animation:none}
   .imm-line,.imm-orbit-arc{transition:none}
+  .imm-in,.imm-out,.imm-swap,.imm-bg-fade,.imm-breathe{animation:none}
 }
 `;

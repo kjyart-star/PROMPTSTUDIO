@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, act, within } from '@testing-library/react'
 import { ImmersivePlayer } from './ImmersivePlayer'
 import { usePlayerStore } from '@/stores/playerStore'
 
@@ -65,15 +65,26 @@ describe('ImmersivePlayer', () => {
     expect(screen.queryByTestId('playlist-coverflow')).toBeNull()
   })
 
-  it('재생목록 보기에서 좌우 키로 이전·다음 곡으로 이동해 재생한다', () => {
-    const q = [trk('1'), trk('2'), trk('3')]
-    const playTrack = vi.fn()
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[1], queue: q, queueIndex: 1, playTrack })
-    render(<ImmersivePlayer />)
-    act(() => { fireEvent.keyDown(window, { key: 'ArrowRight' }) })
-    expect(playTrack).toHaveBeenLastCalledWith(q[2], q)
-    act(() => { fireEvent.keyDown(window, { key: 'ArrowLeft' }) })
-    expect(playTrack).toHaveBeenLastCalledWith(q[0], q)
+  it('커버플로: 좌우 키는 미리보기만 옮기고 멈춘 뒤에야 재생하며, 「지금 재생 중인 곡으로」로 되돌릴 수 있다', () => {
+    vi.useFakeTimers()
+    try {
+      const q = [trk('1'), trk('2'), trk('3')]
+      const playTrack = vi.fn()
+      usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[1], queue: q, queueIndex: 1, playTrack })
+      render(<ImmersivePlayer />)
+      act(() => { fireEvent.keyDown(window, { key: 'ArrowRight' }) })
+      expect(playTrack).not.toHaveBeenCalled()
+      expect(screen.getByText('03 / 03', { exact: false })).toBeTruthy()
+      act(() => { vi.advanceTimersByTime(800) })
+      expect(playTrack).toHaveBeenLastCalledWith(q[2], q)
+      // 되돌리기
+      usePlayerStore.setState({ currentTrack: q[1], queueIndex: 1 })
+      act(() => { fireEvent.keyDown(window, { key: 'ArrowLeft' }) })
+      act(() => { fireEvent.click(screen.getByText('지금 재생 중인 곡으로')) })
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(playTrack).toHaveBeenCalledTimes(1)
+      expect(screen.getByText('02 / 03', { exact: false })).toBeTruthy()
+    } finally { vi.useRealTimers() }
   })
 
   it('첫 곡에서 왼쪽 키는 아무것도 하지 않는다', () => {
@@ -83,6 +94,35 @@ describe('ImmersivePlayer', () => {
     render(<ImmersivePlayer />)
     act(() => { fireEvent.keyDown(window, { key: 'ArrowLeft' }) })
     expect(playTrack).not.toHaveBeenCalled()
+  })
+
+  it('가사형 커버 뒤에 LP 판이 있고, 카세트 디자인은 버튼이 재생 상태에 연결된다', () => {
+    const t = trk('1')
+    const togglePlay = vi.fn(); const seek = vi.fn()
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, isPlaying: false, togglePlay, seek, currentTime: 20, duration: 120 })
+    render(<ImmersivePlayer />)
+    expect(screen.getByTestId('lp-disc')).toBeTruthy()
+    fireEvent.click(screen.getByText('카세트'))
+    expect(screen.getByTestId('cassette-player')).toBeTruthy()
+    expect(screen.getByText('020')).toBeTruthy()
+    const deck = within(screen.getByTestId('cassette-player'))
+    fireEvent.click(deck.getByLabelText('재생'))
+    expect(togglePlay).toHaveBeenCalledTimes(1)
+    fireEvent.click(deck.getByLabelText('빨리감기'))
+    expect(seek).toHaveBeenLastCalledWith(30)
+  })
+
+  it('닫아도 사라지는 움직임이 끝날 때까지는 화면이 남아 있다', () => {
+    vi.useFakeTimers()
+    try {
+      const t = trk('1')
+      usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })
+      render(<ImmersivePlayer />)
+      act(() => { usePlayerStore.setState({ isImmersiveOpen: false }) })
+      expect(screen.getByTestId('immersive-player').className).toContain('imm-out')
+      act(() => { vi.advanceTimersByTime(400) })
+      expect(screen.queryByTestId('immersive-player')).toBeNull()
+    } finally { vi.useRealTimers() }
   })
 
   it('디자인을 고르면 기억하고 다시 열 때 그 디자인으로 열린다', () => {

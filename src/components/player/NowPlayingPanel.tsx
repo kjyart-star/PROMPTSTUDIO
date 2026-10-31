@@ -1,5 +1,6 @@
 'use client';
 
+import { albumLabel } from '@/lib/player/albumLabel';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { X, Heart, ListMusic, Music, Info, Share2, MoreHorizontal, Plus, Search, Check, Disc3, ChevronLeft, ChevronRight, Play } from 'lucide-react';
@@ -416,7 +417,7 @@ export function NowPlayingPanel() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#282828] bg-surface-container-low/65 sticky top-0 z-10 backdrop-blur-md relative rounded-t-lg">
           <h2 className="text-sm font-bold text-on-surface truncate pr-4">
-            {track.album?.title || (lang === 'KO' ? '정보' : 'Details')}
+            {albumLabel(track) || (lang === 'KO' ? '정보' : 'Details')}
           </h2>
           <div className="flex items-center gap-2">
             {/* More options button wrapper with hover activation */}

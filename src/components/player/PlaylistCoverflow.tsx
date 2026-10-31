@@ -10,6 +10,8 @@
 import { useEffect } from 'react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { withBase } from '@/lib/basePath';
+import { ClassicCoverflow } from './ClassicCoverflow';
+import { albumLabel } from '@/lib/player/albumLabel';
 import type { Track } from '@/types/music';
 
 const coverOf = (t?: Track | null) =>
@@ -26,6 +28,10 @@ const STEP = 0.44; // 다음 커버가 앞 커버보다 오른쪽으로 밀리�
 export type CoverflowVariant = 'persp' | 'arc';
 
 export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { reduced: boolean; listLabel: string; variant?: CoverflowVariant }) {
+  return variant === 'arc' ? <ArcFlow reduced={reduced} listLabel={listLabel} /> : <ClassicCoverflow reduced={reduced} />;
+}
+
+function ArcFlow({ reduced, listLabel }: { reduced: boolean; listLabel: string }) {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const queue = usePlayerStore((s) => s.queue);
   const queueIndex = usePlayerStore((s) => s.queueIndex);
@@ -54,8 +60,8 @@ export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { r
 
   if (!currentTrack) return null;
   const base = Math.max(0, queueIndex);
-  const arc = variant === 'arc';
-  const offs = arc ? [-3, -2, -1, 0, 1, 2, 3] : [0, 1, 2, 3, 4];
+  const arc = true;
+  const offs = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
   const cards = offs.map((off) => ({ off, track: queue[base + off] ?? (off === 0 ? currentTrack : undefined) }))
     .filter((c): c is { off: number; track: Track } => !!c.track);
   const span = arc ? 6 : cards.length - 1;
@@ -66,7 +72,7 @@ export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { r
 
   return (
     <main className="pcf-wrap" data-testid="playlist-coverflow">
-      <p className="pcf-style" title={style}>{style || (currentTrack as any).album?.title || listLabel}</p>
+      <p className="pcf-style" title={style}>{style || albumLabel(currentTrack) || listLabel}</p>
       <div className={`pcf-stage${arc ? ' pcf-arc' : ''}`} style={{ ['--span' as any]: span }} role="list">
         {cards.map(({ off, track }) => {
           const a = Math.abs(off);
@@ -79,11 +85,11 @@ export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { r
             : `translateX(calc(var(--s) * ${off * STEP})) rotateY(${off === 0 ? 0 : -38}deg) scale(${1 - off * 0.1})`;
           return (
             <button
-              key={`${track.id}-${off}`}
+              key={track.id}
               role="listitem"
               type="button"
               className={`pcf-card${a > 2 ? ' pcf-far' : ''}`}
-              style={{ transform: tf, zIndex: 10 - a, opacity: 1 - a * 0.14 }}
+              style={{ transform: tf, zIndex: 10 - a, opacity: a > 3 ? 0 : 1 - a * 0.14, pointerEvents: a > 3 ? 'none' : undefined }}
               aria-label={track.title}
               aria-current={off === 0 ? 'true' : undefined}
               onClick={() => (off === 0 ? togglePlay() : goTo(base + off))}
@@ -95,8 +101,8 @@ export function PlaylistCoverflow({ reduced, listLabel, variant = 'persp' }: { r
           );
         })}
       </div>
-      <h2 className="pcf-title">{currentTrack.title}</h2>
-      <p className="pcf-kicker">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')}{artist ? ` · ${artist}` : ''}</p>
+      <h2 key={currentTrack.id} className="pcf-title imm-swap">{currentTrack.title}</h2>
+      <p key={`k${currentTrack.id}`} className="pcf-kicker imm-swap">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')}{artist ? ` · ${artist}` : ''}</p>
     </main>
   );
 }
@@ -108,7 +114,9 @@ export const PCF_CSS = `
 .pcf-stage.pcf-arc{width:calc(var(--s) * 4);perspective-origin:50% 40%}
 .pcf-arc .pcf-card{left:calc(50% - var(--s) / 2);transform-origin:center}
 .pcf-card{position:absolute;left:0;top:0;width:var(--s);height:var(--s);padding:0;background:none;cursor:pointer;transform-origin:left center;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .55s}
-.pcf-card>img:first-child{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;box-shadow:0 24px 50px rgba(0,0,0,.5)}
+.pcf-card:hover>img:first-child{translate:0 -6px}
+.pcf-card[aria-current=true]>img:first-child{animation:imm-breathe 4.2s ease-in-out infinite}
+.pcf-card>img:first-child{transition:translate .25s ease-out;width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;box-shadow:0 24px 50px rgba(0,0,0,.5)}
 .pcf-refl{position:absolute;left:0;top:102%;width:100%;height:100%;object-fit:cover;border-radius:14px;transform:scaleY(-1);opacity:.22;mask-image:linear-gradient(0deg,#000,transparent 38%);-webkit-mask-image:linear-gradient(0deg,#000,transparent 38%);pointer-events:none}
 .pcf-title{position:relative;z-index:20;margin:calc(var(--s-gap,0px) + clamp(36px,8vh,80px)) 0 0;font-size:clamp(22px,2.6vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.15;max-width:90vw;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 2px 18px rgba(0,0,0,.6)}
 .pcf-kicker{margin-top:10px;font-size:12px;letter-spacing:.18em;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}

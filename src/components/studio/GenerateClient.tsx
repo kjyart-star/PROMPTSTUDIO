@@ -1,5 +1,6 @@
 'use client'
 
+import { LpDisc } from '@/components/player/LpDisc'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Music, Check, ArrowRight, Disc, User, Play, Pause, Heart, Globe, FolderPlus, Download, Wand2, ChevronDown, Trash2 } from 'lucide-react'
@@ -978,7 +979,8 @@ export function GenerateClient({
                           }`}
                         >
                           {/* 64px 썸네일 + 길이. 재생 중이면 이퀄라이저, 올려 두면 재생 표시 */}
-                          <div className="relative w-16 h-16 shrink-0">
+                          <div className="relative isolate w-16 h-16 shrink-0">
+                            {currentTrack?.id === track.id && <LpDisc playing={isPlaying} label={track.image_url} out={0.2} size={0.9} />}
                             {track.image_url ? (
                               <img src={track.image_url} alt="" className="w-16 h-16 rounded-md object-cover" />
                             ) : (

@@ -15,7 +15,7 @@ import { handlePlayerShortcut } from './playerShortcuts';
 import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl';
 import { withCorsCacheKey, bustCorsCacheKey } from '@/lib/audio/corsUrl';
-import { Disc, DiscStyles } from './Disc';
+import { LpDisc } from './LpDisc';
 import { withBase } from '@/lib/basePath'
 
 // hasMobileNav — 이 화면에 모바일 하단 내비(md:hidden, h-24)가 있으면 true.
@@ -403,7 +403,6 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
 
       {/* 하단 고정 플레이어 UI */}
       {/* 모바일에선 하단 내비(h-24)가 bottom-0 을 차지하므로 플레이어를 그 바로 위에 얹는다. md+ 는 내비가 없어 종전대로 bottom-0. */}
-      <DiscStyles />
       <footer className={`fixed left-0 w-full z-50 flex items-center justify-between px-[32px] h-24 glass-panel border-t border-outline-variant/10 ${
         hasMobileNav ? 'bottom-24 md:bottom-0' : 'bottom-0'
       }`}>
@@ -429,11 +428,11 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
             <button
               type="button"
               onClick={() => toggleInfo()}
-              className="group relative mr-2 block h-14 w-14 shrink-0 cursor-pointer overflow-visible text-left active:scale-95 transition-transform"
+              className="group relative isolate mr-2 block h-14 w-14 shrink-0 cursor-pointer overflow-visible text-left active:scale-95 transition-transform"
               title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
               aria-label={`${displayTrack.title} ${isNowPlayingOpen ? '곡 정보 닫기' : '곡 정보 보기'}`}
             >
-              <Disc spinning={isPlaying} />
+              <LpDisc playing={isPlaying} label={displayCoverUrl} out={0.36} />
               <span className="relative z-10 block h-full w-full overflow-hidden rounded-lg border border-outline-variant/10 bg-surface-container shadow-lg transition-opacity group-hover:opacity-90">
                 <img
                   src={displayCoverUrl}
