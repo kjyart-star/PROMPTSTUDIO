@@ -100,16 +100,18 @@ export default function CinemaClient() {
   const sizeMb = estimateBytes(totalSec, outW, outH, settings.fps) / 1048576
   const canFilePicker = typeof window !== 'undefined' && 'showSaveFilePicker' in window
 
-  const addTrack = async (base: Omit<CTrack, 'id' | 'duration' | 'lyrics'>) => {
+  const addTrack = async (base: Omit<CTrack, 'id' | 'duration' | 'lyrics'>, saved?: { t: number; text: string }[]) => {
     const t: CTrack = { ...base, id: newId(), duration: 0, lyrics: { lines: [], mode: 'none' } }
     setAdding(`「${t.title}」 길이를 재는 중…`)
     try {
       t.duration = await probeDuration(t)
-      t.lyrics = initialLyrics(t.lyricsRaw, t.duration)
+      // 보관함의 「가사 시간 편집기」에서 맞춰 둔 시간표가 있으면 그대로 쓴다(정확)
+      const ok = saved && saved.length > 0 && saved.every(l => typeof l.t === 'number' && l.t >= 0 && l.text)
+      t.lyrics = ok ? { lines: saved!.map(l => ({ text: l.text, start: l.t })), mode: 'exact' } : initialLyrics(t.lyricsRaw, t.duration)
       setTracks(ts => [...ts, t])
     } catch { setNotice(`「${t.title}」 을(를) 불러오지 못했어요. 로그인과 파일 형식을 확인해 주세요.`) } finally { setAdding('') }
   }
-  const addSong = (s: LibrarySong) => addTrack({ title: s.title || '제목 없음', song: s, lyricsRaw: s.lyrics ?? '' })
+  const addSong = (s: LibrarySong) => addTrack({ title: s.title || '제목 없음', song: s, lyricsRaw: s.lyrics ?? '' }, (s as LibrarySong & { form?: { lrc?: { t: number; text: string }[] } }).form?.lrc)
   const addFiles = async (files: FileList | null) => {
     for (const f of Array.from(files ?? [])) await addTrack({ title: f.name.replace(/\.[^.]+$/, ''), file: f, lyricsRaw: '' })
   }

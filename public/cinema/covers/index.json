@@ -1,0 +1,52 @@
+[
+  {
+    "id": "summer-night",
+    "file": "summer-night.webp",
+    "mood": "여름밤"
+  },
+  {
+    "id": "rainy-cafe",
+    "file": "rainy-cafe.webp",
+    "mood": "비 오는 카페"
+  },
+  {
+    "id": "autumn-book",
+    "file": "autumn-book.webp",
+    "mood": "가을 책"
+  },
+  {
+    "id": "neon-city",
+    "file": "neon-city.webp",
+    "mood": "네온 도시"
+  },
+  {
+    "id": "sea-sunset",
+    "file": "sea-sunset.webp",
+    "mood": "바다 노을"
+  },
+  {
+    "id": "winter-window",
+    "file": "winter-window.webp",
+    "mood": "겨울 창가"
+  },
+  {
+    "id": "jazz-bar",
+    "file": "jazz-bar.webp",
+    "mood": "재즈 바"
+  },
+  {
+    "id": "forest-morning",
+    "file": "forest-morning.webp",
+    "mood": "숲 아침"
+  },
+  {
+    "id": "city-dawn",
+    "file": "city-dawn.webp",
+    "mood": "새벽 도시"
+  },
+  {
+    "id": "night-road",
+    "file": "night-road.webp",
+    "mood": "밤 드라이브"
+  }
+]
