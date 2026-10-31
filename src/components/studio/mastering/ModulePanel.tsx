@@ -24,7 +24,7 @@ type Set = (fn: (p: ChainParams) => ChainParams) => void
 function ctx2d(c: HTMLCanvasElement) {
   const g = c.getContext('2d')
   if (!g) return null
-  const dpr = window.devicePixelRatio || 1
+  const dpr = (window.devicePixelRatio || 1) * (c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1)
   const w = c.clientWidth, h = c.clientHeight
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr) }
   g.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -44,7 +44,7 @@ export function EqWithSpectrum({ p, set, engine, height }: { p: ChainParams; set
       const r = ctx2d(c)
       if (!r) return
       const { g, w, h } = r
-      g.fillStyle = '#121314'; g.fillRect(0, 0, w, h)
+      g.fillStyle = '#08090a'; g.fillRect(0, 0, w, h)
       const an = engine.postAnalyser, pa = engine.preAnalyser
       if (!an || !pa || !engine.ctx || engine.paused) return
       if (!post || post.length !== an.frequencyBinCount) { post = new Float32Array(an.frequencyBinCount); pre = new Float32Array(pa.frequencyBinCount) }
@@ -64,7 +64,7 @@ export function EqWithSpectrum({ p, set, engine, height }: { p: ChainParams; set
         }
       }
       path(pre!); g.strokeStyle = 'rgba(170,175,182,0.35)'; g.lineWidth = 1; g.stroke()
-      path(post); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fillStyle = 'rgba(82,210,126,0.12)'; g.fill()
+      path(post); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fillStyle = 'rgba(46,212,138,0.14)'; g.fill()
     }
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
@@ -108,9 +108,9 @@ function GrGraph({ engine, pick: pk, ceiling }: { engine: MasteringEngine; pick:
       const r = ctx2d(c)
       if (!r) return
       const { g, w, h } = r
-      g.fillStyle = '#121314'; g.fillRect(0, 0, w, h)
+      g.fillStyle = '#08090a'; g.fillRect(0, 0, w, h)
       const Y = (v: number) => (Math.min(18, -v) / 18) * (h - 14)
-      g.strokeStyle = '#26282b'; g.fillStyle = '#868b93'; g.font = '10px ui-monospace, monospace'; g.textAlign = 'left'
+      g.strokeStyle = '#1f2327'; g.fillStyle = '#7b828b'; g.font = '10px ui-monospace, monospace'; g.textAlign = 'left'
       for (const d of [0, -3, -6, -12]) { const y = Y(d) + 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.fillText(`${d}`, 3, y + 10) }
       g.fillText('10초 전', 3, h - 2); g.textAlign = 'right'; g.fillText('지금', w - 3, h - 2)
       g.beginPath(); g.moveTo(0, 0)
@@ -159,10 +159,10 @@ function TransientShape({ attack, sustain }: { attack: number; sustain: number }
   const base = `${pad},${H - pad}`
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" preserveAspectRatio="none" aria-label="타격 엔벨로프 — 처리 전후">
-      <line x1={pad} x2={W - pad} y1={H - pad - (H - pad * 2) / 1.9} y2={H - pad - (H - pad * 2) / 1.9} stroke="#34373b" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+      <line x1={pad} x2={W - pad} y1={H - pad - (H - pad * 2) / 1.9} y2={H - pad - (H - pad * 2) / 1.9} stroke="#262a2f" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
       <polygon points={`${base} ${pre.join(' ')} ${W - pad},${H - pad}`} fill="rgba(170,175,182,0.18)" />
       <polyline points={pre.join(' ')} fill="none" stroke="#9ea3aa" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-      <polyline points={post.join(' ')} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+      <polyline points={post.join(' ')} fill="none" stroke="#2ed48a" strokeWidth={2} vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }
@@ -181,10 +181,10 @@ function ClipShape({ threshold, softness }: { threshold: number; softness: numbe
   }
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" preserveAspectRatio="none" aria-label="깎기 곡선">
-      <line x1={X(-R)} y1={Y(-R)} x2={X(R)} y2={Y(R)} stroke="#42454a" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+      <line x1={X(-R)} y1={Y(-R)} x2={X(R)} y2={Y(R)} stroke="#2c3036" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
       <line x1={pad} x2={W - pad} y1={Y(t)} y2={Y(t)} stroke="#f0a43a" strokeOpacity={0.5} vectorEffect="non-scaling-stroke" />
       <line x1={pad} x2={W - pad} y1={Y(-t)} y2={Y(-t)} stroke="#f0a43a" strokeOpacity={0.5} vectorEffect="non-scaling-stroke" />
-      <path d={d} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="#2ed48a" strokeWidth={2} vectorEffect="non-scaling-stroke" />
     </svg>
   )
 }
@@ -200,21 +200,21 @@ function StereoField({ bands, bassMono }: { bands: { label: string; width: numbe
     const [x0, y0] = p(-a), [x1, y1] = p(a)
     return a < 0.5 ? '' : `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
   }
-  const colors = ['#b07be8', '#52d27e', '#4f8fe8']
+  const colors = ['#b07be8', '#2ed48a', '#4f8fe8']
   const n = bands.length
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg" aria-label="스테레오 폭">
-      {[0.5, 1].map(k => <path key={k} d={`M ${cx - rMax * k} ${cy} A ${rMax * k} ${rMax * k} 0 0 1 ${cx + rMax * k} ${cy}`} fill="none" stroke="#34373b" />)}
-      <line x1={cx} y1={cy} x2={cx} y2={cy - rMax} stroke="#34373b" strokeDasharray="2 3" />
-      <line x1={cx} y1={cy} x2={cx - rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#42454a" strokeDasharray="2 3" />
-      <line x1={cx} y1={cy} x2={cx + rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#42454a" strokeDasharray="2 3" />
+      {[0.5, 1].map(k => <path key={k} d={`M ${cx - rMax * k} ${cy} A ${rMax * k} ${rMax * k} 0 0 1 ${cx + rMax * k} ${cy}`} fill="none" stroke="#262a2f" />)}
+      <line x1={cx} y1={cy} x2={cx} y2={cy - rMax} stroke="#262a2f" strokeDasharray="2 3" />
+      <line x1={cx} y1={cy} x2={cx - rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#2c3036" strokeDasharray="2 3" />
+      <line x1={cx} y1={cy} x2={cx + rMax * Math.SQRT1_2} y2={cy - rMax * Math.SQRT1_2} stroke="#2c3036" strokeDasharray="2 3" />
       {bands.map((b, i) => {
         const r = rMax * (n === 1 ? 0.78 : 0.45 + (i / (n - 1)) * 0.5)
         return <path key={b.label} d={arc(r, b.width)} fill="none" stroke={colors[n === 1 ? 1 : i]} strokeWidth={n === 1 ? 10 : 7} strokeLinecap="round" />
       })}
       <text x={10} y={cy + 4} fill="#9ea3aa" fontSize={11}>L</text>
       <text x={W - 18} y={cy + 4} fill="#9ea3aa" fontSize={11}>R</text>
-      <text x={cx} y={cy - rMax - 4} fill="#868b93" fontSize={10} textAnchor="middle">가운데</text>
+      <text x={cx} y={cy - rMax - 4} fill="#7b828b" fontSize={10} textAnchor="middle">가운데</text>
       {bands.map((b, i) => (
         <text key={b.label} x={10 + i * 70} y={H - 4} fill={colors[n === 1 ? 1 : i]} fontSize={11}>{b.label} {Math.round(b.width)}%</text>
       ))}
@@ -242,13 +242,13 @@ function MsEqCurve({ mid, side }: { mid: MsBandSet; side: MsBandSet }) {
   return (
     <div className="relative h-full min-h-[120px]">
       <svg viewBox={`0 0 ${W} ${H}`} className="ms-graphsvg absolute inset-0" preserveAspectRatio="none" aria-label="미드·사이드 EQ 곡선">
-        {[100, 1000, 10000].map(f => <line key={f} x1={fx(f)} x2={fx(f)} y1={0} y2={H} stroke="#26282b" vectorEffect="non-scaling-stroke" />)}
-        {[-6, 6].map(d => <line key={d} x1={0} x2={W} y1={H / 2 - (d / 12) * (H / 2 - 8)} y2={H / 2 - (d / 12) * (H / 2 - 8)} stroke="#26282b" vectorEffect="non-scaling-stroke" />)}
-        <line x1={0} x2={W} y1={H / 2} y2={H / 2} stroke="#42454a" vectorEffect="non-scaling-stroke" />
+        {[100, 1000, 10000].map(f => <line key={f} x1={fx(f)} x2={fx(f)} y1={0} y2={H} stroke="#1f2327" vectorEffect="non-scaling-stroke" />)}
+        {[-6, 6].map(d => <line key={d} x1={0} x2={W} y1={H / 2 - (d / 12) * (H / 2 - 8)} y2={H / 2 - (d / 12) * (H / 2 - 8)} stroke="#1f2327" vectorEffect="non-scaling-stroke" />)}
+        <line x1={0} x2={W} y1={H / 2} y2={H / 2} stroke="#2c3036" vectorEffect="non-scaling-stroke" />
         <polyline points={line(side)} fill="none" stroke="#4f8fe8" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-        <polyline points={line(mid)} fill="none" stroke="#52d27e" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        <polyline points={line(mid)} fill="none" stroke="#2ed48a" strokeWidth={2} vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className="absolute left-2 top-1 text-[11px] flex gap-3 pointer-events-none"><span style={{ color: '#52d27e' }}>미드</span><span style={{ color: '#4f8fe8' }}>사이드</span></div>
+      <div className="absolute left-2 top-1 text-[11px] flex gap-3 pointer-events-none"><span style={{ color: '#2ed48a' }}>미드</span><span style={{ color: '#4f8fe8' }}>사이드</span></div>
       <div className="absolute right-2 bottom-1 text-[10px] faint pointer-events-none">20 Hz – 20 kHz · ±12 dB</div>
     </div>
   )
@@ -295,7 +295,7 @@ function Graph({ slot, p, set, engine }: { slot: SlotId; p: ChainParams; set: Se
     return (
       <div>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[90px] block rounded-lg bg-[var(--m-well)]" preserveAspectRatio="none" aria-label="매칭 곡선">
-          <line x1={0} x2={W} y1={y(0)} y2={y(0)} stroke="#3a3d42" />
+          <line x1={0} x2={W} y1={y(0)} y2={y(0)} stroke="#2c3036" />
           {has && <polyline fill="none" stroke="var(--m-green)" strokeWidth={2} vectorEffect="non-scaling-stroke" points={p.match.curve.map((v, i) => `${x(i)},${y((v * p.match.strength) / 100)}`).join(' ')} />}
         </svg>
         {!has && <p className="dim mt-1">곡선이 없어요. 왼쪽 도구의 「레퍼런스」에서 「레퍼런스 톤 맞추기」를 누르면 생겨요.</p>}

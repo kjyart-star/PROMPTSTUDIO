@@ -39,11 +39,11 @@ function LevelMeter({ read, height, label }: { read: () => number[]; height: num
       const c = cv.current
       const g = c?.getContext('2d')
       if (!c || !g) return
-      const dpr = window.devicePixelRatio || 1
+      const dpr = (window.devicePixelRatio || 1) * (c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1)
       const w = c.clientWidth, h = c.clientHeight
       if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr) }
       g.setTransform(dpr, 0, 0, dpr, 0, 0)
-      g.fillStyle = '#121314'; g.fillRect(0, 0, w, h)
+      g.fillStyle = '#08090a'; g.fillRect(0, 0, w, h)
       const lv = readRef.current().map(x => (x > 1e-6 ? 20 * Math.log10(x) : -90))
       const n = Math.max(1, lv.length)
       const bw = (w - (n - 1) * 2) / n
@@ -53,7 +53,7 @@ function LevelMeter({ read, height, label }: { read: () => number[]; height: num
         for (let s = 0; s < 60; s += 1.5) {
           const segDb = -60 + s
           if (db < segDb) break
-          g.fillStyle = segDb > -1 ? '#e5484d' : segDb > -6 ? '#f0a43a' : '#52d27e'
+          g.fillStyle = segDb > -1 ? '#e5484d' : segDb > -6 ? '#f0a43a' : '#2ed48a'
           g.fillRect(x, Y(segDb + 1.5) + 0.5, bw, Math.max(1, Y(segDb) - Y(segDb + 1.5) - 1))
         }
         if (hold[i] === undefined) { hold[i] = -90; holdT[i] = 0 }

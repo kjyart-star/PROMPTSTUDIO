@@ -72,26 +72,26 @@ export function Timeline({
     const c = wave.current
     if (!c) return
     const draw = () => {
-      const dpr = window.devicePixelRatio || 1
+      const dpr = (window.devicePixelRatio || 1) * (c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1)
       const w = c.clientWidth, h = c.clientHeight
       c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
       const g = c.getContext('2d')!
       g.setTransform(dpr, 0, 0, dpr, 0, 0)
       g.clearRect(0, 0, w, h)
       const top = 18, wh = h - top - 2, mid = top + wh / 2
-      g.fillStyle = '#121212'; g.fillRect(0, 0, w, top)
+      g.fillStyle = '#0b0c0e'; g.fillRect(0, 0, w, top)
       if (duration > 0) {
         const pxPerSec = w / duration
         const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300]
         const step = steps.find(s => s * pxPerSec >= 70) ?? 600
-        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#777'; g.strokeStyle = '#2a2a2a'
+        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#7b828b'; g.strokeStyle = '#23272c'
         for (let t = 0; t <= duration; t += step) {
           const x = Math.round(t * pxPerSec) + 0.5
           g.beginPath(); g.moveTo(x, top - 6); g.lineTo(x, h); g.stroke()
           g.fillText(fmtClock(t, false), x + 3, 11)
         }
       }
-      g.strokeStyle = '#2f2f2f'; g.beginPath(); g.moveTo(0, mid); g.lineTo(w, mid); g.stroke()
+      g.strokeStyle = '#262a2f'; g.beginPath(); g.moveTo(0, mid); g.lineTo(w, mid); g.stroke()
       const drawPeaks = (pk: Float32Array, color: string) => {
         const n = pk.length / 2
         g.fillStyle = color
@@ -104,7 +104,7 @@ export function Timeline({
       }
       // 전후 겹침: 원본은 뒤에 희미한 회색, 처리본은 앞에 선명한 녹색
       if (peaks) drawPeaks(peaks, processedPeaks ? 'rgba(170,175,182,0.32)' : 'rgba(170,175,182,0.6)')
-      if (processedPeaks) drawPeaks(processedPeaks, 'rgba(82,210,126,0.8)')
+      if (processedPeaks) drawPeaks(processedPeaks, 'rgba(46,212,138,0.85)')
       if (duration > 0) {
         const X = (t: number) => (t / duration) * w
         // 잘라 낼 앞뒤는 어둡게
@@ -153,16 +153,16 @@ export function Timeline({
     const c = lane.current
     if (!c) return
     const draw = () => {
-      const dpr = window.devicePixelRatio || 1
+      const dpr = (window.devicePixelRatio || 1) * (c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1)
       const w = c.clientWidth, h = c.clientHeight
       c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
       const g = c.getContext('2d')!
       g.setTransform(dpr, 0, 0, dpr, 0, 0)
       g.clearRect(0, 0, w, h)
-      g.fillStyle = '#0e0e0e'; g.fillRect(0, 0, w, h)
+      g.fillStyle = '#08090a'; g.fillRect(0, 0, w, h)
       if (!autoTarget || !duration) return
       const Y = (v: number) => h - 4 - ((v - range.min) / (range.max - range.min)) * (h - 8)
-      g.strokeStyle = '#2a2a2a'
+      g.strokeStyle = '#23272c'
       g.beginPath(); g.moveTo(0, Y(range.def)); g.lineTo(w, Y(range.def)); g.stroke()
       g.strokeStyle = '#f59e0b'; g.lineWidth = 1.5
       g.beginPath()
@@ -221,7 +221,7 @@ export function Timeline({
   const pct = (t: number) => `${(t / Math.max(duration, 1e-6)) * 100}%`
 
   return (
-    <div ref={wrap} className="relative w-full overflow-x-auto overflow-y-hidden rounded-lg bg-[var(--m-well)] border border-[var(--m-line-soft)] custom-scrollbar">
+    <div ref={wrap} className="relative w-full overflow-x-auto overflow-y-hidden rounded bg-[var(--m-well)] shadow-[var(--m-inset)] custom-scrollbar">
       <div className="relative" style={{ width: `${zoom * 100}%` }}>
         <div className="relative" style={{ height }}>
           <canvas
@@ -292,7 +292,7 @@ export function Timeline({
         {autoTarget && (
           <canvas
             ref={lane}
-            className="block w-full h-[64px] border-t border-white/10 cursor-crosshair touch-none"
+            className="block w-full h-[64px] border-t border-[var(--m-line-soft)] cursor-crosshair touch-none"
             aria-label={`${range.label} 오토메이션 — 클릭으로 점 추가, 끌어서 이동, 더블클릭으로 삭제`}
             onPointerDown={e => {
               if (!duration) return

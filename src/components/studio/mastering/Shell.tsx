@@ -95,6 +95,18 @@ export function TimelineStrip({ ctx }: { ctx: ViewCtx }) {
   const { loop, loopOn, peaks, processedPeaks } = useUi()
   const setUi = useUi(s => s.set)
   const [zoom, setZoom] = useState(1)
+  // 창이 높을수록 파형도 키운다(서버 렌더·낮은 창은 92)
+  const [waveH, setWaveH] = useState(92)
+  useEffect(() => {
+    const f = () => {
+      const ms = document.querySelector<HTMLElement>('.ms')
+      const pw = ms ? ms.getBoundingClientRect().width : window.innerWidth
+      const z = ms && ms.offsetWidth ? pw / ms.offsetWidth : 1
+      setWaveH(pw < 1200 ? 92 : Math.round(Math.min(240, Math.max(92, (window.innerHeight / z - 760) * 0.5))))
+    }
+    f(); window.addEventListener('resize', f)
+    return () => window.removeEventListener('resize', f)
+  }, [])
   const at = ctx.expanded ? ctx.autoTarget : null
   const autoBase = !at || at === 'volume' ? 0 : at === 'limiter.gain' ? params.limiter.gain : params.eq[at.split('.')[1] as 'lf'].gain
   return (
@@ -122,13 +134,13 @@ export function TimelineStrip({ ctx }: { ctx: ViewCtx }) {
         <Timeline
           peaks={peaks} processedPeaks={processedPeaks} duration={ctx.duration || srcA?.duration || 0} engine={ctx.engine}
           markers={active.markers} onMarkers={m => updateTrack(active.id, x => ({ ...x, markers: m }), 'markers')}
-          loop={loop} loopOn={loopOn} zoom={zoom} height={92}
+          loop={loop} loopOn={loopOn} zoom={zoom} height={waveH}
           onSeek={t => ctx.engine.seek(t)} onLoop={r => setUi({ loop: r, loopOn: !!r })}
           edit={active.edit} onEdit={fn => updateTrack(active.id, x => ({ ...x, edit: fn(x.edit) }), 'edit')}
           autoTarget={at} autoBase={autoBase} clips={(outA ?? srcA)?.clips}
         />
       ) : (
-        <div className="h-[92px] border border-dashed border-[var(--m-line)] rounded-lg flex items-center justify-center gap-2">
+        <div style={{ height: waveH }} className="border border-[var(--m-line-soft)] bg-[var(--m-well)] shadow-[var(--m-inset)] rounded flex items-center justify-center gap-2">
           <button type="button" className="ms-btn go" onClick={ctx.openLibrary}>보관함에서 고르기</button>
           <button type="button" className="ms-btn" onClick={ctx.openFile}>파일 열기</button>
         </div>

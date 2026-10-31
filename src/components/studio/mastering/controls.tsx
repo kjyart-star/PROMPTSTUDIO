@@ -110,7 +110,7 @@ function ValueText({ p, className, editState }: { p: ParamProps; className?: str
           }
           if (e.key === 'Escape') setEdit(null)
         }}
-        className="w-full bg-black/60 border border-[var(--cm-brand)] rounded px-1 text-center text-[11px] text-white outline-none"
+        className="w-full bg-[var(--m-well)] border border-[var(--cm-brand)] rounded px-1 text-center text-[11px] text-white outline-none"
         style={MONO}
       />
     )
@@ -119,12 +119,12 @@ function ValueText({ p, className, editState }: { p: ParamProps; className?: str
     <button
       type="button"
       onClick={() => !p.disabled && setEdit(String(value))}
-      className={`text-[11px] leading-none text-zinc-100 hover:text-white ${className ?? ''}`}
+      className={`text-[11px] leading-none text-[var(--m-text)] hover:text-white ${className ?? ''}`}
       style={MONO}
       title="클릭해서 직접 입력"
     >
       {text}
-      {unit && unit !== 'Hz' ? <span className="text-zinc-500 ml-0.5">{unit}</span> : unit === 'Hz' ? <span className="text-zinc-500 ml-0.5">Hz</span> : null}
+      {unit && unit !== 'Hz' ? <span className="text-[var(--m-faint)] ml-0.5">{unit}</span> : unit === 'Hz' ? <span className="text-[var(--m-faint)] ml-0.5">Hz</span> : null}
     </button>
   )
 }
@@ -151,7 +151,7 @@ export function Knob(props: ParamProps & { size?: number; color?: string; bipola
   const color = props.color ?? 'var(--cm-brand)'
   return (
     <div className={`flex flex-col items-center gap-1 select-none ${disabled ? 'opacity-40' : ''}`} style={{ width: Math.max(size + 12, 52) }}>
-      <span className="text-[10px] text-zinc-400 leading-none whitespace-nowrap">{label}</span>
+      <span className="text-[10px] text-[var(--m-dim)] leading-none whitespace-nowrap">{label}</span>
       <div
         role="slider"
         aria-label={label}
@@ -165,8 +165,8 @@ export function Knob(props: ParamProps & { size?: number; color?: string; bipola
         title="드래그로 조절 · Shift 미세 조절 · 더블클릭 기본값"
       >
         <svg width={size} height={size}>
-          <circle cx={c} cy={c} r={r - 4} fill="#1c1c1c" stroke="#333" strokeWidth={1} />
-          <path d={arc(a0, a1)} stroke="#2e2e2e" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <circle cx={c} cy={c} r={r - 4} fill="#1f2226" stroke="#3a3f46" strokeWidth={1} />
+          <path d={arc(a0, a1)} stroke="#2a2e33" strokeWidth={3} fill="none" strokeLinecap="round" />
           {Math.abs(ang - zeroAng) > 0.5 && (
             <path d={arc(Math.min(zeroAng, ang), Math.max(zeroAng, ang))} stroke={color} strokeWidth={3} fill="none" strokeLinecap="round" />
           )}
@@ -174,7 +174,7 @@ export function Knob(props: ParamProps & { size?: number; color?: string; bipola
             x1={c} y1={c}
             x2={c + (r - 6) * Math.cos(((ang - 90) * Math.PI) / 180)}
             y2={c + (r - 6) * Math.sin(((ang - 90) * Math.PI) / 180)}
-            stroke="#e4e4e4" strokeWidth={2} strokeLinecap="round"
+            stroke="#f2f3f5" strokeWidth={2} strokeLinecap="round"
           />
         </svg>
       </div>
@@ -189,14 +189,14 @@ export function NumField(props: ParamProps & { width?: number }) {
   const handlers = useParamDrag(props, 'xy', () => editState[1](String(props.value)))
   return (
     <div className={`flex flex-col gap-0.5 ${props.disabled ? 'opacity-40' : ''}`} style={{ width: props.width ?? 64 }}>
-      <span className="text-[10px] text-zinc-400 leading-none">{props.label}</span>
+      <span className="text-[10px] text-[var(--m-dim)] leading-none">{props.label}</span>
       <div
         role="slider"
         aria-label={props.label}
         aria-valuenow={props.value}
         tabIndex={props.disabled ? -1 : 0}
         {...handlers}
-        className="h-6 flex items-center justify-center rounded-md bg-black/50 border border-white/10 cursor-ew-resize touch-none outline-none focus-visible:border-[var(--cm-brand)]"
+        className="h-6 flex items-center justify-center rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] cursor-ew-resize touch-none outline-none focus-visible:border-[var(--cm-brand)]"
         title="드래그로 조절 · Shift 미세 조절 · 더블클릭 기본값"
       >
         <ValueText p={props} editState={editState} />
@@ -213,7 +213,7 @@ export function Fader(props: ParamProps & { height?: number | 'fill' }) {
   const fill = height === 'fill'
   return (
     <div className={`flex flex-col items-center gap-1 select-none ${fill ? 'h-full min-h-0' : ''}`} style={{ width: 52 }}>
-      <span className="text-[10px] text-zinc-400 leading-none whitespace-nowrap">{label}</span>
+      <span className="text-[10px] text-[var(--m-dim)] leading-none whitespace-nowrap">{label}</span>
       <div
         role="slider"
         aria-label={label}
@@ -224,11 +224,11 @@ export function Fader(props: ParamProps & { height?: number | 'fill' }) {
         style={fill ? undefined : { height }}
         title="드래그로 조절 · Shift 미세 조절 · 더블클릭 기본값"
       >
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 rounded bg-black/70 border border-white/10" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 rounded bg-[var(--m-well)] shadow-[var(--m-inset)]" />
         <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-1 rounded bg-[var(--cm-brand)]" style={{ height: `${t * 100}%` }} />
         <div
-          className="absolute left-0 right-0 h-3 rounded-sm bg-zinc-300 border border-black shadow"
-          style={{ bottom: `calc(${t * 100}% - 6px)` }}
+          className="absolute left-0 right-0 h-3 rounded-sm border border-[#0b0c0d]"
+          style={{ bottom: `calc(${t * 100}% - 6px)`, background: 'linear-gradient(180deg,#d7dade,#9ea3aa)', borderTopColor: '#0b0c0d', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.35)' }}
         />
       </div>
       <ValueText p={props} />
@@ -244,9 +244,9 @@ export function Led({ on, onClick, label, title, tone = 'brand' }: { on: boolean
       onClick={onClick}
       title={title}
       aria-pressed={on}
-      className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md border text-[10px] font-semibold whitespace-nowrap transition-colors ${on ? 'border-white/20 bg-white/10 text-white' : 'border-white/10 bg-black/40 text-zinc-500 hover:text-zinc-300'}`}
+      className={`inline-flex items-center gap-1.5 h-6 px-2 rounded-md border text-[10px] font-semibold whitespace-nowrap transition-colors ${on ? 'border-[var(--m-line)] bg-[var(--m-raise)] text-white' : 'border-[var(--m-line-soft)] bg-[var(--m-well)] text-[var(--m-faint)] hover:text-[var(--m-text)]'}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: on ? color : '#3a3a3a', boxShadow: on ? `0 0 6px ${color}` : 'none' }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: on ? `radial-gradient(circle at 35% 35%, #8df5c0, ${color} 60%)` : 'radial-gradient(circle at 35% 35%, #3a3f46, #1e2125)', boxShadow: on ? `0 0 6px ${color}` : 'inset 0 1px 2px rgba(0,0,0,.8)' }} />
       {label}
     </button>
   )
@@ -254,14 +254,14 @@ export function Led({ on, onClick, label, title, tone = 'brand' }: { on: boolean
 
 export function Segmented<T extends string | number>({ value, options, onChange, size = 'sm' }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; size?: 'sm' | 'xs' }) {
   return (
-    <div className="inline-flex flex-wrap rounded-md border border-white/10 bg-black/40 p-0.5 gap-0.5">
+    <div className="inline-flex flex-wrap rounded-md border border-[var(--m-line-soft)] bg-[var(--m-well)] p-0.5 gap-0.5">
       {options.map(o => (
         <button
           key={String(o.value)}
           type="button"
           onClick={() => onChange(o.value)}
           aria-pressed={value === o.value}
-          className={`${size === 'xs' ? 'h-5 px-1.5 text-[10px]' : 'h-6 px-2 text-[11px]'} rounded font-semibold whitespace-nowrap transition-colors ${value === o.value ? 'bg-[var(--cm-brand)] text-white' : 'text-zinc-400 hover:text-white'}`}
+          className={`${size === 'xs' ? 'h-5 px-1.5 text-[10px]' : 'h-6 px-2 text-[11px]'} rounded font-semibold whitespace-nowrap transition-colors ${value === o.value ? 'bg-[var(--cm-brand)] text-white' : 'text-[var(--m-dim)] hover:text-white'}`}
         >
           {o.label}
         </button>

@@ -50,7 +50,7 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
   useEffect(() => {
     const c = ref.current
     if (!c) return
-    const dpr = window.devicePixelRatio || 1
+    const dpr = (window.devicePixelRatio || 1) * (c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1)
     const w = c.clientWidth, h = c.clientHeight
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
     const g = c.getContext('2d')!
@@ -58,7 +58,7 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
     g.clearRect(0, 0, w, h)
     const { fx, gy } = geom(w, h)
     g.font = '9px ui-monospace, monospace'
-    g.strokeStyle = '#242424'; g.fillStyle = '#5f5f5f'
+    g.strokeStyle = '#1f2327'; g.fillStyle = '#7b828b'
     for (const f of [30, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
       const x = fx(f)
       g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke()
@@ -66,7 +66,7 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
     }
     for (const d of [-12, -6, 0, 6, 12]) {
       const y = gy(d)
-      g.strokeStyle = d === 0 ? '#3a3a3a' : '#242424'
+      g.strokeStyle = d === 0 ? '#2c3036' : '#1f2327'
       g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke()
       g.textAlign = 'left'; g.fillText(d > 0 ? `+${d}` : String(d), 3, y - 2)
     }
@@ -78,9 +78,9 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
       const y = gy(Math.max(-G_RANGE - 6, Math.min(G_RANGE + 6, db)))
       if (x === 0) g.moveTo(x, y); else g.lineTo(x, y)
     }
-    g.strokeStyle = 'rgb(20,173,130)'; g.lineWidth = 2; g.stroke()
+    g.strokeStyle = '#2ed48a'; g.lineWidth = 2; g.stroke()
     g.lineTo(w, gy(0)); g.lineTo(0, gy(0)); g.closePath()
-    g.fillStyle = 'rgba(12,153,101,0.12)'; g.fill()
+    g.fillStyle = 'rgba(46,212,138,0.14)'; g.fill()
     g.lineWidth = 1
     // 핸들
     for (const b of BANDS) {
@@ -88,10 +88,10 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
       const [f, gn] = handlePos(b.key, eq)
       const x = fx(f), y = gy(gn)
       g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2)
-      g.fillStyle = band.on ? b.color : '#2a2a2a'
+      g.fillStyle = band.on ? b.color : '#23272c'
       g.globalAlpha = band.on ? 0.9 : 0.6
       g.fill(); g.globalAlpha = 1
-      g.strokeStyle = '#0d0d0d'; g.stroke()
+      g.strokeStyle = '#08090a'; g.stroke()
       g.fillStyle = '#e4e4e4'; g.textAlign = 'center'
       g.fillText(b.label, Math.min(w - 12, Math.max(12, x)), y - 9)
     }
@@ -113,7 +113,7 @@ export function EqGraph({ eq, onChange, bare }: { eq: EqParams; onChange: (fn: (
   return (
     <canvas
       ref={ref}
-      className={bare ? 'absolute inset-0 w-full h-full block cursor-crosshair touch-none' : 'w-full h-[170px] block rounded-md bg-[#0b0b0b] border border-white/5 cursor-crosshair touch-none'}
+      className={bare ? 'absolute inset-0 w-full h-full block cursor-crosshair touch-none' : 'w-full h-[170px] block rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] cursor-crosshair touch-none'}
       onPointerDown={e => {
         const k = pick(e)
         if (!k) return
@@ -157,7 +157,7 @@ function EqPanel({ p, set }: { p: ChainParams; set: Setter }) {
             const bp = eq[b.key] as EqBandParams & EqPassParams & EqShelfParams
             const def = DEFAULT_EQ[b.key] as EqBandParams & EqPassParams & EqShelfParams
             return (
-              <div key={b.key} className="rounded-md bg-black/30 border border-white/5 p-1.5 flex flex-col items-center gap-1.5 min-w-0">
+              <div key={b.key} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] p-1.5 flex flex-col items-center gap-1.5 min-w-0">
                 <div className="flex items-center gap-1 w-full justify-between">
                   <span className="text-[10px] font-bold" style={{ color: b.color }}>{b.label}</span>
                   <Led on={bp.on} onClick={() => band(b.key, { on: !bp.on } as never)} title={bp.on ? '이 밴드 끄기' : '이 밴드 켜기'} />
@@ -166,11 +166,11 @@ function EqPanel({ p, set }: { p: ChainParams; set: Setter }) {
                   onChange={v => band(b.key, { freq: v } as never)} />
                 {isPass ? (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-zinc-400">기울기</span>
+                    <span className="text-[10px] text-[var(--m-dim)]">기울기</span>
                     <select
                       value={bp.slope}
                       onChange={e => band(b.key, { slope: Number(e.target.value) as EqPassParams['slope'] } as never)}
-                      className="h-6 rounded-md bg-black/50 border border-white/10 text-[11px] text-zinc-100 px-1"
+                      className="h-6 rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] text-[11px] text-[var(--m-text)] px-1"
                       style={MONO}
                       disabled={!bp.on}
                     >
@@ -196,11 +196,11 @@ function EqPanel({ p, set }: { p: ChainParams; set: Setter }) {
         <div className="flex flex-wrap items-center gap-2">
           <Segmented size="xs" value={eq.mode} onChange={v => upd(e => ({ ...e, mode: v }))}
             options={[{ value: 'min', label: '최소 위상' }, { value: 'linear', label: '리니어 페이즈' }]} />
-          <span className="text-[10px] text-zinc-500">톤 프리셋</span>
+          <span className="text-[10px] text-[var(--m-faint)]">톤 프리셋</span>
           {EQ_TONE_PRESETS.map(t => (
             <button key={t.id} type="button"
               onClick={() => upd(e => ({ ...e, lf: { ...e.lf, gain: t.gains[0] }, lmf: { ...e.lmf, gain: t.gains[1] }, mf: { ...e.mf, gain: t.gains[2] }, hmf: { ...e.hmf, gain: t.gains[3] }, hf: { ...e.hf, gain: t.gains[4] } }))}
-              className="h-6 px-2 rounded-md border border-white/10 bg-black/40 text-[11px] text-zinc-300 hover:text-white hover:border-white/25">
+              className="h-6 px-2 rounded-md border border-[var(--m-line-soft)] bg-[var(--m-well)] text-[11px] text-[var(--m-text)] hover:text-white hover:border-white/25">
               {t.label}
             </button>
           ))}
@@ -226,7 +226,7 @@ export function TransferCurve({ threshold, ratio, knee, makeup = 0 }: { threshol
     d += `${x === lo ? 'M' : 'L'} ${map(x).toFixed(1)} ${(S - map(Math.max(lo, Math.min(0, y)))).toFixed(1)} `
   }
   return (
-    <svg width={S} height={S} className="rounded-md bg-[#0b0b0b] border border-white/5 shrink-0" aria-label="압축 곡선">
+    <svg width={S} height={S} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] shrink-0" aria-label="압축 곡선">
       {[-48, -36, -24, -12].map(v => (
         <g key={v}>
           <line x1={map(v)} y1={0} x2={map(v)} y2={S} stroke="#222" />
@@ -235,7 +235,7 @@ export function TransferCurve({ threshold, ratio, knee, makeup = 0 }: { threshol
       ))}
       <line x1={0} y1={S} x2={S} y2={0} stroke="#333" strokeDasharray="3 3" />
       <line x1={map(threshold)} y1={0} x2={map(threshold)} y2={S} stroke="#f59e0b" strokeOpacity={0.4} />
-      <path d={d} stroke="rgb(20,173,130)" strokeWidth={2} fill="none" />
+      <path d={d} stroke="#2ed48a" strokeWidth={2} fill="none" />
     </svg>
   )
 }
@@ -257,11 +257,11 @@ export function GrBar({ engine, pick, label }: { engine: MasteringEngine; pick: 
   }, [engine, pick])
   return (
     <div className="flex flex-col items-center gap-1 w-10 shrink-0">
-      <span className="text-[10px] text-zinc-400 whitespace-nowrap">{label}</span>
-      <div className="relative w-3 h-[100px] rounded bg-black/60 border border-white/10 overflow-hidden">
+      <span className="text-[10px] text-[var(--m-dim)] whitespace-nowrap">{label}</span>
+      <div className="relative w-3 h-[100px] rounded bg-[var(--m-well)] border border-[var(--m-line-soft)] overflow-hidden">
         <div ref={ref} className="absolute top-0 left-0 right-0 bg-amber-500" style={{ height: 0 }} />
       </div>
-      <span ref={txt} className="text-[10px] text-zinc-200" style={MONO}>0.0</span>
+      <span ref={txt} className="text-[10px] text-[var(--m-text)]" style={MONO}>0.0</span>
     </div>
   )
 }
@@ -307,14 +307,14 @@ function MultibandPanel({ p, set, engine }: { p: ChainParams; set: Setter; engin
           onChange={v => set(x => ({ ...x, multiband: { ...x.multiband, lowX: Math.min(v, x.multiband.highX * 0.8) } }))} />
         <NumField label="중/고 경계" value={mb.highX} min={500} max={16000} def={4000} step={1} unit="Hz" scale="log" width={84}
           onChange={v => set(x => ({ ...x, multiband: { ...x.multiband, highX: Math.max(v, x.multiband.lowX * 1.25) } }))} />
-        <span className="text-[10px] text-zinc-500 pb-1">경계는 위상 맞춤 크로스오버(24dB/oct)로 나눠, 압축이 없으면 원음과 같아요.</span>
+        <span className="text-[10px] text-[var(--m-faint)] pb-1">경계는 위상 맞춤 크로스오버(24dB/oct)로 나눠, 압축이 없으면 원음과 같아요.</span>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-2">
         {mb.bands.map((b, i) => (
-          <div key={i} className="rounded-md bg-black/30 border border-white/5 p-2 flex gap-2">
+          <div key={i} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] p-2 flex gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1.5 gap-1">
-                <span className="text-[11px] font-bold text-zinc-200 whitespace-nowrap">{names[i]}</span>
+                <span className="text-[11px] font-bold text-[var(--m-text)] whitespace-nowrap">{names[i]}</span>
                 <div className="flex gap-1">
                   <Led on={b.on} onClick={() => ub(i, { on: !b.on })} label="켬" />
                   <Led on={b.solo} onClick={() => ub(i, { solo: !b.solo })} label="솔로" tone="solo" />
@@ -349,7 +349,7 @@ function StereoPanel({ p, set }: { p: ChainParams; set: Setter }) {
         <Knob label="사이드" value={s.side} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u({ side: v })} />
         <Knob label="저역 모노" value={s.bassMono} min={0} max={300} def={0} step={1} unit="Hz" format={v => (v < 1 ? '끔' : `${Math.round(v)}`)} onChange={v => u({ bassMono: v < 20 ? 0 : v })} />
       </div>
-      <p className="text-[11px] text-zinc-500 max-w-[280px] leading-relaxed">
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[280px] leading-relaxed">
         폭 0% 는 모노, 100% 는 원래 그대로예요. 저역 모노를 켜면 그 주파수 아래는 가운데로 모여 킥·베이스가 단단해져요.
         오른쪽 위상 상관 미터가 0 아래로 내려가면 폭을 줄여 주세요.
       </p>
@@ -374,9 +374,9 @@ export function SatCurve({ drive, mode }: { drive: number; mode: SatMode }) {
     d += `${i ? 'L' : 'M'} ${((x + 1) / 2) * S} ${S - ((Math.max(-1, Math.min(1, y)) + 1) / 2) * S} `
   }
   return (
-    <svg width={S} height={S} className="rounded-md bg-[#0b0b0b] border border-white/5 shrink-0" aria-label="왜곡 곡선">
+    <svg width={S} height={S} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] shrink-0" aria-label="왜곡 곡선">
       <line x1={0} y1={S} x2={S} y2={0} stroke="#333" strokeDasharray="3 3" />
-      <path d={d} stroke="rgb(20,173,130)" strokeWidth={2} fill="none" />
+      <path d={d} stroke="#2ed48a" strokeWidth={2} fill="none" />
     </svg>
   )
 }
@@ -414,7 +414,7 @@ function LimiterPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine:
         <Led on={l.truePeak} onClick={() => u({ truePeak: !l.truePeak })} label="트루 피크" title="샘플 사이에서 생기는 피크까지 막아요(4배 보간 근사)" />
       </div>
       <GrBar engine={engine} pick={pickLim} label="리덕션" />
-      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">
         게인으로 밀어 넣고, 천장 위로는 절대 넘지 않게 막아요. 위쪽의 「자동 맞춤」은 이 게인을 타깃 라우드니스에 맞춰 줘요.
       </p>
     </div>
@@ -488,7 +488,7 @@ function GatePanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: Ma
         <Knob label="릴리스" value={g.release} min={5} max={2000} def={200} step={1} unit="ms" scale="log" onChange={v => u({ release: v })} />
       </div>
       <GrBar engine={engine} pick={pickGate} label="감쇠" />
-      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">스레숄드보다 작은 소리를 더 작게 만들어요. 레이쇼 1:2 정도면 부드러운 익스팬더, 크게 하면 게이트처럼 끊겨요.</p>
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">스레숄드보다 작은 소리를 더 작게 만들어요. 레이쇼 1:2 정도면 부드러운 익스팬더, 크게 하면 게이트처럼 끊겨요.</p>
     </div>
   )
 }
@@ -500,7 +500,7 @@ function MsEqPanel({ p, set }: { p: ChainParams; set: Setter }) {
     const b = p.mseq[which]
     const u = (k: keyof MsBandSet, patch: Record<string, number>) => set(x => ({ ...x, mseq: { ...x.mseq, [which]: { ...x.mseq[which], [k]: { ...x.mseq[which][k], ...patch } } } }))
     return (
-      <div className="rounded-md bg-black/30 border border-white/5 p-2">
+      <div className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] p-2">
         <div className="text-[11px] font-bold mb-1.5" style={{ color }}>{label}</div>
         <div className="flex flex-wrap gap-1">
           <Knob size={34} color={color} label="저역 셸프" value={b.low.gain} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u('low', { gain: v })} />
@@ -529,13 +529,13 @@ function DynEqPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: M
   const ub = (i: number, patch: Partial<DynBandParams>) => set(x => ({ ...x, dyneq: { bands: x.dyneq.bands.map((b, k) => (k === i ? { ...b, ...patch } : b)) } }))
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] text-zinc-500">소리가 스레숄드를 넘을 때만 그 대역을 움직여요 — 가끔 튀는 공진·치찰·저역 뭉침에 좋아요.</p>
+      <p className="text-[11px] text-[var(--m-faint)]">소리가 스레숄드를 넘을 때만 그 대역을 움직여요 — 가끔 튀는 공진·치찰·저역 뭉침에 좋아요.</p>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
         {p.dyneq.bands.map((b, i) => (
-          <div key={i} className="rounded-md bg-black/30 border border-white/5 p-2 flex gap-2">
+          <div key={i} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] p-2 flex gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[11px] font-bold text-zinc-200">밴드 {i + 1}</span>
+                <span className="text-[11px] font-bold text-[var(--m-text)]">밴드 {i + 1}</span>
                 <Led on={b.on} onClick={() => ub(i, { on: !b.on })} label="켬" />
                 <Segmented size="xs" value={b.mode} onChange={v => ub(i, { mode: v })} options={[{ value: 'cut', label: '넘으면 깎기' }, { value: 'boost', label: '넘으면 올리기' }]} />
               </div>
@@ -572,7 +572,7 @@ function DeesserPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine:
         <div className="flex flex-col justify-center"><Led on={d.listen} onClick={() => u({ listen: !d.listen })} label="감지 소리 듣기" tone="warn" title="디에서가 감지하는 대역만 들려줘요 — 주파수를 맞출 때" /></div>
       </div>
       <GrBar engine={engine} pick={pickDeess} label="감쇠" />
-      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">「ㅅ·ㅊ」 같은 치찰음이 튈 때만 그 위 고역을 내려요. 감지 소리 듣기를 켜고 주파수를 치찰음이 가장 크게 들리는 곳에 맞추세요.</p>
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">「ㅅ·ㅊ」 같은 치찰음이 튈 때만 그 위 고역을 내려요. 감지 소리 듣기를 켜고 주파수를 치찰음이 가장 크게 들리는 곳에 맞추세요.</p>
     </div>
   )
 }
@@ -588,15 +588,15 @@ function MatchPanel({ p, set }: { p: ChainParams; set: Setter }) {
   const has = m.curve.some(v => Math.abs(v) > 0.01)
   return (
     <div className="flex flex-col gap-2">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px] rounded-md bg-[#0b0b0b] border border-white/5" preserveAspectRatio="none" aria-label="매칭 곡선">
-        {[-6, 0, 6].map(d => <line key={d} x1={0} x2={W} y1={y(d)} y2={y(d)} stroke={d === 0 ? '#3a3a3a' : '#222'} />)}
-        {has && <polyline points={pts} fill="none" stroke="rgb(20,173,130)" strokeWidth={2} vectorEffect="non-scaling-stroke" />}
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px] rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)]" preserveAspectRatio="none" aria-label="매칭 곡선">
+        {[-6, 0, 6].map(d => <line key={d} x1={0} x2={W} y1={y(d)} y2={y(d)} stroke={d === 0 ? '#2c3036' : '#222'} />)}
+        {has && <polyline points={pts} fill="none" stroke="#2ed48a" strokeWidth={2} vectorEffect="non-scaling-stroke" />}
       </svg>
       <div className="flex flex-wrap items-center gap-3">
         <Knob label="강도" value={m.strength} min={0} max={100} def={70} step={1} unit="%" onChange={v => set(c => ({ ...c, match: { ...c.match, strength: v } }))} />
         <button type="button" onClick={() => set(c => ({ ...c, match: { ...c.match, curve: c.match.curve.map(() => 0) } }))} disabled={!has}
-          className="h-7 px-2.5 rounded-md border border-white/10 bg-black/40 text-[11px] text-zinc-300 hover:text-white disabled:opacity-40">곡선 지우기</button>
-        <p className="text-[11px] text-zinc-500 max-w-[360px]">{has ? '레퍼런스 곡과의 스펙트럼 차이로 만든 곡선이에요. 리니어 페이즈라 위상이 바뀌지 않아요(지연 약 45ms).' : '곡선이 없어요. 아래 「레퍼런스」 탭에서 레퍼런스 곡을 불러와 「레퍼런스 톤 맞추기」를 누르세요.'}</p>
+          className="h-7 px-2.5 rounded-md border border-[var(--m-line-soft)] bg-[var(--m-well)] text-[11px] text-[var(--m-text)] hover:text-white disabled:opacity-40">곡선 지우기</button>
+        <p className="text-[11px] text-[var(--m-faint)] max-w-[360px]">{has ? '레퍼런스 곡과의 스펙트럼 차이로 만든 곡선이에요. 리니어 페이즈라 위상이 바뀌지 않아요(지연 약 45ms).' : '곡선이 없어요. 아래 「레퍼런스」 탭에서 레퍼런스 곡을 불러와 「레퍼런스 톤 맞추기」를 누르세요.'}</p>
       </div>
     </div>
   )
@@ -613,7 +613,7 @@ function TransientPanel({ p, set, engine }: { p: ChainParams; set: Setter; engin
       <Knob size={52} label="서스테인" value={t.sustain} min={-100} max={100} def={0} step={1} unit="%" bipolar onChange={v => u({ sustain: v })} />
       <Knob label="출력" value={t.output} min={-12} max={12} def={0} unit="dB" bipolar onChange={v => u({ output: v })} />
       <GrBar engine={engine} pick={pickTrans} label="변화" />
-      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">어택을 올리면 킥·스네어가 앞으로 튀어나오고, 서스테인을 내리면 잔향·꼬리가 짧아져 단단해져요.</p>
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">어택을 올리면 킥·스네어가 앞으로 튀어나오고, 서스테인을 내리면 잔향·꼬리가 짧아져 단단해져요.</p>
     </div>
   )
 }
@@ -636,7 +636,7 @@ function ImagerPanel({ p, set }: { p: ChainParams; set: Setter }) {
           <Fader key={n} label={n} value={im.widths[i]} min={0} max={200} def={100} step={1} unit="%" height={110}
             onChange={v => set(x => ({ ...x, imager: { ...x.imager, widths: x.imager.widths.map((w, k) => (k === i ? v : w)) } }))} />
         ))}
-        <p className="text-[11px] text-zinc-500 max-w-[280px] leading-relaxed self-center">대역마다 넓이를 따로 정해요. 저역은 좁게(모노 쪽), 고역은 넓게 두면 단단하면서 시원한 이미지가 돼요.</p>
+        <p className="text-[11px] text-[var(--m-faint)] max-w-[280px] leading-relaxed self-center">대역마다 넓이를 따로 정해요. 저역은 좁게(모노 쪽), 고역은 넓게 두면 단단하면서 시원한 이미지가 돼요.</p>
       </div>
     </div>
   )
@@ -656,14 +656,14 @@ function ClipperPanel({ p, set }: { p: ChainParams; set: Setter }) {
   }
   return (
     <div className="flex flex-wrap items-start gap-4">
-      <svg width={S} height={S} className="rounded-md bg-[#0b0b0b] border border-white/5 shrink-0" aria-label="클리핑 곡선">
+      <svg width={S} height={S} className="rounded-md bg-[var(--m-well)] border border-[var(--m-line-soft)] shrink-0" aria-label="클리핑 곡선">
         <line x1={0} y1={S} x2={S} y2={0} stroke="#333" strokeDasharray="3 3" />
-        <path d={d} stroke="rgb(20,173,130)" strokeWidth={2} fill="none" />
+        <path d={d} stroke="#2ed48a" strokeWidth={2} fill="none" />
       </svg>
       <Knob size={48} label="스레숄드" value={c.threshold} min={-12} max={0} def={-0.5} unit="dB" onChange={v => u({ threshold: v })} />
       <Knob label="부드럽게" value={c.softness} min={0} max={100} def={40} step={1} unit="%" onChange={v => u({ softness: v })} />
       <Knob label="출력" value={c.output} min={-6} max={6} def={0} unit="dB" bipolar onChange={v => u({ output: v })} />
-      <p className="text-[11px] text-zinc-500 max-w-[260px] leading-relaxed">리미터 앞에서 짧은 피크를 먼저 둥글게 잘라, 리미터가 덜 일하게 해요. 펌핑 없이 소리가 커져요.</p>
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">리미터 앞에서 짧은 피크를 먼저 둥글게 잘라, 리미터가 덜 일하게 해요. 펌핑 없이 소리가 커져요.</p>
     </div>
   )
 }

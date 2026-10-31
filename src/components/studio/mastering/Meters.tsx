@@ -19,11 +19,12 @@ const fmt = (v: number, d = 1) => (Number.isFinite(v) && v > -150 ? v.toFixed(d)
 function levelColor(db: number) {
   if (db > -1) return '#ef4444'
   if (db > -6) return '#f59e0b'
-  return 'rgb(12,153,101)'
+  return '#2ed48a'
 }
 
 function setupCanvas(c: HTMLCanvasElement) {
-  const dpr = window.devicePixelRatio || 1
+  const zoom = c.clientWidth ? c.getBoundingClientRect().width / c.clientWidth : 1
+  const dpr = (window.devicePixelRatio || 1) * zoom
   const w = c.clientWidth, h = c.clientHeight
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
@@ -41,14 +42,14 @@ function drawSegBar(g: CanvasRenderingContext2D, x: number, y: number, w: number
     const segDb = DB_MIN + ((i + 1) / segs) * -DB_MIN
     const yy = y + h - (i + 1) * sh
     const lit = db >= segDb - (-DB_MIN / segs)
-    g.fillStyle = lit ? levelColor(segDb) : '#1f1f1f'
+    g.fillStyle = lit ? levelColor(segDb) : '#15181b'
     g.globalAlpha = lit ? (rmsDb >= segDb ? 1 : 0.55) : 1
     g.fillRect(x, yy + 0.5, w, sh - 1)
   }
   g.globalAlpha = 1
   if (holdDb > DB_MIN) {
     const t = (holdDb - DB_MIN) / -DB_MIN
-    g.fillStyle = levelColor(holdDb)
+    g.fillStyle = '#f2f3f5'
     g.fillRect(x, y + h - t * h, w, 2)
   }
 }
@@ -102,7 +103,7 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
           drawSegBar(g, xs[i], top, bw, bh, disp[i], on ? rms[i] : -200, hold.v[i])
         }
         // 눈금
-        g.fillStyle = '#6b6b6b'
+        g.fillStyle = '#7b828b'
         g.font = '9px ui-monospace, monospace'
         g.textAlign = 'center'
         for (const d of [0, -6, -12, -24, -40, -60]) {
@@ -123,14 +124,14 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         const bw = (w - 30) / 3
         bars.forEach(([v, label], i) => {
           const x = 4 + i * (bw + 6)
-          g.fillStyle = '#1f1f1f'
+          g.fillStyle = '#15181b'
           g.fillRect(x, 4, bw, h - 18)
           if (Number.isFinite(v)) {
             const over = v > tgt + 1
-            g.fillStyle = over ? '#f59e0b' : i === 2 ? '#347dd7' : 'rgb(12,153,101)'
+            g.fillStyle = over ? '#f59e0b' : i === 2 ? '#347dd7' : '#2ed48a'
             g.fillRect(x, y(v), bw, h - 14 - y(v))
           }
-          g.fillStyle = '#8a8a8a'
+          g.fillStyle = '#7b828b'
           g.font = '9px ui-monospace, monospace'
           g.textAlign = 'center'
           g.fillText(label, x + bw / 2, h - 3)
@@ -139,7 +140,7 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         g.setLineDash([3, 3])
         g.beginPath(); g.moveTo(2, y(tgt)); g.lineTo(w - 22, y(tgt)); g.stroke()
         g.setLineDash([])
-        g.fillStyle = '#9a9a9a'; g.textAlign = 'left'
+        g.fillStyle = '#7b828b'; g.textAlign = 'left'
         for (const d of [0, -10, -20, -30, -40]) g.fillText(String(d), w - 20, y(d) + 3)
       }
 
@@ -154,10 +155,10 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         g.font = '9px ui-monospace, monospace'
         rows.forEach(([label, gr], i) => {
           const yy = i * rh
-          g.fillStyle = '#8a8a8a'; g.textAlign = 'left'
+          g.fillStyle = '#7b828b'; g.textAlign = 'left'
           g.fillText(label, 0, yy + rh / 2 + 3)
           const x0 = 38, bw = w - x0 - 34
-          g.fillStyle = '#1f1f1f'; g.fillRect(x0, yy + 3, bw, rh - 6)
+          g.fillStyle = '#15181b'; g.fillRect(x0, yy + 3, bw, rh - 6)
           const t = Math.min(1, Math.max(0, -gr / 12))
           g.fillStyle = '#f59e0b'
           g.fillRect(x0, yy + 3, bw * (on ? t : 0), rh - 6)
@@ -176,8 +177,8 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
         const nyq = engine.ctx.sampleRate / 2
         const fx = (f: number) => (Math.log(f / 20) / Math.log(20000 / 20)) * w
         const dy = (db: number) => h - ((Math.max(-96, Math.min(0, db)) + 96) / 96) * h
-        g.strokeStyle = '#262626'; g.lineWidth = 1
-        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#5a5a5a'; g.textAlign = 'center'
+        g.strokeStyle = '#1f2327'; g.lineWidth = 1
+        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#7b828b'; g.textAlign = 'center'
         for (const f of [50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
           const x = fx(f)
           g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke()
@@ -202,26 +203,26 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
           g.strokeStyle = 'rgba(200,200,200,0.35)'; g.lineWidth = 1; g.stroke()
           path(freqPost)
           g.lineTo(w, h); g.lineTo(0, h); g.closePath()
-          g.fillStyle = 'rgba(12,153,101,0.28)'; g.fill()
+          g.fillStyle = 'rgba(46,212,138,0.22)'; g.fill()
           path(freqPost)
-          g.strokeStyle = 'rgb(20,173,130)'; g.lineWidth = 1.5; g.stroke()
+          g.strokeStyle = '#2ed48a'; g.lineWidth = 1.5; g.stroke()
         }
       }
 
       // 고니오미터(벡터스코프): 세로 = 미드, 가로 = 사이드
       if (goRef.current) {
         const { g, w, h } = setupCanvas(goRef.current)
-        g.fillStyle = 'rgba(13,13,13,0.35)'
+        g.fillStyle = 'rgba(8,9,10,0.35)'
         g.fillRect(0, 0, w, h)
-        g.strokeStyle = '#262626'
+        g.strokeStyle = '#1f2327'
         g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2)
         g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke()
-        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#5a5a5a'
+        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#7b828b'
         g.textAlign = 'left'; g.fillText('L', 3, 10); g.textAlign = 'right'; g.fillText('R', w - 3, 10)
         if (on && engine.anL && engine.anR) {
           if (!tdL || tdL.length !== engine.anL.fftSize) { tdL = new Float32Array(engine.anL.fftSize); tdR = new Float32Array(engine.anR.fftSize) }
           engine.anL.getFloatTimeDomainData(tdL); engine.anR.getFloatTimeDomainData(tdR!)
-          g.fillStyle = 'rgba(20,173,130,0.55)'
+          g.fillStyle = 'rgba(46,212,138,0.55)'
           const sc = Math.min(w, h) * 0.45
           for (let i = 0; i < tdL.length; i += 2) {
             const l = tdL[i], r = tdR![i]
@@ -236,14 +237,14 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
       if (crRef.current) {
         const { g, w, h } = setupCanvas(crRef.current)
         g.clearRect(0, 0, w, h)
-        g.fillStyle = '#1f1f1f'; g.fillRect(0, 4, w, h - 16)
-        g.fillStyle = '#3a3a3a'; g.fillRect(w / 2 - 0.5, 2, 1, h - 12)
+        g.fillStyle = '#15181b'; g.fillRect(0, 4, w, h - 16)
+        g.fillStyle = '#3a3f46'; g.fillRect(w / 2 - 0.5, 2, 1, h - 12)
         const c = on && m ? m.correlation : 0
         const x = ((c + 1) / 2) * w
-        g.fillStyle = c < 0 ? '#ef4444' : c < 0.3 ? '#f59e0b' : 'rgb(12,153,101)'
+        g.fillStyle = c < 0 ? '#ef4444' : c < 0.3 ? '#f59e0b' : '#2ed48a'
         g.fillRect(Math.min(w / 2, x), 6, Math.abs(x - w / 2), h - 20)
         g.fillStyle = '#e4e4e4'; g.fillRect(x - 1, 2, 2, h - 12)
-        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#8a8a8a'
+        g.font = '9px ui-monospace, monospace'; g.fillStyle = '#7b828b'
         g.textAlign = 'left'; g.fillText('-1', 0, h - 1)
         g.textAlign = 'center'; g.fillText('0', w / 2, h - 1)
         g.textAlign = 'right'; g.fillText('+1', w, h - 1)
@@ -275,18 +276,18 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
 
   // 높이 고정형(METER_COL_MAX_H 안) — 레벨·라우드니스 2열, 수치 한 줄, 누름, 스펙트럼 옆에 고니오·상관
   return (
-    <div className="ms-meters flex flex-col gap-1 min-w-0" style={{ maxHeight: METER_COL_MAX_H, overflowY: 'auto' }} data-testid="meter-column">
-      <div className="grid grid-cols-2 gap-1">
-        <Section title="레벨" help={METER_HELP.level}>
-          <canvas ref={lvRef} className="w-full h-[80px] block" />
-          <div className="grid grid-cols-2 text-[10px] leading-[12px] text-zinc-500 mt-0.5" style={MONO}>
-            <span title="입력 피크">입 <span ref={reg} data-k="inpk" className="text-zinc-200">-∞</span></span>
-            <span className="text-right" title="출력 피크">출 <span ref={reg} data-k="outpk" className="text-zinc-200">-∞</span></span>
+    <div className="ms-meters flex flex-col gap-1 min-w-0 flex-1 min-h-0" style={{ maxHeight: METER_COL_MAX_H, overflowY: 'auto' }} data-testid="meter-column">
+      <div className="grid grid-cols-2 gap-1 flex-[1_1_auto] min-h-[96px]">
+        <Section title="레벨" className="flex flex-col" help={METER_HELP.level}>
+          <canvas ref={lvRef} className="w-full min-h-[80px] block" style={{ flex: '1 1 80px' }} />
+          <div className="grid grid-cols-2 text-[10px] leading-[12px] text-[var(--m-faint)] mt-0.5" style={MONO}>
+            <span title="입력 피크">입 <span ref={reg} data-k="inpk" className="text-[var(--m-text)]">-∞</span></span>
+            <span className="text-right" title="출력 피크">출 <span ref={reg} data-k="outpk" className="text-[var(--m-text)]">-∞</span></span>
           </div>
         </Section>
-        <Section title="라우드니스" help={`${METER_HELP.lufs} 타깃 ${targetLufs} LUFS`} right={<span className="text-[9px] text-zinc-500" style={MONO} title="타깃(LUFS)">{targetLufs}</span>}>
-          <canvas ref={ldRef} className="w-full h-[80px] block" />
-          <div className="grid grid-cols-3 text-[10px] leading-[12px] text-zinc-200 mt-0.5" style={MONO}>
+        <Section title="라우드니스" className="flex flex-col" help={`${METER_HELP.lufs} 타깃 ${targetLufs} LUFS`} right={<span className="text-[9px] text-[var(--m-faint)]" style={MONO} title="타깃(LUFS)">{targetLufs}</span>}>
+          <canvas ref={ldRef} className="w-full min-h-[80px] block" style={{ flex: '1 1 80px' }} />
+          <div className="grid grid-cols-3 text-[10px] leading-[12px] text-[var(--m-text)] mt-0.5" style={MONO}>
             <span ref={reg} data-k="m" title="순간(M) LUFS">-∞</span>
             <span ref={reg} data-k="s" title="단기(S) LUFS">-∞</span>
             <span ref={reg} data-k="i" title="통합(I) LUFS" className="font-semibold text-white">-∞</span>
@@ -304,10 +305,10 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
       <Section title="게인 리덕션(누르는 양)" help={METER_HELP.gr}>
         <canvas ref={grRef} className="w-full h-[50px] block" />
       </Section>
-      <Section title="스펙트럼 · 고니오 · 위상 상관" help={`스펙트럼: ${METER_HELP.spectrum} · 고니오미터: ${METER_HELP.gonio} · 위상 상관: ${METER_HELP.corr}`}
-        right={<span ref={reg} data-k="corr" className="text-[10px] text-zinc-200" style={MONO} title="위상 상관">—</span>}>
-        <div className="flex gap-1.5">
-          <canvas ref={spRef} className="flex-1 min-w-0 h-[90px] block" aria-label="스펙트럼" />
+      <Section title="스펙트럼 · 고니오 · 위상 상관" className="flex flex-col flex-[1_1_auto]" help={`스펙트럼: ${METER_HELP.spectrum} · 고니오미터: ${METER_HELP.gonio} · 위상 상관: ${METER_HELP.corr}`}
+        right={<span ref={reg} data-k="corr" className="text-[10px] text-[var(--m-text)]" style={MONO} title="위상 상관">—</span>}>
+        <div className="flex gap-1.5 flex-1 min-h-0">
+          <canvas ref={spRef} className="flex-1 min-w-0 min-h-[90px] block" aria-label="스펙트럼" />
           <div className="flex flex-col gap-1.5 flex-none w-[52px]">
             <canvas ref={goRef} className="w-[52px] h-[52px] block" aria-label="고니오미터" />
             <canvas ref={crRef} className="w-[52px] h-[30px] block" aria-label="위상 상관" />
@@ -320,9 +321,9 @@ export function MeterColumn({ engine, targetLufs, ceiling, playing }: { engine: 
 
 function MiniStat({ label, k, unit, reg, help }: { label: string; k: string; unit: string; reg: (el: HTMLSpanElement | null) => void; help?: string }) {
   return (
-    <div className="rounded-md bg-black/40 px-1 py-0.5 min-w-0 flex items-baseline justify-between gap-0.5 text-[10px] leading-[14px]" title={help ? `${label} (${unit}) — ${help}` : `${label} (${unit})`}>
-      <span className="text-[9px] text-zinc-500">{label}</span>
-      <span ref={reg} data-k={k} className="text-zinc-100 truncate">—</span>
+    <div className="rounded bg-[var(--m-well)] shadow-[var(--m-inset)] px-1 py-0.5 min-w-0 flex items-baseline justify-between gap-0.5 text-[10px] leading-[14px]" title={help ? `${label} (${unit}) — ${help}` : `${label} (${unit})`}>
+      <span className="text-[9px] text-[var(--m-faint)]">{label}</span>
+      <span ref={reg} data-k={k} className="text-[var(--m-text)] truncate">—</span>
     </div>
   )
 }
@@ -330,10 +331,10 @@ function MiniStat({ label, k, unit, reg, help }: { label: string; k: string; uni
 export function Section({ title, right, children, className, help }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string; help?: string }) {
   // 설명은 마우스를 올리면 보여요(열 높이를 고정하려고 본문에서는 뺐다)
   return (
-    <section className={`rounded-lg border border-[var(--m-line-soft)] bg-[var(--m-well)] p-1.5 min-w-0 ${className ?? ''}`} title={help}>
+    <section className={`rounded-md border border-[var(--m-line-soft)] bg-[var(--m-well)] shadow-[var(--m-inset)] p-1.5 min-w-0 ${className ?? ''}`} title={help}>
       {(title || right) && (
         <header className="flex items-center justify-between gap-1 mb-0.5 min-w-0">
-          <h3 className="text-[10px] leading-[12px] font-semibold text-[var(--m-dim)] truncate">{title}</h3>
+          <h3 className="text-[10px] leading-[12px] font-bold tracking-[.06em] text-[var(--m-dim)] [text-shadow:0_1px_0_rgba(0,0,0,.7)] truncate">{title}</h3>
           {right}
         </header>
       )}

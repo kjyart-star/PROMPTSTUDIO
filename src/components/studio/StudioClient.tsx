@@ -1824,7 +1824,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         onPickPlaylist={(id) => { setTrashView(false); setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
-          <div className={`w-full p-6 pb-8${currentTab === 'suno' || currentTab === 'studio' ? ' flex-1 min-h-0 flex flex-col xl:pb-4' : ''}`}>
+          <div className={`w-full p-6 pb-8${currentTab === 'suno' || currentTab === 'studio' ? ' flex-1 min-h-0 flex flex-col xl:pb-4' : currentTab === 'mastering' ? ' flex-1 flex flex-col xl:pb-4' : ''}`}>
             {currentTab === 'suno' && (
               <WideFit fill>
                 <GenerateClient
@@ -1854,9 +1854,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
             )}
 
             {currentTab === 'mastering' && (
-              <div className="max-w-[1700px] mx-auto w-full">
+              <WideFit fill>
                 <MasteringClient />
-              </div>
+              </WideFit>
             )}
 
             {currentTab === 'library' && trashView && (
