@@ -1,0 +1,63 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react'
+import { ImmersivePlayer } from './ImmersivePlayer'
+import { usePlayerStore } from '@/stores/playerStore'
+
+const trk = (id: string, extra: any = {}) =>
+  ({ id, title: `곡 ${id}`, file_url: 'a', duration_sec: 120, lyrics: null, album: { title: '앨범', cover_url: `/c/${id}.png` }, ...extra }) as any
+
+beforeEach(() => {
+  const mem: Record<string, string> = {}
+  vi.stubGlobal('localStorage', { getItem: (k: string) => mem[k] ?? null, setItem: (k: string, v: string) => { mem[k] = v }, removeItem: (k: string) => { delete mem[k] } })
+})
+afterEach(cleanup)
+
+describe('ImmersivePlayer', () => {
+  it('닫혀 있으면 아무것도 그리지 않는다', () => {
+    usePlayerStore.setState({ isImmersiveOpen: false, currentTrack: trk('1') })
+    render(<ImmersivePlayer />)
+    expect(screen.queryByTestId('immersive-player')).toBeNull()
+  })
+
+  it('시간표 없는 가사는 「가사 시간 추정」을 보이고 현재 줄을 강조한다', () => {
+    const t = trk('1', { lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다' })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 100, duration: 120, isPlaying: false })
+    render(<ImmersivePlayer />)
+    expect(screen.getByText('가사 시간 추정')).toBeTruthy()
+    expect(screen.getByText('셋째 줄입니다').getAttribute('aria-current')).toBe('true')
+  })
+
+  it('시간표가 있는 가사는 추정 표시가 없다', () => {
+    const t = trk('1', { lyrics: '[00:01.00]하나\n[00:10.00]둘' })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 11, duration: 120 })
+    render(<ImmersivePlayer />)
+    expect(screen.queryByText('가사 시간 추정')).toBeNull()
+    expect(screen.getByText('둘').getAttribute('aria-current')).toBe('true')
+  })
+
+  it('가사가 없으면 안내 문구', () => {
+    const t = trk('1')
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })
+    render(<ImmersivePlayer />)
+    expect(screen.getByText('등록된 가사가 없습니다')).toBeTruthy()
+  })
+
+  it('재생목록이면 커버플로우가 기본이고 옆 커버를 누르면 그 곡을 재생한다', () => {
+    const q = [trk('1'), trk('2'), trk('3')]
+    const playTrack = vi.fn()
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[1], queue: q, queueIndex: 1, playTrack })
+    render(<ImmersivePlayer />)
+    expect(screen.getByText('02 / 03', { exact: false })).toBeTruthy()
+    fireEvent.click(screen.getByLabelText('곡 3'))
+    expect(playTrack).toHaveBeenCalledWith(q[2], q)
+  })
+
+  it('Esc 로 닫힌다', () => {
+    const t = trk('1')
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })
+    render(<ImmersivePlayer />)
+    act(() => { fireEvent.keyDown(window, { key: 'Escape' }) })
+    expect(usePlayerStore.getState().isImmersiveOpen).toBe(false)
+  })
+})

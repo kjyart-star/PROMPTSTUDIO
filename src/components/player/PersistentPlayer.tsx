@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Play, Pause, SkipBack, SkipForward,
-  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart, PanelRight, Music
+  Volume2, VolumeX, Shuffle, Repeat, Mic, ListMusic, PictureInPicture2, Heart, PanelRight, Music, Maximize2
 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
+import { ImmersivePlayer } from './ImmersivePlayer';
 import { Disc, DiscStyles } from './Disc';
 import { withBase } from '@/lib/basePath'
 
@@ -22,6 +23,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
     currentTrack, isPlaying, progress, currentTime, duration,
     volume, isMuted, hasLoggedPlay, isNowPlayingOpen,
     isShuffle, repeatMode, seekTrigger,
+    setImmersiveOpen,
     playTrack, togglePlay, next, prev, seek, setVolume, toggleMute, setNowPlayingOpen,
     toggleShuffle, toggleRepeatMode,
     _setIsPlaying, _setProgress, _markPlayLogged,
@@ -476,6 +478,16 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
           >
             <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
           </button>
+          <button
+            type="button"
+            onClick={() => setImmersiveOpen(true)}
+            disabled={!currentTrack}
+            className="text-on-surface-variant hover:text-on-surface transition-colors ml-[4px] cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-default"
+            title={lang === 'KO' ? '전체 화면으로 보기' : lang === 'JA' ? '全画面で見る' : 'Full screen'}
+            aria-label={lang === 'KO' ? '전체 화면으로 보기' : lang === 'JA' ? '全画面で見る' : 'Full screen'}
+          >
+            <Maximize2 className="w-5 h-5" />
+          </button>
         </div>
 
         {/* 중: 컨트롤 + 진행바 */}
@@ -694,6 +706,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
 
       {/* Mini Player PiP Window */}
       <MiniPlayerPip isOpen={isPipOpen} onClose={() => setIsPipOpen(false)} />
+      <ImmersivePlayer />
     </>
   );
 }

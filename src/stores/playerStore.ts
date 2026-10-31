@@ -16,6 +16,9 @@ interface PlayerState {
   playStartTime: number | null;
   hasLoggedPlay: boolean;
   isNowPlayingOpen: boolean;
+  /** 전체 화면 「지금 재생」 */
+  isImmersiveOpen: boolean;
+  setImmersiveOpen: (open: boolean) => void;
 
   // Shuffle & Repeat state
   isShuffle: boolean;
@@ -83,6 +86,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playStartTime: null,
   hasLoggedPlay: false,
   isNowPlayingOpen: false,
+  isImmersiveOpen: false,
+  setImmersiveOpen: (open) => set({ isImmersiveOpen: open }),
   isShuffle: false,
   repeatMode: 'off',
   seekTrigger: null,
