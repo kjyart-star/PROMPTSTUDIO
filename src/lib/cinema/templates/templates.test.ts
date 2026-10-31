@@ -39,9 +39,9 @@ function frame(w: number, h: number, lyrics: boolean): CinemaFrame {
 }
 
 describe('cinema templates', () => {
-  it('16종(기존 9 + 실사 장면 7)이 등록되고 getTemplate 은 없는 id 에 첫 번째를 준다', () => {
-    expect(TEMPLATES).toHaveLength(16)
-    expect(new Set(TEMPLATES.map(t => t.id)).size).toBe(16)
+  it('21종(기존 9 + 실사 장면 7 + 레트로 5)이 등록되고 getTemplate 은 없는 id 에 첫 번째를 준다', () => {
+    expect(TEMPLATES).toHaveLength(21)
+    expect(new Set(TEMPLATES.map(t => t.id)).size).toBe(21)
     expect(getTemplate('nope')).toBe(TEMPLATES[0])
   })
   for (const tpl of TEMPLATES) {
