@@ -6,12 +6,12 @@ import {
   RotateCcw, Undo2, Redo2, Scissors, Trash2, Plus, Magnet, 
   ZoomIn, ZoomOut, MousePointer2, Music, Wand2, Image as ImageIcon, 
   Sliders, FolderOpen, Settings, Layers, Sparkles, Download, Check,
-  Share2, RefreshCw, Disc, Eye, Tag, FileText, Split
+  Clapperboard, Share2, RefreshCw, Disc, Eye, Tag, FileText, Split
 } from 'lucide-react'
 
 interface StudioWorkspaceProps {
   currentTab: string
-  setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering') => void
+  setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering' | 'cinema') => void
   uiLanguage: string
   userCredits?: number
   user?: any
@@ -169,6 +169,24 @@ export function StudioWorkspace({
           >
             <Sliders className="w-4 h-4 shrink-0" />
             <span className="truncate">마스터링</span>
+          </button>
+
+          {/* 6. 플레이리스트 영상 */}
+          <button
+            type="button"
+            onClick={() => setCurrentTab('cinema')}
+            className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
+              currentTab === 'cinema' 
+                ? 'text-white shadow-md border border-white/20' 
+                : 'text-zinc-400 hover:text-white bg-[#14161b]/80 hover:bg-[#1c1f26] border border-white/[0.04]'
+            }`}
+            style={currentTab === 'cinema' ? { background: 'linear-gradient(90deg, #14b48b 0%, #289eba 50%, #3688e9 100%)' } : {}}
+          >
+            <Clapperboard className="w-4 h-4 shrink-0" />
+            <span className="truncate">플레이리스트 영상</span>
+            <span className="ml-auto text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#a3e635] text-black shadow-sm leading-none">
+              NEW
+            </span>
           </button>
         </aside>
 

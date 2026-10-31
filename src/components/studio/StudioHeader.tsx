@@ -7,12 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 import { 
   Zap, ArrowLeft, 
   Sparkles, Music, Wand2, Image as ImageIcon, Volume2, 
-  Layers, Check, User, LogIn, LogOut, Settings, CreditCard, HardDrive
+  Layers, Check, Clapperboard, User, LogIn, LogOut, Settings, CreditCard, HardDrive
 } from 'lucide-react'
 
 interface StudioHeaderProps {
   currentTab: string
-  setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering') => void
+  setCurrentTab: (tab: 'studio' | 'library' | 'cover' | 'suno' | 'mastering' | 'cinema') => void
   uiLanguage: string
   user?: any
   projectTitle?: string
@@ -34,6 +34,7 @@ export function StudioHeader({
     { id: 'library' as const, label: '보관함', icon: HardDrive },
     { id: 'cover' as const, label: 'AI 커버', icon: ImageIcon },
     { id: 'mastering' as const, label: '마스터링', icon: Volume2 },
+    { id: 'cinema' as const, label: '플레이리스트 영상', icon: Clapperboard },
   ]
 
   const [isAuthMenuOpen, setIsAuthMenuOpen] = useState(false)

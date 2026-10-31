@@ -1,0 +1,8 @@
+.cinema-root .btn-cin{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);font-size:12px;font-weight:600;color:#d4d4d8;background:rgba(255,255,255,.03)}
+.cinema-root .btn-cin:hover:not(:disabled){border-color:rgba(255,255,255,.4);color:#fff}
+.cinema-root .btn-cin:disabled{opacity:.35;cursor:not-allowed}
+.cinema-root .inp-cin,.cinema-root .sel-cin{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 8px;font-size:12px;color:#fff;max-width:100%}
+.cinema-root .sel-cin{width:100%}
+.cinema-root .fld-cin{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cinema-root .fld-cin>span{font-size:11px;font-weight:700;color:#a1a1aa}
+.cinema-root .fld-cin>span em{font-style:normal;font-weight:400;color:#71717a}

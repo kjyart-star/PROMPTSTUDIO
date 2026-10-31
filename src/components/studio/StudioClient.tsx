@@ -18,6 +18,9 @@ import QuickMasterDialog from './QuickMasterDialog'
 import LyricTimingEditor from './LyricTimingEditor'
 import { filterLibrary, isInstrumental, moveInOrder, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
+import dynamic from 'next/dynamic'
+
+const CinemaClient = dynamic(() => import('./cinema/CinemaClient'), { ssr: false })
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
 import { StudioHero } from './StudioHero'
@@ -822,7 +825,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
    * 아예 돌지 않아 `?tab=`·`?title=`·`?style=` 이 통째로 무시됐다.
    * 초깃값으로 넣으면 서버 렌더 HTML 자체가 이미 맞는 탭·입력값을 담는다.
    */
-  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering'>(() => {
+  const [currentTab, setCurrentTab] = useState<'studio' | 'library' | 'cover' | 'suno' | 'mastering' | 'cinema'>(() => {
     // title/style/prompt 가 오면 아래 effect 와 같은 규칙으로 음악 프롬프트 탭이 이긴다
     if (searchParams.get('title') || searchParams.get('style') || searchParams.get('prompt')) return 'studio'
     if (
@@ -830,7 +833,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
       tabParam === 'studio' ||
       tabParam === 'cover' ||
       tabParam === 'suno' ||
-      tabParam === 'mastering'
+      tabParam === 'mastering' ||
+      tabParam === 'cinema'
     ) {
       return tabParam
     }
@@ -843,7 +847,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
       tabParam === 'studio' ||
       tabParam === 'cover' ||
       tabParam === 'suno' ||
-      tabParam === 'mastering'
+      tabParam === 'mastering' ||
+      tabParam === 'cinema'
     ) {
       setCurrentTab(tabParam)
     }
@@ -1729,6 +1734,12 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
             {currentTab === 'cover' && (
               <div className="max-w-[1700px] mx-auto w-full">
                 <CoverClient user={user} />
+              </div>
+            )}
+
+            {currentTab === 'cinema' && (
+              <div className="max-w-[1700px] mx-auto w-full">
+                <CinemaClient />
               </div>
             )}
 

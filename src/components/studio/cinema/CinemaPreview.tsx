@@ -1,0 +1,160 @@
+'use client'
+/**
+ * 실시간 미리보기 — 내보내기와 같은 draw(makeFrame/drawFrame)·같은 스펙트럼 분석을 쓴다.
+ * 소리는 디코드한 버퍼를 AudioBufferSource 로 재생해 화면 시계를 오디오 시계에 맞춘다.
+ */
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Play, Pause, SkipBack, SkipForward, Loader2 } from 'lucide-react'
+import { decodeToChannels, type CinemaSettings } from '@/lib/cinema/render'
+import { createSpectrumAnalyzer, type SpectrumAnalyzer } from '@/lib/cinema/spectrum'
+import { getPalette } from '@/lib/cinema/palettes'
+import { makeFrame, drawFrame } from '@/lib/cinema/frame'
+import { ASPECTS } from '@/lib/cinema/types'
+import { formatClock } from '@/lib/cinema/output'
+import { loadAudioBlob, loadCoverBlob, type CTrack } from './model'
+
+interface Loaded { id: string; channels: Float32Array[]; spec: SpectrumAnalyzer; cover: ImageBitmap | null }
+
+export function CinemaPreview({ tracks, settings, index, onIndex, seekRequest }: {
+  tracks: CTrack[]; settings: CinemaSettings; index: number; onIndex: (i: number) => void
+  /** 가사 확인 단계에서 특정 시각으로 보내고 싶을 때(nonce 로 같은 값 재요청 가능) */
+  seekRequest?: { nonce: number; t: number } | null
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [loaded, setLoaded] = useState<Loaded | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [playing, setPlaying] = useState(false)
+  const [pos, setPos] = useState(0)
+  const track = tracks[index] ?? null
+  const ctxRef = useRef<AudioContext | null>(null)
+  const srcRef = useRef<AudioBufferSourceNode | null>(null)
+  const startRef = useRef({ at: 0, offset: 0 })
+  const posRef = useRef(0)
+  const loadedRef = useRef<Loaded | null>(null)
+  const settingsRef = useRef(settings); settingsRef.current = settings
+  const trackRef = useRef(track); trackRef.current = track
+  const indexRef = useRef(index)
+  indexRef.current = index
+  const tracksRef = useRef(tracks); tracksRef.current = tracks
+
+  const aspect = ASPECTS.find(a => a.id === settings.aspect)?.ratio ?? 16 / 9
+  const W = aspect >= 1 ? 960 : Math.round(960 * aspect), H = aspect >= 1 ? Math.round(960 / aspect) : 960
+
+  const draw = useCallback((t: number) => {
+    const c = canvasRef.current, tr = trackRef.current, L = loadedRef.current
+    if (!c || !tr) return
+    const ctx = c.getContext('2d'); if (!ctx) return
+    const s = settingsRef.current
+    const sp = L && L.id === tr.id ? L.spec.at(t) : { bars: new Float32Array(64).fill(0.08), level: 0 }
+    const f = makeFrame({
+      w: c.width, h: c.height, t, trackIndex: indexRef.current, trackCount: tracksRef.current.length, title: tr.title, headline: s.headline,
+      coverSeed: tr.id + tr.title, cover: L && L.id === tr.id ? L.cover : null, kind: s.kind, lyrics: tr.lyrics, duration: tr.duration,
+      bars: sp.bars, level: sp.level, shape: s.shape, palette: getPalette(s.paletteId),
+    })
+    drawFrame(ctx, s.templateId, f)
+  }, [])
+
+  const stop = useCallback(() => {
+    try { srcRef.current?.stop() } catch {}
+    srcRef.current = null
+    setPlaying(false)
+  }, [])
+
+  const playFrom = useCallback((offset: number) => {
+    const L = loadedRef.current, tr = trackRef.current
+    if (!L || !tr || L.id !== tr.id) return
+    const ac = ctxRef.current ?? (ctxRef.current = new AudioContext({ sampleRate: 48000 }))
+    void ac.resume()
+    try { srcRef.current?.stop() } catch {}
+    const buf = ac.createBuffer(2, L.channels[0].length, 48000)
+    buf.copyToChannel(L.channels[0] as Float32Array<ArrayBuffer>, 0); buf.copyToChannel(L.channels[1] as Float32Array<ArrayBuffer>, 1)
+    const src = ac.createBufferSource(); src.buffer = buf; src.connect(ac.destination)
+    const off = Math.max(0, Math.min(offset, buf.duration - 0.05))
+    src.start(0, off)
+    startRef.current = { at: ac.currentTime, offset: off }
+    L.spec.reset()
+    src.onended = () => { if (srcRef.current === src) { srcRef.current = null; if (posRef.current >= buf.duration - 0.3) { const n = indexRef.current + 1; if (n < tracksRef.current.length) { onIndex(n); setAutoPlay(true) } else { setPlaying(false); posRef.current = 0; setPos(0); draw(0) } } } }
+    srcRef.current = src
+    setPlaying(true)
+  }, [draw, onIndex])
+
+  const [autoPlay, setAutoPlay] = useState(false)
+
+  // 곡이 바뀌면 소리·커버를 불러온다
+  useEffect(() => {
+    stop(); posRef.current = 0; setPos(0); setError('')
+    loadedRef.current = null; setLoaded(null)
+    if (!track) { const c = canvasRef.current; c?.getContext('2d')?.clearRect(0, 0, c.width, c.height); return }
+    let dead = false
+    setLoading(true)
+    ;(async () => {
+      try {
+        const [blob, cb] = await Promise.all([loadAudioBlob(track), loadCoverBlob(track)])
+        const channels = await decodeToChannels(blob)
+        const cover = cb ? await createImageBitmap(cb).catch(() => null) : null
+        if (dead) return
+        const L: Loaded = { id: track.id, channels, spec: createSpectrumAnalyzer(channels, 48000), cover }
+        loadedRef.current = L; setLoaded(L)
+        draw(0)
+        if (autoPlay) { setAutoPlay(false); playFrom(0) }
+      } catch (e) { if (!dead) setError(e instanceof Error && e.message ? '곡을 불러오지 못했어요. 로그인과 인터넷 연결을 확인해 주세요.' : '곡을 불러오지 못했어요.') }
+      finally { if (!dead) setLoading(false) }
+    })()
+    return () => { dead = true; stop() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id])
+
+  // 그림 루프(오디오 시계 기준)
+  useEffect(() => {
+    let raf = 0
+    const tick = () => {
+      const ac = ctxRef.current
+      if (srcRef.current && ac) {
+        const t = startRef.current.offset + (ac.currentTime - startRef.current.at)
+        posRef.current = t; setPos(t); draw(t)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [draw])
+
+  // 설정·가사가 바뀌면 멈춘 상태에서도 다시 그린다
+  useEffect(() => { if (!srcRef.current) draw(posRef.current) }, [settings, track, loaded, draw, W, H])
+
+  useEffect(() => {
+    if (!seekRequest || !track) return
+    const t = Math.max(0, seekRequest.t)
+    posRef.current = t; setPos(t)
+    if (srcRef.current) playFrom(t); else draw(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seekRequest?.nonce])
+
+  useEffect(() => () => { try { srcRef.current?.stop() } catch {}; void ctxRef.current?.close() }, [])
+
+  const toggle = () => { if (playing) { stop() } else playFrom(posRef.current >= (track?.duration ?? 0) - 0.3 ? 0 : posRef.current) }
+  const seek = (t: number) => { posRef.current = t; setPos(t); if (playing) playFrom(t); else draw(t) }
+
+  return (
+    <div className="rounded-xl border border-outline-variant bg-black/40 p-3">
+      <div className="relative mx-auto flex items-center justify-center bg-black rounded-lg overflow-hidden" style={{ aspectRatio: String(aspect), maxHeight: 420, width: aspect >= 1 ? '100%' : undefined, height: aspect < 1 ? 420 : undefined }}>
+        <canvas ref={canvasRef} width={W} height={H} className="w-full h-full block" data-testid="cinema-preview-canvas" />
+        {!track && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">곡을 고르면 여기에서 미리 볼 수 있어요.</div>}
+        {loading && <div className="absolute inset-0 grid place-items-center bg-black/50"><Loader2 className="w-6 h-6 animate-spin text-zinc-300" /></div>}
+        {error && <div className="absolute inset-x-0 bottom-0 bg-red-950/80 text-red-200 text-xs px-3 py-2">{error}</div>}
+      </div>
+      <div className="mt-2 flex items-center gap-2 text-xs text-zinc-300">
+        <button type="button" disabled={index <= 0} onClick={() => onIndex(index - 1)} className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-30" aria-label="이전 곡"><SkipBack className="w-4 h-4" /></button>
+        <button type="button" disabled={!loaded} onClick={toggle} className="p-2 rounded-full bg-white text-black disabled:opacity-40" aria-label={playing ? '일시정지' : '재생'}>
+          {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </button>
+        <button type="button" disabled={index >= tracks.length - 1} onClick={() => onIndex(index + 1)} className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-30" aria-label="다음 곡"><SkipForward className="w-4 h-4" /></button>
+        <span className="tabular-nums w-10 text-right">{formatClock(pos)}</span>
+        <input type="range" min={0} max={Math.max(1, track?.duration ?? 1)} step={0.1} value={Math.min(pos, track?.duration ?? 1)} onChange={e => seek(Number(e.target.value))} className="flex-1 accent-emerald-400" aria-label="재생 위치" />
+        <span className="tabular-nums w-10">{formatClock(track?.duration ?? 0)}</span>
+      </div>
+      <p className="mt-1 text-[11px] text-zinc-500">음원을 분석해 그립니다. 미리보기는 곡 음량 맞추기가 적용되기 전 소리예요.</p>
+    </div>
+  )
+}
