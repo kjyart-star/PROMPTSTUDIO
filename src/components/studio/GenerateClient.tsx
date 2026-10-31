@@ -24,10 +24,16 @@ interface GenerateClientProps {
   initialStyle?: string
   initialTitle?: string
   initialNegativePrompt?: string
+  /** 곡 ⋯ 메뉴(간단 마스터링·스템·앨범아트·휴지통 …) — 보관함 카드와 같은 메뉴를 StudioClient 가 만들어 준다 */
+  renderTrackMenu?: (item: any, buttonClass: string, iconClass: string) => React.ReactNode
+  /** 메뉴 동작으로 곡이 바뀌면 올라가는 번호 — 목록을 다시 읽는다 */
+  historyVersion?: number
 }
 
 export function GenerateClient({ 
   user, 
+  renderTrackMenu,
+  historyVersion = 0,
   historyId,
   initialPrompt = '',
   initialStyle = '',
@@ -234,6 +240,11 @@ export function GenerateClient({
       console.error('Error refreshing history list:', e)
     }
   }
+
+  useEffect(() => {
+    if (historyVersion > 0) refreshHistoryList()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyVersion])
 
   // Initial load and sync on currentHistoryId changes
   useEffect(() => {
@@ -1165,8 +1176,11 @@ export function GenerateClient({
                             )}
                           </div>
 
+                          {renderTrackMenu?.(track, 'w-7 h-7 rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60', 'w-3.5 h-3.5')}
+
                           {/* 좋아요 버튼 */}
                           <button
+                            aria-label={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
                             onClick={() => handleLikeToggle(track)}
                             className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer group/heart shrink-0"
                             title={uiLanguage === 'KO' ? '좋아요' : uiLanguage === 'JA' ? 'いいね' : 'Like'}
@@ -1182,6 +1196,7 @@ export function GenerateClient({
 
                           {/* 다운로드 버튼 */}
                           <button
+                            aria-label={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
                             onClick={() => handleDownloadTrack(track.audio_url, track.title, track.image_url)}
                             className="p-1.5 rounded hover:bg-white/[0.05] transition-colors cursor-pointer shrink-0"
                             title={uiLanguage === 'KO' ? '다운로드' : uiLanguage === 'JA' ? 'ダウンロード' : 'Download'}
@@ -1191,6 +1206,7 @@ export function GenerateClient({
 
                           {/* 재생 버튼 */}
                           <button
+                            aria-label={uiLanguage === 'KO' ? '재생' : uiLanguage === 'JA' ? '再生' : 'Play'}
                             onClick={() => playListTrack(track)}
                             className="h-8 w-8 rounded-full bg-primary text-black flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                           >

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+let quotaResult: any = null
+vi.mock('@/lib/studio/usageLimit', () => ({ takeQuota: async () => quotaResult }))
 vi.mock('@/lib/auth/aiGate', () => ({ requireAiAccess: async () => ({ ok: true }) }))
 vi.mock('@/lib/credits/suite', () => ({ SUITE_API_BASE: 'https://w', suiteAccessToken: async () => 'tok' }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) } }) }))
@@ -27,7 +29,7 @@ const post = async (body: any) => (await POST(new Request('http://x/api/studio/a
 const submits = () => calls.filter((c) => c.url.endsWith('/v1/ai/images'))
 
 beforeEach(() => {
-  calls.length = 0; priceMilli = 1000
+  quotaResult = null; calls.length = 0; priceMilli = 1000
   submit = { status: 200, body: { taskId: 'job:1', creditsMilli: 1000, balanceMilli: 9000 } }
 })
 
@@ -78,5 +80,12 @@ describe('앨범아트 — 게이트웨이 차감 정합', () => {
     job = { status: 'succeeded', images: [{ url: 'https://img/a.png' }] }
     const d = await (await GET(new Request('http://x/api/studio/album-art?taskId=job:1')))!.json()
     expect(d).toEqual({ status: 'done', imageUrl: 'https://pub/a.png' })
+  })
+
+  it('연타·하루 상한에 걸리면 게이트웨이를 부르지 않는다', async () => {
+    quotaResult = new Response(JSON.stringify({ error: 'x' }), { status: 429 })
+    const r = await post({ prompt: 'cover', maxCreditsMilli: 1000 })
+    expect(r.status).toBe(429)
+    expect(submits()).toHaveLength(0)
   })
 })

@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { requireAiAccess } from '@/lib/auth/aiGate'
 import { SUITE_API_BASE, suiteAccessToken } from '@/lib/credits/suite'
+import { takeQuota } from '@/lib/studio/usageLimit'
 
 /**
  * 앨범아트 만들기 — 유료. 쿠키플레이 AI 게이트웨이(`/v1/ai/images`)를 사용자 토큰으로 부른다.
@@ -96,6 +97,9 @@ export async function POST(request: Request) {
     if (Number.isFinite(shown) && shown > 0 && quote > shown) {
       return NextResponse.json({ error: '요금이 바뀌었어요. 새 요금을 확인해 주세요.', creditsMilli: quote }, { status: 409 })
     }
+
+    const limited = await takeQuota(user.id, 'albumArt')
+    if (limited) return limited
 
     const res = await fetch(`${SUITE_API_BASE}/v1/ai/images`, {
       method: 'POST',

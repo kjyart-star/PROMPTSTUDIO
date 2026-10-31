@@ -23,6 +23,8 @@ vi.mock('@/lib/credits/suite', () => ({
   refundCredits: (id: string) => refundMock(id),
   creditErrorResponse: (r: any) => new Response(JSON.stringify({ error: r.kind }), { status: r.kind === 'insufficient' ? 402 : 503 }),
 }))
+let quotaResult: any = null
+vi.mock('@/lib/studio/usageLimit', () => ({ takeQuota: async () => quotaResult }))
 vi.mock('@/lib/auth/aiGate', () => ({ requireAiAccess: async () => ({ ok: true }) }))
 vi.mock('@/lib/suite/provider', () => ({ SUNO_COST_USD_PER_SONG: { apipass: 0.06, kie: 0.06 }, reportProviderUsage: vi.fn() }))
 
@@ -53,7 +55,7 @@ const post = async () => (await POST(new Request('http://x/api/suno/stem', { met
 const get = async () => (await GET(new Request('http://x/api/suno/stem?historyId=h1')))!
 
 beforeEach(() => {
-  ledger.length = 0; balance = 10; spendMock.mockClear(); refundMock.mockClear()
+  quotaResult = null; ledger.length = 0; balance = 10; spendMock.mockClear(); refundMock.mockClear()
   row = { id: 'h1', user_id: 'u1', title: '곡', status: 'completed', audio_url: 'audio/h1.mp3', suno_task_id: 'apipass:T1', form: { suno_audio_id: 'A1' } }
   createOutcome = { ok: true, taskRef: 'apipass:S1', channel: 'apipass' }
   statusOutcome = { ok: true, channel: 'apipass', state: 'processing', results: [] }
@@ -140,5 +142,15 @@ describe('스템 분리 — 크레딧 원장 정합', () => {
     const r = await post()
     expect(r.status).toBe(409)
     expect(spendMock).not.toHaveBeenCalled()
+  })
+
+  it('연타·하루 상한에 걸리면 차감도 공급사 호출도 없다', async () => {
+    quotaResult = new Response(JSON.stringify({ error: 'x' }), { status: 429 })
+    const { createStemTask } = await import('@/lib/suno/channel')
+    ;(createStemTask as any).mockClear()
+    const r = await post()
+    expect(r.status).toBe(429)
+    expect(spendMock).not.toHaveBeenCalled()
+    expect(createStemTask).not.toHaveBeenCalled()
   })
 })

@@ -12,6 +12,7 @@ vi.mock('@/lib/credits/useSuiteCredits', () => ({
 vi.mock('./StudioAudioDuration', () => ({ AudioDuration: () => <span>3:00</span> }))
 
 import { GenerateClient } from './GenerateClient'
+import TrackMenu from './TrackMenu'
 import { usePlayerStore } from '@/stores/playerStore'
 
 const rows = [
@@ -53,5 +54,32 @@ describe('GenerateClient 곡 행 클릭', () => {
     fireEvent.click(icon)
     expect(usePlayerStore.getState().currentTrack).toBeNull()
     expect(container.querySelector('aside')).toBeNull()
+  })
+})
+
+describe('GenerateClient 곡 ⋯ 메뉴', () => {
+  it('곡마다 ⋯ 메뉴가 있고 간단 마스터링으로 들어간다, 아이콘 버튼엔 aria-label 이 있다', async () => {
+    const onQuick = vi.fn()
+    const renderTrackMenu = (item: any, buttonClass: string, iconClass: string) => (
+      <TrackMenu uiLanguage="KO" item={item} playlists={[]} signedIn buttonClass={buttonClass} iconClass={iconClass}
+        onUpdate={() => {}} onRestorePrompt={() => {}} onPublish={() => {}} onMastering={() => {}} onQuickMaster={onQuick}
+        onEditTiming={() => {}} onAlbumArt={() => {}} onStem={() => {}} artMilli={1000} stemMilli={3000} onDownload={() => {}} onTrash={() => {}} />
+    )
+    const { findByText, container, getAllByLabelText, getByText } = render(
+      <GenerateClient user={{ id: 'u', email: 'u@x.y' }} renderTrackMenu={renderTrackMenu} />,
+    )
+    await findByText('Song A')
+    expect(getAllByLabelText('더보기')).toHaveLength(2)
+    expect(getAllByLabelText(/좋아요|Like/).length).toBe(2)
+    expect(getAllByLabelText(/다운로드|Download/).length).toBe(2)
+    expect(getAllByLabelText(/재생|Play/).length).toBeGreaterThanOrEqual(2)
+    fireEvent.click(getAllByLabelText('더보기')[0])
+    expect(getByText('스템 분리 (보컬/악기)')).toBeTruthy()
+    expect(getByText('✦3')).toBeTruthy()
+    fireEvent.click(getByText('마스터링'))
+    expect(onQuick).toHaveBeenCalled()
+    // 메뉴를 눌러도 곡이 재생되지 않는다
+    expect(usePlayerStore.getState().currentTrack).toBeNull()
+    expect(container).toBeTruthy()
   })
 })

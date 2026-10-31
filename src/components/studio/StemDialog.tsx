@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { PaidConfirm, PriceBadge } from './PaidConfirm'
+import { suiteHref } from '@/lib/basePath'
 
 type Phase = 'idle' | 'processing' | 'done' | 'failed'
 
@@ -91,6 +92,9 @@ export default function StemDialog({
           <button type="button" onClick={() => { setPhase('idle'); setMsg('') }} className="px-4 py-2 rounded-xl border border-[#262626] text-xs font-bold text-zinc-300 cursor-pointer">다시 시도</button>
         )}
         {msg && <p role="alert" className="text-xs text-red-400">{msg}</p>}
+        {msg.includes('크레딧이 모자라요') && (
+          <a href={suiteHref('/pricing')} className="inline-block text-xs font-bold text-primary hover:underline">크레딧 충전하러 가기 →</a>
+        )}
         <div className="flex justify-end"><button type="button" onClick={onClose} className="px-4 py-2 text-xs font-bold text-zinc-300 rounded-xl border border-[#262626] cursor-pointer">닫기</button></div>
       </div>
     </div>

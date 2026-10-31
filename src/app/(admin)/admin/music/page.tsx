@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Users, Library, Music, Play, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
+import StudioOpenSwitch from '@/components/admin/StudioOpenSwitch'
 
 export const revalidate = 0
 
@@ -71,6 +72,8 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-slate-400 mt-1">플랫폼 음악 데이터 및 활성 통계를 요약합니다.</p>
         </div>
       </div>
+
+      <StudioOpenSwitch />
 
       {/* 통계 카드 그리드 (브랜드 컬러 테마: bg-[#161616], border-[#232323]) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

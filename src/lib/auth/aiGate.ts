@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isStudioOpen } from '@/lib/studio/openSwitch'
 
 /**
  * [임시 게이트] 비용이 나가는 외부 API 실행을 관리자에게만 허용한다.
@@ -33,6 +34,15 @@ export async function requireAiAccess(feature: string): Promise<AiGateResult> {
     }
   }
 
+  // 스튜디오 공개 스위치(src/lib/studio/openSwitch.ts) — 켜져 있으면 로그인한 사용자 누구나, 차단 계정만 제외
+  if (await isStudioOpen()) {
+    const { data: prof, error } = await supabase.from('profiles').select('is_banned').eq('id', user.id).maybeSingle()
+    if (!error && prof?.is_banned) {
+      return { ok: false, response: NextResponse.json({ error: '이용이 제한된 계정입니다.' }, { status: 403 }) }
+    }
+    return { ok: true }
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('is_admin')
@@ -59,6 +69,7 @@ export async function hasAiAccess(): Promise<boolean> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
+  if (await isStudioOpen()) return true
 
   const { data: profile } = await supabase
     .from('profiles')

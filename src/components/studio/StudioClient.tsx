@@ -936,6 +936,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [quickMasterItem, setQuickMasterItem] = useState<any | null>(null)
   const [timingItem, setTimingItem] = useState<any | null>(null)
   const [queueCount, setQueueCount] = useState(0)
+  const [historyVersion, setHistoryVersion] = useState(0)
   const [artItem, setArtItem] = useState<any | null>(null)
   const [stemItem, setStemItem] = useState<any | null>(null)
   const [artMilli, setArtMilli] = useState<number | null | undefined>(undefined)
@@ -1042,6 +1043,31 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     }
     playTrack(trackToPlay as any, [trackToPlay] as any[])
   }
+
+  /** 곡 ⋯ 메뉴 — 보관함 카드와 「음악 생성」 탭 곡 목록이 같은 메뉴를 쓴다 */
+  const buildTrackMenu = (item: any, baseBtn: string, iconClass: string) => (
+      <TrackMenu
+        uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+        item={item}
+        playlists={playlists}
+        signedIn={!!user}
+        buttonClass={baseBtn}
+        iconClass={iconClass}
+        onUpdate={(payload) => updateHistoryItem(item.id, payload)}
+        onRestorePrompt={() => { openHistoryItem(item, 'all'); setCurrentTab('studio') }}
+        onPublish={() => { if (item.is_published) updateHistoryItem(item.id, { is_published: false }); else setCurrentTab('suno') }}
+        onMastering={() => setCurrentTab('mastering')}
+        onQuickMaster={() => setQuickMasterItem(item)}
+        onEditTiming={() => setTimingItem(item)}
+        onAlbumArt={() => setArtItem(item)}
+        onStem={() => setStemItem(item)}
+        artMilli={artMilli}
+        stemMilli={creditPrices['music.stem2']}
+        onMove={libraryQuery.playlistId && libraryQuery.sort === 'playlist' ? (dir) => moveInPlaylist(item.id, dir) : undefined}
+        onDownload={() => downloadHistoryTrack(item)}
+        onTrash={() => setDeleteConfirmId(item.id)}
+      />
+  )
 
   const supabase = createClient()
   const options = useMemo(() => getOptions(uiLanguage), [uiLanguage])
@@ -1175,6 +1201,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         const completedData = rawData.filter((item: any) => (item.audio_url || item.file_url) && item.form?.source !== 'upload')
         completedData.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
         setHistory(completedData)
+        setHistoryVersion((v) => v + 1)
       }
     } catch (e) {
       console.error('Error fetching song history:', e)
@@ -1705,6 +1732,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         if (res.ok) {
           setHistory(prev => prev.filter(item => item.id !== id))
           setTrashRefreshKey(k => k + 1)
+          setHistoryVersion(v => v + 1)
           setStatus(uiLanguage === 'KO' ? '휴지통으로 옮겼습니다 (30일 보관)' : uiLanguage === 'JA' ? 'ゴミ箱へ移動しました (30日間保管)' : 'Moved to trash (kept for 30 days)')
         } else {
           const err = await res.json()
@@ -1762,6 +1790,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   initialStyle={resultParts.prompt}
                   initialTitle={resultParts.title}
                   initialNegativePrompt={resultParts.negativePrompt}
+                  renderTrackMenu={buildTrackMenu}
+                  historyVersion={historyVersion}
                 />
               </div>
             )}
@@ -1879,29 +1909,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       setLibraryPlaylistMenuId(null)
                       updateHistoryItem(item.id, { playlist_id: playlistId })
                     }
-                    const trackMenu = (
-                      <TrackMenu
-                        uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
-                        item={item}
-                        playlists={playlists}
-                        signedIn={!!user}
-                        buttonClass={baseBtn}
-                        iconClass={iconClass}
-                        onUpdate={(payload) => updateHistoryItem(item.id, payload)}
-                        onRestorePrompt={() => { openHistoryItem(item, 'all'); setCurrentTab('studio') }}
-                        onPublish={() => { if (item.is_published) updateHistoryItem(item.id, { is_published: false }); else setCurrentTab('suno') }}
-                        onMastering={() => setCurrentTab('mastering')}
-                        onQuickMaster={() => setQuickMasterItem(item)}
-                        onEditTiming={() => setTimingItem(item)}
-                        onAlbumArt={() => setArtItem(item)}
-                        onStem={() => setStemItem(item)}
-                        artMilli={artMilli}
-                        stemMilli={creditPrices['music.stem2']}
-                        onMove={libraryQuery.playlistId && libraryQuery.sort === 'playlist' ? (dir) => moveInPlaylist(item.id, dir) : undefined}
-                        onDownload={() => downloadHistoryTrack(item)}
-                        onTrash={() => setDeleteConfirmId(item.id)}
-                      />
-                    )
+                    const trackMenu = buildTrackMenu(item, baseBtn, iconClass)
                     const kindLabel = isInstrumental(item)
                       ? (uiLanguage === 'KO' ? '경음악' : uiLanguage === 'JA' ? 'インスト' : 'Instrumental')
                       : (uiLanguage === 'KO' ? '보컬' : uiLanguage === 'JA' ? 'ボーカル' : 'Vocal')

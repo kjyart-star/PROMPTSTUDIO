@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PaidConfirm, PriceBadge } from './PaidConfirm'
+import { suiteHref } from '@/lib/basePath'
 
 const MAX_UPLOAD = 5 * 1024 * 1024
 
@@ -130,6 +131,9 @@ export default function AlbumArtDialog({
         )}
         {running && <p role="status" className="text-xs text-zinc-400">그림을 만들고 있어요. 보통 10~30초 걸립니다.</p>}
         {msg && <p role="alert" className="text-xs text-red-400">{msg}</p>}
+        {msg.includes('크레딧이 모자라요') && (
+          <a href={suiteHref('/pricing')} className="inline-block text-xs font-bold text-primary hover:underline">크레딧 충전하러 가기 →</a>
+        )}
         <div className="flex justify-end pt-1">
           <button type="button" onClick={onClose} disabled={running} className="px-4 py-2 text-xs font-bold text-zinc-300 rounded-xl border border-[#262626] cursor-pointer disabled:opacity-40">닫기</button>
         </div>

@@ -5,6 +5,7 @@ import { requireAiAccess } from '@/lib/auth/aiGate'
 import { creditErrorResponse, refundCredits, spendCredits } from '@/lib/credits/suite'
 import { SUNO_COST_USD_PER_SONG, reportProviderUsage } from '@/lib/suite/provider'
 import { createStemTask, getSunoStatus, parseTaskRef } from '@/lib/suno/channel'
+import { takeQuota } from '@/lib/studio/usageLimit'
 import { pickStems, stemIdempotencyKey, variantIndex, type StemState } from '@/lib/studio/stem'
 
 /**
@@ -62,6 +63,9 @@ export async function POST(request: Request) {
       audioId = hit && typeof hit.id === 'string' ? hit.id : ''
     }
     if (!audioId) return NextResponse.json({ error: '이 곡의 원본 정보를 찾지 못해 나눌 수 없어요. 새로 만든 곡부터 가능해요.' }, { status: 409 })
+
+    const limited = await takeQuota(user.id, 'stem')
+    if (limited) return limited
 
     const spend = await spendCredits({
       action: 'music.stem2',

@@ -71,6 +71,7 @@ export default function TrackMenu(p: TrackMenuProps) {
   const [title, setTitle] = useState('')
   const [lyrics, setLyrics] = useState('')
   const [notice, setNotice] = useState('')
+  const [pos, setPos] = useState<React.CSSProperties>({})
   const wrap = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const area = useRef<HTMLTextAreaElement>(null)
@@ -79,11 +80,23 @@ export default function TrackMenu(p: TrackMenuProps) {
 
   useEffect(() => {
     if (!open) return
+    // 목록 칸의 overflow 에 잘리지 않게 화면 기준(fixed)으로 띄운다 — 위쪽 공간이 모자라면 아래로 연다
+    const r = wrap.current?.getBoundingClientRect()
+    if (r) {
+      const right = Math.max(8, window.innerWidth - r.right)
+      setPos(r.top > 380 ? { right, bottom: window.innerHeight - r.top + 4 } : { right, top: r.bottom + 4 })
+    }
+    const closeOnScroll = () => { setOpen(false); setSub(false) }
+    window.addEventListener('scroll', closeOnScroll, true)
+    window.addEventListener('resize', closeOnScroll)
     const off = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) { setOpen(false); setSub(false) } }
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setSub(false) } }
     document.addEventListener('mousedown', off)
     document.addEventListener('keydown', esc)
-    return () => { document.removeEventListener('mousedown', off); document.removeEventListener('keydown', esc) }
+    return () => {
+      document.removeEventListener('mousedown', off); document.removeEventListener('keydown', esc)
+      window.removeEventListener('scroll', closeOnScroll, true); window.removeEventListener('resize', closeOnScroll)
+    }
   }, [open])
 
   useEffect(() => {
@@ -109,7 +122,7 @@ export default function TrackMenu(p: TrackMenuProps) {
         <MoreHorizontal className={p.iconClass} />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 bottom-full mb-1 z-30 w-56 rounded-xl border border-[#262626] bg-[#141414] p-1 shadow-2xl shadow-black/70">
+        <div role="menu" style={pos} className="fixed z-[60] max-h-[70vh] overflow-y-auto w-56 rounded-xl border border-[#262626] bg-[#141414] p-1 shadow-2xl shadow-black/70">
           <button role="menuitem" className={row} onClick={() => { setTitle(p.item.title || ''); setLyrics(p.item.lyrics || ''); setEditing(true); close() }}>{T.edit[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onRestorePrompt(); close() }}>{T.restore[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onQuickMaster(); close() }}>{T.quick[l]}</button>
