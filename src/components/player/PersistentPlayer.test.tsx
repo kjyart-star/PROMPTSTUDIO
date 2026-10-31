@@ -90,4 +90,49 @@ describe('PersistentPlayer', () => {
     act(() => { audio.dispatchEvent(new Event('pause')) }) // 사용자의 정지는 반영된다
     expect(usePlayerStore.getState().isPlaying).toBe(false)
   })
+  it('crossOrigin 으로 불러오는 http 주소에는 cors=1 을 붙이고, 서명 쿼리는 & 로 이어 붙인다', async () => {
+    const { container } = render(<PersistentPlayer />)
+    act(() => usePlayerStore.getState().playTrack(track('a')))
+    await wait(120)
+    const audio = container.querySelector('audio')!
+    expect(audio.crossOrigin).toBe('anonymous')
+    expect(srcSets[0]).toMatch(/^https:\/\/x\.test\/sign\/audio\/a\.mp3\?t=[^&]+&cors=1$/)
+    act(() => usePlayerStore.getState().playTrack({ ...track('c'), file_url: 'https://cdn.test/audio/c.mp3' }))
+    await wait(120)
+    expect(srcSets[srcSets.length - 1]).toBe('https://cdn.test/audio/c.mp3?cors=1')
+  })
+
+  it('CORS 로드가 실패하면 crossOrigin 없이 한 번만 다시 불러와 재생한다', async () => {
+    const { container } = render(<PersistentPlayer />)
+    act(() => usePlayerStore.getState().playTrack(track('a')))
+    await wait(120)
+    const audio = container.querySelector('audio')!
+    const before = srcSets.length
+    act(() => { audio.dispatchEvent(new Event('error')) })
+    expect(audio.hasAttribute('crossorigin')).toBe(false)
+    expect(srcSets).toHaveLength(before + 1)
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+    // 두 번째 오류는 더 재시도하지 않고 실패로 처리한다
+    act(() => { audio.dispatchEvent(new Event('error')) })
+    expect(srcSets).toHaveLength(before + 1)
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+  })
+  it('재생/정지를 오가도 src 는 곡마다 고정값이고 다시 로드되지 않으며, 연속 재생도 곡당 한 번만 설정된다', async () => {
+    const { container } = render(<PersistentPlayer />)
+    act(() => usePlayerStore.getState().playTrack({ ...track('a'), file_url: 'https://cdn.test/audio/a.mp3' }))
+    await wait(60)
+    const audio = container.querySelector('audio')!
+    const first = srcSets[0]
+    for (let i = 0; i < 4; i++) {
+      act(() => usePlayerStore.getState().togglePlay())
+      await wait(10)
+    }
+    expect(srcSets).toEqual([first])
+    expect(first).toBe('https://cdn.test/audio/a.mp3?cors=1')
+    expect(audio.getAttribute('crossorigin')).toBe('anonymous')
+    act(() => usePlayerStore.getState().playTrack({ ...track('b'), file_url: 'https://cdn.test/audio/b.mp3' }))
+    await wait(60)
+    expect(srcSets).toEqual([first, 'https://cdn.test/audio/b.mp3?cors=1'])
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
 })

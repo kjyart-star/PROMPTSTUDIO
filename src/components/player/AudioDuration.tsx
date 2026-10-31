@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { withCorsCacheKey } from '@/lib/audio/corsUrl'
 
 interface AudioDurationProps {
   url: string
@@ -25,13 +26,14 @@ export function AudioDuration({ url, defaultSec, fallback = '-', className = '' 
     // 재사용되면 CORS 오류가 난다 — 처음부터 CORS 로 받는다. 거부되면 한 번만 CORS 없이 다시 연다.
     const audio = new Audio()
     audio.preload = 'metadata'
-    if (/^https?:/.test(url)) {
+    const corsUrl = withCorsCacheKey(url)
+    if (corsUrl !== url) {
       audio.crossOrigin = 'anonymous'
       audio.addEventListener('error', () => {
-        if (audio.crossOrigin) { audio.removeAttribute('crossorigin'); audio.src = url }
+        if (audio.crossOrigin) { audio.removeAttribute('crossorigin'); audio.src = corsUrl }
       }, { once: true })
     }
-    audio.src = url
+    audio.src = corsUrl
     
     const onLoadedMetadata = () => {
       if (audio.duration && audio.duration !== Infinity && !isNaN(audio.duration)) {

@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { MiniPlayerPip } from './MiniPlayerPip';
 import { ImmersivePlayer } from './ImmersivePlayer';
 import { attachSpectrumTap, getSpectrumTap } from '@/lib/audio/spectrumTap';
+import { withCorsCacheKey, bustCorsCacheKey } from '@/lib/audio/corsUrl';
 import { Disc, DiscStyles } from './Disc';
 import { withBase } from '@/lib/basePath'
 
@@ -188,14 +189,15 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
       if (!isCurrent || !audioRef.current) return;
       loadedTrackIdRef.current = currentTrack.id;
       // 실제 스펙트럼 분석은 CORS 로 불러온 음원에서만 가능하다. 이미 분석 노드가 붙은 요소는 항상 CORS 로 불러야 무음이 안 된다.
+      // 주소에는 cors=1 을 붙여, CORS 없이 받아 둔 immutable 캐시(CDN)와 섞이지 않게 한다.
       if (/^https?:/.test(u)) audioRef.current.crossOrigin = 'anonymous';
       else if (!getSpectrumTap(audioRef.current)) audioRef.current.removeAttribute('crossorigin');
-      audioRef.current.src = u;
+      audioRef.current.src = audioRef.current.crossOrigin === 'anonymous' ? withCorsCacheKey(u) : u;
       audioRef.current.load();
       if (isPlaying) {
         audioRef.current.play().catch((err) => {
           // CORS 로 못 불러 실패한 경우는 onError 의 폴백(분석 없이 재생)이 이어받는다.
-          if ((err as Error)?.name === 'NotSupportedError' && audioRef.current?.crossOrigin === 'anonymous' && !corsFallbackRef.current && !getSpectrumTap(audioRef.current)) return;
+          if ((err as Error)?.name === 'NotSupportedError' && audioRef.current?.crossOrigin === 'anonymous' && !corsFallbackRef.current) return;
           console.error('Autoplay blocked:', err);
           void retryWithFreshSign();
         });
@@ -398,13 +400,14 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
         onPause={() => { if (!switchingRef.current) _setIsPlaying(false); }}
         onError={(e) => {
           const el = e.currentTarget;
-          // CORS 거부(또는 캐시된 비-CORS 응답) 때문에 실패한 것이면 crossOrigin 없이 한 번 다시 — 분석만 포기하고 재생은 살린다.
-          if (el.crossOrigin === 'anonymous' && !getSpectrumTap(el) && !corsFallbackRef.current && el.src) {
+          // CORS 거부(또는 캐시된 비-CORS 응답) 때문에 실패한 것이면 한 번 다시 — 분석 노드가 없으면 crossOrigin 을 끄고(분석만 포기, 재생 우선),
+          // 이미 붙어 있으면(끌 수 없다) cors 값을 바꿔 캐시를 한 번 더 피한다.
+          if (el.crossOrigin === 'anonymous' && !corsFallbackRef.current && el.src) {
             corsFallbackRef.current = true;
             const at = el.currentTime || 0;
             const resumePlay = usePlayerStore.getState().isPlaying;
-            el.removeAttribute('crossorigin');
-            el.src = el.src;
+            if (getSpectrumTap(el)) el.src = bustCorsCacheKey(el.src);
+            else { el.removeAttribute('crossorigin'); el.src = el.src; }
             el.load();
             if (at > 0) el.addEventListener('loadedmetadata', () => { el.currentTime = at; }, { once: true });
             if (resumePlay) el.play().catch(() => _setIsPlaying(false));

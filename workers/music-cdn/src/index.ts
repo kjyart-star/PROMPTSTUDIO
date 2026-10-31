@@ -32,9 +32,11 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
 
 function corsHeaders(origin: string | null): Headers {
   const headers = new Headers();
+  // Origin 이 없거나 허용 밖이어도 항상 Vary: Origin — 안 그러면 CORS 없는 요청(<audio> 기본)이 받은 immutable 응답이
+  // 브라우저 HTTP 캐시에 남아, 같은 주소를 crossOrigin 으로 열 때 ACAO 없는 응답이 재사용되어 재생이 실패한다.
+  headers.set('vary', 'Origin');
   if (origin && ALLOWED_ORIGIN.test(origin)) {
     headers.set('access-control-allow-origin', origin);
-    headers.set('vary', 'Origin');
   }
   headers.set(
     'access-control-expose-headers',
