@@ -591,8 +591,8 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
             onClick={() => toggleInfo()}
             aria-expanded={hasSidePanel ? isNowPlayingOpen : undefined}
             aria-controls={hasSidePanel ? 'now-playing-panel' : undefined}
-            className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${isNowPlayingOpen ? 'text-primary' : 'text-on-surface-variant'}`}
-            title={isNowPlayingOpen
+            className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${hasSidePanel && isNowPlayingOpen ? 'text-primary' : 'text-on-surface-variant'}`}
+            title={hasSidePanel && isNowPlayingOpen
               ? (lang === 'KO' ? '지금 재생 중 닫기' : lang === 'JA' ? '再生中を閉じる' : 'Hide now playing')
               : (lang === 'KO' ? '지금 재생 중 열기' : lang === 'JA' ? '再生中を開く' : 'Show now playing')}
           >
