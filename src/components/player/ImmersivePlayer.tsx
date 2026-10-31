@@ -9,13 +9,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
-import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
 import { CassettePlayer, CS_CSS } from './CassettePlayer';
 import { LpDisc } from './LpDisc';
+import { SpectrumCanvas, SPEC_CSS } from './SpectrumCanvas';
+import { useCoverColor } from './coverColor';
 import { ImmBackground, BG_CSS } from './ImmBackground';
 import { VolumeControl, VOL_CTL_CSS } from './VolumeControl';
 import type { Track } from '@/types/music';
@@ -40,23 +41,6 @@ function fmt(sec: number) {
 const coverOf = (t?: Track | null) =>
   (t as any)?.album?.cover_url || (t as any)?.image_url || withBase('/default-album.png');
 
-/** 곡 id 로 만드는 고정 막대 높이(0~1). waveform_data 가 숫자 배열이면 그것을 쓴다. */
-function barShape(track: Track | null, n: number): number[] {
-  const wf = track?.waveform_data;
-  if (Array.isArray(wf) && wf.length >= n && typeof wf[0] === 'number') {
-    const max = Math.max(...wf.map((v: number) => Math.abs(v))) || 1;
-    return Array.from({ length: n }, (_, i) => Math.abs(wf[Math.floor((i / n) * wf.length)]) / max);
-  }
-  let h = 2166136261;
-  const id = track?.id ?? 'x';
-  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
-  return Array.from({ length: n }, (_, i) => {
-    h = Math.imul(h ^ (i + 1), 2246822519) >>> 0;
-    const base = 0.25 + ((h % 1000) / 1000) * 0.75;
-    return base * (0.7 + 0.3 * Math.sin(i / 3));
-  });
-}
-
 function usePrefersReducedMotion() {
   const [r, setR] = useState(false);
   useEffect(() => {
@@ -68,41 +52,6 @@ function usePrefersReducedMotion() {
     return () => mq.removeEventListener?.('change', on);
   }, []);
   return r;
-}
-
-const BAR_COUNT = 48;
-
-function Visualizer({ track, playing, reduced }: { track: Track | null; playing: boolean; reduced: boolean }) {
-  const getFrequencyData = usePlayerStore((s) => s.getFrequencyData);
-  const live = useRef<number[]>(new Array(BAR_COUNT).fill(0));
-  const shape = useMemo(() => barShape(track, BAR_COUNT), [track]);
-  const refs = useRef<(HTMLSpanElement | null)[]>([]);
-  useEffect(() => {
-    const paint = (t: number) => {
-      // 실제 음원 분석값이 있으면 그대로, 없으면(분석 불가·정지) 곡 고유 모양으로 대체
-      const data = playing ? getFrequencyData?.() : null;
-      const bins = data ? binSpectrum(data, BAR_COUNT, live.current) : null;
-      refs.current.forEach((el, i) => {
-        if (!el) return;
-        if (bins) { el.style.transform = `scaleY(${Math.min(1, Math.max(0.06, bins[i] * 1.15))})`; return; }
-        const wob = playing && !reduced ? 0.55 + 0.45 * Math.sin(t / 260 + i * 0.9) * Math.cos(t / 610 + i * 0.37) : 0.6;
-        el.style.transform = `scaleY(${Math.max(0.08, shape[i] * wob)})`;
-      });
-    };
-    paint(0);
-    if (!playing || reduced) return;
-    let raf = 0;
-    const loop = (t: number) => { paint(t); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [shape, playing, reduced, getFrequencyData]);
-  return (
-    <div className="imm-bars" aria-hidden="true">
-      {shape.map((_, i) => (
-        <span key={i} ref={(el) => { refs.current[i] = el; }} />
-      ))}
-    </div>
-  );
 }
 
 function Orbit({ progress, spinning }: { progress: number; spinning: boolean }) {
@@ -128,6 +77,7 @@ export function ImmersivePlayer() {
     isShuffle, repeatMode, toggleShuffle, toggleRepeatMode,
   } = usePlayerStore();
   const reduced = usePrefersReducedMotion();
+  const coverColor = useCoverColor(currentTrack ? coverOf(currentTrack) : '');
   const [lang, setLang] = useState<'KO' | 'EN' | 'JA'>('KO');
   const [view, setView] = useState<View>('now');
   const [designs, setDesigns] = useState<{ now: Design; list: Design }>({ now: 'lyrics', list: 'persp' });
@@ -217,7 +167,7 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS}</style>
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
@@ -289,7 +239,7 @@ export function ImmersivePlayer() {
       )}
 
       <footer className="imm-bottom">
-        <Visualizer track={currentTrack} playing={isPlaying} reduced={reduced} />
+        <SpectrumCanvas mode={view === 'list' ? 'mirror' : designs.now === 'card' ? 'line' : 'thin'} playing={isPlaying} reduced={reduced} color={coverColor} glow={view === 'list' ? 0.4 : designs.now === 'card' ? 0.7 : 0.5} />
         <div className="imm-seekrow">
           <span>{fmt(currentTime)}</span>
           <input
@@ -363,8 +313,6 @@ const IMM_CSS = `
 .imm-est{margin-top:10px;font-size:12px;color:rgba(255,255,255,.55);padding-left:clamp(16px,2.4vw,32px)}
 .imm-nolyr{margin:auto 0;font-size:16px;color:rgba(255,255,255,.55);border-left:2px solid rgba(255,255,255,.18);padding-left:24px}
 .imm-bottom{padding:0 clamp(20px,6vw,96px) 22px}
-.imm-bars{display:flex;align-items:flex-end;gap:4px;height:56px;margin-bottom:10px}
-.imm-bars span{flex:1;height:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.25));transform-origin:bottom;transform:scaleY(.1)}
 .imm-seekrow{display:flex;align-items:center;gap:12px;font-size:12px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.7)}
 .imm-seekrow input{flex:1;height:4px;-webkit-appearance:none;appearance:none;border-radius:2px;cursor:pointer;background:linear-gradient(90deg,#fff var(--p,0%),rgba(255,255,255,.22) var(--p,0%))}
 .imm-seekrow input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff}
@@ -386,7 +334,6 @@ const IMM_CSS = `
   .imm-title{font-size:22px;-webkit-line-clamp:2}
   .imm-right{height:100%;min-height:0}
   .imm-line{font-size:17px}
-  .imm-bars{height:36px}
 }
 @media (prefers-reduced-motion:reduce){
   .imm-spin{animation:none}

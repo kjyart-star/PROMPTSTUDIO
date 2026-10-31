@@ -329,7 +329,7 @@ export const CS_CSS = `
 .cs-woodbg{position:absolute;inset:0;pointer-events:none;background:
  repeating-linear-gradient(92deg,rgba(0,0,0,0) 0 7px,rgba(20,10,4,.34) 7px 9px,rgba(0,0,0,0) 8px 21px,rgba(255,200,140,.05) 21px 23px),
  repeating-linear-gradient(88deg,rgba(0,0,0,0) 0 41px,rgba(10,5,2,.36) 41px 44px),
- linear-gradient(180deg,rgba(74,45,24,.9),rgba(42,25,13,.94));opacity:.86;mix-blend-mode:multiply}
+ linear-gradient(180deg,rgba(74,45,24,.9),rgba(42,25,13,.94));opacity:.8}
 .cs-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 16px;perspective:1200px}
 .cs-set{--cw:min(50vw,520px,calc(42vh * 1.6));--sw:clamp(84px,11.5vw,150px);position:relative;display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,2.2vw,32px);max-width:100%}
 .cs-deck{width:var(--cw);display:flex;flex-direction:column;gap:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}

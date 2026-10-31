@@ -66,7 +66,7 @@ export function ImmBackground({ src, reduced }: { src: string; reduced: boolean 
 }
 
 export const BG_CSS = `
-.imm-bgwrap{position:absolute;inset:0;overflow:hidden;background:#0d0d0d}
+.imm-bgwrap{position:absolute;inset:0;overflow:hidden;background:#0d0d0d;isolation:isolate;z-index:0}
 .imm-bgl{position:absolute;inset:0;will-change:opacity}
 .imm-bgl canvas{position:absolute;inset:-12%;width:124%;height:124%;filter:blur(28px) saturate(1.5) brightness(.85);transform:scale(1.1)}
 `;
