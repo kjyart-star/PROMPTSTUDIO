@@ -12,6 +12,7 @@ import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { withBase } from '@/lib/basePath';
+import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import type { Track } from '@/types/music';
 
 type View = 'now' | 'list';
@@ -114,7 +115,7 @@ function Orbit({ progress, spinning }: { progress: number; spinning: boolean }) 
 export function ImmersivePlayer() {
   const {
     isImmersiveOpen, setImmersiveOpen, currentTrack, queue, queueIndex,
-    isPlaying, currentTime, duration, togglePlay, next, prev, seek, playTrack,
+    isPlaying, currentTime, duration, togglePlay, next, prev, seek,
   } = usePlayerStore();
   const reduced = usePrefersReducedMotion();
   const [lang, setLang] = useState<'KO' | 'EN' | 'JA'>('KO');
@@ -177,29 +178,23 @@ export function ImmersivePlayer() {
   const total = queue.length || 1;
   const pos = Math.max(0, queueIndex) + 1;
 
-  const flow = [-3, -2, -1, 0, 1, 2, 3]
-    .map((off) => ({ off, track: queue[queueIndex + off] as Track | undefined }))
-    .filter((x) => x.track);
-
   return (
     <div className="imm-root" role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS}</style>
+      <style>{IMM_CSS + PCF_CSS}</style>
       <img className="imm-bg" src={cover} alt="" aria-hidden="true" />
       <div className="imm-veil" aria-hidden="true" />
 
       <header className="imm-top">
-        {hasList ? (
-          <div className="imm-tabs" role="tablist" aria-label={t.view}>
-            <button role="tab" aria-selected={view === 'now'} onClick={() => pickView('now')}><Mic2 size={15} />{t.now}</button>
-            <button role="tab" aria-selected={view === 'list'} onClick={() => pickView('list')}><GalleryHorizontal size={15} />{t.list}</button>
-          </div>
-        ) : <span />}
+        <div className="imm-tabs" role="tablist" aria-label={t.view}>
+          <button role="tab" aria-selected={view === 'now'} onClick={() => pickView('now')}><Mic2 size={15} />{t.now}</button>
+          <button role="tab" aria-selected={view === 'list'} onClick={() => pickView('list')}><GalleryHorizontal size={15} />{t.list}</button>
+        </div>
         <button ref={closeRef} className="imm-close" onClick={() => setImmersiveOpen(false)} aria-label={t.close} title={t.close}>
           <X size={20} />
         </button>
       </header>
 
-      {view === 'now' || !hasList ? (
+      {view === 'now' ? (
         <main className="imm-now">
           <section className="imm-left">
             <div className="imm-coverwrap">
@@ -241,34 +236,7 @@ export function ImmersivePlayer() {
           </section>
         </main>
       ) : (
-        <main className="imm-list">
-          <p className="imm-listname">— {(currentTrack as any).album?.title ?? t.list} —</p>
-          <div className="imm-flow" role="list">
-            {flow.map(({ off, track }) => {
-              const a = Math.abs(off);
-              const style: React.CSSProperties = reduced
-                ? { transform: `translateX(${off * 62}%) scale(${1 - a * 0.12})`, zIndex: 10 - a, opacity: 1 - a * 0.22 }
-                : { transform: `translateX(${off * 58}%) rotateY(${off === 0 ? 0 : off > 0 ? -52 : 52}deg) scale(${1 - a * 0.1})`, zIndex: 10 - a, opacity: 1 - a * 0.2 };
-              return (
-                <button
-                  key={track!.id}
-                  role="listitem"
-                  className="imm-card"
-                  style={style}
-                  aria-label={track!.title}
-                  aria-current={off === 0 ? 'true' : undefined}
-                  tabIndex={off === 0 ? -1 : 0}
-                  onClick={() => { if (off !== 0) playTrack(track!, queue); }}
-                >
-                  <img src={coverOf(track)} alt="" />
-                  <img className="imm-refl" src={coverOf(track)} alt="" aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
-          <h2 className="imm-title imm-title-c">{currentTrack.title}</h2>
-          <p className="imm-kicker imm-kicker-c">{String(pos).padStart(2, '0')} / {String(total).padStart(2, '0')}{artist ? ` · ${artist}` : ''}</p>
-        </main>
+        <PlaylistCoverflow reduced={reduced} listLabel={t.list} />
       )}
 
       <footer className="imm-bottom">
@@ -339,14 +307,6 @@ const IMM_CSS = `
 .imm-ctrl button{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;cursor:pointer;color:#fff}
 .imm-ctrl .imm-play{width:56px;height:56px;background:#fff;color:#111}
 .imm-root button:focus-visible,.imm-seekrow input:focus-visible{outline:2px solid #fff;outline-offset:3px}
-.imm-list{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;text-align:center}
-.imm-listname{font-size:13px;letter-spacing:.2em;color:rgba(255,255,255,.65);margin-bottom:clamp(16px,4vh,40px);max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.imm-flow{position:relative;width:min(100%,900px);height:min(36vw,40vh,340px);perspective:1100px;perspective-origin:50% 40%}
-.imm-card{position:absolute;left:50%;top:0;height:100%;aspect-ratio:1;margin-left:calc(min(36vw,40vh,340px)/-2);transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .55s;cursor:pointer;transform-style:preserve-3d;background:none;padding:0}
-.imm-card>img:first-child{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block;box-shadow:0 24px 50px rgba(0,0,0,.5)}
-.imm-refl{position:absolute;left:0;top:102%;width:100%;height:100%;object-fit:cover;border-radius:14px;transform:scaleY(-1);opacity:.22;mask-image:linear-gradient(0deg,#000,transparent 38%);-webkit-mask-image:linear-gradient(0deg,#000,transparent 38%);pointer-events:none}
-.imm-title-c{text-align:center;position:relative;z-index:20;text-shadow:0 2px 18px rgba(0,0,0,.6);margin-top:clamp(40px,9vh,90px);font-size:clamp(22px,2.6vw,36px)}
-.imm-kicker-c{margin-top:10px}
 @media (max-width:820px){
   .imm-now{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:12px;align-content:start;padding:0 20px}
   .imm-left{align-items:center;text-align:center}
@@ -355,11 +315,9 @@ const IMM_CSS = `
   .imm-right{height:100%;min-height:0}
   .imm-line{font-size:17px}
   .imm-bars{height:36px}
-  .imm-flow{height:min(58vw,34vh)}
-  .imm-card{margin-left:calc(min(58vw,34vh)/-2)}
 }
 @media (prefers-reduced-motion:reduce){
   .imm-spin{animation:none}
-  .imm-line,.imm-card,.imm-orbit-arc{transition:none}
+  .imm-line,.imm-orbit-arc{transition:none}
 }
 `;

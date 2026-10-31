@@ -17,7 +17,9 @@ import { withBase } from '@/lib/basePath'
 
 // hasMobileNav — 이 화면에 모바일 하단 내비(md:hidden, h-24)가 있으면 true.
 // 스트리밍 셸만 해당하고, 스튜디오·관리자 화면은 내비가 없어 종전대로 bottom-0 에 붙는다.
-export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: boolean }) {
+// hasSidePanel — 오른쪽 「지금 재생 중」 패널(NowPlayingPanel)이 이 화면에 실제로 있으면 true.
+// 없는 화면(스튜디오·관리자)에서 패널 토글을 누르면 아무 반응이 없었으므로, 대신 전체 화면 「지금 재생」을 연다.
+export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }: { hasMobileNav?: boolean; hasSidePanel?: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const seekRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +34,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
     _setGetFrequencyData,
   } = usePlayerStore();
 
+  const toggleInfo = () => { if (hasSidePanel) setNowPlayingOpen(!isNowPlayingOpen); else setImmersiveOpen(true); };
   const [isLiked, setIsLiked] = useState(false);
   const [isPipOpen, setIsPipOpen] = useState(false);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
@@ -468,7 +471,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
           {currentTrack && (
             <button
               type="button"
-              onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
+              onClick={() => toggleInfo()}
               className="group relative mr-2 block h-14 w-14 shrink-0 cursor-pointer overflow-visible text-left active:scale-95 transition-transform"
               title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
               aria-label={`${displayTrack.title} ${isNowPlayingOpen ? '곡 정보 닫기' : '곡 정보 보기'}`}
@@ -486,7 +489,7 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
           {currentTrack && (
             <div className="relative z-10 hidden sm:block min-w-0">
               <button
-                onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
+                onClick={() => toggleInfo()}
                 className="block font-semibold text-[14px] leading-[20px] text-on-surface hover:underline truncate text-left w-full focus:outline-none"
                 title={isNowPlayingOpen ? "닫기" : "곡 정보 보기"}
               >
@@ -627,9 +630,9 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
         {/* 우: 볼륨 및 기능 */}
         <div className="flex items-center justify-end gap-[16px] w-1/4">
           <button
-            onClick={() => setNowPlayingOpen(!isNowPlayingOpen)}
-            aria-expanded={isNowPlayingOpen}
-            aria-controls="now-playing-panel"
+            onClick={() => toggleInfo()}
+            aria-expanded={hasSidePanel ? isNowPlayingOpen : undefined}
+            aria-controls={hasSidePanel ? 'now-playing-panel' : undefined}
             className={`hover:text-on-surface cursor-pointer flex items-center justify-center transition-colors ${isNowPlayingOpen ? 'text-primary' : 'text-on-surface-variant'}`}
             title={isNowPlayingOpen
               ? (lang === 'KO' ? '지금 재생 중 닫기' : lang === 'JA' ? '再生中を閉じる' : 'Hide now playing')

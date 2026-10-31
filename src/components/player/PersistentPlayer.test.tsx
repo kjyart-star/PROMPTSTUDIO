@@ -135,4 +135,21 @@ describe('PersistentPlayer', () => {
     expect(srcSets).toEqual([first, 'https://cdn.test/audio/b.mp3?cors=1'])
     expect(usePlayerStore.getState().isPlaying).toBe(true)
   })
+
+  it('오른쪽 패널이 없는 화면(스튜디오)에서는 「지금 재생 중 열기」가 전체 화면 지금 재생을 연다', () => {
+    usePlayerStore.setState({ isImmersiveOpen: false, isNowPlayingOpen: false })
+    const { getByTitle } = render(<PersistentPlayer />)
+    act(() => usePlayerStore.getState().playTrack(track('a')))
+    act(() => { getByTitle('지금 재생 중 열기').click() })
+    expect(usePlayerStore.getState().isImmersiveOpen).toBe(true)
+    expect(usePlayerStore.getState().isNowPlayingOpen).toBe(false)
+  })
+
+  it('오른쪽 패널이 있는 화면에서는 종전대로 패널을 토글한다', () => {
+    usePlayerStore.setState({ isImmersiveOpen: false, isNowPlayingOpen: false })
+    const { getByTitle } = render(<PersistentPlayer hasSidePanel />)
+    act(() => { getByTitle('지금 재생 중 열기').click() })
+    expect(usePlayerStore.getState().isNowPlayingOpen).toBe(true)
+    expect(usePlayerStore.getState().isImmersiveOpen).toBe(false)
+  })
 })

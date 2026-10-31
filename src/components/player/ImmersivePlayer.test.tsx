@@ -53,6 +53,38 @@ describe('ImmersivePlayer', () => {
     expect(playTrack).toHaveBeenCalledWith(q[2], q)
   })
 
+  it('곡이 하나여도 「지금 재생 / 재생목록」 토글이 있고 재생목록 보기로 바꿀 수 있다', () => {
+    const t = trk('1', { style_prompt: 'dreamy synth pop' })
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })
+    render(<ImmersivePlayer />)
+    expect(screen.getByText('지금 재생').closest('button')!.getAttribute('aria-selected')).toBe('true')
+    fireEvent.click(screen.getByText('재생목록'))
+    expect(screen.getByTestId('playlist-coverflow')).toBeTruthy()
+    expect(screen.getByText('dreamy synth pop')).toBeTruthy()
+    fireEvent.click(screen.getByText('지금 재생'))
+    expect(screen.queryByTestId('playlist-coverflow')).toBeNull()
+  })
+
+  it('재생목록 보기에서 좌우 키로 이전·다음 곡으로 이동해 재생한다', () => {
+    const q = [trk('1'), trk('2'), trk('3')]
+    const playTrack = vi.fn()
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[1], queue: q, queueIndex: 1, playTrack })
+    render(<ImmersivePlayer />)
+    act(() => { fireEvent.keyDown(window, { key: 'ArrowRight' }) })
+    expect(playTrack).toHaveBeenLastCalledWith(q[2], q)
+    act(() => { fireEvent.keyDown(window, { key: 'ArrowLeft' }) })
+    expect(playTrack).toHaveBeenLastCalledWith(q[0], q)
+  })
+
+  it('첫 곡에서 왼쪽 키는 아무것도 하지 않는다', () => {
+    const q = [trk('1'), trk('2')]
+    const playTrack = vi.fn()
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[0], queue: q, queueIndex: 0, playTrack })
+    render(<ImmersivePlayer />)
+    act(() => { fireEvent.keyDown(window, { key: 'ArrowLeft' }) })
+    expect(playTrack).not.toHaveBeenCalled()
+  })
+
   it('Esc 로 닫힌다', () => {
     const t = trk('1')
     usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0 })

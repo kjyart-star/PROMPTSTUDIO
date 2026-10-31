@@ -758,7 +758,7 @@ export function PublicLayoutClient({
         </div>
       )}
 
-      <PersistentPlayer hasMobileNav />
+      <PersistentPlayer hasMobileNav hasSidePanel />
       <NowPlayingPanel />
     </div>
   )
