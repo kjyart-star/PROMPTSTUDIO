@@ -273,7 +273,7 @@ export const CCF_CSS = `
 .ccf-card:active .ccf-art{scale:1.04}
 .ccf-art.is-now{animation:imm-breathe 4.2s ease-in-out infinite}
 .ccf-art.is-paused{animation-play-state:paused}
-.ccf-floor{position:absolute;left:-10%;right:-10%;top:calc(var(--s) * 1.01);height:calc(var(--s) * .5);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.55) 40%,rgba(0,0,0,0));pointer-events:none;z-index:0}
+.ccf-floor{position:absolute;left:-25%;right:-25%;top:calc(var(--s) * .9);height:calc(var(--s) * .75);background:radial-gradient(ellipse 50% 60% at 50% 12%,rgba(255,255,255,.08),rgba(0,0,0,.34) 45%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 50% 60% at 50% 12%,#000 20%,transparent 100%);mask-image:radial-gradient(ellipse 50% 60% at 50% 12%,#000 20%,transparent 100%);pointer-events:none;z-index:0}
 .ccf-scrub{display:flex;align-items:center;gap:14px;width:min(560px,86vw);margin-top:clamp(12px,2.4vh,22px)}
 .ccf-scrub input{flex:1;height:4px;-webkit-appearance:none;appearance:none;border-radius:2px;cursor:pointer;background:linear-gradient(90deg,rgba(255,255,255,.85) var(--p,0%),rgba(255,255,255,.22) var(--p,0%))}
 .ccf-scrub input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff}
