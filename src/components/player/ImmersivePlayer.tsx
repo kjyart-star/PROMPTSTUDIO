@@ -15,6 +15,7 @@ import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
 import { CassettePlayer, CS_CSS } from './CassettePlayer';
 import { LpDisc } from './LpDisc';
+import { PocketPlayer, PK_CSS } from './PocketPlayer';
 import { SpectrumCanvas, SPEC_CSS } from './SpectrumCanvas';
 import { useCoverColor } from './coverColor';
 import { ImmBackground, BG_CSS } from './ImmBackground';
@@ -24,14 +25,14 @@ import type { Track } from '@/types/music';
 type View = 'now' | 'list';
 const VIEW_KEY = 'cm.immersive-view';
 const DESIGN_KEY = 'cm.immersive-design';
-type Design = 'lyrics' | 'card' | 'cassette' | 'persp' | 'arc';
-const NOW_DESIGNS: Design[] = ['lyrics', 'card', 'cassette'];
+type Design = 'lyrics' | 'card' | 'cassette' | 'pocket' | 'persp' | 'arc';
+const NOW_DESIGNS: Design[] = ['lyrics', 'card', 'cassette', 'pocket'];
 const LIST_DESIGNS: Design[] = ['persp', 'arc'];
 
 const T = {
-  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', cassette: '카세트', persp: '커버플로', arc: '원통형' },
-  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', cassette: 'Cassette', persp: 'Cover Flow', arc: 'Arc' },
-  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', cassette: 'カセット', persp: 'カバーフロー', arc: '円筒' },
+  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', cassette: '카세트', pocket: '포켓', persp: '커버플로', arc: '원통형' },
+  EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', cassette: 'Cassette', pocket: 'Pocket', persp: 'Cover Flow', arc: 'Arc' },
+  JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', cassette: 'カセット', pocket: 'ポケット', persp: 'カバーフロー', arc: '円筒' },
 } as const;
 
 function fmt(sec: number) {
@@ -167,7 +168,7 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS}</style>
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
@@ -192,6 +193,8 @@ export function ImmersivePlayer() {
 
       {view === 'now' && designs.now === 'cassette' ? (
         <CassettePlayer reduced={reduced} />
+      ) : view === 'now' && designs.now === 'pocket' ? (
+        <PocketPlayer reduced={reduced} />
       ) : view === 'now' ? (
         <main className="imm-now">
           <section className="imm-left">

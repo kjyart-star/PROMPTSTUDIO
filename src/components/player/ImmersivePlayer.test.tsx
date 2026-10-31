@@ -266,4 +266,59 @@ describe('ImmersivePlayer', () => {
     expect(usePlayerStore.getState().repeatMode).toBe('one')
     expect(screen.getByLabelText('반복: 한 곡')).toBeTruthy()
   })
+
+  describe('포켓(클릭휠) 디자인', () => {
+    beforeEach(() => {
+      // jsdom 에는 PointerEvent 가 없어 좌표를 못 싣는다 — MouseEvent 로 대신한다
+      class PE extends MouseEvent { pointerId: number; constructor(t: string, i: any = {}) { super(t, i); this.pointerId = i.pointerId ?? 1 } }
+      ;(window as any).PointerEvent = PE; (globalThis as any).PointerEvent = PE
+    })
+    const setup = () => {
+      const q = [trk('1'), trk('2'), trk('3')]
+      const playTrack = vi.fn(); const togglePlay = vi.fn(); const next = vi.fn(); const prev = vi.fn()
+      usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[0], queue: q, queueIndex: 0, isPlaying: true, volume: 0.5, isMuted: false, playTrack, togglePlay, next, prev, currentTime: 10, duration: 100 })
+      render(<ImmersivePlayer />)
+      fireEvent.click(screen.getByText('지금 재생'))
+      fireEvent.click(screen.getByText('포켓'))
+      const wheel = screen.getByTestId('pocket-wheel')
+      wheel.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 200, right: 200, bottom: 200, x: 0, y: 0, toJSON() {} }) as any
+      return { q, playTrack, togglePlay, next, prev, wheel }
+    }
+    const press = (wheel: HTMLElement, x: number, y: number) => { fireEvent.pointerDown(wheel, { clientX: x, clientY: y, pointerId: 1 }); fireEvent.pointerUp(wheel, { clientX: x, clientY: y, pointerId: 1 }) }
+
+    it('휠의 위·오른쪽·아래·왼쪽 클릭 = 메뉴·다음·재생/일시정지·이전', () => {
+      const { wheel, next, prev, togglePlay } = setup()
+      press(wheel, 100, 15)
+      expect(screen.getByLabelText('재생목록')).toBeTruthy()          // 메뉴 → 목록 화면
+      press(wheel, 185, 100); expect(next).toHaveBeenCalledTimes(1)
+      press(wheel, 15, 100); expect(prev).toHaveBeenCalledTimes(1)
+      press(wheel, 100, 185); expect(togglePlay).toHaveBeenCalledTimes(1)
+    })
+
+    it('휠을 돌리면 지금 재생에서는 볼륨, 재생목록에서는 선택이 움직이고 가운데 버튼이 고른 곡을 재생한다', () => {
+      const { wheel, q, playTrack } = setup()
+      const rotate = (steps: number) => {
+        fireEvent.pointerDown(wheel, { clientX: 100, clientY: 10, pointerId: 1 })
+        for (let i = 1; i <= steps * 3; i++) {
+          const a = (-90 + i * 9) * Math.PI / 180
+          fireEvent.pointerMove(wheel, { clientX: 100 + 90 * Math.cos(a), clientY: 100 + 90 * Math.sin(a), pointerId: 1 })
+        }
+        fireEvent.pointerUp(wheel, { clientX: 100, clientY: 10, pointerId: 1 })
+      }
+      const v0 = usePlayerStore.getState().volume
+      rotate(1)
+      expect(usePlayerStore.getState().volume).toBeGreaterThan(v0)
+      expect(screen.getByTestId('pocket-volume')).toBeTruthy()
+      press(wheel, 100, 15) // 목록으로
+      rotate(1)
+      press(wheel, 100, 100) // 가운데 버튼
+      expect(playTrack).toHaveBeenCalledWith(q[1], q)
+    })
+
+    it('본체 색을 고르면 기억한다', () => {
+      setup()
+      fireEvent.click(screen.getByLabelText('스페이스그레이'))
+      expect(JSON.parse(localStorage.getItem('cm.pocket')!).theme).toBe('gray')
+    })
+  })
 })
