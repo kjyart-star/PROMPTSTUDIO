@@ -194,6 +194,8 @@ export function PersistentPlayer({ hasMobileNav = false }: { hasMobileNav?: bool
       audioRef.current.load();
       if (isPlaying) {
         audioRef.current.play().catch((err) => {
+          // CORS 로 못 불러 실패한 경우는 onError 의 폴백(분석 없이 재생)이 이어받는다.
+          if ((err as Error)?.name === 'NotSupportedError' && audioRef.current?.crossOrigin === 'anonymous' && !corsFallbackRef.current && !getSpectrumTap(audioRef.current)) return;
           console.error('Autoplay blocked:', err);
           void retryWithFreshSign();
         });

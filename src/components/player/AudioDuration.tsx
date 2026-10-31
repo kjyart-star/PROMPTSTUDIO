@@ -21,8 +21,17 @@ export function AudioDuration({ url, defaultSec, fallback = '-', className = '' 
 
     if (!url) return
 
-    const audio = new Audio(url)
+    // 같은 주소를 플레이어가 crossOrigin 으로 다시 열 때, 여기서 CORS 없이 받아 둔 캐시(immutable)가
+    // 재사용되면 CORS 오류가 난다 — 처음부터 CORS 로 받는다. 거부되면 한 번만 CORS 없이 다시 연다.
+    const audio = new Audio()
     audio.preload = 'metadata'
+    if (/^https?:/.test(url)) {
+      audio.crossOrigin = 'anonymous'
+      audio.addEventListener('error', () => {
+        if (audio.crossOrigin) { audio.removeAttribute('crossorigin'); audio.src = url }
+      }, { once: true })
+    }
+    audio.src = url
     
     const onLoadedMetadata = () => {
       if (audio.duration && audio.duration !== Infinity && !isNaN(audio.duration)) {

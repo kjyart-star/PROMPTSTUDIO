@@ -47,6 +47,14 @@ export function AudioDuration({ url, className = '' }: { url: string; className?
         audio.preload = 'metadata'
         audio.muted = true
         audio.addEventListener('loadedmetadata', onMeta)
+        // 플레이어가 같은 음원을 crossOrigin 으로 열 때 CORS 없이 받은 캐시가 재사용되면 오류가 난다 — CORS 로 받고, 거부되면 한 번만 CORS 없이.
+        if (/^https?:/.test(src)) {
+          audio.crossOrigin = 'anonymous'
+          const a = audio
+          a.addEventListener('error', () => {
+            if (a.crossOrigin) { a.removeAttribute('crossorigin'); a.src = src }
+          }, { once: true })
+        }
         audio.src = src
       })
       .catch(() => {})
