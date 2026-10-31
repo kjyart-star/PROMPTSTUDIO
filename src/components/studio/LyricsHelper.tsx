@@ -33,6 +33,7 @@ export default function LyricsHelper({
 }) {
   const l = uiLanguage
   const over = value.length > LYRICS_MAX
+  const near = !over && value.length >= LYRICS_MAX * 0.9
   return (
     <div className="flex flex-wrap items-center gap-1.5" aria-label={T.tags[l]}>
       {SECTION_TAGS.map((tag) => (
@@ -58,7 +59,7 @@ export default function LyricsHelper({
       >
         {T.template[l]}
       </button>
-      <span className={`ml-auto text-[11px] font-mono ${over ? 'text-red-400' : 'text-zinc-500'}`}>
+      <span className={`ml-auto text-[11px] font-mono ${over ? 'text-red-400' : near ? 'text-amber-400' : 'text-zinc-500'}`}>
         {value.length.toLocaleString()} / {LYRICS_MAX.toLocaleString()} {T.chars[l]}{over ? ` · ${T.over[l]}` : ''}
       </span>
     </div>

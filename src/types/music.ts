@@ -52,6 +52,9 @@ export interface Track {
   waveform_data: any | null;
   lyrics: string | null;
   style_prompt: string | null;
+  /** 공개 곡 정보 — 싱크 가사(LRC)·마스터링본 여부 */
+  has_lrc?: boolean;
+  is_mastered?: boolean;
   bpm: number | null;
   song_key: string | null;
   prompt_meta: Record<string, any> | null;

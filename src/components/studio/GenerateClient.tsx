@@ -755,7 +755,7 @@ export function GenerateClient({
                 disabled={generateForm.instrumentalOnly}
                 placeholder={generateForm.instrumentalOnly ? (uiLanguage === 'KO' ? '연주곡만 생성 옵션이 켜져있어 가사를 입력할 수 없습니다.' : uiLanguage === 'JA' ? 'インストゥルメンタルのみのオプションがオンのため、歌詞は入力できません。' : 'Disabled for Instrumental Only') : ''}
                 rows={5}
-                className={`w-full rounded-xl p-3 text-xs outline-none resize-none custom-scrollbar transition-colors font-mono ${
+                className={`w-full rounded-xl p-3 text-xs outline-none resize-y min-h-[7rem] max-h-[40rem] custom-scrollbar transition-colors font-mono ${
                   generateForm.instrumentalOnly 
                     ? 'bg-[#0a0a0a]/50 border border-[#1a1a1a] text-zinc-600 cursor-not-allowed opacity-60' 
                     : 'bg-[#0a0a0a] border border-[#1a1a1a] text-zinc-200 focus:border-primary/60'

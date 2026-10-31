@@ -150,6 +150,8 @@ export default async function PublicHomePage() {
       arranger: song.form?.arranger || '',
       lyrics: song.lyrics || '',
       style_prompt: song.prompt || song.form?.prompt || '',
+      has_lrc: Array.isArray(song.form?.lrc) && song.form.lrc.length > 0,
+      is_mastered: song.form?.kind === 'mastering',
       album: playlist ? {
         id: playlist.id,
         slug: playlist.id,

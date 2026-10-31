@@ -933,6 +933,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [quickMasterItem, setQuickMasterItem] = useState<any | null>(null)
   const [timingItem, setTimingItem] = useState<any | null>(null)
+  const [queueCount, setQueueCount] = useState(0)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -1174,6 +1175,29 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
       console.error('Error fetching song history:', e)
     }
   }
+
+  /* 다른 탭에 있어도 생성 중인 곡 수를 알려 준다 — 생성 탭 안에서는 그 화면이 직접 진행을 보여 준다.
+     생성 중인 곡이 있을 때만 15초마다 확인한다. */
+  useEffect(() => {
+    if (!user) return
+    let dead = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const check = async () => {
+      let n = 0
+      try {
+        const res = await fetch('/api/song-history')
+        if (res.ok) {
+          const rows = await res.json()
+          n = (Array.isArray(rows) ? rows : []).filter((r: any) => r.status === 'processing' && r.suno_task_id && Date.now() - new Date(r.created_at || 0).getTime() < 30 * 60_000).length
+        }
+      } catch { /* 다음 확인에서 다시 */ }
+      if (dead) return
+      setQueueCount(n)
+      if (n > 0 && currentTab !== 'suno') timer = setTimeout(check, 15000)
+    }
+    check()
+    return () => { dead = true; if (timer) clearTimeout(timer) }
+  }, [user, currentTab])
 
   const fetchPlaylists = async () => {
     if (!user) return
@@ -1714,6 +1738,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         history={history}
         playlists={playlists}
         activePlaylistId={libraryQuery.playlistId ?? null}
+        queueCount={queueCount}
         onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */

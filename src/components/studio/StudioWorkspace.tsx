@@ -20,6 +20,8 @@ interface StudioWorkspaceProps {
   playlists?: { id: string; title: string }[]
   activePlaylistId?: string | null
   onPickPlaylist?: (id: string | null) => void
+  /** 생성 중인 곡 수 — 「음악 생성」 탭 숫자 배지와 안내 띠 */
+  queueCount?: number
   childrenLeft?: React.ReactNode
 }
 
@@ -34,6 +36,7 @@ export function StudioWorkspace({
   playlists = [],
   activePlaylistId = null,
   onPickPlaylist,
+  queueCount = 0,
   childrenLeft
 }: StudioWorkspaceProps) {
   // Playback & Timeline State
@@ -97,7 +100,10 @@ export function StudioWorkspace({
           >
             <Music className="w-4 h-4 shrink-0" />
             <span className="truncate">음악 생성</span>
-            <span className="ml-auto text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#0284c7] text-white shadow-sm leading-none">
+            {queueCount > 0 && (
+              <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-white text-[10px] font-black text-black flex items-center justify-center" aria-label={`생성 중 ${queueCount}곡`}>{queueCount}</span>
+            )}
+            <span className={`${queueCount > 0 ? '' : 'ml-auto '}text-[9px] font-black italic px-1.5 py-0.5 rounded-[4px] bg-[#0284c7] text-white shadow-sm leading-none`}>
               HOT
             </span>
           </button>
@@ -192,6 +198,13 @@ export function StudioWorkspace({
 
         {/* 2. Main Workspace Content Pane (프롬프트 / Suno 생성 / AI 커버 / 마스터링 / 보관함 폼이 전체 화면을 넓게 사용) */}
         <main className="flex-1 rounded-lg border border-outline-variant bg-surface flex flex-col min-w-0 overflow-y-auto custom-scrollbar">
+          {queueCount > 0 && currentTab !== 'suno' && (
+            <div role="status" className="mx-4 mt-3 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-xs text-zinc-200">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse motion-reduce:animate-none" aria-hidden />
+              <span className="font-bold">곡 {queueCount}개를 만들고 있어요.</span>
+              <button type="button" onClick={() => setCurrentTab('suno')} className="ml-auto font-bold text-primary hover:underline cursor-pointer">진행 상황 보기 →</button>
+            </div>
+          )}
           {childrenLeft}
         </main>
       </div>

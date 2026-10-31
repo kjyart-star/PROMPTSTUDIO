@@ -1,5 +1,6 @@
 'use client'
 
+import TrackBadges from '@/components/common/TrackBadges'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
@@ -871,8 +872,9 @@ export function HomeClient({
 
                   {/* Title & Artist */}
                   <div className="mt-1">
-                    <p className="font-bold text-xs truncate text-slate-100 group-hover:text-primary transition-colors">
-                      {track.title}
+                    <p className="flex items-center gap-1 font-bold text-xs text-slate-100 group-hover:text-primary transition-colors">
+                      <span className="truncate">{track.title}</span>
+                      <TrackBadges track={track} />
                     </p>
                     {track.album?.artist ? (
                       <div className="mt-0.5">
@@ -1066,9 +1068,10 @@ export function HomeClient({
                         handlePlay(track, displayLatestTracks)
                         setNowPlayingOpen(true)
                       }}
-                      className="font-bold text-xs truncate text-slate-100 group-hover:text-primary transition-colors flex-1 cursor-pointer hover:underline text-left"
+                      className="font-bold text-xs text-slate-100 group-hover:text-primary transition-colors flex-1 min-w-0 flex items-center gap-1 cursor-pointer hover:underline text-left"
                     >
-                      {track.title}
+                      <span className="truncate">{track.title}</span>
+                      <TrackBadges track={track} />
                     </p>
                   </div>
                   {track.album?.artist && (
