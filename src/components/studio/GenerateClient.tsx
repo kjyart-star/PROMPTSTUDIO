@@ -658,8 +658,8 @@ export function GenerateClient({
   const detailTrack = detailTrackId ? historyList.find((h: any) => h.id === detailTrackId) || null : null
 
   return (
-    <div className="w-full pb-10 flex items-start gap-4">
-      <div className="flex-1 min-w-0 space-y-6">
+    <div className="w-full pb-10 xl:pb-0 flex items-start gap-4 xl:flex-1 xl:min-h-0 xl:h-full">
+      <div className="flex-1 min-w-0 space-y-6 xl:flex xl:flex-col xl:space-y-0 xl:gap-6 xl:h-full xl:min-h-0">
       <StudioHero
         badge={
           <>
@@ -686,9 +686,9 @@ export function GenerateClient({
         bg="/studio/hero-gen.webp"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] min-[1280px]:grid-cols-[420px_minmax(0,1fr)] min-[1440px]:grid-cols-[450px_minmax(0,1fr)] gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] min-[1280px]:grid-cols-[420px_minmax(0,1fr)] min-[1440px]:grid-cols-[450px_minmax(0,1fr)] gap-4 items-start xl:items-stretch xl:flex-1 xl:min-h-0">
         {/* Left Column: Input Settings (5칸 또는 6칸) */}
-        <div className="space-y-5 cm-panel-console bg-[#111111] p-5 rounded-2xl border border-[#1e1e1e] shadow-xl lg:sticky lg:top-0 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto custom-scrollbar">
+        <div className="space-y-5 cm-panel-console bg-[#111111] p-5 rounded-2xl border border-[#1e1e1e] shadow-xl lg:sticky lg:top-0 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto xl:static xl:max-h-none xl:min-h-0 custom-scrollbar">
           <div className="flex justify-between items-center border-b border-[#1e1e1e] pb-3">
             <h2 className="text-sm font-bold text-zinc-200">{uiLanguage === 'KO' ? '입력 설정 (Input)' : uiLanguage === 'JA' ? '入力設定' : 'Input Settings'}</h2>
           </div>
@@ -929,7 +929,7 @@ export function GenerateClient({
         </div>
 
         {/* Right Column: Generation & Output (6칸) */}
-        <div className="min-w-0 space-y-6 cm-panel-console bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl relative flex flex-col justify-between">
+        <div className="min-w-0 space-y-6 cm-panel-console bg-[#111111] p-6 rounded-2xl border border-[#1e1e1e] shadow-xl relative flex flex-col justify-between xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
           <div className="space-y-6 flex-1 flex flex-col">
             <h2 className="text-sm font-bold text-zinc-200 border-b border-[#1e1e1e] pb-3 flex justify-between items-center shrink-0">
               <span>{uiLanguage === 'KO' ? '진행 상태 및 완료된 곡' : uiLanguage === 'JA' ? 'ステータス & 完了したトラック' : 'Status & Completed Tracks'}</span>

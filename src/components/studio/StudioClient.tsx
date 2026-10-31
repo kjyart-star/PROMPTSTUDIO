@@ -20,6 +20,7 @@ import AlbumArtDialog from './AlbumArtDialog'
 import StemDialog from './StemDialog'
 import { filterLibrary, isInstrumental, moveInOrder, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
+import { WideFit } from './WideFit'
 import dynamic from 'next/dynamic'
 
 const CinemaClient = dynamic(() => import('./cinema/CinemaClient'), { ssr: false })
@@ -1780,9 +1781,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
-          <div className="w-full p-6 pb-8">
+          <div className={`w-full p-6 pb-8${currentTab === 'suno' || currentTab === 'studio' ? ' flex-1 min-h-0 flex flex-col xl:pb-4' : ''}`}>
             {currentTab === 'suno' && (
-              <div className="max-w-[1700px] mx-auto w-full">
+              <WideFit fill>
                 <GenerateClient
                   user={user}
                   historyId={currentHistoryId}
@@ -1793,19 +1794,19 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   renderTrackMenu={buildTrackMenu}
                   historyVersion={historyVersion}
                 />
-              </div>
+              </WideFit>
             )}
 
             {currentTab === 'cover' && (
-              <div className="max-w-[1700px] mx-auto w-full">
+              <WideFit>
                 <CoverClient user={user} />
-              </div>
+              </WideFit>
             )}
 
             {currentTab === 'cinema' && (
-              <div className="max-w-[1700px] mx-auto w-full">
+              <WideFit>
                 <CinemaClient />
-              </div>
+              </WideFit>
             )}
 
             {currentTab === 'mastering' && (
@@ -1815,7 +1816,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
             )}
 
             {currentTab === 'library' && (
-              <div className="max-w-[1700px] mx-auto w-full flex items-start gap-4">
+              <WideFit><div className="w-full flex items-start gap-4">
               <div className="flex-1 min-w-0 space-y-5 pb-10">
                 <StudioHero
                   badge={
@@ -2202,11 +2203,11 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   libraryDetailTrack?.audio_url ? <AudioDuration url={libraryDetailTrack.audio_url} /> : null
                 }
               />
-              </div>
+              </div></WideFit>
             )}
 
             {currentTab === 'studio' && (
-              <div className="max-w-[1700px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-5 pb-10">
+              <WideFit fill><div className="w-full grid grid-cols-1 xl:grid-cols-12 xl:grid-rows-[auto_minmax(0,1fr)] xl:flex-1 xl:min-h-0 gap-5 pb-10 xl:pb-0">
 
                 {/* 히어로 — 그리드 한 줄을 통째로 쓴다 */}
                 <div className="xl:col-span-12">
@@ -2238,7 +2239,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 </div>
 
                 {/* 1열: 좌측 패널 (AI 설정 & 지침서 가이드) - 3칸 */}
-                <div className="xl:col-span-3 space-y-4 xl:flex xl:flex-col">
+                <div className="xl:col-span-3 space-y-4 xl:flex xl:flex-col xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
                   {/* AI 설정 ([임시 게이트] 해제 방법은 src/lib/auth/aiGate.ts 참고) */}
                   {canUseAi && (
                     <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-4 rounded-2xl space-y-3 shadow-xl">
@@ -2413,7 +2414,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 </div>
 
                 {/* 2열: 중앙 패널 (곡 정보 및 프롬프트 설정) - 5칸 */}
-                <div className="xl:col-span-5 space-y-4">
+                <div className="xl:col-span-5 space-y-4 xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
                   <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl space-y-4 shadow-xl">
                     <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
                       <Disc className="w-3.5 h-3.5 text-primary" />
@@ -2788,7 +2789,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                 </div>
 
                 {/* 3열: 우측 패널 (생성 결과 OUTPUT) - 가운데 패널과 아래쪽 높이 일치 */}
-                <div className="xl:col-span-4 h-full flex flex-col">
+                <div className="xl:col-span-4 h-full flex flex-col xl:min-h-0 xl:overflow-y-auto custom-scrollbar">
                   <div className="cm-panel-console bg-[#111111] border border-[#1e1e1e] p-5 rounded-2xl shadow-xl flex-1 flex flex-col justify-between space-y-3.5">
                     <div className="space-y-3 flex-1 flex flex-col">
                       <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-primary">
@@ -2971,7 +2972,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   </div>
                 </div>
 
-              </div>
+              </div></WideFit>
             )}
           </div>
         }
