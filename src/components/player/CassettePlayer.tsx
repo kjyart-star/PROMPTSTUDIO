@@ -164,6 +164,43 @@ function Cassette({ track, progress, playing, reduced, phase, flow, color }: { t
   );
 }
 
+/** 스피커용 저음·고음 크기(0~1). 분석값이 없으면 재생 중에는 가짜 박동, 멈추면 0. */
+function useBands(ref: React.RefObject<HTMLElement | null>, playing: boolean, reduced: boolean) {
+  const getFrequencyData = usePlayerStore((s) => s.getFrequencyData);
+  useEffect(() => {
+    let raf = 0, bass = 0, treb = 0;
+    const tick = (t: number) => {
+      const data = playing ? getFrequencyData?.() : null;
+      let wb = 0, wt = 0;
+      if (data) { const b = binSpectrum(data, 16); wb = Math.max(b[0], b[1], b[2]); wt = (b[11] + b[12] + b[13] + b[14] + b[15]) / 5; }
+      else if (playing && !reduced) { wb = 0.35 + 0.3 * Math.max(0, Math.sin(t / 230)); wt = 0.2 + 0.2 * Math.max(0, Math.sin(t / 97)); }
+      bass += (wb - bass) * (wb > bass ? 0.6 : 0.14);
+      treb += (wt - treb) * (wt > treb ? 0.6 : 0.2);
+      const el = ref.current;
+      if (el) { el.style.setProperty('--bass', reduced ? '0' : bass.toFixed(3)); el.style.setProperty('--treb', reduced ? '0' : treb.toFixed(3)); }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, getFrequencyData, reduced, ref]);
+}
+
+/** 북쉘프 스피커 — 월넛 인클로저, 그릴을 뗀 우퍼·트위터(고무 엣지·더스트캡). 저음에 우퍼, 고음에 트위터가 미세하게 펌핑한다. */
+function Speaker({ side }: { side: 'l' | 'r' }) {
+  return (
+    <div className={`cs-spk cs-spk-${side}`} aria-hidden="true">
+      <div className="cs-spk-body">
+        <div className="cs-baffle">
+          <span className="cs-tweeter"><i /></span>
+          <span className="cs-woofer"><span className="cs-edge"><i className="cs-cone"><b /></i></span></span>
+          <span className="cs-led" />
+        </div>
+      </div>
+      <span className="cs-spk-shadow" />
+    </div>
+  );
+}
+
 export function CassettePlayer({ reduced }: { reduced: boolean }) {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
@@ -242,6 +279,8 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   const playPause = () => togglePlay();
   const stop = () => { if (usePlayerStore.getState().isPlaying) togglePlay(); seek(0); };
 
+  const setRef = useRef<HTMLDivElement>(null);
+  useBands(setRef, isPlaying, reduced);
   const color = useCoverColor((shown as any)?.album?.cover_url || (shown as any)?.image_url);
   const flow: Flow = pressed === 'ff' ? 'ff' : pressed === 'rew' ? 'rew' : isPlaying ? 'play' : 'off';
   const cover = (shown as any)?.album?.cover_url || (shown as any)?.image_url || withBase('/default-album.png');
@@ -252,6 +291,8 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   return (
     <main className="cs-wrap" data-testid="cassette-player" style={{ ['--cc' as any]: rgba(color, 1, '255,196,120') }}>
       <div className="cs-glow" aria-hidden="true" style={{ background: `radial-gradient(ellipse 55% 50% at 50% 48%, ${rgba(color, 0.42, '255,176,96')}, transparent 70%)` }} />
+      <div className="cs-set" ref={setRef}>
+      <Speaker side="l" />
       <div className={`cs-deck${isPlaying && !reduced ? ' is-running' : ''}${phase === 'closing' ? ' is-click' : ''}`}>
         <div className="cs-bay">
           <Cassette track={shown} progress={progress} playing={isPlaying} reduced={reduced} phase={phase} flow={flow} color={color} />
@@ -273,10 +314,12 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
           </div>
         </div>
       </div>
+      <Speaker side="r" />
       <aside key={shown.id} className="cs-jcard" aria-hidden="true">
         <img src={cover} alt="" draggable={false} />
         <div className="cs-jspine"><b>{shown.title}</b><span>{artistName}</span></div>
       </aside>
+      </div>
     </main>
   );
 }
@@ -288,7 +331,8 @@ export const CS_CSS = `
  repeating-linear-gradient(88deg,rgba(0,0,0,0) 0 41px,rgba(10,5,2,.36) 41px 44px),
  linear-gradient(180deg,rgba(74,45,24,.9),rgba(42,25,13,.94));opacity:.86;mix-blend-mode:multiply}
 .cs-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 16px;perspective:1200px}
-.cs-deck{--cw:min(88vw,540px,calc(44vh * 1.6));width:var(--cw);display:flex;flex-direction:column;gap:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
+.cs-set{--cw:min(50vw,520px,calc(42vh * 1.6));--sw:clamp(84px,11.5vw,150px);position:relative;display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,2.2vw,32px);max-width:100%}
+.cs-deck{width:var(--cw);display:flex;flex-direction:column;gap:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
 .cs-bay{position:relative;padding:3.2% 3.2% 2.6%;border-radius:14px 14px 4px 4px;background:linear-gradient(180deg,#2c2c30,#17171a);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 2px 8px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
 .cs-cassette{display:block;width:100%;height:auto;will-change:transform,opacity;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
 .cs-lid{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;transform-origin:50% 0;transition:transform .3s cubic-bezier(.3,.7,.2,1);background:linear-gradient(115deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%,rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
@@ -308,12 +352,24 @@ export const CS_CSS = `
 .cs-flow-ff{animation:cs-flow .09s linear infinite}
 .cs-flow-rew{animation:cs-flow .09s linear infinite reverse}
 @keyframes cs-flow{from{transform:translateX(0)}to{transform:translateX(-18px)}}
-.cs-jcard{position:absolute;right:max(2vw,calc(50% - var(--cw,540px) / 2 - 150px));bottom:calc(50% - var(--cw,540px) * .42);width:clamp(96px,11vw,150px);transform:perspective(700px) rotateY(-24deg) rotate(4deg);transform-origin:left bottom;border-radius:4px;background:rgba(235,238,240,.16);backdrop-filter:blur(2px);border:1px solid rgba(255,255,255,.3);box-shadow:0 18px 30px rgba(0,0,0,.55),inset 0 0 0 3px rgba(255,255,255,.06);padding:5px;animation:imm-rise .6s .6s cubic-bezier(.2,.8,.2,1) both;pointer-events:none}
+.cs-jcard{position:absolute;right:calc(var(--sw) * .12);bottom:-5%;width:calc(var(--sw) * .8);transform:perspective(700px) rotateY(-22deg) rotate(5deg);transform-origin:left bottom;border-radius:4px;background:rgba(235,238,240,.16);backdrop-filter:blur(2px);border:1px solid rgba(255,255,255,.3);box-shadow:0 18px 30px rgba(0,0,0,.55),inset 0 0 0 3px rgba(255,255,255,.06);padding:5px;animation:imm-rise .6s .6s cubic-bezier(.2,.8,.2,1) both;pointer-events:none;z-index:4}
 .cs-jcard img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px}
 .cs-jspine{margin-top:5px;font:400 14px/1.1 'Nanum Pen Script','Gamja Flower','Segoe Print','Bradley Hand',cursive;color:#f0e8d2;display:flex;flex-direction:column;gap:1px}
 .cs-jspine b{font-weight:400;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cs-jspine span{opacity:.7;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 @media (max-width:980px){.cs-jcard{display:none}}
+.cs-spk{position:relative;width:var(--sw);height:calc(var(--sw) * 1.95);flex:none;margin-bottom:2px}
+.cs-spk-body{position:absolute;inset:0;border-radius:7px 7px 5px 5px;background:repeating-linear-gradient(88deg,rgba(0,0,0,.0) 0 5px,rgba(20,8,2,.16) 5px 6px),linear-gradient(100deg,#4d2f19,#7b4b2a 28%,#5a3720 55%,#3f2514 80%,#5e3a22);box-shadow:inset 0 1px 0 rgba(255,220,170,.28),inset 0 -2px 4px rgba(0,0,0,.5),inset 2px 0 3px rgba(255,200,140,.12),0 24px 22px -8px rgba(0,0,0,.65);padding:7%}
+.cs-baffle{position:relative;width:100%;height:100%;border-radius:4px;background:linear-gradient(180deg,#1b1816,#0f0d0c);box-shadow:inset 0 2px 6px rgba(0,0,0,.85),0 1px 0 rgba(255,220,170,.12)}
+.cs-tweeter{position:absolute;left:50%;top:9%;width:34%;aspect-ratio:1;margin-left:-17%;border-radius:50%;background:radial-gradient(circle,#2b2724 0 38%,#0c0b0a 40% 60%,#3a342f 62% 70%,#0c0b0a 72%);box-shadow:0 0 0 2px #1d1a18,0 1px 0 rgba(255,255,255,.1)}
+.cs-tweeter i{position:absolute;inset:26%;border-radius:50%;background:radial-gradient(circle at 36% 32%,#cfc8bb,#6e675d 55%,#2c2824);transform:scale(calc(1 + var(--treb,0) * .12));will-change:transform}
+.cs-woofer{position:absolute;left:50%;top:34%;width:78%;aspect-ratio:1;margin-left:-39%;border-radius:50%;background:#0b0a09;box-shadow:0 0 0 2px #1d1a18,0 1px 0 rgba(255,255,255,.1)}
+.cs-edge{position:absolute;inset:5%;border-radius:50%;background:radial-gradient(circle,transparent 62%,#171514 63% 78%,#2a2623 80% 86%,#0f0e0d 88%);display:block}
+.cs-cone{position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle at 40% 34%,#4a4541,#2b2825 45%,#1a1816 80%),repeating-radial-gradient(circle,rgba(255,255,255,.05) 0 2px,transparent 2px 6px);background-blend-mode:screen;display:block;transform:scale(calc(1 + var(--bass,0) * .085));will-change:transform;box-shadow:inset 0 0 8px rgba(0,0,0,.8)}
+.cs-cone b{position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;margin:-17% 0 0 -17%;border-radius:50%;background:radial-gradient(circle at 36% 32%,#7d776e,#35312c 60%,#16140f)}
+.cs-led{position:absolute;left:50%;bottom:4%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#e9742b;box-shadow:0 0 6px #e9742b}
+.cs-spk-shadow{position:absolute;left:-6%;right:-6%;bottom:-7px;height:14px;background:radial-gradient(ellipse at 50% 30%,rgba(0,0,0,.6),transparent 70%);pointer-events:none}
+@media (max-width:768px){.cs-spk{display:none}.cs-set{--cw:min(88vw,540px,calc(44vh * 1.6))}}
 .cs-panel{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:10px 14px;align-items:center;padding:12px 14px 14px;border-radius:4px 4px 14px 14px;background:linear-gradient(180deg,#3a3a3f,#232326 40%,#1a1a1d);border:1px solid rgba(255,255,255,.12);border-top:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
 .cs-counter{padding:5px 8px;border-radius:5px;background:#0b0c0a;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.12)}
 .cs-cnt{font:700 22px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:#e8dfc4;text-shadow:0 0 6px rgba(232,223,196,.35)}
