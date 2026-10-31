@@ -16,7 +16,7 @@ import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
 import QuickMasterDialog from './QuickMasterDialog'
 import LyricTimingEditor from './LyricTimingEditor'
-import { filterLibrary, isInstrumental, type LibraryQuery } from './libraryFilter'
+import { filterLibrary, isInstrumental, moveInOrder, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
@@ -954,6 +954,19 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     for (const t of targets) await deleteHistoryItem(t.id)
     setSelectedIds([])
   }
+  const addSelectedToPlaylist = async (playlistId: string) => {
+    for (const t of selectedItems) {
+      await fetch(`/api/song-history/${t.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ playlist_id: playlistId }) })
+    }
+    await fetchSongHistory()
+  }
+  const moveInPlaylist = async (id: string, dir: -1 | 1) => {
+    const changes = moveInOrder(visibleHistory, id, dir)
+    for (const c of changes) {
+      await fetch(`/api/song-history/${c.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ playlist_order: c.order }) })
+    }
+    if (changes.length) await fetchSongHistory()
+  }
   const downloadSelected = async () => {
     for (const t of selectedItems) await downloadHistoryTrack(t)
   }
@@ -1696,7 +1709,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         history={history}
         playlists={playlists}
         activePlaylistId={libraryQuery.playlistId ?? null}
-        onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id })); setCurrentTab('library') }}
+        onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
         childrenLeft={
           /* 판이 이제 플레이어 위에서 끝나므로 아래를 128px 씩 비워 둘 이유가 없다 */
           <div className="w-full p-6 pb-8">
@@ -1805,6 +1818,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   onDownload={downloadSelected}
                   onTrash={trashSelected}
                   hasPublishedSelected={selectedItems.some((h) => h.is_published)}
+                  playlists={playlists}
+                  onAddToPlaylist={addSelectedToPlaylist}
                 />
                 <div className={`grid ${LIBRARY_GRID_CLASS[libraryViewSize]}`}>
                   {visibleHistory.map((item) => {
@@ -1832,6 +1847,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         onMastering={() => setCurrentTab('mastering')}
                         onQuickMaster={() => setQuickMasterItem(item)}
                         onEditTiming={() => setTimingItem(item)}
+                        onMove={libraryQuery.playlistId && libraryQuery.sort === 'playlist' ? (dir) => moveInPlaylist(item.id, dir) : undefined}
                         onDownload={() => downloadHistoryTrack(item)}
                         onTrash={() => setDeleteConfirmId(item.id)}
                       />

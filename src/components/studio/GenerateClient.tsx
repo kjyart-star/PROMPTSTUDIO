@@ -13,6 +13,7 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { StudioHero } from './StudioHero'
 import LyricsHelper from './LyricsHelper'
+import GenerateQueue from './GenerateQueue'
 import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
 
@@ -467,7 +468,11 @@ export function GenerateClient({
     const url = new URL(window.location.href)
     url.searchParams.set('historyId', track.id)
     window.history.replaceState({}, '', url.toString())
-    
+    loadFormFrom(track)
+  }
+
+  /** 곡 기록의 생성 설정을 입력칸에 채운다(생성은 하지 않는다) */
+  const loadFormFrom = (track: any) => {
     if (track.form) {
       setGenerateForm(prev => ({
         ...prev,
@@ -631,6 +636,14 @@ export function GenerateClient({
     .filter((item: any) => item.status === 'completed' && item.audio_url && item.form?.source !== 'upload')
     .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
   const topCompletedSongs = completedSongs.slice(0, 30)
+  const failedRows = historyList
+    .filter((item: any) => item.status === 'failed' && !item.audio_url && Date.now() - new Date(item.created_at || 0).getTime() < 3 * 86_400_000)
+    .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+    .slice(0, 8)
+  const dismissFailed = async (row: any) => {
+    await fetch(`/api/song-history?id=${row.id}&rollback=1`, { method: 'DELETE' }).catch(() => {})
+    refreshHistoryList()
+  }
   const detailTrack = detailTrackId ? historyList.find((h: any) => h.id === detailTrackId) || null : null
 
   return (
@@ -932,6 +945,14 @@ export function GenerateClient({
                 </button>
               </div>
             )}
+
+            <GenerateQueue
+              uiLanguage={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+              tasks={activeTasks}
+              failedRows={failedRows}
+              onRetry={(row) => { loadFormFrom(row); setStatus(uiLanguage === 'KO' ? '실패한 작업의 설정을 불러왔습니다. 확인 후 생성을 눌러 주세요.' : 'Loaded settings of the failed job. Press generate to retry.') }}
+              onDismiss={dismissFailed}
+            />
 
             {/* Completed Songs History List */}
             {topCompletedSongs.length > 0 ? (

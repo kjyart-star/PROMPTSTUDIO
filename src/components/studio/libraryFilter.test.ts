@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterLibrary, isInstrumental } from './libraryFilter'
+import { filterLibrary, isInstrumental, moveInOrder } from './libraryFilter'
 
 const items = [
   { id: '1', title: 'Rain', style: 'city pop', lyrics: '비가 와', created_at: '2026-10-01', form: { instrumentalOnly: false } },
@@ -31,5 +31,12 @@ describe('filterLibrary', () => {
     const copy = [...items]
     filterLibrary(items, q({ sort: 'title' }))
     expect(items).toEqual(copy)
+  })
+  it('재생목록 순서 정렬 · 한 칸 이동', () => {
+    const l = [{ id: 'a', playlist_order: 1, created_at: '2026-10-01' }, { id: 'b', playlist_order: 0, created_at: '2026-10-02' }, { id: 'c', created_at: '2026-10-03' }]
+    const sorted = filterLibrary(l, q({ sort: 'playlist' }))
+    expect(sorted.map((i) => i.id)).toEqual(['b', 'a', 'c'])
+    expect(moveInOrder(sorted, 'a', -1)).toEqual([{ id: 'a', order: 0 }, { id: 'b', order: 1 }, { id: 'c', order: 2 }])
+    expect(moveInOrder(sorted, 'b', -1)).toEqual([])
   })
 })

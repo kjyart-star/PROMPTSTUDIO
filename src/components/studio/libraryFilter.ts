@@ -1,5 +1,5 @@
 export type LibraryKind = 'all' | 'vocal' | 'instrumental'
-export type LibrarySort = 'newest' | 'oldest' | 'title'
+export type LibrarySort = 'newest' | 'oldest' | 'title' | 'playlist'
 
 export interface LibraryQuery {
   query: string
@@ -27,8 +27,21 @@ export function filterLibrary<T extends Record<string, any>>(items: T[], q: Libr
     return hay.includes(needle)
   })
   const time = (i: T) => new Date(i.created_at || 0).getTime()
-  if (q.sort === 'oldest') out.sort((a, b) => time(a) - time(b))
+  if (q.sort === 'playlist') {
+    const ord = (i: T) => (Number.isInteger(i.playlist_order) ? (i.playlist_order as number) : Number.MAX_SAFE_INTEGER)
+    out.sort((a, b) => ord(a) - ord(b) || time(b) - time(a))
+  } else if (q.sort === 'oldest') out.sort((a, b) => time(a) - time(b))
   else if (q.sort === 'title') out.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'ko'))
   else out.sort((a, b) => time(b) - time(a))
   return out
+}
+
+/** 재생목록 순서에서 한 칸 옮긴 뒤, 바뀐 곡들의 새 순번만 돌려준다 */
+export function moveInOrder(ordered: { id: string; playlist_order?: number | null }[], id: string, dir: -1 | 1): { id: string; order: number }[] {
+  const i = ordered.findIndex((x) => x.id === id)
+  const j = i + dir
+  if (i < 0 || j < 0 || j >= ordered.length) return []
+  const next = [...ordered]
+  ;[next[i], next[j]] = [next[j], next[i]]
+  return next.map((x, k) => ({ id: x.id, order: k })).filter((x, k) => ordered.find((o) => o.id === x.id)?.playlist_order !== k)
 }

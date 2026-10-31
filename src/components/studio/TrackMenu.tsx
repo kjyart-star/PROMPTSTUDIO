@@ -15,6 +15,8 @@ const T = {
   mastering: { KO: '고급 마스터링', JA: '詳細マスタリング', EN: 'Advanced mastering' },
   quick: { KO: '마스터링', JA: 'マスタリング', EN: 'Mastering' },
   timing: { KO: '가사 시간 편집', JA: '歌詞タイミング編集', EN: 'Edit lyric timing' },
+  up: { KO: '재생목록에서 한 칸 앞으로', JA: '1つ前へ', EN: 'Move up' },
+  down: { KO: '재생목록에서 한 칸 뒤로', JA: '1つ後ろへ', EN: 'Move down' },
   lrcOut: { KO: 'LRC 내보내기', JA: 'LRC を書き出す', EN: 'Export LRC' },
   restore: { KO: '프롬프트로 되돌리기', JA: 'プロンプトに戻す', EN: 'Restore to prompt' },
   publish: { KO: '공개하기 (음악 생성 탭)', JA: '公開する', EN: 'Publish' },
@@ -45,6 +47,8 @@ export interface TrackMenuProps {
   onMastering: () => void
   onQuickMaster: () => void
   onEditTiming: () => void
+  /** 재생목록 보기에서만 넘긴다 */
+  onMove?: (dir: -1 | 1) => void
   onDownload: () => void
   onTrash: () => void
 }
@@ -125,6 +129,8 @@ export default function TrackMenu(p: TrackMenuProps) {
               )}
             </>
           )}
+          {p.onMove && <button role="menuitem" className={row} onClick={() => { p.onMove!(-1); close() }}>{T.up[l]}</button>}
+          {p.onMove && <button role="menuitem" className={row} onClick={() => { p.onMove!(1); close() }}>{T.down[l]}</button>}
           <button role="menuitem" className={row} onClick={() => { p.onDownload(); close() }}>{T.download[l]}</button>
           <div className="my-1 h-px bg-[#232323]" />
           <button role="menuitem" disabled={!!p.item.is_published} title={p.item.is_published ? T.trashLocked[l] : undefined}

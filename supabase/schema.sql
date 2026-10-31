@@ -107,3 +107,5 @@ using ((select auth.uid()) = user_id);
 
 -- 휴지통(소프트 삭제): 지우면 trashed_at 만 채운다. 30일이 지나도 자동 삭제하지 않는다.
 alter table public.song_history add column if not exists trashed_at timestamptz;
+
+alter table public.song_history add column if not exists playlist_order integer;

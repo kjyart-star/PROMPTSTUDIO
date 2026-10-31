@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc } = body
+    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc, playlist_order } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
@@ -53,6 +53,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (is_published !== undefined) updateData.is_published = is_published
       if (playlist_id !== undefined) updateData.playlist_id = playlist_id
       if (liked !== undefined) updateData.liked = liked
+      if (playlist_order === null || Number.isInteger(playlist_order)) updateData.playlist_order = playlist_order
       if (trashed === false) updateData.trashed_at = null // 휴지통에서 복원
       if (typeof title === 'string' && title.trim()) updateData.title = title.trim().slice(0, 200)
       if (typeof lyrics === 'string') updateData.lyrics = lyrics.slice(0, 20000)

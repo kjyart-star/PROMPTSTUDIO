@@ -13,6 +13,8 @@ const T = {
   newest: { KO: '최신순', JA: '新しい順', EN: 'Newest' },
   oldest: { KO: '오래된순', JA: '古い順', EN: 'Oldest' },
   title: { KO: '제목순', JA: 'タイトル順', EN: 'Title' },
+  playlist: { KO: '재생목록 순서', JA: 'プレイリスト順', EN: 'Playlist order' },
+  addTo: { KO: '재생목록에 추가…', JA: 'プレイリストに追加…', EN: 'Add to playlist…' },
   selectAll: { KO: '전체 선택', JA: 'すべて選択', EN: 'Select all' },
   selected: { KO: '곡 선택됨', JA: '曲を選択中', EN: 'selected' },
   download: { KO: '내려받기', JA: 'ダウンロード', EN: 'Download' },
@@ -23,7 +25,7 @@ const T = {
 
 export default function LibraryToolbar({
   uiLanguage, value, onChange, total, shown, selectedCount, allSelected,
-  onToggleAll, onClear, onDownload, onTrash, hasPublishedSelected,
+  onToggleAll, onClear, onDownload, onTrash, hasPublishedSelected, playlists, onAddToPlaylist,
 }: {
   uiLanguage: Lang
   value: LibraryQuery
@@ -37,6 +39,8 @@ export default function LibraryToolbar({
   onDownload: () => void
   onTrash: () => void
   hasPublishedSelected: boolean
+  playlists: { id: string; title: string }[]
+  onAddToPlaylist: (playlistId: string) => void
 }) {
   const l = uiLanguage
   const kinds: LibraryKind[] = ['all', 'vocal', 'instrumental']
@@ -78,7 +82,7 @@ export default function LibraryToolbar({
           aria-label="sort"
           className={`${field} px-3 py-2`}
         >
-          {(['newest', 'oldest', 'title'] as const).map((s) => (
+          {(value.playlistId ? (['playlist', 'newest', 'oldest', 'title'] as const) : (['newest', 'oldest', 'title'] as const)).map((s) => (
             <option key={s} value={s}>{T[s][l]}</option>
           ))}
         </select>
@@ -88,6 +92,12 @@ export default function LibraryToolbar({
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
           <span className="text-xs font-bold text-primary">{selectedCount} {T.selected[l]}</span>
           <button type="button" onClick={onDownload} className="px-3 py-1 rounded-lg border border-[#262626] bg-[#161616] text-xs font-bold text-zinc-200 hover:text-primary cursor-pointer">{T.download[l]}</button>
+          {playlists.length > 0 && (
+            <select aria-label={T.addTo[l]} value="" onChange={(e) => { if (e.target.value) onAddToPlaylist(e.target.value) }} className={`${field} px-2 py-1`}>
+              <option value="">{T.addTo[l]}</option>
+              {playlists.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </select>
+          )}
           <button type="button" onClick={onTrash} className="px-3 py-1 rounded-lg border border-red-500/40 text-xs font-bold text-red-400 hover:bg-red-500/10 cursor-pointer">{T.trash[l]}</button>
           <button type="button" onClick={onClear} className="px-3 py-1 text-xs font-bold text-zinc-400 hover:text-white cursor-pointer">{T.clear[l]}</button>
           {hasPublishedSelected && <span className="text-[11px] text-zinc-500">{T.publishedSkip[l]}</span>}
