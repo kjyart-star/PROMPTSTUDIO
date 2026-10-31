@@ -34,6 +34,7 @@ import { withBase } from '@/lib/basePath'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { historyItemToTrack, buildHistoryQueue, queueWithPlayable } from '@/lib/studio/playQueue'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
+import { downloadStudioWav } from '@/lib/studio/downloadWav'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
 import { formatPriceCredits } from '@/lib/credits/format'
@@ -1060,6 +1061,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         stemMilli={creditPrices['music.stem2']}
         onMove={libraryQuery.playlistId && libraryQuery.sort === 'playlist' ? (dir) => moveInPlaylist(item.id, dir) : undefined}
         onDownload={() => downloadHistoryTrack(item)}
+        onDownloadWav={() => downloadStudioWav(item).catch((e) => { console.error(e); alert(e instanceof Error ? e.message : 'WAV 로 내려받지 못했습니다.') })}
         onTrash={() => setDeleteConfirmId(item.id)}
       />
   )

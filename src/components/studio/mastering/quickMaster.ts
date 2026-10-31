@@ -5,6 +5,7 @@ import { analyzeAudio } from '@/lib/mastering/analyze'
 import { masterToTarget } from '@/lib/mastering/automaster'
 import { composeChoice, recommendGenres, type TextureId } from '@/lib/mastering/compose'
 import type { MasterTemplate } from '@/lib/mastering/templates'
+import { sourceSampleRate } from '@/lib/mastering/sniffRate'
 import { newTrack, type LibrarySong } from './store'
 import { cancelRef, decodeTrack, fetchSongBlob, measureFile, renderTrackFile, type ExportOpts } from './actions'
 
@@ -15,7 +16,6 @@ export const QUICK_TONES = ['balanced', 'clear', 'warm', 'punch'] as const
 export type QuickTone = (typeof QUICK_TONES)[number]
 
 const TEXTURE: Record<QuickTone, TextureId | null> = { balanced: null, clear: 'tex-clean', warm: 'tex-warm', punch: 'tex-punch' }
-const UPLOAD_LIMIT = 50 * 1024 * 1024
 
 /** 고른 음량·피크를 템플릿에 덮어쓴다 — 리미터 천장도 같이 맞춘다 */
 export function quickTemplate(genre: string, tone: QuickTone, lufs: number, tp: number): MasterTemplate {
@@ -26,10 +26,14 @@ export function quickTemplate(genre: string, tone: QuickTone, lufs: number, tp: 
   }
 }
 
-export interface QuickResult { id: string; title: string; integrated: number; truePeak: number; targetLufs: number }
+export interface QuickResult {
+  id: string; title: string; integrated: number; truePeak: number; targetLufs: number
+  /** 같은 처리 결과를 브라우저에서 WAV 로 만들어 돌려준다 — 업로드 없음, 내려받기 전용 */
+  makeWav: (onProgress?: (p: number) => void) => Promise<Blob>
+}
 
 /**
- * 원곡은 그대로 두고 별도 WAV 로 마스터링해 보관함에 새 곡으로 올린다. 처리는 전부 브라우저에서 한다(서버 비용 0).
+ * 원곡은 그대로 두고 별도 MP3(320kbps)로 마스터링해 보관함에 새 곡으로 올린다. 샘플레이트는 원본(44.1/48kHz)을 따른다. 처리는 전부 브라우저에서 한다(서버 비용 0).
  */
 export async function quickMaster(
   song: LibrarySong & { form?: any },
@@ -47,13 +51,11 @@ export async function quickMaster(
   const tpl = quickTemplate(genre, opt.tone, opt.lufs, opt.tp)
   onProgress('목표 음량에 맞추는 중', 0.25)
   const res = await masterToTarget(dec.channels, dec.sampleRate, a, tpl, { onProgress: p => onProgress('목표 음량에 맞추는 중', 0.25 + p * 0.35) })
-  const opts: ExportOpts = { format: 'wav', bits: 24, rate: 44100, dither: 'tpdf', range: 'all' }
-  onProgress('WAV 파일 만드는 중', 0.6)
-  let out = await renderTrackFile(t, opts, p => onProgress('WAV 파일 만드는 중', 0.6 + p * 0.2), { params: res.params })
-  if (out.blob.size > UPLOAD_LIMIT) {
-    onProgress('용량이 커서 MP3 로 바꾸는 중', 0.8)
-    out = await renderTrackFile(t, { ...opts, format: 'mp3' }, p => onProgress('용량이 커서 MP3 로 바꾸는 중', 0.8 + p * 0.1), { params: res.params })
-  }
+  const rate = await sourceSampleRate(blob)
+  const opts: ExportOpts = { format: 'mp3', bits: 24, rate, dither: 'tpdf', range: 'all' }
+  onProgress('MP3 파일 만드는 중', 0.6)
+  // 인코딩 뒤 다시 풀어 트루 피크·음량을 재고 천장을 넘으면 낮춰 다시 만든다(renderMp3Safe)
+  const out = await renderTrackFile(t, opts, p => onProgress('MP3 파일 만드는 중', 0.6 + p * 0.3), { params: res.params })
   const rep = await measureFile(out.blob, `${t.title}.${out.ext}`, { ...opts, format: out.ext })
   onProgress('보관함에 올리는 중', 0.92)
   const r = await fetch(withBase('/api/studio/mastering-upload'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ext: out.ext }) })
@@ -75,5 +77,6 @@ export async function quickMaster(
   if (!save.ok) throw new Error('save')
   const row = await save.json().catch(() => ({}))
   onProgress('완료', 1)
-  return { id: row.id, title, integrated: rep.integrated, truePeak: rep.truePeak, targetLufs: res.targetLufs }
+  const makeWav = async (p?: (x: number) => void) => (await renderTrackFile(t, { ...opts, format: 'wav' }, x => p?.(x), { params: res.params })).blob
+  return { id: row.id, title, integrated: rep.integrated, truePeak: rep.truePeak, targetLufs: res.targetLufs, makeWav }
 }

@@ -31,6 +31,21 @@ describe('TrackMenu', () => {
     expect(p.onTrash).toHaveBeenCalled()
   })
 
+  it('WAV 내려받기가 있으면 MP3·WAV 두 줄 — MP3 곡엔 변환 안내, 예전 WAV 곡은 WAV 만', () => {
+    const wav = vi.fn()
+    const { unmount } = render(<TrackMenu {...base({ item: { id: 'a', audio_url: 'audio/x.mp3', form: {} }, onDownloadWav: wav })} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.getByText('MP3 내려받기')).toBeTruthy()
+    expect(screen.getByText('MP3 를 WAV 로 변환한 파일')).toBeTruthy()
+    fireEvent.click(screen.getByText(/^WAV 내려받기/))
+    expect(wav).toHaveBeenCalled()
+    unmount()
+    render(<TrackMenu {...base({ item: { id: 'a', audio_url: 'audio/mastered-1.wav', form: {} }, onDownloadWav: wav })} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.queryByText('MP3 내려받기')).toBeNull()
+    expect(screen.queryByText('MP3 를 WAV 로 변환한 파일')).toBeNull()
+  })
+
   it('공개된 곡은 휴지통 항목이 비활성이고 안내가 보인다', () => {
     const p = base({ item: { id: 'a', is_published: true, form: {} } })
     render(<TrackMenu {...p} />)

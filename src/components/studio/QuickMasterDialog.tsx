@@ -26,6 +26,24 @@ export default function QuickMasterDialog({
   const [run, setRun] = useState<{ label: string; p: number } | null>(null)
   const [error, setError] = useState('')
   const [result, setResult] = useState<QuickResult | null>(null)
+  const [wav, setWav] = useState<{ busy: boolean; p: number; err: string }>({ busy: false, p: 0, err: '' })
+
+  /** 같은 처리 결과를 브라우저에서 WAV 로 만들어 바로 내려받는다(업로드 없음) */
+  const downloadWav = async () => {
+    if (!result || wav.busy) return
+    setWav({ busy: true, p: 0, err: '' })
+    try {
+      const blob = await result.makeWav(p => setWav(w => ({ ...w, p })))
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `${result.title.replace(/[\\/:*?"<>|]/g, '_')}.wav`
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      setWav({ busy: false, p: 1, err: '' })
+    } catch {
+      setWav({ busy: false, p: 0, err: 'WAV 를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.' })
+    }
+  }
 
   const start = async () => {
     setError('')
@@ -83,7 +101,7 @@ export default function QuickMasterDialog({
           </div>
         </fieldset>
 
-        <p className="text-[11px] text-zinc-500">원곡은 그대로 두고, 마스터링한 곡을 별도 WAV 로 보관함에 새로 저장합니다. 처리는 이 브라우저에서 하며 크레딧이 들지 않습니다(무료).</p>
+        <p className="text-[11px] text-zinc-500">원곡은 그대로 두고, 마스터링한 곡을 별도 MP3(320kbps)로 보관함에 새로 저장합니다. 처리는 이 브라우저에서 하며 크레딧이 들지 않습니다(무료).</p>
 
         {run && (
           <div role="status" className="space-y-1">
@@ -96,6 +114,15 @@ export default function QuickMasterDialog({
           <p role="status" className="text-xs text-primary">
             완료: 「{result.title}」을 보관함에 저장했어요 ({result.integrated.toFixed(1)} LUFS · {result.truePeak.toFixed(1)} dBTP).
           </p>
+        )}
+        {result && (
+          <div className="space-y-1">
+            <button type="button" onClick={downloadWav} disabled={wav.busy} className="px-4 py-2 text-xs font-bold text-zinc-200 rounded-xl border border-[#262626] cursor-pointer disabled:opacity-40">
+              {wav.busy ? `WAV 만드는 중 ${Math.round(wav.p * 100)}%` : 'WAV 로 내려받기'}
+            </button>
+            <p className="text-[10px] text-zinc-500">WAV 는 이 브라우저에서 바로 만들어 내려받고, 보관함에는 올리지 않아요.</p>
+            {wav.err && <p role="alert" className="text-[11px] text-red-400">{wav.err}</p>}
+          </div>
         )}
 
         <div className="flex flex-wrap items-center gap-3 pt-1">

@@ -17,7 +17,9 @@ export async function downloadStudioTrack(url: string, title: string, imageUrl?:
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
-  anchor.download = /\.mp3$/i.test(title) ? title : `${title}.mp3`
+  // 예전에 WAV 로 저장된 마스터링 곡은 원본 그대로 받으니 확장자도 wav
+  const ext = /\.wav(\?|$)/i.test(url) ? 'wav' : 'mp3'
+  anchor.download = new RegExp(`\\.${ext}$`, 'i').test(title) ? title : `${title}.${ext}`
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()

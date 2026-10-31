@@ -13,6 +13,7 @@ import { decodeAudio, computePeaks, renderChain, autoMatchLoudness, mixStems, jo
 import { analyzeAudio, loudestWindow, matchingCurve, type Analysis } from '@/lib/mastering/analyze'
 import { masterToTarget, refineGain } from '@/lib/mastering/automaster'
 import { TEMPLATES, type MasterTemplate } from '@/lib/mastering/templates'
+import { sourceSampleRate } from '@/lib/mastering/sniffRate'
 import { encodeWav, tagMp3, makeZip, readZip, type BitDepth, type DitherKind, type TrackMeta } from '@/lib/mastering/fileformats'
 import { MasteringEngine } from './engine'
 import { registerDecoder, registerApplied, settleRendered } from './destination'
@@ -382,7 +383,8 @@ async function coverBytes(url?: string | null): Promise<TrackMeta['cover']> {
 
 /** 한 곡을 렌더해 파일로 */
 export async function renderTrackFile(t: TrackItem, opts: ExportOpts, onP: (p: number) => void, extra?: { trackNo?: string; noMeta?: boolean; params?: ChainParams }) {
-  const dec = await decodeTrack(t, opts.rate)
+  // MP3 인코더는 44.1/48kHz 만 받는다 — 96kHz 선택은 48kHz 로
+  const dec = await decodeTrack(t, opts.format === 'mp3' && opts.rate === 96000 ? 48000 : opts.rate)
   const { loop } = ui()
   const useLoop = opts.range === 'loop' && loop && t.id === st().activeId
   // 비교용 원본 듣기·음량 맞춤은 내보내기에 들어가지 않는다
@@ -616,22 +618,15 @@ export async function albumLoudness(mode: 'each' | 'album') {
 
 // ───────────────────────── 보관함 저장 ─────────────────────────
 
-const UPLOAD_LIMIT = 50 * 1024 * 1024
-
 export async function saveToLibrary() {
   const t = activeTrackNow()
   if (!t) return
   cancelRef.cancelled = false
-  const opts = { ...ui().exportOpts, range: 'all' as const }
-  busy('마스터링본 만드는 중')
+  // 보관함에는 항상 MP3(320kbps) — WAV 는 올리지 않는다. 샘플레이트는 원본(44.1/48k)을 따른다.
+  const opts = { ...ui().exportOpts, format: 'mp3' as const, rate: await sourceSampleRate(t.blob), range: 'all' as const }
+  busy('MP3 마스터링본 만드는 중')
   try {
-    let out = await renderTrackFile(t, opts, progress)
-    let note = ''
-    if (out.blob.size > UPLOAD_LIMIT) {
-      busy('용량이 커서 MP3 로 바꾸는 중')
-      out = await renderTrackFile(t, { ...opts, format: 'mp3' }, progress)
-      note = ' (용량이 커서 MP3 320kbps 로 저장했어요)'
-    }
+    const out = await renderTrackFile(t, opts, progress)
     const rep = await measureFile(out.blob, `${t.title}.${out.ext}`, { ...opts, format: out.ext })
     busy('보관함에 올리는 중', 0.5)
     const r = await fetch(withBase('/api/studio/mastering-upload'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ext: out.ext }) })
@@ -654,7 +649,7 @@ export async function saveToLibrary() {
     })
     if (!save.ok) throw new Error('save')
     ui().set({ reports: [rep, ...ui().reports] })
-    notify('ok', `보관함에 「${t.meta.title || t.title} (마스터링)」을 새 곡으로 저장했어요${note}. 원곡은 그대로 있어요.`)
+    notify('ok', `보관함에 「${t.meta.title || t.title} (마스터링)」을 새 곡(MP3 320kbps)으로 저장했어요. 원곡은 그대로 있어요.`)
   } catch (e) {
     if (isCancel(e)) notify('info', '저장을 멈췄어요.')
     else { console.error(e); notify('err', '저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.') }

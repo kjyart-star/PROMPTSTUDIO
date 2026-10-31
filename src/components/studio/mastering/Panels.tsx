@@ -539,7 +539,7 @@ export function ExportPanel() {
         )}
         <div className="flex flex-wrap gap-2">
           <button type="button" className={btn} disabled={!t || !!busy} onClick={exportActive}><Download className="w-3.5 h-3.5" /> 내려받기</button>
-          <button type="button" className={btnPrimary} disabled={!t || !!busy} onClick={saveToLibrary}><Save className="w-3.5 h-3.5" /> 보관함에 새 곡으로 저장</button>
+          <button type="button" className={btnPrimary} disabled={!t || !!busy} onClick={saveToLibrary}><Save className="w-3.5 h-3.5" /> 보관함에 새 곡으로 저장 (MP3 320kbps)</button>
           {ntracks > 1 && <button type="button" className={btn} disabled={!!busy} onClick={exportAlbumZip}><Download className="w-3.5 h-3.5" /> {ntracks}곡 ZIP</button>}
         </div>
       </div>

@@ -31,6 +31,9 @@ const T = {
   playlist: { KO: '재생목록에 추가', JA: 'プレイリストに追加', EN: 'Add to playlist' },
   noPlaylist: { KO: '재생목록에서 빼기', JA: 'プレイリストから外す', EN: 'Remove from playlist' },
   download: { KO: '내려받기', JA: 'ダウンロード', EN: 'Download' },
+  dlMp3: { KO: 'MP3 내려받기', JA: 'MP3 をダウンロード', EN: 'Download MP3' },
+  dlWav: { KO: 'WAV 내려받기', JA: 'WAV をダウンロード', EN: 'Download WAV' },
+  wavNote: { KO: 'MP3 를 WAV 로 변환한 파일', JA: 'MP3 を WAV に変換したファイル', EN: 'MP3 converted to WAV' },
   trash: { KO: '휴지통으로 이동', JA: 'ゴミ箱へ移動', EN: 'Move to trash' },
   trashLocked: { KO: '쿠키뮤직에 공개된 곡은 휴지통으로 보낼 수 없습니다', JA: '公開中の曲はゴミ箱へ移動できません', EN: 'Published tracks cannot be moved to trash' },
   title: { KO: '제목', JA: 'タイトル', EN: 'Title' },
@@ -62,6 +65,8 @@ export interface TrackMenuProps {
   /** 재생목록 보기에서만 넘긴다 */
   onMove?: (dir: -1 | 1) => void
   onDownload: () => void
+  /** 있으면 「MP3 내려받기」·「WAV 내려받기」 두 줄로 보인다 */
+  onDownloadWav?: () => void
   onTrash: () => void
 }
 
@@ -168,7 +173,16 @@ export default function TrackMenu(p: TrackMenuProps) {
           )}
           {p.onMove && <button role="menuitem" className={row} onClick={() => { p.onMove!(-1); close() }}>{T.up[l]}</button>}
           {p.onMove && <button role="menuitem" className={row} onClick={() => { p.onMove!(1); close() }}>{T.down[l]}</button>}
-          <button role="menuitem" className={row} onClick={() => { p.onDownload(); close() }}>{T.download[l]}</button>
+          {!p.onDownloadWav && <button role="menuitem" className={row} onClick={() => { p.onDownload(); close() }}>{T.download[l]}</button>}
+          {p.onDownloadWav && !/\.wav(\?|$)/i.test(p.item.audio_url || '') && (
+            <button role="menuitem" className={row} onClick={() => { p.onDownload(); close() }}>{T.dlMp3[l]}</button>
+          )}
+          {p.onDownloadWav && (
+            <button role="menuitem" className={row} onClick={() => { p.onDownloadWav!(); close() }}>
+              {T.dlWav[l]}
+              {!/\.wav(\?|$)/i.test(p.item.audio_url || '') && <span className="block text-[10px] text-zinc-500">{T.wavNote[l]}</span>}
+            </button>
+          )}
           <div className="my-1 h-px bg-[#232323]" />
           <button role="menuitem" disabled={!!p.item.is_published} title={p.item.is_published ? T.trashLocked[l] : undefined}
             className={`${row} !text-red-400 hover:!bg-red-500/10`} onClick={() => { p.onTrash(); close() }}>{T.trash[l]}</button>

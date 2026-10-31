@@ -117,6 +117,47 @@ export async function encodeAudioBufferToMp3(
   kbps: number = 320,
   onProgress?: (percent: number) => void
 ): Promise<Blob> {
+  if (typeof Worker !== 'undefined') {
+    try { return await encodeMp3InWorker(buffer, kbps, onProgress) } catch (e) { console.warn('MP3 워커 인코딩 실패 — 화면 스레드로 다시 시도해요', e) }
+  }
+  return encodeMp3OnMainThread(buffer, kbps, onProgress)
+}
+
+/**
+ * Web Worker 에서 인코딩한다. 약 1.5초(64프레임)씩 Int16 으로 바꿔 보내고 워커가 ack 하면 다음 조각을 보내
+ * 화면이 멈추지 않고, 전체 곡을 Int16 으로 한꺼번에 만들지 않아 메모리도 폭증하지 않는다.
+ */
+function encodeMp3InWorker(buffer: AudioBuffer, kbps: number, onProgress?: (percent: number) => void): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const channels = buffer.numberOfChannels >= 2 ? 2 : 1
+    const L = buffer.getChannelData(0)
+    const R = channels === 2 ? buffer.getChannelData(1) : null
+    const total = L.length
+    const step = 1152 * 64
+    const w = new Worker(withBase('/vendor/mp3-encoder-worker.js'))
+    let pos = 0
+    const fail = (e: unknown) => { w.terminate(); reject(e instanceof Error ? e : new Error(String((e as ErrorEvent)?.message ?? e))) }
+    const next = () => {
+      if (pos >= total) { w.postMessage({ type: 'end' }); return }
+      const l = floatTo16BitArray(L.subarray(pos, pos + step))
+      const r = R ? floatTo16BitArray(R.subarray(pos, pos + step)) : null
+      pos += step
+      onProgress?.(Math.min(99, Math.round((pos / total) * 100)))
+      w.postMessage({ type: 'pcm', l: l.buffer, r: r?.buffer }, r ? [l.buffer, r.buffer] : [l.buffer])
+    }
+    w.onmessage = (e: MessageEvent) => {
+      const m = e.data
+      if (m.type === 'ack') next()
+      else if (m.type === 'done') { w.terminate(); onProgress?.(100); resolve(new Blob(m.chunks as BlobPart[], { type: 'audio/mpeg' })) }
+      else if (m.type === 'error') fail(new Error(m.message))
+    }
+    w.onerror = fail
+    w.postMessage({ type: 'init', channels, rate: buffer.sampleRate, kbps })
+    next()
+  })
+}
+
+async function encodeMp3OnMainThread(buffer: AudioBuffer, kbps: number, onProgress?: (percent: number) => void): Promise<Blob> {
   const { Mp3Encoder } = await loadLamejs()
   const channels = buffer.numberOfChannels >= 2 ? 2 : 1
   const encoder = new Mp3Encoder(channels, buffer.sampleRate, kbps)
@@ -144,7 +185,7 @@ export async function encodeAudioBufferToMp3(
   if (finalBuf.length > 0) chunks.push(finalBuf)
   onProgress?.(100)
 
-  return new Blob(chunks as BlobPart[], { type: 'audio/mp3' })
+  return new Blob(chunks as BlobPart[], { type: 'audio/mpeg' })
 }
 
 function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array) {
