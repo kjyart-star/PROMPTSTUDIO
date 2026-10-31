@@ -170,4 +170,24 @@ describe('PersistentPlayer', () => {
     expect(usePlayerStore.getState().isNowPlayingOpen).toBe(true)
     expect(usePlayerStore.getState().isImmersiveOpen).toBe(false)
   })
+
+  it('곡이 끝나면: 끔은 마지막 곡에서 정지, 전체 반복은 첫 곡으로, 한 곡 반복은 같은 곡을 처음부터', async () => {
+    const q = [track('a'), track('b')]
+    const { container } = render(<PersistentPlayer />)
+    act(() => usePlayerStore.setState({ repeatMode: 'off', isShuffle: false }))
+    act(() => usePlayerStore.getState().playTrack(q[1], q))
+    await wait(100)
+    const audio = container.querySelector('audio')!
+    act(() => { audio.dispatchEvent(new Event('ended')) })
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+    expect(usePlayerStore.getState().currentTrack?.id).toBe('b')
+    act(() => usePlayerStore.setState({ repeatMode: 'all', isPlaying: true }))
+    act(() => { audio.dispatchEvent(new Event('ended')) })
+    expect(usePlayerStore.getState().currentTrack?.id).toBe('a')
+    act(() => usePlayerStore.setState({ repeatMode: 'one', isPlaying: true }))
+    act(() => { audio.dispatchEvent(new Event('ended')) })
+    expect(usePlayerStore.getState().currentTrack?.id).toBe('a')
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+    expect(usePlayerStore.getState().currentTime).toBe(0)
+  })
 })

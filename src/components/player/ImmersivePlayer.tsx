@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
@@ -16,6 +16,7 @@ import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
 import { CassettePlayer, CS_CSS } from './CassettePlayer';
 import { LpDisc } from './LpDisc';
+import { ImmBackground, BG_CSS } from './ImmBackground';
 import { VolumeControl, VOL_CTL_CSS } from './VolumeControl';
 import type { Track } from '@/types/music';
 
@@ -124,6 +125,7 @@ export function ImmersivePlayer() {
   const {
     isImmersiveOpen, setImmersiveOpen, currentTrack, queue, queueIndex,
     isPlaying, currentTime, duration, togglePlay, next, prev, seek,
+    isShuffle, repeatMode, toggleShuffle, toggleRepeatMode,
   } = usePlayerStore();
   const reduced = usePrefersReducedMotion();
   const [lang, setLang] = useState<'KO' | 'EN' | 'JA'>('KO');
@@ -204,15 +206,6 @@ export function ImmersivePlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isImmersiveOpen, reduced]);
 
-  // 배경은 곡이 바뀔 때 이전 커버 위로 새 커버가 서서히 겹쳐 나타난다
-  const coverNow = currentTrack ? coverOf(currentTrack) : '';
-  const [bgPrev, setBgPrev] = useState('');
-  const bgCur = useRef(coverNow);
-  useEffect(() => {
-    if (coverNow && coverNow !== bgCur.current) { setBgPrev(bgCur.current); bgCur.current = coverNow; }
-    else if (coverNow) bgCur.current = coverNow;
-  }, [coverNow]);
-
   if ((!isImmersiveOpen && !mounted) || !currentTrack) return null;
   const closing = !isImmersiveOpen;
 
@@ -224,9 +217,8 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
-      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS}</style>
-      {bgPrev && bgPrev !== cover && <img key={`p-${bgPrev}`} className="imm-bg" src={bgPrev} alt="" aria-hidden="true" />}
-      <img key={cover} className={`imm-bg${bgPrev ? ' imm-bg-fade' : ''}`} src={cover} alt="" aria-hidden="true" />
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS}</style>
+      <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
 
@@ -310,11 +302,13 @@ export function ImmersivePlayer() {
           <span>{fmt(dur)}</span>
         </div>
         <div className="imm-ctrl">
+          <button className={`imm-mode${isShuffle ? ' is-on' : ''}`} onClick={toggleShuffle} aria-pressed={isShuffle} aria-label={isShuffle ? '셔플 끄기' : '셔플 켜기'} title="셔플 (S)"><Shuffle size={19} /></button>
           <button onClick={prev} aria-label={t.prev}><SkipBack size={22} /></button>
           <button className="imm-play" onClick={togglePlay} aria-label={isPlaying ? t.pause : t.play}>
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
           </button>
           <button onClick={next} aria-label={t.next}><SkipForward size={22} /></button>
+          <button className={`imm-mode${repeatMode !== 'off' ? ' is-on' : ''}`} onClick={toggleRepeatMode} aria-label={repeatMode === 'one' ? '반복: 한 곡' : repeatMode === 'all' ? '반복: 전체' : '반복: 끔'} title="반복 (R)">{repeatMode === 'one' ? <Repeat1 size={19} /> : <Repeat size={19} />}</button>
           <div className="imm-vol"><VolumeControl /></div>
         </div>
       </footer>
@@ -324,8 +318,6 @@ export function ImmersivePlayer() {
 
 const IMM_CSS = `
 .imm-root{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;color:#f4efe8;background:#0d0d0d;overflow:hidden;font-family:inherit}
-.imm-bg{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;filter:blur(70px) saturate(1.5) brightness(.85);transform:scale(1.1)}
-.imm-bg-fade{animation:imm-fadein .9s ease-out both}
 @keyframes imm-fadein{from{opacity:0}to{opacity:1}}
 @keyframes imm-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .imm-swap{animation:imm-rise .5s cubic-bezier(.2,.8,.2,1) both}
@@ -337,7 +329,7 @@ const IMM_CSS = `
 .imm-in{animation:imm-open .42s cubic-bezier(.2,.8,.2,1) both}
 .imm-out{animation:imm-close .28s ease-in both;pointer-events:none}
 .imm-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,13,.25),rgba(13,13,13,.78) 85%)}
-.imm-root>*:not(.imm-bg):not(.imm-veil){position:relative}
+.imm-root>*:not(.imm-bgwrap):not(.imm-veil):not(.cs-woodbg){position:relative}
 .imm-top{display:flex;justify-content:flex-start;align-items:center;padding:16px 20px}
 .imm-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px)}
 .imm-tabs button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:7px;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);cursor:pointer}
@@ -377,6 +369,9 @@ const IMM_CSS = `
 .imm-seekrow input{flex:1;height:4px;-webkit-appearance:none;appearance:none;border-radius:2px;cursor:pointer;background:linear-gradient(90deg,#fff var(--p,0%),rgba(255,255,255,.22) var(--p,0%))}
 .imm-seekrow input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff}
 .imm-seekrow input::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff}
+.imm-ctrl .imm-mode{width:38px;height:38px;color:rgba(255,255,255,.55);position:relative}
+.imm-ctrl .imm-mode.is-on{color:#fff}
+.imm-ctrl .imm-mode.is-on::after{content:'';position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fff}
 .imm-vol{position:absolute;right:0;top:50%;transform:translateY(-50%)}
 .imm-cassette .imm-vol{display:none}
 @media (max-width:820px){.imm-vol .vol-ctl input{width:64px}}
@@ -396,6 +391,6 @@ const IMM_CSS = `
 @media (prefers-reduced-motion:reduce){
   .imm-spin{animation:none}
   .imm-line,.imm-orbit-arc{transition:none}
-  .imm-in,.imm-out,.imm-swap,.imm-bg-fade,.imm-breathe{animation:none}
+  .imm-in,.imm-out,.imm-swap,.imm-breathe{animation:none}
 }
 `;

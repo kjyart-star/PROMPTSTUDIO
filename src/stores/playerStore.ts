@@ -15,6 +15,27 @@ export function hydrateVolume() {
   } catch { /* ignore */ }
 }
 
+const MODE_KEY = 'cm.playmode';
+function saveMode(shuffle: boolean, repeat: string) {
+  try { localStorage.setItem(MODE_KEY, JSON.stringify({ s: shuffle, r: repeat })); } catch { /* private mode */ }
+}
+/** 현재 곡을 맨 앞에 두고 나머지만 섞는다 */
+export function shuffledWithCurrent(queue: Track[], current: Track | null): Track[] {
+  const rest = queue.filter((t) => t.id !== current?.id);
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+  return current && queue.some((t) => t.id === current.id) ? [current, ...rest] : rest;
+}
+/** 저장된 셔플·반복 상태를 읽는다(마운트 때 한 번) */
+export function hydratePlayMode() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(MODE_KEY) || 'null');
+    if (raw) usePlayerStore.setState({ isShuffle: !!raw.s, repeatMode: raw.r === 'all' || raw.r === 'one' ? raw.r : 'off' });
+  } catch { /* ignore */ }
+}
+
 interface PlayerState {
   currentTrack: Track | null;
   queue: Track[];
@@ -36,6 +57,10 @@ interface PlayerState {
 
   // Shuffle & Repeat state
   isShuffle: boolean;
+  /** 셔플을 켜기 전의 원래 순서 — 끄면 이 순서로 돌아간다 */
+  originalQueue: Track[] | null;
+  /** 셔플·반복 상태가 바뀔 때 화면 가운데에 잠깐 띄우는 알림 */
+  modeNote: { n: number; text: string } | null;
   repeatMode: 'off' | 'all' | 'one';
   seekTrigger: number | null;
 
@@ -108,17 +133,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setShortcutHelpOpen: (open) => set({ isShortcutHelpOpen: open }),
   setImmersiveOpen: (open) => set({ isImmersiveOpen: open }),
   isShuffle: false,
+  originalQueue: null,
+  modeNote: null,
   repeatMode: 'off',
   seekTrigger: null,
   getFrequencyData: null,
   _setGetFrequencyData: (fn) => set({ getFrequencyData: fn }),
 
   playTrack: (track, queue) => {
-    const newQueue = queue ?? [track];
+    const st = get();
+    let newQueue = queue ?? [track];
+    let original: Track[] | null = st.originalQueue;
+    // 셔플 중에 새 목록을 틀면 그 목록을 섞는다(고른 곡이 맨 앞). 지금 대기열을 그대로 넘기면(커버플로 클릭 등) 순서를 유지한다.
+    if (st.isShuffle && newQueue !== st.queue && newQueue.length > 1) {
+      original = newQueue;
+      newQueue = shuffledWithCurrent(newQueue, track);
+    } else if (!st.isShuffle) original = null;
     const newIndex = newQueue.findIndex((t) => t.id === track.id);
     set({
       currentTrack: track,
       queue: newQueue,
+      originalQueue: original,
       queueIndex: newIndex >= 0 ? newIndex : 0,
       isPlaying: true,
       progress: 0,
@@ -136,22 +171,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   next: () => {
-    const { queue, queueIndex, isShuffle, repeatMode } = get();
+    const { queue, queueIndex, repeatMode } = get();
     if (queue.length === 0) return;
 
+    // 셔플은 대기열 자체가 섞인 순서라 앞으로만 가면 된다. 끝에서: 전체 반복이면 처음으로, 아니면 정지
     let nextIndex = -1;
-    if (isShuffle && queue.length > 1) {
-      nextIndex = queueIndex;
-      while (nextIndex === queueIndex) {
-        nextIndex = Math.floor(Math.random() * queue.length);
-      }
-    } else {
-      if (queueIndex < queue.length - 1) {
-        nextIndex = queueIndex + 1;
-      } else if (repeatMode === 'all') {
-        nextIndex = 0;
-      }
-    }
+    if (queueIndex < queue.length - 1) nextIndex = queueIndex + 1;
+    else if (repeatMode === 'all') nextIndex = 0;
 
     if (nextIndex >= 0) {
       const nextTrack = queue[nextIndex];
@@ -170,7 +196,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   prev: () => {
-    const { queue, queueIndex, currentTime, isShuffle, repeatMode } = get();
+    const { queue, queueIndex, currentTime, repeatMode } = get();
     if (queue.length === 0) return;
 
     if (currentTime > 3) {
@@ -179,18 +205,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
 
     let prevIndex = -1;
-    if (isShuffle && queue.length > 1) {
-      prevIndex = queueIndex;
-      while (prevIndex === queueIndex) {
-        prevIndex = Math.floor(Math.random() * queue.length);
-      }
-    } else {
-      if (queueIndex > 0) {
-        prevIndex = queueIndex - 1;
-      } else if (repeatMode === 'all') {
-        prevIndex = queue.length - 1;
-      }
-    }
+    if (queueIndex > 0) prevIndex = queueIndex - 1;
+    else if (repeatMode === 'all') prevIndex = queue.length - 1;
 
     if (prevIndex >= 0) {
       const prevTrack = queue[prevIndex];
@@ -227,15 +243,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ isNowPlayingOpen: open });
   },
 
-  toggleShuffle: () => set((s) => ({ isShuffle: !s.isShuffle })),
-  toggleRepeatMode: () => set((s) => {
-    const nextModeMap: Record<'off' | 'all' | 'one', 'off' | 'all' | 'one'> = {
-      'off': 'all',
-      'all': 'one',
-      'one': 'off',
-    };
-    return { repeatMode: nextModeMap[s.repeatMode] };
-  }),
+  toggleShuffle: () => {
+    const st = get();
+    const on = !st.isShuffle;
+    const cur = st.currentTrack;
+    let patch: Partial<PlayerState> = { isShuffle: on, modeNote: { n: (st.modeNote?.n ?? 0) + 1, text: on ? '셔플 켬' : '셔플 끔' } };
+    if (on && st.queue.length > 1) {
+      const q = shuffledWithCurrent(st.queue, cur);
+      patch = { ...patch, originalQueue: st.queue, queue: q, queueIndex: Math.max(0, q.findIndex((t) => t.id === cur?.id)) };
+    } else if (!on && st.originalQueue) {
+      const q = st.originalQueue;
+      patch = { ...patch, originalQueue: null, queue: q, queueIndex: Math.max(0, q.findIndex((t) => t.id === cur?.id)) };
+    }
+    set(patch);
+    saveMode(on, st.repeatMode);
+  },
+  toggleRepeatMode: () => {
+    const st = get();
+    const next = ({ off: 'all', all: 'one', one: 'off' } as const)[st.repeatMode];
+    set({ repeatMode: next, modeNote: { n: (st.modeNote?.n ?? 0) + 1, text: next === 'all' ? '전체 반복' : next === 'one' ? '한 곡 반복' : '반복 끔' } });
+    saveMode(st.isShuffle, next);
+  },
 
   _setIsPlaying: (v) => set({ isPlaying: v }),
   _setProgress: (currentTime, duration) =>

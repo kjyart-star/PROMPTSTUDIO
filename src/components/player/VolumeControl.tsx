@@ -47,6 +47,25 @@ export function VolumeControl({ variant = 'bar' }: { variant?: 'bar' | 'deck' })
   );
 }
 
+/** 셔플·반복 상태가 바뀌면 화면 가운데에 1.2초 떠 있는 알림 */
+export function ModeToast() {
+  const note = usePlayerStore((s) => s.modeNote);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!note) return;
+    setOn(true);
+    const id = setTimeout(() => setOn(false), 1200);
+    return () => clearTimeout(id);
+  }, [note]);
+  if (!on || !note) return null;
+  return (
+    <div className="mode-toast" role="status" aria-live="polite" data-testid="mode-toast">
+      <style>{VOL_CSS}</style>
+      {note.text}
+    </div>
+  );
+}
+
 /** 키보드(↑/↓·M)로 볼륨을 바꿀 때 화면 가운데 위쪽에 1.2초 떠 있는 표시 */
 export function VolumeHud() {
   const tick = usePlayerStore((s) => s.volumeHudTick);
@@ -72,6 +91,9 @@ export function VolumeHud() {
 }
 
 export const VOL_CSS = `
+.mode-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:140;padding:12px 22px;border-radius:999px;background:rgba(18,18,20,.86);backdrop-filter:blur(14px);color:#fff;font:700 15px/1 inherit;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none;animation:mode-pop .2s ease-out both}
+@keyframes mode-pop{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%)}}
+@media (prefers-reduced-motion:reduce){.mode-toast{animation:none}}
 .vol-hud{position:fixed;top:clamp(56px,9vh,96px);left:50%;transform:translateX(-50%);z-index:140;display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:999px;background:rgba(18,18,20,.82);backdrop-filter:blur(14px);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none;animation:vol-pop .18s ease-out both}
 .vol-hud b{min-width:3ch;font:700 13px/1 inherit;font-variant-numeric:tabular-nums;text-align:right}
 .vol-hud-bar{display:block;width:140px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}

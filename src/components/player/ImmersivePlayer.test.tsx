@@ -252,4 +252,18 @@ describe('ImmersivePlayer', () => {
       expect(seek).toHaveBeenCalled()
     } finally { vi.useRealTimers() }
   })
+
+  it('전체 화면 셔플·반복 버튼이 스토어 상태와 알림에 연결된다', () => {
+    const q = [trk('1'), trk('2'), trk('3')]
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: q[0], queue: q, queueIndex: 0, isShuffle: false, repeatMode: 'off', originalQueue: null })
+    render(<ImmersivePlayer />)
+    fireEvent.click(screen.getByLabelText('셔플 켜기'))
+    expect(usePlayerStore.getState().isShuffle).toBe(true)
+    expect(usePlayerStore.getState().queue[0].id).toBe('1')
+    fireEvent.click(screen.getByLabelText('반복: 끔'))
+    expect(usePlayerStore.getState().repeatMode).toBe('all')
+    fireEvent.click(screen.getByLabelText('반복: 전체'))
+    expect(usePlayerStore.getState().repeatMode).toBe('one')
+    expect(screen.getByLabelText('반복: 한 곡')).toBeTruthy()
+  })
 })

@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, Square, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, Square, SkipBack, SkipForward, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
 import { binSpectrum } from '@/lib/audio/spectrumTap';
 import { useSpinRamp } from './useSpinRamp';
@@ -171,6 +171,10 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
   const duration = usePlayerStore((s) => s.duration);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const seek = usePlayerStore((s) => s.seek);
+  const isShuffle = usePlayerStore((s) => s.isShuffle);
+  const repeatMode = usePlayerStore((s) => s.repeatMode);
+  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
+  const toggleRepeatMode = usePlayerStore((s) => s.toggleRepeatMode);
 
   // 곡이 바뀌면 카세트가 빠지고(out) 새 카세트가 들어온다(in)
   const [shown, setShown] = useState<Track | null>(currentTrack);
@@ -256,7 +260,11 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
         <div className="cs-panel">
           <div className="cs-counter" aria-label="카운터"><span className="cs-cnt">{counter}</span></div>
           <Leds playing={isPlaying} reduced={reduced} />
-          <div className="cs-vol"><VolumeControl variant="deck" /></div>
+          <div className="cs-vol">
+            <button type="button" className={`cs-tog${isShuffle ? ' is-on' : ''}`} onClick={toggleShuffle} aria-pressed={isShuffle} aria-label={isShuffle ? '셔플 끄기' : '셔플 켜기'} title="셔플 (S)"><i /><Shuffle size={13} /></button>
+            <button type="button" className={`cs-tog${repeatMode !== 'off' ? ' is-on' : ''}`} onClick={toggleRepeatMode} aria-label={repeatMode === 'one' ? '반복: 한 곡' : repeatMode === 'all' ? '반복: 전체' : '반복: 끔'} title="반복 (R)"><i />{repeatMode === 'one' ? <Repeat1 size={13} /> : <Repeat size={13} />}</button>
+            <VolumeControl variant="deck" />
+          </div>
           <div className="cs-keys" role="group" aria-label="카세트 버튼">
             <button type="button" className={`cs-key${pressed === 'rew' ? ' is-down' : ''}`} aria-label="이전 곡" title="짧게: 이전 곡 · 길게: 되감기" onPointerDown={startHold(-5, 'rew')} onPointerUp={endHold(goPrev)} onPointerLeave={stopHold} onPointerCancel={stopHold} onClick={keyClick(goPrev, 'rew')}><SkipBack size={16} /></button>
             <button type="button" className={`cs-key${isPlaying ? ' is-down' : ''}`} aria-label={isPlaying ? '일시정지' : '재생'} aria-pressed={isPlaying} onClick={playPause}>{isPlaying ? <Pause size={16} /> : <Play size={16} />}</button>
@@ -315,7 +323,11 @@ export const CS_CSS = `
 .cs-ledcol i::before{content:'';position:absolute;inset:0;border-radius:1px;background:var(--c);box-shadow:0 0 5px var(--c);opacity:clamp(0,calc((var(--lit) - var(--k)) * 2.2),1)}
 .cs-ledcol i::after{content:'';position:absolute;inset:0;border-radius:1px;background:#fff6dc;box-shadow:0 0 6px #ffe9a8;opacity:clamp(0,calc(1 - (var(--peak) - 1 - var(--k)) * (var(--peak) - 1 - var(--k)) * 1000),1)}
 .cs-ledcol i:nth-child(1){--c:#3fd36b}.cs-ledcol i:nth-child(2){--c:#3fd36b}.cs-ledcol i:nth-child(3){--c:#3fd36b}.cs-ledcol i:nth-child(4){--c:#9bd93a}.cs-ledcol i:nth-child(5){--c:#e4d234}.cs-ledcol i:nth-child(6){--c:#ef8a2c}.cs-ledcol i:nth-child(7){--c:#e5412f}
-.cs-vol{grid-column:1/-1;justify-self:end}
+.cs-vol{grid-column:1/-1;justify-self:end;display:flex;align-items:center;gap:10px}
+.cs-tog{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:5px;color:#b9b4a6;background:linear-gradient(180deg,#34343a,#222226);box-shadow:0 2px 0 #0d0d0f,inset 0 1px 0 rgba(255,255,255,.12);cursor:pointer;font-size:11px}
+.cs-tog i{width:6px;height:6px;border-radius:50%;background:#3a2a22;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.cs-tog.is-on i{background:#ffb347;box-shadow:0 0 6px #ff9a1f}
+.cs-tog.is-on{color:#fff;transform:translateY(1px);box-shadow:0 1px 0 #0d0d0f,inset 0 2px 3px rgba(0,0,0,.4)}
 .cs-keys{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .cs-key{height:46px;border-radius:5px 5px 3px 3px;display:grid;place-items:center;color:#222;cursor:pointer;background:linear-gradient(180deg,#d9d6cf,#aaa69d 55%,#8f8b82);box-shadow:0 5px 0 #4a4843,0 7px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7);transition:transform .08s ease-out,box-shadow .08s ease-out;will-change:transform}
 .cs-key.is-down{transform:translateY(4px);box-shadow:0 1px 0 #4a4843,0 2px 3px rgba(0,0,0,.6),inset 0 2px 4px rgba(0,0,0,.35);background:linear-gradient(180deg,#b9b5ac,#9a968d)}
