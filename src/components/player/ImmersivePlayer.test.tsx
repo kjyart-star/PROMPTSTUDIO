@@ -353,6 +353,24 @@ describe('ImmersivePlayer', () => {
       expect(playTrack).toHaveBeenCalledWith(q[1], q)
     })
 
+    it('재생목록: 행을 누르면 그 곡을 재생하고 지금 재생 화면으로 돌아가며, 키보드 ↑↓+Enter 도 같다', () => {
+      const { wheel, q, playTrack } = setup()
+      press(wheel, 100, 15) // 목록 화면
+      const rows = screen.getAllByRole('option')
+      expect(rows).toHaveLength(3)
+      expect(rows[0].getAttribute('aria-current')).toBe('true')       // 재생 중 표시
+      expect(rows[0].className).toContain('is-now')
+      fireEvent.click(rows[2])
+      expect(playTrack).toHaveBeenLastCalledWith(q[2], q)
+      expect(screen.queryByRole('listbox')).toBeNull()                // 지금 재생 화면으로 전환
+      press(wheel, 100, 15)
+      const list = screen.getByRole('listbox')
+      fireEvent.keyDown(list, { key: 'ArrowDown' })
+      expect(screen.getAllByRole('option')[1].getAttribute('aria-selected')).toBe('true')
+      fireEvent.keyDown(list, { key: 'Enter' })
+      expect(playTrack).toHaveBeenLastCalledWith(q[1], q)
+    })
+
     it('본체 색을 고르면 기억한다', () => {
       setup()
       fireEvent.click(screen.getByLabelText('스페이스그레이'))

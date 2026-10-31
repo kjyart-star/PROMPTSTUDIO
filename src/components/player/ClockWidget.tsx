@@ -14,7 +14,7 @@ type Size = 's' | 'm' | 'l';
 interface Cfg { hidden: boolean; pos: Pos; fx: number; fy: number; h24: boolean; sec: boolean; date: boolean; size: Size }
 const KEY = 'cm.clock';
 const DEFAULT: Cfg = { hidden: false, pos: 'tl', fx: 0.05, fy: 0.15, h24: false, sec: false, date: true, size: 'm' };
-const TOP_SAFE = 72, BOTTOM_SAFE = 214, SIDE = 20, SNAP = 90;
+const TOP_SAFE = 72, FOOTER_H = 186, FOOT_GAP = 28, SIDE = 20, SNAP = 90;
 export const CLOCK_EVENT = 'cm:clock-toggle';
 const POS_LABEL: Record<Exclude<Pos, 'free'>, string> = { tl: '왼쪽 위', tc: '가운데 위', tr: '오른쪽 위', bl: '왼쪽 아래', br: '오른쪽 아래' };
 
@@ -22,12 +22,24 @@ function load(): Cfg {
   try { return { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return DEFAULT; }
 }
 
-export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; pos: Pos }) => void }) {
+/** 시계가 차지하는 영역만큼 본문(기기·카드)을 밀어내기 위한 여백(px). 위쪽 시계면 위 여백, 아래쪽이면 아래 여백. */
+export function clockReserve(c: { hidden: boolean; pos: Pos; fy: number }, boxH: number, rootH: number, geo: { top: number; foot: number } = { top: TOP_SAFE, foot: FOOTER_H }): { t: number; b: number } {
+  if (c.hidden || !boxH) return { t: 0, b: 0 };
+  const gap = 8;
+  if (c.pos === 'tl' || c.pos === 'tr' || c.pos === 'tc') return { t: Math.round(boxH + gap), b: 0 };
+  if (c.pos === 'bl' || c.pos === 'br') return { t: 0, b: Math.round(boxH + FOOT_GAP + gap) };
+  const y = c.fy * rootH;
+  if (y + boxH / 2 < rootH / 2) return { t: Math.max(0, Math.round(y + boxH - geo.top + gap)), b: 0 };
+  return { t: 0, b: Math.max(0, Math.round(rootH - geo.foot - y + gap)) };
+}
+
+export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; pos: Pos; t: number; b: number }) => void }) {
   const [cfg, setCfg] = useState<Cfg>(DEFAULT);
   const [now, setNow] = useState(() => new Date());
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
+  const [geo, setGeo] = useState({ top: TOP_SAFE, foot: FOOTER_H });
   const [dragXY, setDragXY] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => { setCfg(load()); }, []);
@@ -36,7 +48,19 @@ export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; po
     try { localStorage.setItem(KEY, JSON.stringify(n)); } catch { /* private mode */ }
     return n;
   });
-  useEffect(() => { onLayout?.({ hidden: cfg.hidden, pos: cfg.pos }); }, [cfg.hidden, cfg.pos, onLayout]);
+  useEffect(() => {
+    const report = () => {
+      const el = box.current, par = el?.offsetParent as HTMLElement | null;
+      const hdr = par?.querySelector('.imm-top') as HTMLElement | null, ftr = par?.querySelector('.imm-bottom') as HTMLElement | null;
+      const g = { top: hdr ? hdr.offsetHeight : TOP_SAFE, foot: par && ftr ? par.clientHeight - ftr.offsetTop : FOOTER_H };
+      setGeo((o) => (o.top === g.top && o.foot === g.foot ? o : g));
+      const r = clockReserve(cfg, el ? el.offsetHeight : 0, par ? par.clientHeight : 0, g);
+      onLayout?.({ hidden: cfg.hidden, pos: cfg.pos, ...r });
+    };
+    report();
+    window.addEventListener('resize', report);
+    return () => window.removeEventListener('resize', report);
+  }, [cfg, now.getMinutes(), onLayout]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -54,8 +78,8 @@ export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; po
   const dateText = now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
 
   const anchors = (W: number, H: number, cw: number, ch: number): Record<Exclude<Pos, 'free'>, { x: number; y: number }> => ({
-    tl: { x: SIDE, y: TOP_SAFE }, tr: { x: W - cw - SIDE, y: TOP_SAFE }, tc: { x: (W - cw) / 2, y: TOP_SAFE },
-    bl: { x: SIDE, y: H - BOTTOM_SAFE - ch }, br: { x: W - cw - SIDE, y: H - BOTTOM_SAFE - ch },
+    tl: { x: SIDE, y: geo.top }, tr: { x: W - cw - SIDE, y: geo.top }, tc: { x: (W - cw) / 2, y: geo.top },
+    bl: { x: SIDE, y: H - geo.foot - FOOT_GAP - ch }, br: { x: W - cw - SIDE, y: H - geo.foot - FOOT_GAP - ch },
   });
   const rect = () => {
     const el = box.current, par = el?.offsetParent as HTMLElement | null;
@@ -65,7 +89,7 @@ export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; po
   };
   const clampXY = (x: number, y: number, r: NonNullable<ReturnType<typeof rect>>) => ({
     x: Math.max(8, Math.min(r.W - r.cw - 8, x)),
-    y: Math.max(TOP_SAFE - 8, Math.min(r.H - BOTTOM_SAFE - r.ch, y)),
+    y: Math.max(geo.top - 8, Math.min(r.H - geo.foot - FOOT_GAP - r.ch, y)),
   });
 
   const onDown = (e: React.PointerEvent) => {
@@ -99,6 +123,8 @@ export function ClockWidget({ onLayout }: { onLayout?: (c: { hidden: boolean; po
   const style: React.CSSProperties = {};
   if (dragXY) { style.left = dragXY.x; style.top = dragXY.y; }
   else if (cfg.pos === 'free') { style.left = `${cfg.fx * 100}%`; style.top = `${cfg.fy * 100}%`; }
+  else if (cfg.pos === 'bl' || cfg.pos === 'br') style.bottom = geo.foot + FOOT_GAP;
+  else style.top = geo.top;
   const cls = `clk clk-${cfg.size} clk-p-${dragXY ? 'free' : cfg.pos}${dragXY ? ' is-drag' : ''}`;
 
   return (

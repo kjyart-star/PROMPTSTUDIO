@@ -263,7 +263,7 @@ export function ClassicCoverflow({ reduced }: { reduced: boolean }) {
 
 export const CCF_CSS = `
 .ccf-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;text-align:center;min-width:0}
-.ccf-stage{--s:min(36vw,36vh,320px);position:relative;width:100%;max-width:1100px;height:calc(var(--s) * 1.3);perspective:1100px;perspective-origin:50% 38%;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:visible}
+.ccf-stage{--s:min(36vw,calc(36vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .8),320px);position:relative;width:100%;max-width:1100px;height:calc(var(--s) * 1.3);perspective:1100px;perspective-origin:50% 38%;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:visible}
 .ccf-stage:active{cursor:grabbing}
 .ccf-card{position:absolute;left:calc(50% - var(--s) / 2);top:0;width:var(--s);height:var(--s);padding:0;background:none;will-change:transform,opacity;transform-origin:50% 50%}
 .ccf-art{display:block;position:relative;width:100%;height:100%;transition:translate .25s ease-out,scale .2s ease-out}
@@ -281,7 +281,7 @@ export const CCF_CSS = `
 .ccf-back{display:inline-flex;align-items:center;gap:6px;flex:none;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;opacity:0;scale:.92;pointer-events:none;transition:opacity .25s,scale .25s}
 .ccf-back.is-on{opacity:1;scale:1;pointer-events:auto}
 @media (max-width:820px){
-  .ccf-stage{--s:min(54vw,28vh,230px)}
+  .ccf-stage{--s:min(54vw,calc(28vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .8),230px)}
   .ccf-back{padding:6px 8px;font-size:11px}
 }
 @media (prefers-reduced-motion:reduce){.ccf-art{transition:none}.ccf-art.is-now{animation:none}}

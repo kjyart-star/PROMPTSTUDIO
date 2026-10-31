@@ -369,11 +369,10 @@ export function CassettePlayer({ reduced }: { reduced: boolean }) {
 export const CS_CSS = `
 .imm-cassette .imm-veil{background:radial-gradient(ellipse at 30% 0%,rgba(255,196,120,.16),transparent 55%),radial-gradient(ellipse at 50% 55%,transparent 30%,rgba(0,0,0,.72) 100%)}
 .cs-woodbg{position:absolute;inset:0;pointer-events:none;background:
- repeating-linear-gradient(92deg,rgba(0,0,0,0) 0 7px,rgba(20,10,4,.34) 7px 9px,rgba(0,0,0,0) 8px 21px,rgba(255,200,140,.05) 21px 23px),
- repeating-linear-gradient(88deg,rgba(0,0,0,0) 0 41px,rgba(10,5,2,.36) 41px 44px),
- linear-gradient(180deg,rgba(74,45,24,.9),rgba(42,25,13,.94));opacity:.8}
+ repeating-linear-gradient(92deg,rgba(0,0,0,0) 0 7px,rgba(20,10,4,.07) 7px 9px,rgba(0,0,0,0) 9px 21px,rgba(255,200,140,.025) 21px 23px),
+ linear-gradient(180deg,rgba(8,5,3,0) 0%,rgba(8,5,3,0) 34%,rgba(10,6,4,.5) 66%,rgba(6,4,3,.72) 100%)}
 .cs-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 16px;perspective:1200px}
-.cs-set{--cw:min(50vw,520px,calc(42vh * 1.6));--sw:clamp(84px,11.5vw,150px);position:relative;display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,2.2vw,32px);max-width:100%}
+.cs-set{--cw:min(50vw,520px,calc((42vh - (var(--clk-t,0px) + var(--clk-b,0px)) * 1) * 1.6));--sw:clamp(84px,11.5vw,150px);position:relative;display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,2.2vw,32px);max-width:100%}
 .cs-deck{width:var(--cw);display:flex;flex-direction:column;gap:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
 .cs-bay{position:relative;padding:3.2% 3.2% 2.6%;border-radius:14px 14px 4px 4px;background:linear-gradient(180deg,#2c2c30,#17171a);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 2px 8px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
 .cs-cassette{display:block;width:100%;height:auto;will-change:transform,opacity;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
@@ -401,7 +400,7 @@ export const CS_CSS = `
 .cs-cone b{position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;margin:-17% 0 0 -17%;border-radius:50%;background:radial-gradient(circle at 36% 32%,#7d776e,#35312c 60%,#16140f)}
 .cs-led{position:absolute;left:50%;bottom:4%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#e9742b;box-shadow:0 0 6px #e9742b}
 .cs-spk-shadow{position:absolute;left:-6%;right:-6%;bottom:-7px;height:14px;background:radial-gradient(ellipse at 50% 30%,rgba(0,0,0,.6),transparent 70%);pointer-events:none}
-@media (max-width:768px){.cs-spk{display:none}.cs-set{--cw:min(88vw,540px,calc(44vh * 1.6))}}
+@media (max-width:768px){.cs-spk{display:none}.cs-set{--cw:min(88vw,540px,calc((44vh - (var(--clk-t,0px) + var(--clk-b,0px)) * 1) * 1.6))}}
 .cs-panel{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"cnt meter knob" "cnt tg knob" "keys keys keys";gap:8px 16px;align-items:center;padding:14px 22px 12px;border-radius:2px 2px 12px 12px;
  background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,rgba(0,0,0,.05) 1px 3px),linear-gradient(180deg,#34353a,#222327 30%,#17181b);
  border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 1px 0 0 rgba(255,255,255,.05),inset 0 -2px 3px rgba(0,0,0,.5)}

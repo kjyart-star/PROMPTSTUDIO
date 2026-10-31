@@ -57,6 +57,7 @@ export function PocketPlayer({ reduced }: { reduced: boolean }) {
   const savePref = (t: Theme, c: boolean) => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ theme: t, click: c })); } catch { /* ignore */ } };
 
   useEffect(() => { setSel(Math.max(0, queueIndex)); }, [queueIndex, screen]);
+  useEffect(() => { if (screen === 'list') listRef.current?.focus({ preventScroll: true }); }, [screen]);
   useEffect(() => {
     const ul = listRef.current;
     const el = ul?.children[sel] as HTMLElement | undefined;
@@ -133,13 +134,25 @@ export function PocketPlayer({ reduced }: { reduced: boolean }) {
     else if (a > 45 && a <= 135) usePlayerStore.getState().togglePlay();              // 아래: 재생/일시정지
     else usePlayerStore.getState().prev();                                            // 왼쪽: 이전
   };
+  const playAt = (i: number) => {
+    const st = usePlayerStore.getState();
+    const t = st.queue[i];
+    if (!t) return;
+    setSel(i);
+    if (t.id === st.currentTrack?.id) { if (!st.isPlaying) st.togglePlay(); } else st.playTrack(t, st.queue);
+    setScreen('now');
+  };
+  const onListKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault(); e.stopPropagation(); // 전역 볼륨 단축키로 새지 않게
+      setSel((v) => Math.max(0, Math.min(usePlayerStore.getState().queue.length - 1, v + (e.key === 'ArrowDown' ? 1 : -1))));
+    } else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); playAt(sel); }
+  };
   const centerPress = () => {
     const st = usePlayerStore.getState();
-    if (screen === 'list') {
-      const t = st.queue[sel];
-      if (t) { if (t.id === st.currentTrack?.id) st.togglePlay(); else st.playTrack(t, st.queue); setScreen('now'); }
-    } else st.togglePlay();
+    if (screen === 'list') playAt(sel); else st.togglePlay();
   };
+
 
   // 마우스 휠·트랙패드 — 휠 영역 위에서만
   useEffect(() => {
@@ -197,10 +210,18 @@ export function PocketPlayer({ reduced }: { reduced: boolean }) {
                 )}
               </div>
             ) : (
-              <ul className="pk-list" ref={listRef} aria-label="재생목록">
+              <ul className="pk-list" ref={listRef} role="listbox" aria-label="재생목록" tabIndex={0} onKeyDown={onListKey}>
                 {queue.map((t, i) => (
-                  <li key={`${t.id}-${i}`} className={`${i === sel ? 'is-sel' : ''}${t.id === currentTrack.id ? ' is-now' : ''}`}>
-                    <span>{t.title}</span>{t.id === currentTrack.id && <Play size={11} />}
+                  <li
+                    key={`${t.id}-${i}`}
+                    role="option"
+                    aria-selected={i === sel}
+                    aria-current={t.id === currentTrack.id ? 'true' : undefined}
+                    className={`${i === sel ? 'is-sel' : ''}${t.id === currentTrack.id ? ' is-now' : ''}`}
+                    onClick={() => playAt(i)}
+                  >
+                    <span>{t.title}</span>
+                    {t.id === currentTrack.id && <Volume2 size={12} aria-label="재생 중" />}
                   </li>
                 ))}
               </ul>
@@ -233,13 +254,13 @@ export function PocketPlayer({ reduced }: { reduced: boolean }) {
 export const PK_CSS = `
 .pk-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 16px}
 .pk-stage{position:relative}
-.pk-dev{--pw:min(300px,calc((100vh - 330px) / 1.72));position:relative;width:var(--pw);height:calc(var(--pw) * 1.72);border-radius:calc(var(--pw) * .09);padding:calc(var(--pw) * .06);display:flex;flex-direction:column;align-items:center;gap:calc(var(--pw) * .06);
+.pk-dev{--pw:min(300px,calc((100vh - 330px - var(--clk-t,0px) - var(--clk-b,0px)) / 1.72));position:relative;width:var(--pw);height:calc(var(--pw) * 1.72);border-radius:calc(var(--pw) * .09);padding:calc(var(--pw) * .06);display:flex;flex-direction:column;align-items:center;gap:calc(var(--pw) * .06);
  background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,rgba(0,0,0,.035) 1px 2px),linear-gradient(135deg,var(--b1),var(--b2) 45%,var(--b3));
  box-shadow:inset 0 0 0 1.5px var(--edge),inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 4px rgba(0,0,0,.25),-10px 0 18px -10px rgba(0,0,0,.4),0 28px 36px rgba(0,0,0,.55)}
 .pk-silver{--b1:#e9ebee;--b2:#c3c7cc;--b3:#a9aeb4;--edge:#8f949a;--wheel:#f7f7f6;--ink:#6a6e74}
 .pk-gray{--b1:#7a7d83;--b2:#5a5d63;--b3:#44464b;--edge:#2c2d30;--wheel:#2a2b2e;--ink:#9a9da3}
 .pk-white{--b1:#fbfbfa;--b2:#e6e6e3;--b3:#cfcfcb;--edge:#b5b5b0;--wheel:#ffffff;--ink:#8a8a86}
-@media (max-width:820px){.pk-dev{--pw:min(92vw,calc((100vh - 300px) / 1.72))}}
+@media (max-width:820px){.pk-dev{--pw:min(92vw,calc((100vh - 300px - var(--clk-t,0px) - var(--clk-b,0px)) / 1.72))}}
 .pk-side{position:absolute;top:calc(var(--pw) * .1);left:-3px;width:3px;height:calc(var(--pw) * .1);border-radius:2px 0 0 2px;background:linear-gradient(90deg,#777,#bbb)}
 .pk-screen{width:100%;height:46%;border-radius:calc(var(--pw) * .035);background:linear-gradient(180deg,#14233a,#0b1220);box-shadow:inset 0 0 0 2px rgba(0,0,0,.65),0 1px 0 rgba(255,255,255,.55);overflow:hidden;position:relative;color:#eaf2ff;display:flex;flex-direction:column;font-size:calc(var(--pw) * .042)}
 .pk-screen::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.12),transparent 38%);pointer-events:none}
@@ -265,7 +286,10 @@ export const PK_CSS = `
 .pk-list{flex:1;min-height:0;margin:0;padding:0;list-style:none;overflow:hidden;position:relative}
 .pk-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2.4% 4%;border-bottom:1px solid rgba(255,255,255,.06);white-space:nowrap}
 .pk-list li span{overflow:hidden;text-overflow:ellipsis}
+.pk-list{outline:none}
+.pk-list li{cursor:pointer}
 .pk-list li.is-now{color:#7fd0ff}
+.pk-list li.is-now svg{flex:none}
 .pk-list li.is-sel{background:linear-gradient(180deg,#3d82d8,#2a5fa8);color:#fff}
 .pk-wheel{position:relative;width:calc(var(--pw) * .78);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 30%,#fff,var(--wheel) 55%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.2),inset 0 -4px 8px rgba(0,0,0,.12),0 2px 3px rgba(255,255,255,.5);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;margin-top:auto}
 .pk-wheel:active{cursor:grabbing}

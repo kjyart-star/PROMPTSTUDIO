@@ -83,8 +83,8 @@ export function ImmersivePlayer() {
     setDesigns(next);
     try { localStorage.setItem(DESIGN_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   };
-  const [clockLay, setClockLay] = useState<{ hidden: boolean; pos: string }>({ hidden: false, pos: 'tl' });
-  const onClock = useCallback((c: { hidden: boolean; pos: string }) => setClockLay(c), []);
+  const [clockLay, setClockLay] = useState<{ hidden: boolean; pos: string; t: number; b: number }>({ hidden: false, pos: 'tl', t: 0, b: 0 });
+  const onClock = useCallback((c: { hidden: boolean; pos: string; t: number; b: number }) => setClockLay((o) => (o.hidden === c.hidden && o.pos === c.pos && o.t === c.t && o.b === c.b ? o : c)), []);
   const closeRef = useRef<HTMLButtonElement>(null);
   const lyricBoxRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<Record<number, HTMLElement | null>>({});
@@ -161,7 +161,7 @@ export function ImmersivePlayer() {
   const pos = Math.max(0, queueIndex) + 1;
 
   return (
-    <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}${!clockLay.hidden ? ` imm-clock-on imm-clock-${clockLay.pos}` : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player">
+    <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}${!clockLay.hidden ? ` imm-clock-on imm-clock-${clockLay.pos}` : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player" style={{ ['--clk-t' as any]: `${clockLay.hidden ? 0 : clockLay.t}px`, ['--clk-b' as any]: `${clockLay.hidden ? 0 : clockLay.b}px` }}>
       <style>{IMM_CSS + SYNC_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
@@ -303,21 +303,21 @@ const IMM_CSS = `
 .imm-designs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);margin-left:auto;margin-right:12px}
 .imm-designs button{padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:rgba(255,255,255,.65);cursor:pointer}
 .imm-designs button[aria-pressed=true]{background:rgba(255,255,255,.22);color:#fff}
-.imm-framed .imm-now{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;text-align:center;margin:0 clamp(16px,4vw,64px) 8px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
+.imm-framed .imm-now{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;text-align:center;margin:var(--clk-t,0px) clamp(16px,4vw,64px) calc(8px + var(--clk-b,0px));border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
 .imm-close{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);cursor:pointer}
 .imm-help{margin-right:8px}
 .imm-close:hover{background:rgba(255,255,255,.22)}
 .imm-now{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(24px,5vw,80px);align-items:center;padding:0 clamp(20px,6vw,96px)}
 .imm-framed .imm-left{align-items:center;text-align:center}
-.imm-framed .imm-coverwrap{width:min(40vw,44vh,400px);margin:0 0 30px;transform:translateX(-21%)}
+.imm-framed .imm-coverwrap{width:min(40vw,calc(44vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .9),400px);margin:0 0 30px;transform:translateX(-21%)}
 .imm-framed .imm-left h2{order:1}.imm-framed .imm-kicker{order:2;margin-top:10px}.imm-framed .imm-artist{order:3}
 .imm-left{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
-.imm-coverwrap{position:relative;isolation:isolate;width:min(28vw,44vh,380px);aspect-ratio:1;margin:0 0 24px 14px}
+.imm-coverwrap{position:relative;isolation:isolate;width:min(28vw,calc(44vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .9),380px);aspect-ratio:1;margin:0 0 24px 14px}
 .imm-cover{width:100%;height:100%;object-fit:cover;border-radius:22px;box-shadow:0 30px 70px rgba(0,0,0,.55)}
 .imm-kicker{font-size:12px;letter-spacing:.18em;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
 .imm-title{font-size:clamp(28px,3.6vw,52px);line-height:1.1;font-weight:800;margin:8px 0 0;letter-spacing:-.02em;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .imm-artist{margin-top:8px;font-size:15px;color:rgba(255,255,255,.7)}
-.imm-right{min-width:0;height:min(58vh,560px);display:flex;flex-direction:column}
+.imm-right{min-width:0;height:min(calc(58vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .95),560px);display:flex;flex-direction:column}
 .imm-lyrics{position:relative;flex:1;min-height:0;overflow:hidden;border-left:2px solid rgba(255,255,255,.18);padding-left:clamp(16px,2.4vw,32px);mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent)}
 .imm-pad{height:40%}
 .imm-line{font-size:clamp(18px,2vw,28px);line-height:1.45;font-weight:700;margin:0 0 14px;cursor:pointer;transition:opacity .35s,color .35s,transform .35s;transform-origin:left center;word-break:keep-all}
@@ -333,8 +333,8 @@ const IMM_CSS = `
 .imm-ctrl .imm-mode{width:38px;height:38px;color:rgba(255,255,255,.55);position:relative}
 .imm-ctrl .imm-mode.is-on{color:#fff}
 .imm-ctrl .imm-mode.is-on::after{content:'';position:absolute;bottom:2px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fff}
-.imm-clock-tc .imm-now,.imm-clock-tc .cs-wrap,.imm-clock-tc .pk-wrap,.imm-clock-tc .pcf-wrap,.imm-clock-tc .ccf-wrap{padding-top:96px}
-@media (max-width:820px){.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .imm-now,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .cs-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .pk-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .pcf-wrap,.imm-clock-on:not(.imm-clock-bl):not(.imm-clock-br) .ccf-wrap{padding-top:70px}}
+.imm-now,.cs-wrap,.pk-wrap,.pcf-wrap,.ccf-wrap{margin-top:var(--clk-t,0px);margin-bottom:var(--clk-b,0px);transition:margin .35s ease}
+@media (prefers-reduced-motion:reduce){.imm-now,.cs-wrap,.pk-wrap,.pcf-wrap,.ccf-wrap{transition:none}}
 .imm-vol{position:absolute;right:0;top:50%;transform:translateY(-50%)}
 .imm-cassette .imm-vol{display:none}
 @media (max-width:820px){.imm-vol .vol-ctl input{width:64px}}

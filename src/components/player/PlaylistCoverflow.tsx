@@ -110,7 +110,7 @@ function ArcFlow({ reduced, listLabel }: { reduced: boolean; listLabel: string }
 export const PCF_CSS = `
 .pcf-wrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;text-align:center;min-width:0}
 .pcf-style{max-width:min(90vw,640px);margin:0 0 clamp(10px,2.4vh,22px);font-size:12px;letter-spacing:.12em;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcf-stage{--s:min(34vw,36vh,320px);position:relative;width:calc(var(--s) * (1 + .44 * var(--span)));height:var(--s);perspective:1200px;perspective-origin:30% 40%;margin:0 auto}
+.pcf-stage{--s:min(34vw,calc(36vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .8),320px);position:relative;width:calc(var(--s) * (1 + .44 * var(--span)));height:var(--s);perspective:1200px;perspective-origin:30% 40%;margin:0 auto}
 .pcf-stage.pcf-arc{width:calc(var(--s) * 4);perspective-origin:50% 40%}
 .pcf-arc .pcf-card{left:calc(50% - var(--s) / 2);transform-origin:center}
 .pcf-card{position:absolute;left:0;top:0;width:var(--s);height:var(--s);padding:0;background:none;cursor:pointer;transform-origin:left center;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .55s}
@@ -121,7 +121,7 @@ export const PCF_CSS = `
 .pcf-title{position:relative;z-index:20;margin:calc(var(--s-gap,0px) + clamp(36px,8vh,80px)) 0 0;font-size:clamp(22px,2.6vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.15;max-width:90vw;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 2px 18px rgba(0,0,0,.6)}
 .pcf-kicker{margin-top:10px;font-size:12px;letter-spacing:.18em;font-weight:700;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
 @media (max-width:820px){
-  .pcf-stage{--s:min(46vw,30vh,240px);width:calc(var(--s) * (1 + .44 * min(var(--span), 2)))}
+  .pcf-stage{--s:min(46vw,calc(30vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .8),240px);width:calc(var(--s) * (1 + .44 * min(var(--span), 2)))}
   .pcf-far{display:none}
   .pcf-stage.pcf-arc{width:calc(var(--s) * 2.6)}
 }
