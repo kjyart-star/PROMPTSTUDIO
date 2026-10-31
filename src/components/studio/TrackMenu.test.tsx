@@ -7,7 +7,7 @@ afterEach(cleanup)
 
 const base = (over: any = {}) => ({
   uiLanguage: 'KO' as const,
-  item: { id: 'a', title: '곡', lyrics: '가사', is_published: false, playlist_id: null, form: {} },
+  item: { id: 'a', title: '곡', lyrics: '가사', is_published: false, playlist_id: null, status: 'completed', audio_url: 'audio/a.mp3', suno_task_id: 'apipass:T', form: { suno_audio_id: 'A1' } },
   playlists: [{ id: 'p1', title: '아침' }],
   signedIn: true,
   buttonClass: 'b', iconClass: 'i',
@@ -97,5 +97,19 @@ describe('TrackMenu', () => {
     render(<TrackMenu {...base({ item: { id: 'a', form: { stems: { status: 'done' } } } })} />)
     fireEvent.click(screen.getByLabelText('더보기'))
     expect(screen.getByText('스템 보기')).toBeTruthy()
+  })
+
+  it('스템을 나눌 수 없는 곡(올린 파일·id 없는 예전 곡·kie)은 메뉴에서 아예 숨긴다', () => {
+    for (const item of [
+      { id: 'u', status: 'completed', audio_url: 'audio/u.mp3', form: { source: 'upload' } },
+      { id: 'o', status: 'completed', audio_url: 'audio/o.mp3', suno_task_id: 'task_old', form: {} },
+      { id: 'k', status: 'completed', audio_url: 'audio/k.mp3', suno_task_id: 'kie:T', form: { suno_audio_id: 'x' } },
+    ]) {
+      const { unmount } = render(<TrackMenu {...base({ item })} />)
+      fireEvent.click(screen.getByLabelText('더보기'))
+      expect(screen.queryByText(/스템 분리|스템 보기/)).toBeNull()
+      expect(screen.getByText('앨범아트 만들기 · 올리기')).toBeTruthy()
+      unmount()
+    }
   })
 })

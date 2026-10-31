@@ -5,6 +5,8 @@ import { MoreHorizontal } from 'lucide-react'
 import LyricsHelper from './LyricsHelper'
 import { parseTiming, toLrc, type TimedLine } from './lrc'
 import { PriceBadge } from './PaidConfirm'
+import { stemAvailability } from '@/lib/studio/stem'
+import { createPortal } from 'react-dom'
 
 type Lang = 'KO' | 'JA' | 'EN'
 
@@ -73,9 +75,13 @@ export default function TrackMenu(p: TrackMenuProps) {
   const [notice, setNotice] = useState('')
   const [pos, setPos] = useState<React.CSSProperties>({})
   const wrap = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const area = useRef<HTMLTextAreaElement>(null)
   const stemStatus = p.item.form?.stems?.status as string | undefined
+  const stemOk = stemAvailability(p.item) !== 'none'
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const hasLrc = Array.isArray(p.item.form?.lrc) && p.item.form.lrc.length > 0
 
   useEffect(() => {
@@ -89,7 +95,7 @@ export default function TrackMenu(p: TrackMenuProps) {
     const closeOnScroll = () => { setOpen(false); setSub(false) }
     window.addEventListener('scroll', closeOnScroll, true)
     window.addEventListener('resize', closeOnScroll)
-    const off = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) { setOpen(false); setSub(false) } }
+    const off = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) { setOpen(false); setSub(false) } }
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setSub(false) } }
     document.addEventListener('mousedown', off)
     document.addEventListener('keydown', esc)
@@ -121,8 +127,8 @@ export default function TrackMenu(p: TrackMenuProps) {
         onClick={() => setOpen((v) => !v)} className={`${p.buttonClass} text-zinc-300 hover:text-primary hover:border-primary/40`}>
         <MoreHorizontal className={p.iconClass} />
       </button>
-      {open && (
-        <div role="menu" style={pos} className="fixed z-[60] max-h-[70vh] overflow-y-auto w-56 rounded-xl border border-[#262626] bg-[#141414] p-1 shadow-2xl shadow-black/70">
+      {open && mounted && createPortal(
+        <div ref={menuRef} role="menu" style={pos} className="fixed z-[60] max-h-[70vh] overflow-y-auto w-56 rounded-xl border border-[#262626] bg-[#141414] p-1 shadow-2xl shadow-black/70">
           <button role="menuitem" className={row} onClick={() => { setTitle(p.item.title || ''); setLyrics(p.item.lyrics || ''); setEditing(true); close() }}>{T.edit[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onRestorePrompt(); close() }}>{T.restore[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onQuickMaster(); close() }}>{T.quick[l]}</button>
@@ -130,10 +136,10 @@ export default function TrackMenu(p: TrackMenuProps) {
           <button role="menuitem" className={`${row} flex items-center gap-2`} onClick={() => { p.onAlbumArt(); close() }}>
             {T.art[l]} <PriceBadge milli={p.artMilli} className="ml-auto" />
           </button>
-          <button role="menuitem" className={`${row} flex items-center gap-2`} onClick={() => { p.onStem(); close() }}>
+          {stemOk && <button role="menuitem" className={`${row} flex items-center gap-2`} onClick={() => { p.onStem(); close() }}>
             {stemStatus === 'done' ? T.stemView[l] : stemStatus === 'processing' ? T.stemBusy[l] : T.stem[l]}
             {stemStatus === 'done' || stemStatus === 'processing' ? null : <PriceBadge milli={p.stemMilli} className="ml-auto" />}
-          </button>
+          </button>}
           <button role="menuitem" className={row} onClick={() => { p.onEditTiming(); close() }}>{T.timing[l]}</button>
           <button role="menuitem" className={row} onClick={() => { fileRef.current?.click(); close() }}>{T.lrc[l]}</button>
           {hasLrc && <button role="menuitem" className={row} onClick={() => {
@@ -167,14 +173,16 @@ export default function TrackMenu(p: TrackMenuProps) {
           <button role="menuitem" disabled={!!p.item.is_published} title={p.item.is_published ? T.trashLocked[l] : undefined}
             className={`${row} !text-red-400 hover:!bg-red-500/10`} onClick={() => { p.onTrash(); close() }}>{T.trash[l]}</button>
           {p.item.is_published && <p className="px-3 pb-2 text-[10px] text-zinc-500">{T.trashLocked[l]}</p>}
-        </div>
+        </div>,
+        document.body,
       )}
       <input ref={fileRef} type="file" accept=".lrc,.srt,.txt" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) readFile(f) }} />
-      {notice && (
-        <div role="status" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[130] rounded-xl border border-[#262626] bg-[#141414] px-4 py-2 text-xs text-zinc-200">{notice}</div>
+      {notice && mounted && createPortal(
+        <div role="status" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[130] rounded-xl border border-[#262626] bg-[#141414] px-4 py-2 text-xs text-zinc-200">{notice}</div>,
+        document.body,
       )}
-      {editing && (
+      {editing && mounted && createPortal(
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-4" onClick={() => setEditing(false)}>
           <div className="w-full max-w-lg rounded-2xl border border-[#232323] bg-[#141414] p-5 space-y-3 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <label className="block text-xs font-bold text-zinc-300">{T.title[l]}
@@ -192,7 +200,8 @@ export default function TrackMenu(p: TrackMenuProps) {
                 className="px-5 py-2 text-xs font-extrabold text-black bg-primary rounded-xl cursor-pointer disabled:opacity-40">{T.save[l]}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

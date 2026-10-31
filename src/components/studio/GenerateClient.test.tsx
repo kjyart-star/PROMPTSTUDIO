@@ -36,14 +36,14 @@ describe('GenerateClient 곡 행 클릭', () => {
     const detail = () => container.querySelectorAll('aside')[0]?.textContent ?? ''
 
     fireEvent.click(rowA)
-    expect(usePlayerStore.getState().currentTrack?.id).toBe('a')
+    await waitFor(() => expect(usePlayerStore.getState().currentTrack?.id).toBe('a'))
     expect(usePlayerStore.getState().isPlaying).toBe(true)
     await waitFor(() => expect(detail()).toContain('Song A'))
     // 접힌 레일이 아니라 펼쳐진 패널이어야 한다
     expect(container.querySelector('aside button[aria-expanded="true"]')).not.toBeNull()
 
     fireEvent.click(rowB)
-    expect(usePlayerStore.getState().currentTrack?.id).toBe('b')
+    await waitFor(() => expect(usePlayerStore.getState().currentTrack?.id).toBe('b'))
     await waitFor(() => expect(detail()).toContain('Song B'))
   })
 
@@ -74,12 +74,28 @@ describe('GenerateClient 곡 ⋯ 메뉴', () => {
     expect(getAllByLabelText(/다운로드|Download/).length).toBe(2)
     expect(getAllByLabelText(/재생|Play/).length).toBeGreaterThanOrEqual(2)
     fireEvent.click(getAllByLabelText('더보기')[0])
-    expect(getByText('스템 분리 (보컬/악기)')).toBeTruthy()
-    expect(getByText('✦3')).toBeTruthy()
+    // 이 곡들은 Suno 곡 id 가 없어 스템 항목은 아예 보이지 않는다(눌러 보고 실패하는 일 금지)
+    expect(container.textContent).not.toContain('스템 분리')
+    expect(getByText('✦1')).toBeTruthy()
     fireEvent.click(getByText('마스터링'))
     expect(onQuick).toHaveBeenCalled()
     // 메뉴를 눌러도 곡이 재생되지 않는다
     expect(usePlayerStore.getState().currentTrack).toBeNull()
     expect(container).toBeTruthy()
+  })
+})
+
+describe('GenerateClient 재생은 서버 서명 주소로', () => {
+  it('저장소 경로 곡을 누르면 서버 서명 라우트로 받은 https 주소를 플레이어에 넘긴다', async () => {
+    const f = vi.fn(async (url: string) => {
+      if (String(url).includes('/api/tracks/signed-url')) return new Response(JSON.stringify({ signedUrl: 'https://signed.example/a.mp3?t=1' }))
+      return new Response(JSON.stringify(rows))
+    })
+    vi.stubGlobal('fetch', f)
+    const { findByText } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    const rowA = (await findByText('Song A')).closest('[role=button]') as HTMLElement
+    fireEvent.click(rowA)
+    await waitFor(() => expect(usePlayerStore.getState().currentTrack?.file_url).toBe('https://signed.example/a.mp3?t=1'))
+    expect((usePlayerStore.getState().currentTrack as any).raw_file_url).toBe('audio/a.mp3')
   })
 })

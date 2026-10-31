@@ -14,6 +14,7 @@ import { GenerateClient } from './GenerateClient'
 import LibraryTrash from './LibraryTrash'
 import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
+import { DRAG_TYPE } from './FolderSidebar'
 import QuickMasterDialog from './QuickMasterDialog'
 import LyricTimingEditor from './LyricTimingEditor'
 import AlbumArtDialog from './AlbumArtDialog'
@@ -30,6 +31,7 @@ import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
+import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
@@ -1013,7 +1015,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
 
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore()
 
-  const playHistoryTrack = (item: any) => {
+  const playHistoryTrack = async (item: any) => {
     if (!item) return
     const audioUrl = item.audio_url || item.stream_url || item.url
     if (!audioUrl) return
@@ -1022,11 +1024,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
       return
     }
     // 하단 플레이어는 file_url 을 읽는다 — audio_url 로 넘기면 재생되지 않는다
+    // 저장소 경로는 서버 서명 주소로 바꿔 넘긴다(브라우저 직접 서명은 관리자만 된다). 못 받으면 경로 그대로.
+    const playable = (await resolveStudioAudioUrl(audioUrl)) || audioUrl
     const cover = item.image_url || withBase('/default-album.png')
     const trackToPlay = {
       id: item.id,
       title: item.title || 'Untitled Track',
-      file_url: audioUrl,
+      file_url: playable,
+      raw_file_url: /^https?:/i.test(audioUrl) ? undefined : audioUrl,
       duration_sec: 180,
       album_id: 'studio-generated',
       image_url: cover,
@@ -1236,6 +1241,30 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     if (!user) return
     fetch('/api/studio/album-art?quote=1').then((r) => r.json()).then((d) => setArtMilli(typeof d?.creditsMilli === 'number' ? d.creditsMilli : null)).catch(() => setArtMilli(null))
   }, [user])
+
+  /** 폴더(재생목록) 관리 — 기존 /api/playlists 를 그대로 쓴다. 폴더를 지워도 곡은 지워지지 않는다. */
+  const folderActions = {
+    onCreate: async (title: string) => {
+      const res = await fetch('/api/playlists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, type: 'playlist' }) })
+      if (res.ok) await fetchPlaylists()
+      return res.ok
+    },
+    onRename: async (id: string, title: string) => {
+      const res = await fetch(`/api/playlists/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) })
+      if (res.ok) await fetchPlaylists()
+      return res.ok
+    },
+    onDelete: async (id: string) => {
+      const res = await fetch(`/api/playlists/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        if (libraryQuery.playlistId === id) setLibraryQuery((q) => ({ ...q, playlistId: null, sort: q.sort === 'playlist' ? 'newest' : q.sort }))
+        await fetchPlaylists()
+        await fetchSongHistory()
+      }
+      return res.ok
+    },
+    onDropSong: (songId: string, folderId: string | null) => { void updateHistoryItem(songId, { playlist_id: folderId }) },
+  }
 
   const fetchPlaylists = async () => {
     if (!user) return
@@ -1776,6 +1805,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         user={user}
         history={history}
         playlists={playlists}
+        folderActions={folderActions}
         activePlaylistId={libraryQuery.playlistId ?? null}
         queueCount={queueCount}
         onPickPlaylist={(id) => { setLibraryQuery((q) => ({ ...q, playlistId: id, sort: id ? 'playlist' : q.sort === 'playlist' ? 'newest' : q.sort })); setCurrentTab('library') }}
@@ -1897,6 +1927,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                   hasPublishedSelected={selectedItems.some((h) => h.is_published)}
                   playlists={playlists}
                   onAddToPlaylist={addSelectedToPlaylist}
+                  onReset={() => setLibraryQuery({ query: '', kind: 'all', sort: 'newest', playlistId: null })}
                 />
                 <div className={`grid ${LIBRARY_GRID_CLASS[libraryViewSize]}`}>
                   {visibleHistory.map((item) => {
@@ -2063,6 +2094,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         key={item.id}
                         role="button"
                         tabIndex={0}
+                        draggable
+                        onDragStart={(e) => { e.dataTransfer.setData(DRAG_TYPE, item.id); e.dataTransfer.effectAllowed = 'move' }}
                         /* 카드 클릭 = 재생 + 오른쪽 상세 패널 열기 (대표 지시 2026-09-05) */
                         onClick={() => { playHistoryTrack(item); setLibraryDetailId(item.id) }}
                         onKeyDown={(e) => {
@@ -2149,15 +2182,15 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         {/* 「크게」는 커버 위에 재생 액션만 얹고, 관리 액션은 카드 아래 한 줄로 내린다 —
                             7개를 오버레이에 다 넣으면 넘친다(대표 지시 2026-09-05). */}
                         {isLarge && (
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-col gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1 flex-wrap">{playbackActions}{trackMenu}</div>
                             <button
                               type="button"
                               onClick={() => setCurrentTab('cover')}
-                              className="text-[11px] font-bold text-primary hover:underline cursor-pointer truncate"
+                              className="self-start text-[11px] font-bold text-primary hover:underline cursor-pointer"
                             >
                               {uiLanguage === 'KO' ? '커버 만들기 →' : uiLanguage === 'JA' ? 'カバーを作る →' : 'Make a cover →'}
                             </button>
-                            <div className="ml-auto flex items-center gap-1">{playbackActions}{trackMenu}</div>
                           </div>
                         )}
                         {isSmall && (

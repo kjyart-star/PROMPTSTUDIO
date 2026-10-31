@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { withBase } from '@/lib/basePath'
+import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 
 const durationCache: Record<string, number> = {}
 
@@ -9,14 +9,10 @@ function format(secs: number) {
   return `${Math.floor(secs / 60)}:${Math.floor(secs % 60).toString().padStart(2, '0')}`
 }
 
-/** 스토리지 경로(audio/xxx.mp3)는 그대로는 Audio 가 못 읽는다 — 서명 URL 로 바꿔서 길이만 읽는다. */
 async function resolveUrl(url: string): Promise<string> {
-  if (/^https?:\/\//i.test(url)) return url
-  const res = await fetch(withBase(`/api/tracks/signed-url?file_path=${encodeURIComponent(url)}`))
-  if (!res.ok) throw new Error('sign failed')
-  const data = await res.json()
-  if (!data.signedUrl) throw new Error('no signed url')
-  return data.signedUrl
+  const u = await resolveStudioAudioUrl(url)
+  if (!u) throw new Error('sign failed')
+  return u
 }
 
 export function AudioDuration({ url, className = '' }: { url: string; className?: string }) {

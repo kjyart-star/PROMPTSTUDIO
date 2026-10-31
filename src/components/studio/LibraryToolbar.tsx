@@ -19,13 +19,15 @@ const T = {
   selected: { KO: '곡 선택됨', JA: '曲を選択中', EN: 'selected' },
   download: { KO: '내려받기', JA: 'ダウンロード', EN: 'Download' },
   trash: { KO: '휴지통으로', JA: 'ゴミ箱へ', EN: 'Move to trash' },
+  filtering: { KO: '필터 적용 중', JA: 'フィルター適用中', EN: 'Filtered' },
+  reset: { KO: '모두 보기', JA: 'すべて表示', EN: 'Show all' },
   clear: { KO: '선택 해제', JA: '選択解除', EN: 'Clear' },
   publishedSkip: { KO: '공개된 곡은 제외됩니다', JA: '公開中の曲は除外されます', EN: 'Published tracks are skipped' },
 }
 
 export default function LibraryToolbar({
   uiLanguage, value, onChange, total, shown, selectedCount, allSelected,
-  onToggleAll, onClear, onDownload, onTrash, hasPublishedSelected, playlists, onAddToPlaylist,
+  onToggleAll, onClear, onDownload, onTrash, hasPublishedSelected, playlists, onAddToPlaylist, onReset,
 }: {
   uiLanguage: Lang
   value: LibraryQuery
@@ -41,6 +43,8 @@ export default function LibraryToolbar({
   hasPublishedSelected: boolean
   playlists: { id: string; title: string }[]
   onAddToPlaylist: (playlistId: string) => void
+  /** 필터를 모두 지운다(검색·종류·폴더) */
+  onReset: () => void
 }) {
   const l = uiLanguage
   const kinds: LibraryKind[] = ['all', 'vocal', 'instrumental']
@@ -88,6 +92,15 @@ export default function LibraryToolbar({
         </select>
         <span className="text-[11px] text-zinc-500">{shown}/{total}</span>
       </div>
+      {(value.query.trim() || value.kind !== 'all' || value.playlistId) && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs text-amber-300" role="status">
+          <span className="font-bold">{T.filtering[l]}</span>
+          <span className="text-zinc-300">
+            {[value.playlistId ? (playlists.find((p) => p.id === value.playlistId)?.title ?? '') : '', value.kind !== 'all' ? T[value.kind][l] : '', value.query.trim() ? `“${value.query.trim()}”` : ''].filter(Boolean).join(' · ')}
+          </span>
+          <button type="button" onClick={onReset} className="ml-auto font-bold text-amber-300 hover:underline cursor-pointer">{T.reset[l]}</button>
+        </div>
+      )}
       {selectedCount > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
           <span className="text-xs font-bold text-primary">{selectedCount} {T.selected[l]}</span>

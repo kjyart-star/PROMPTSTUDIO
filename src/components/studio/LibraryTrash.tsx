@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
 
 export const TRASH_KEEP_DAYS = 30
@@ -172,7 +173,7 @@ export default function LibraryTrash({
           )}
         </div>
       )}
-      {confirm && (
+      {confirm && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -190,7 +191,8 @@ export default function LibraryTrash({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </section>
   )

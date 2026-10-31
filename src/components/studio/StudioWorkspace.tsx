@@ -1,5 +1,6 @@
 'use client'
 
+import FolderSidebar, { type FolderItem } from './FolderSidebar'
 import { useState } from 'react'
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, Maximize2, 
@@ -17,7 +18,8 @@ interface StudioWorkspaceProps {
   user?: any
   currentTrack?: any
   history?: any[]
-  playlists?: { id: string; title: string }[]
+  playlists?: { id: string; title: string; is_published?: boolean }[]
+  folderActions?: Pick<React.ComponentProps<typeof FolderSidebar>, 'onCreate' | 'onRename' | 'onDelete' | 'onDropSong'>
   activePlaylistId?: string | null
   onPickPlaylist?: (id: string | null) => void
   /** 생성 중인 곡 수 — 「음악 생성」 탭 숫자 배지와 안내 띠 */
@@ -34,6 +36,7 @@ export function StudioWorkspace({
   currentTrack = null,
   history = [],
   playlists = [],
+  folderActions,
   activePlaylistId = null,
   onPickPlaylist,
   queueCount = 0,
@@ -111,7 +114,7 @@ export function StudioWorkspace({
           {/* 3. 보관함 */}
           <button
             type="button"
-            onClick={() => setCurrentTab('library')}
+            onClick={() => { setCurrentTab('library'); onPickPlaylist?.(null) }}
             className={`w-full px-3 py-2.5 rounded-[10px] flex items-center gap-2.5 text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'library' 
                 ? 'text-white shadow-md border border-white/20' 
@@ -123,25 +126,16 @@ export function StudioWorkspace({
             <span className="truncate">보관함</span>
             <span className="ml-auto text-[10px] font-mono text-zinc-500">{history.length}</span>
           </button>
-          {/* 재생목록(폴더)별 곡 수 — 누르면 보관함이 그 폴더 곡만 보여 준다 */}
-          {playlists.length > 0 && onPickPlaylist && (
-            <div className="ml-3 pl-2 border-l border-white/[0.06] flex flex-col gap-0.5" aria-label="재생목록">
-              {playlists.map((pl) => {
-                const active = currentTab === 'library' && activePlaylistId === pl.id
-                return (
-                  <button
-                    key={pl.id}
-                    type="button"
-                    onClick={() => onPickPlaylist(active ? null : pl.id)}
-                    aria-pressed={active}
-                    className={`w-full px-2 py-1.5 rounded-lg flex items-center gap-2 text-[11px] font-bold cursor-pointer ${active ? 'text-primary bg-primary/10' : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'}`}
-                  >
-                    <span className="truncate">{pl.title}</span>
-                    <span className="ml-auto font-mono text-[10px] text-zinc-500">{history.filter((h: any) => h.playlist_id === pl.id).length}</span>
-                  </button>
-                )
-              })}
-            </div>
+          {/* 폴더(재생목록) — 새로 만들기·이름 바꾸기·삭제·곡 끌어 넣기, 곡 수 */}
+          {onPickPlaylist && folderActions && (
+            <FolderSidebar
+              folders={playlists as FolderItem[]}
+              counts={Object.fromEntries(playlists.map((pl) => [pl.id, history.filter((h: any) => h.playlist_id === pl.id).length]))}
+              activeId={currentTab === 'library' ? activePlaylistId : null}
+              onPick={onPickPlaylist}
+              total={history.length}
+              {...folderActions}
+            />
           )}
 
           {/* 4. AI 커버 스튜디오 */}

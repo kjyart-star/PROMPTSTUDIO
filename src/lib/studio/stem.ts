@@ -28,3 +28,20 @@ export function pickStems(results: { audio_url?: string; type?: string }[]): { v
 export function stemIdempotencyKey(userId: string, historyId: string, previous: StemState | undefined): string {
   return `music.stem2:${userId}:${historyId}:${(previous?.attempt ?? 0) + 1}`
 }
+
+export type StemAvailability = 'ready' | 'view' | 'busy' | 'none'
+
+/**
+ * 이 곡을 스템으로 나눌 수 있는가 — 메뉴에 보일지 정한다(눌러 보고 실패하는 일이 없게).
+ * 나눌 수 있는 곡: Suno(APIPASS)로 만들었고 곡 id(form.suno_audio_id)가 남아 있는 완성곡.
+ * 올린 파일·kie 로 만든 곡·id 가 사라진 예전 곡은 'none' (게이트웨이에 오디오 분리 모델이 없어 파일로는 못 나눈다).
+ */
+export function stemAvailability(item: any): StemAvailability {
+  const st = item?.form?.stems?.status
+  if (st === 'done') return 'view'
+  if (st === 'processing') return 'busy'
+  if (!item?.audio_url || item.status !== 'completed' || item.form?.source === 'upload') return 'none'
+  const task = String(item.suno_task_id || '')
+  if (!task || task.startsWith('kie:')) return 'none'
+  return typeof item.form?.suno_audio_id === 'string' && item.form.suno_audio_id ? 'ready' : 'none'
+}

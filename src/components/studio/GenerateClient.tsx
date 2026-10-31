@@ -8,6 +8,7 @@ import { AudioDuration } from './StudioAudioDuration'
 import { parsePlaylistDescription } from '@/lib/utils'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
+import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { downloadStudioTrack } from '@/lib/studio/downloadTrack'
 import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
@@ -440,7 +441,7 @@ export function GenerateClient({
   }
 
   // 행 전체 클릭·원형 버튼이 함께 쓰는 재생 동작
-  const playListTrack = (track: any) => {
+  const playListTrack = async (track: any) => {
     if (!track?.audio_url) return
     setDetailTrackId(track.id)
     // 접어 둔 상세 패널(좁은 레일)도 곡을 누르면 펼쳐서 그 곡을 보여 준다
@@ -452,10 +453,12 @@ export function GenerateClient({
       togglePlay()
       return
     }
+    const playable = (await resolveStudioAudioUrl(track.audio_url)) || track.audio_url
     const trackToPlay = {
       id: track.id,
       title: track.title,
-      file_url: track.audio_url,
+      file_url: playable,
+      raw_file_url: /^https?:/i.test(track.audio_url) ? undefined : track.audio_url,
       duration_sec: 180,
       album_id: 'studio-generated',
       image_url: track.image_url || withBase('/default-album.png'),
