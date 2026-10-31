@@ -42,3 +42,18 @@ const two = (n: number) => String(n).padStart(2, '0')
 export function toLrc(lines: TimedLine[]): string {
   return lines.map((l) => `[${two(Math.floor(l.t / 60))}:${two(Math.floor(l.t % 60))}.${two(Math.floor((l.t % 1) * 100))}]${l.text}`).join('\n') + '\n'
 }
+
+/** 시간 문자열 「m:ss.xx」→ 초. 읽을 수 없으면 null */
+export function parseClock(v: string): number | null {
+  const m = v.trim().match(/^(\d{1,3}):(\d{1,2})(?:\.(\d{1,3}))?$/)
+  if (!m) return null
+  return Number(m[1]) * 60 + Number(m[2]) + (m[3] ? Number(`0.${m[3]}`) : 0)
+}
+export function formatClock(t: number): string {
+  const s = Math.max(0, t)
+  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}.${String(Math.floor((s % 1) * 100)).padStart(2, '0')}`
+}
+/** 가사 본문 → 시간 없는 줄들 (섹션 태그 [Verse] 줄과 빈 줄은 뺀다) */
+export function linesFromLyrics(lyrics: string): TimedLine[] {
+  return lyrics.split(/\r?\n/).map((x) => x.trim()).filter((x) => x && !/^\[[^\]]*\]$/.test(x)).map((text) => ({ t: -1, text }))
+}

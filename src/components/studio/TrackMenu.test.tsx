@@ -11,7 +11,7 @@ const base = (over: any = {}) => ({
   playlists: [{ id: 'p1', title: '아침' }],
   signedIn: true,
   buttonClass: 'b', iconClass: 'i',
-  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onQuickMaster: vi.fn(), onDownload: vi.fn(), onTrash: vi.fn(),
+  onUpdate: vi.fn(), onRestorePrompt: vi.fn(), onPublish: vi.fn(), onMastering: vi.fn(), onQuickMaster: vi.fn(), onEditTiming: vi.fn(), onDownload: vi.fn(), onTrash: vi.fn(),
   ...over,
 })
 

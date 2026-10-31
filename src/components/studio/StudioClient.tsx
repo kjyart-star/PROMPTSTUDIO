@@ -15,6 +15,7 @@ import LibraryTrash from './LibraryTrash'
 import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
 import QuickMasterDialog from './QuickMasterDialog'
+import LyricTimingEditor from './LyricTimingEditor'
 import { filterLibrary, isInstrumental, type LibraryQuery } from './libraryFilter'
 import { MasteringClient } from './MasteringClient'
 import { GenreModal } from './GenreModal'
@@ -926,6 +927,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
   const [libraryQuery, setLibraryQuery] = useState<LibraryQuery>({ query: '', kind: 'all', sort: 'newest' })
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [quickMasterItem, setQuickMasterItem] = useState<any | null>(null)
+  const [timingItem, setTimingItem] = useState<any | null>(null)
   const [libraryViewSize, setLibraryViewSize] = useState<LibraryViewSize>('medium')
 
   const [libraryPlaylistMenuId, setLibraryPlaylistMenuId] = useState<string | null>(null)
@@ -1829,6 +1831,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                         onPublish={() => { if (item.is_published) updateHistoryItem(item.id, { is_published: false }); else setCurrentTab('suno') }}
                         onMastering={() => setCurrentTab('mastering')}
                         onQuickMaster={() => setQuickMasterItem(item)}
+                        onEditTiming={() => setTimingItem(item)}
                         onDownload={() => downloadHistoryTrack(item)}
                         onTrash={() => setDeleteConfirmId(item.id)}
                       />
@@ -2912,6 +2915,14 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
         }}
         uiLanguage={uiLanguage}
       />
+
+      {timingItem && (
+        <LyricTimingEditor
+          song={timingItem}
+          onSave={(lines) => updateHistoryItem(timingItem.id, { lrc: lines })}
+          onClose={() => setTimingItem(null)}
+        />
+      )}
 
       {quickMasterItem && (
         <QuickMasterDialog

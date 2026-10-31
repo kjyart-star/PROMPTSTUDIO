@@ -14,6 +14,7 @@ const T = {
   lrcClear: { KO: '가사 시간표 지우기', JA: '歌詞タイミングを削除', EN: 'Remove lyric timing' },
   mastering: { KO: '고급 마스터링', JA: '詳細マスタリング', EN: 'Advanced mastering' },
   quick: { KO: '마스터링', JA: 'マスタリング', EN: 'Mastering' },
+  timing: { KO: '가사 시간 편집', JA: '歌詞タイミング編集', EN: 'Edit lyric timing' },
   lrcOut: { KO: 'LRC 내보내기', JA: 'LRC を書き出す', EN: 'Export LRC' },
   restore: { KO: '프롬프트로 되돌리기', JA: 'プロンプトに戻す', EN: 'Restore to prompt' },
   publish: { KO: '공개하기 (음악 생성 탭)', JA: '公開する', EN: 'Publish' },
@@ -43,6 +44,7 @@ export interface TrackMenuProps {
   onPublish: () => void
   onMastering: () => void
   onQuickMaster: () => void
+  onEditTiming: () => void
   onDownload: () => void
   onTrash: () => void
 }
@@ -97,6 +99,7 @@ export default function TrackMenu(p: TrackMenuProps) {
           <button role="menuitem" className={row} onClick={() => { p.onRestorePrompt(); close() }}>{T.restore[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onQuickMaster(); close() }}>{T.quick[l]}</button>
           <button role="menuitem" className={row} onClick={() => { p.onMastering(); close() }}>{T.mastering[l]}</button>
+          <button role="menuitem" className={row} onClick={() => { p.onEditTiming(); close() }}>{T.timing[l]}</button>
           <button role="menuitem" className={row} onClick={() => { fileRef.current?.click(); close() }}>{T.lrc[l]}</button>
           {hasLrc && <button role="menuitem" className={row} onClick={() => {
             const url = URL.createObjectURL(new Blob([toLrc(p.item.form.lrc)], { type: 'text/plain;charset=utf-8' }))
