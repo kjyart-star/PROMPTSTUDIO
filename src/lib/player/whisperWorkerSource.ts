@@ -208,10 +208,14 @@ async function alignFrom(asr, Tensor, samples, lines, spans, startSec, onProgres
 `;
 
 export const WHISPER_GLUE_SRC = String.raw`
+var USE_WEBGPU = false;
 var asrP = null, asrDev = '', TensorCls = null;
 
 /* WebGPU 를 쓸 수 있으면 { f16 } 를, 아니면 null */
 async function pickGpu() {
+  /* 2026-11-02 운영 실측: WebGPU fp16 의 교차 어텐션으로 정렬하면 줄이 창 길이(30초) 간격으로 밀리고 뒤쪽 줄이 한 시각에 몰렸다.
+     정확도가 확인된 WASM q8 만 쓴다(USE_WEBGPU 를 켜기 전에 반드시 정답 시각과 대조할 것). */
+  if (!USE_WEBGPU) return null;
   try {
     if (self.navigator && self.navigator.gpu) {
       var ad = await self.navigator.gpu.requestAdapter();

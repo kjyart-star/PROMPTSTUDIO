@@ -51,3 +51,13 @@ describe('alignLineTexts', () => {
     expect(alignLineTexts(null)).toEqual([])
   })
 })
+
+describe('plausibleSpacing', () => {
+  it('보통 간격은 통과, 한 시각에 몰리거나 30초 간격이면 거른다', async () => {
+    const { plausibleSpacing } = await import('./lrcValidate')
+    expect(plausibleSpacing([1, 4, 8, 12, 15, 30, 33])).toBe(true)
+    expect(plausibleSpacing([19, 40, 69, 97, 126, 138, 138, 138, 138, 138])).toBe(false)
+    expect(plausibleSpacing([0, 30, 60, 90, 120, 150, 180])).toBe(false)
+    expect(plausibleSpacing([2, 20, 41])).toBe(true)
+  })
+})

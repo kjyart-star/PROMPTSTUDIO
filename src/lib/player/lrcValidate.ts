@@ -9,6 +9,19 @@ export const MAX_SONG_SEC = 1800;
 /** 첫 줄과 마지막 줄 사이가 이보다 짧으면 정렬이 무너진 것(finalizeAlignment 와 같은 기준의 하한) */
 export const MIN_SPAN_SEC = 10;
 
+/**
+ * 무너진 정렬 걸러 내기 — 여러 줄이 한 시각에 몰리거나(앞 줄과 0.05초 이내가 줄 수의 15% 넘음)
+ * 줄이 6줄 이상인데 줄 사이 간격 중앙값이 20초를 넘으면(보통 2~8초) 믿지 않는다. 2026-11-02 WebGPU 정렬이 30초 간격·끝 몰림 결과를 낸 사고.
+ */
+export function plausibleSpacing(ts: number[]): boolean {
+  if (ts.length < 3) return true;
+  const gaps = ts.slice(1).map((t, i) => t - ts[i]);
+  const piled = gaps.filter((g) => g <= 0.05).length;
+  if (piled > Math.max(1, ts.length * 0.15)) return false;
+  const sorted = [...gaps].sort((a, b) => a - b);
+  return ts.length < 6 || sorted[Math.floor(sorted.length / 2)] <= 20;
+}
+
 export type LrcCheck = { ok: true; lines: LrcLine[] } | { ok: false; reason: string };
 
 interface Opts {
@@ -35,6 +48,7 @@ export function validateAutoLrc(input: unknown, opts: Opts = {}): LrcCheck {
     lines.push({ t: Math.round(t * 100) / 100, text });
   }
   if (lines[lines.length - 1].t - lines[0].t < MIN_SPAN_SEC) return { ok: false, reason: 'too-short-span' };
+  if (!plausibleSpacing(lines.map((l) => l.t))) return { ok: false, reason: 'implausible-spacing' };
   const exp = opts.expectedTexts;
   if (exp) {
     if (exp.length !== lines.length) return { ok: false, reason: 'lyrics-mismatch' };

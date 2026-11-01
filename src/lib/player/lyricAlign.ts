@@ -1,3 +1,5 @@
+import { plausibleSpacing } from './lrcValidate';
+
 /**
  * 강제 정렬(워커)이 돌려준 줄 시작 시각을 LRC 로 쓸 수 있게 다듬고, 믿을 수 없는 결과는 걸러 낸다.
  */
@@ -39,5 +41,6 @@ export function finalizeAlignment(starts: (number | null)[], durationSec: number
   }
   // 가사 전체가 곡의 아주 짧은 구간에 뭉쳐 있으면 정렬이 무너진 것
   if (durationSec > 0 && out[n - 1] - out[0] < Math.min(20, durationSec * 0.2)) return null;
+  if (!plausibleSpacing(out)) return null;
   return out;
 }

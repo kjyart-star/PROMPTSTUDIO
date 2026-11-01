@@ -9,6 +9,7 @@ import {
 import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf';
 import { acquireAlignLockSoon, releaseAlignLock } from '@/lib/player/alignLock';
 import { fetchSharedLrc, submitSharedLrc } from '@/lib/player/lrcShareClient';
+import { plausibleSpacing } from '@/lib/player/lrcValidate';
 
 const hasStamps = (raw?: string | null) => /\[\d{1,3}:\d{2}/.test(raw ?? '');
 
@@ -107,7 +108,11 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
       try {
         const out = await autoAlign(src, input.lines, input.dur, null, () => { /* 진행률은 화면에 보이지 않는다 */ }, ctl.signal, {
           startSec: currentAudioTime(),
-          onPartial: (starts) => { if (!ctl.signal.aborted && curId.current === mine) setPartial(starts); },
+          onPartial: (starts) => {
+            // 무너진 부분 결과(한 시각에 몰림·간격 과다)는 보이지 않는다 — 틀린 강조보다 강조 없음이 낫다
+            if (ctl.signal.aborted || curId.current !== mine) return;
+            setPartial(plausibleSpacing(starts.filter((v): v is number => v !== null)) ? starts : null);
+          },
         });
         if (ctl.signal.aborted || curId.current !== mine) return;
         if (!out.ok || !out.lrc) { markFailed(mine); setPartial(null); return; }
