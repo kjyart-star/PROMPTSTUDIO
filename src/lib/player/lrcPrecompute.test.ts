@@ -8,7 +8,7 @@ describe('pendingLrcSongs', () => {
   it('가사가 있고 자동 맞춤(v2)이 없는 곡만 고른다', () => {
     const h = [
       song('a'),
-      song('has-v2', { form: { lrc_auto: auto, lrc_auto_v: 2 } }),
+      song('has-v2', { form: { lrc_auto: auto, lrc_auto_v: 3 } }),
       song('old-v1', { form: { lrc_auto: auto, lrc_auto_v: 1 } }),
       song('user', { form: { lrc: auto, lrc_by: 'user' } }),
       song('nolyr', { lyrics: '' }),
@@ -41,7 +41,7 @@ function make(history: any[], processOne: any, extra: any = {}) {
   })
   return { q, progress, isLocked: () => lock }
 }
-const markDone = (history: any[], id: string) => { const x = history.find((h) => h.id === id); x.form = { lrc_auto: auto, lrc_auto_v: 2 } }
+const markDone = (history: any[], id: string) => { const x = history.find((h) => h.id === id); x.form = { lrc_auto: auto, lrc_auto_v: 3 } }
 
 describe('LrcPrecomputeQueue', () => {
   it('한 번에 한 곡씩 순서대로 처리하고 진행(n/총)을 알린다', async () => {
@@ -93,7 +93,7 @@ describe('LrcPrecomputeQueue', () => {
     })
     await q.run()
     expect(sleeps).toBeGreaterThanOrEqual(2)
-    expect(h[0].form.lrc_auto_v).toBe(2)
+    expect(h[0].form.lrc_auto_v).toBe(3)
   })
 
   it('탭이 숨겨지면 하던 곡을 멈추고, 다시 보이면 그 곡부터 이어 한다', async () => {
@@ -118,7 +118,7 @@ describe('LrcPrecomputeQueue', () => {
     q.setVisible(true)
     await running
     expect(processOne).toHaveBeenCalledTimes(2)
-    expect(h[0].form.lrc_auto_v).toBe(2)
+    expect(h[0].form.lrc_auto_v).toBe(3)
   })
 
   it('재생 화면이 양보를 요청하면 하던 곡을 멈추고 시도한 것으로 세지 않는다', async () => {
@@ -137,7 +137,7 @@ describe('LrcPrecomputeQueue', () => {
     q = made.q
     await q.run()
     expect(calls).toBe(2)
-    expect(h[0].form.lrc_auto_v).toBe(2)
+    expect(h[0].form.lrc_auto_v).toBe(3)
   })
 
   it('stop() 하면 더 하지 않는다', async () => {

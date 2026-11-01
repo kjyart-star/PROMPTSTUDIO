@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
+import { LRC_BROWSER_MODEL } from '@/lib/studio/lyricsOf'
+import { gpuDone } from '@/lib/player/lrcWorkerJobs'
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -71,9 +73,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
         // 시간이 단조 증가하고 곡 길이 안인 결과만 받는다(검증 규칙은 공개 곡 공유 라우트와 같다)
         const check = validateAutoLrc(lrc_auto, { durationSec: Number(base.duration_sec ?? base.duration) || null })
-        if (check.ok && (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length)) {
+        // 회사 PC 사전 계산(GPU) 결과가 이미 있으면 브라우저 결과로 덮지 않는다
+        if (check.ok && !gpuDone(base) && (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length)) {
           base.lrc_auto = check.lines
           base.lrc_auto_v = Number(lrc_auto_v) || 0
+          base.lrc_auto_model = LRC_BROWSER_MODEL
           updateData.form = base
         }
       }

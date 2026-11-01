@@ -101,7 +101,7 @@ describe('TrackMenu', () => {
   })
 
   it('자동 맞춤(lrc_auto v2)만 있는 곡도 LRC 내보내기가 보인다', () => {
-    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc_auto: [{ t: 1, text: 'x' }, { t: 2, text: 'y' }], lrc_auto_v: 2 } } })} />)
+    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc_auto: [{ t: 1, text: 'x' }, { t: 2, text: 'y' }], lrc_auto_v: 3 } } })} />)
     fireEvent.click(screen.getByLabelText('더보기'))
     expect(screen.getByText('LRC 내보내기')).toBeTruthy()
   })

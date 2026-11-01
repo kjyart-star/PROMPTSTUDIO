@@ -35,7 +35,7 @@ describe('LyricTimingEditor', () => {
 
   it('사용자 LRC 가 없으면 자동 맞춤 결과를 초기값으로 불러오고, 옛 표시 없는 form.lrc 는 쓰지 않는다', () => {
     const auto = [{ t: 4, text: '자동 첫' }, { t: 9, text: '자동 둘' }]
-    const { unmount } = render(<LyricTimingEditor song={{ id: 'a', lyrics: '첫\n둘', form: { lrc_auto: auto, lrc_auto_v: 2, lrc: [{ t: 1, text: '옛' }, { t: 2, text: '옛2' }] } }} onSave={() => {}} onClose={() => {}} />)
+    const { unmount } = render(<LyricTimingEditor song={{ id: 'a', lyrics: '첫\n둘', form: { lrc_auto: auto, lrc_auto_v: 3, lrc: [{ t: 1, text: '옛' }, { t: 2, text: '옛2' }] } }} onSave={() => {}} onClose={() => {}} />)
     expect((screen.getByLabelText('1번 줄 시간') as HTMLInputElement).value).toBe('0:04.00')
     unmount()
     render(<LyricTimingEditor song={{ id: 'b', lyrics: '첫\n둘', form: { lrc: [{ t: 1, text: '옛' }, { t: 2, text: '옛2' }] } }} onSave={() => {}} onClose={() => {}} />)

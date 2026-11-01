@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildTimedLyrics, activeLineIndex } from './lyricTiming'
+import { buildTimedLyrics, activeLineIndex, activePartialIndex } from './lyricTiming'
 import type { Span } from './vocalSpans'
 
 describe('buildTimedLyrics', () => {
@@ -64,5 +64,28 @@ describe('음원 분석 기반 추정', () => {
   it('줄 없이 끝에 남은 [Outro] 표지는 노래 뒤쪽을 비워 둔다', () => {
     const st = starts([{ start: 0, end: 100 }])
     expect(st[st.length - 1]).toBeLessThan(90)
+  })
+})
+
+describe('activePartialIndex (부분 시간표)', () => {
+  it('아는 줄이 하나도 없으면 강조 없음', () => {
+    expect(activePartialIndex([null, null, null], 50)).toBe(-1)
+    expect(activePartialIndex(null, 50)).toBe(-1)
+  })
+  it('시각을 아는 줄 중 지금까지 시작한 마지막 줄을 고른다', () => {
+    expect(activePartialIndex([null, 10, 20, null], 25)).toBe(2)
+    expect(activePartialIndex([null, 10, 20, null], 15)).toBe(1)
+    expect(activePartialIndex([null, 10, 20, null], 5)).toBe(-1)
+  })
+  it('다음 줄 시각을 모르면 시작 후 8초 안에서만 강조한다', () => {
+    expect(activePartialIndex([null, 10, null, null], 17.9)).toBe(1)
+    expect(activePartialIndex([null, 10, null, null], 18)).toBe(-1)
+  })
+  it('다음 줄 시각을 알면 오래 지나도 그 줄이 유지된다', () => {
+    expect(activePartialIndex([10, 60], 40)).toBe(0)
+  })
+  it('마지막 줄은 다음 줄이 없으므로 8초 규칙을 따른다', () => {
+    expect(activePartialIndex([10, 20], 25)).toBe(1)
+    expect(activePartialIndex([10, 20], 30)).toBe(-1)
   })
 })

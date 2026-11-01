@@ -9,9 +9,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Clock, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
-import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
+import { buildTimedLyrics, activePartialIndex, activeLineIndex } from '@/lib/player/lyricTiming';
 import { useLyricSync } from './useLyricSync';
-import { AlignBanner, LyricSyncBar, SYNC_LABELS, SYNC_CSS, alignPercent } from './LyricSyncBar';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
@@ -33,7 +32,7 @@ const NOW_DESIGNS: Design[] = ['lyrics', 'card', 'cassette', 'pocket'];
 const LIST_DESIGNS: Design[] = ['persp', 'arc'];
 
 const T = {
-  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', est: '가사 시간 추정', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', cassette: '카세트', pocket: '포켓', persp: '커버플로', arc: '원통형' },
+  KO: { close: '닫기', now: '지금 재생', list: '재생목록', playing: '지금 재생 중', noLyr: '등록된 가사가 없습니다', prev: '이전 곡', next: '다음 곡', play: '재생', pause: '일시정지', seek: '재생 위치', view: '보기 전환', section: '구간', design: '디자인', lyrics: '가사형', card: '카드형', cassette: '카세트', pocket: '포켓', persp: '커버플로', arc: '원통형' },
   EN: { close: 'Close', now: 'Now playing', list: 'Playlist', playing: 'Now playing', est: 'Lyric timing estimated', noLyr: 'No lyrics for this track', prev: 'Previous', next: 'Next', play: 'Play', pause: 'Pause', seek: 'Seek', view: 'Switch view', section: 'Section', design: 'Design', lyrics: 'Lyrics', card: 'Card', cassette: 'Cassette', pocket: 'Pocket', persp: 'Cover Flow', arc: 'Arc' },
   JA: { close: '閉じる', now: '再生中', list: 'プレイリスト', playing: '再生中', est: '歌詞タイミングは推定', noLyr: '歌詞がありません', prev: '前の曲', next: '次の曲', play: '再生', pause: '一時停止', seek: '再生位置', view: '表示切替', section: 'パート', design: 'デザイン', lyrics: '歌詞', card: 'カード', cassette: 'カセット', pocket: 'ポケット', persp: 'カバーフロー', arc: '円筒' },
 } as const;
@@ -125,16 +124,24 @@ export function ImmersivePlayer() {
   }, [isImmersiveOpen, setImmersiveOpen]);
 
   const dur = duration || currentTrack?.duration_sec || 0;
-  const sync = useLyricSync(currentTrack, isImmersiveOpen && view === 'now' && designs.now === 'lyrics', isPlaying);
+  const sync = useLyricSync(currentTrack, isPlaying);
   const timed = useMemo(
-    () => buildTimedLyrics(currentTrack?.lyrics, dur, { lrc: sync.lrc, spans: sync.spans }),
-    [currentTrack?.lyrics, dur, sync.lrc, sync.spans],
+    () => buildTimedLyrics(currentTrack?.lyrics, dur, { lrc: sync.lrc }),
+    [currentTrack?.lyrics, dur, sync.lrc],
   );
   // 자동 맞추기에 쓸 가사 줄 목록(구간 표지 제외)을 훅에 넘긴다
   const lyricLineTexts = useMemo(() => timed.lines.filter((l) => l.kind === 'line').map((l) => l.text), [timed.lines]);
   useEffect(() => { sync.setAutoInput(lyricLineTexts, dur); }, [sync.setAutoInput, lyricLineTexts, dur]);
-  // 오프셋이 +면 가사가 그만큼 먼저 나온다(가사 빠르게)
-  const active = timed.mode === 'none' ? -1 : activeLineIndex(timed.lines, currentTime + sync.offset);
+  // 가사 줄 번호(구간 표지 제외) → 화면 줄 번호
+  const lineAt = useMemo(() => timed.lines.map((l, i) => (l.kind === 'line' ? i : -1)).filter((i) => i >= 0), [timed.lines]);
+  // 시간표가 확정(exact)이거나 부분 시간표가 있을 때만 싱크 모드. 시간표가 없으면 추정하지 않고 일반 가사로 보인다
+  const partial = timed.mode !== 'exact' && sync.partial && sync.partial.length === lineAt.length ? sync.partial : null;
+  let active = -1;
+  if (timed.mode === 'exact') active = activeLineIndex(timed.lines, currentTime);
+  else if (partial) { const p = activePartialIndex(partial, currentTime); active = p >= 0 ? lineAt[p] : -1; }
+  const highlighting = timed.mode === 'exact' || active >= 0;
+  /** 화면 줄 번호 → 눌렀을 때 이동할 시각(모르면 NaN) */
+  const startOf = (i: number) => (timed.mode === 'exact' ? timed.lines[i].start : partial ? (partial[lineAt.indexOf(i)] ?? NaN) : NaN);
 
   useEffect(() => {
     const box = lyricBoxRef.current;
@@ -165,7 +172,7 @@ export function ImmersivePlayer() {
 
   return (
     <div className={`imm-root${closing ? ' imm-out' : ' imm-in'}${view === 'now' && designs.now === 'card' ? ' imm-framed' : ''}${view === 'now' && designs.now === 'cassette' ? ' imm-cassette' : ''}${!clockLay.hidden ? ` imm-clock-on imm-clock-${clockLay.pos}` : ''}`} role="dialog" aria-modal="true" aria-label={t.playing} data-testid="immersive-player" style={{ ['--clk-t' as any]: `${clockLay.hidden ? 0 : clockLay.t}px`, ['--clk-b' as any]: `${clockLay.hidden ? 0 : clockLay.b}px` }}>
-      <style>{IMM_CSS + SYNC_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
+      <style>{IMM_CSS + PCF_CSS + CCF_CSS + CS_CSS + VOL_CTL_CSS + BG_CSS + SPEC_CSS + PK_CSS}</style>
       <ImmBackground src={cover} reduced={reduced} />
       {view === 'now' && designs.now === 'cassette' && <div className="cs-woodbg" aria-hidden="true" />}
       <div className="imm-veil" aria-hidden="true" />
@@ -213,41 +220,25 @@ export function ImmersivePlayer() {
               <p className="imm-nolyr">{t.noLyr}</p>
             ) : (
               <>
-                <AlignBanner labels={SYNC_LABELS[lang]} align={sync.align} />
-                <div className={`imm-lyrics${alignPercent(sync.align) !== null ? ' is-aligning' : ''}`} ref={lyricBoxRef}>
+                <div className={`imm-lyrics${highlighting ? '' : ' is-plain'}`} ref={lyricBoxRef}>
                   <div className="imm-pad" />
                   {timed.lines.map((l, i) => {
                     if (l.kind === 'section') return <p key={i} className="imm-sec" ref={(el) => { lineRefs.current[i] = el; }}>{l.text}</p>;
                     const d = active < 0 ? 3 : Math.abs(i - active);
-                    const cls = i === active ? 'imm-line is-active' : 'imm-line';
+                    const cls = !highlighting ? 'imm-line is-plain' : i === active ? 'imm-line is-active' : 'imm-line';
                     return (
                       <p
                         key={i}
                         ref={(el) => { lineRefs.current[i] = el; }}
                         className={cls}
-                        style={{ opacity: i === active ? 1 : Math.max(0.16, 0.6 - d * 0.14) }}
+                        style={{ opacity: !highlighting ? 0.85 : i === active ? 1 : Math.max(0.16, 0.6 - d * 0.14) }}
                         aria-current={i === active ? 'true' : undefined}
-                        onClick={() => { if (!isNaN(l.start)) seek(Math.max(0, l.start - sync.offset)); }}
+                        onClick={highlighting ? () => { const st = startOf(i); if (!isNaN(st)) seek(Math.max(0, st)); } : undefined}
                       >{l.text}</p>
                     );
                   })}
                   <div className="imm-pad" />
                 </div>
-                {(timed.mode === 'estimated' || timed.mode === 'exact') && (
-                  <LyricSyncBar
-                    labels={SYNC_LABELS[lang]}
-                    mode={timed.mode}
-                    basis={timed.basis}
-                    offset={sync.offset}
-                    onOffset={sync.setOffset}
-                    align={sync.align}
-                    onAlign={() => {
-                      sync.runAlign(lyricLineTexts, dur);
-                    }}
-                    canAlignAgain={sync.hasLocalLrc}
-                    realigned={sync.realigned}
-                  />
-                )}
               </>
             )}
           </section>
@@ -327,8 +318,10 @@ const IMM_CSS = `
 .imm-pad{height:40%}
 .imm-line{font-size:clamp(18px,2vw,28px);line-height:1.45;font-weight:700;margin:0 0 14px;cursor:pointer;transition:opacity .35s,color .35s,transform .35s;transform-origin:left center;word-break:keep-all}
 .imm-line.is-active{color:#fff;transform:scale(1.04);text-shadow:0 0 28px rgba(255,255,255,.35)}
+.imm-lyrics.is-plain{overflow-y:auto;scrollbar-width:thin}
+.imm-lyrics.is-plain .imm-pad{height:12%}
+.imm-line.is-plain{cursor:default}
 .imm-sec{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:rgba(255,255,255,.4);margin:18px 0 8px}
-.imm-est{margin-top:10px;font-size:12px;color:rgba(255,255,255,.55);padding-left:clamp(16px,2.4vw,32px)}
 .imm-nolyr{margin:auto 0;font-size:16px;color:rgba(255,255,255,.55);border-left:2px solid rgba(255,255,255,.18);padding-left:24px}
 .imm-bottom{padding:0 clamp(20px,6vw,96px) 22px}
 .imm-seekrow{display:flex;align-items:center;gap:12px;font-size:12px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.7)}

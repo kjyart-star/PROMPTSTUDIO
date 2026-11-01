@@ -33,8 +33,15 @@ export function styleOfItem(item: any): string {
 /**
  * 자동 맞추기 결과(form.lrc_auto)의 판 번호. 정렬 방식을 바꾸면 올린다 — 판이 다른 저장값은 무시하고 브라우저가 다시 계산한다(값은 지우지 않는다).
  * 2: whisper small 강제 정렬(어텐션 DTW) + 앞 줄 기준 창·줄 사이 음표 토큰(2026-11-01).
+ * 3: 회사 PC 사전 계산(LRC_GPU_MODEL) 도입 — 판 2 결과(브라우저 small)는 쓰지 않는다(2026-11-02).
+ *    브라우저 폴백 결과도 판 3 으로 저장하되 lrc_auto_model 이 달라 GPU 워커가 나중에 덮어쓴다.
  */
-export const LRC_AUTO_VERSION = 2
+export const LRC_AUTO_VERSION = 3
+
+/** 회사 PC 사전 계산 정렬기 이름 — form.lrc_auto_model·song_lrc_auto.model 에 남는다 */
+export const LRC_GPU_MODEL = 'gpu-whisper-large-v3'
+/** 브라우저 폴백 정렬기 이름 */
+export const LRC_BROWSER_MODEL = 'browser-whisper-small'
 
 /**
  * 곡 기록에 저장된 가사 시간표. 사용자가 올리거나 편집한 form.lrc(lrc_by='user') → 현재 판의 자동 맞추기 결과(lrc_auto) 순.

@@ -153,3 +153,23 @@ export function activeLineIndex(lines: LyricLine[], t: number): number {
   }
   return idx;
 }
+
+/** 다음 줄 시각을 모르는 줄은 시작한 지 이 시간(초)이 지나면 강조를 멈춘다 */
+export const PARTIAL_HOLD_SEC = 8;
+
+/**
+ * 부분 시간표(줄 일부만 시각을 아는 상태)에서 강조할 줄 번호. 없으면 -1(일반 가사로 보인다).
+ * 시각을 아는 줄 중 starts[i] <= t 인 마지막 줄 i 를 고르되, 다음 줄 시각을 모르면 t - starts[i] < 8초일 때만 강조한다.
+ */
+export function activePartialIndex(starts: (number | null)[] | null | undefined, t: number): number {
+  if (!starts) return -1;
+  let idx = -1;
+  for (let i = 0; i < starts.length; i++) {
+    const s = starts[i];
+    if (s !== null && s !== undefined && isFinite(s) && s <= t) idx = i;
+  }
+  if (idx < 0) return -1;
+  const next = starts[idx + 1];
+  const nextKnown = next !== null && next !== undefined && isFinite(next);
+  return nextKnown || t - (starts[idx] as number) < PARTIAL_HOLD_SEC ? idx : -1;
+}

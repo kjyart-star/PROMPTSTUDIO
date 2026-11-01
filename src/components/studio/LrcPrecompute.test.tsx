@@ -44,7 +44,7 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(call[0]).toBe('/api/song-history/a')
-    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 2 })
+    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 3 })
     expect(onSaved).toHaveBeenCalledWith('a', result.lrc)
     await act(async () => { await vi.advanceTimersByTimeAsync(3500) })
     expect(autoAlign).toHaveBeenCalledTimes(2)
@@ -52,7 +52,7 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
   })
 
   it('로그인하지 않았거나 맞출 곡이 없으면 아무것도 하지 않는다', async () => {
-    const done = { ...song('a'), form: { lrc_auto: result.lrc, lrc_auto_v: 2 } }
+    const done = { ...song('a'), form: { lrc_auto: result.lrc, lrc_auto_v: 3 } }
     render(<LrcPrecompute userId="u1" history={[done]} lang="KO" onSaved={vi.fn()} />)
     render(<LrcPrecompute userId={null} history={[song('b')]} lang="KO" onSaved={vi.fn()} />)
     await act(async () => { await vi.advanceTimersByTimeAsync(20_000) })

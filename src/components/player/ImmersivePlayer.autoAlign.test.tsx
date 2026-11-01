@@ -1,137 +1,189 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, act } from '@testing-library/react'
+import { render, screen, cleanup, act, fireEvent } from '@testing-library/react'
 import { usePlayerStore } from '@/stores/playerStore'
 
 const autoAlign = vi.fn()
+const markFailed = vi.fn()
 
 vi.mock('@/lib/player/lyricSyncClient', () => ({
-  analyzeSpans: vi.fn(async () => null),
   autoAlign: (...a: unknown[]) => autoAlign(...a),
   canAutoAlign: () => true,
-  clearCachedLrc: vi.fn(),
   currentAudioSrc: () => 'blob:song',
+  currentAudioTime: () => 31,
   loadCachedLrc: () => null,
-  loadCachedSpans: () => null,
-  loadOffset: () => 0,
-  markFailed: vi.fn(),
+  markFailed: (...a: unknown[]) => markFailed(...a),
   recentlyFailed: () => false,
   saveCachedLrc: vi.fn(),
-  saveOffset: vi.fn(),
-  takeLegacyOffset: (id: string) => legacy.has(id),
 }))
-const legacy = new Set<string>()
+import { releaseAlignLock } from '@/lib/player/alignLock'
 import { ImmersivePlayer } from './ImmersivePlayer'
 
-/** 서버 공유 결과 확인(비동기)이 끝나 화면이 다시 그려진 뒤 5초(자동 시작 대기 4초 + 한가한 때)를 흘린다 */
-const settleAndWait = async () => {
-  await act(async () => { await vi.advanceTimersByTimeAsync(0) })
-  await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
-}
+const FULL = [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }]
+const flush = async (ms = 0) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms) }) }
 
 const trk = (id: string, extra: any = {}) =>
   ({ id, title: `곡 ${id}`, file_url: 'a', duration_sec: 120, lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다', album: { title: '앨범', cover_url: '/c.png' }, ...extra }) as any
+const open = (t: any, extra: any = {}) =>
+  usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 31, duration: 120, isPlaying: true, ...extra })
+
+/** 서버 조회 응답을 흉내 낸다 — shared 가 null 이면 404 */
+const serverReturns = (get: () => unknown[] | null) =>
+  vi.stubGlobal('fetch', vi.fn(async (u: string) => {
+    if (!String(u).includes('/api/song-lrc-auto')) return { ok: true }
+    const lrc = get()
+    return lrc ? { ok: true, json: async () => ({ lrc, v: 3 }) } : { ok: false, status: 404 }
+  }))
 
 beforeEach(() => {
   vi.useFakeTimers()
   autoAlign.mockReset()
+  markFailed.mockReset()
   const mem: Record<string, string> = {}
   vi.stubGlobal('localStorage', { getItem: (k: string) => mem[k] ?? null, setItem: (k: string, v: string) => { mem[k] = v }, removeItem: (k: string) => { delete mem[k] } })
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true })))
+  serverReturns(() => null)
 })
-afterEach(() => { cleanup(); vi.useRealTimers() })
+afterEach(() => { cleanup(); releaseAlignLock(); vi.useRealTimers() })
 
-describe('가사 자동 맞추기 (재생 시작 시 백그라운드)', () => {
-  it('처음 재생하면 추정으로 보이다가, 맞춤 결과가 나오면 시간표로 교체되고 추정 표시가 사라진다', async () => {
-    autoAlign.mockResolvedValue({ ok: true, lrc: [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }] })
-    const t = trk('1')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 31, duration: 120, isPlaying: true })
-    render(<ImmersivePlayer />)
-    expect(screen.getByText('가사 시간 추정')).toBeTruthy()
-    await settleAndWait()
-    expect(autoAlign).toHaveBeenCalledTimes(1)
-    expect(screen.queryByText('가사 시간 추정')).toBeNull()
-    expect(screen.getByText('둘째 줄입니다').getAttribute('aria-current')).toBe('true')
-  })
+const currentLines = () => Array.from(document.querySelectorAll('[aria-current="true"]')).map((e) => e.textContent)
 
-  it('재생 중이 아니면 자동으로 돌리지 않는다', async () => {
-    const t = trk('2')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: false })
-    render(<ImmersivePlayer />)
-    await act(async () => { await vi.advanceTimersByTimeAsync(6000) })
-    expect(autoAlign).not.toHaveBeenCalled()
-  })
-
-  it('옛 시간표에 맞춰 넣었던 오프셋이 있던 곡은 초기화 안내 뒤, 새로 맞추면 「다시 맞췄어요」를 보인다', async () => {
-    autoAlign.mockResolvedValue({ ok: true, lrc: [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }] })
-    legacy.add('4')
-    const t = trk('4')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: true })
-    render(<ImmersivePlayer />)
-    expect(screen.getByText(/직접 넣은 빠르게·느리게 값은 초기화했어요/)).toBeTruthy()
-    await settleAndWait()
-    expect(screen.getByText('가사 시간을 다시 맞췄어요')).toBeTruthy()
-    expect(screen.getByText('0.00s')).toBeTruthy()
-  })
-
-  it('맞추지 못하면 추정을 그대로 두고 실패 안내만 보인다', async () => {
-    autoAlign.mockResolvedValue({ ok: false })
-    const t = trk('3')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: true })
-    render(<ImmersivePlayer />)
-    await settleAndWait()
-    expect(screen.getByText('가사 시간 추정')).toBeTruthy()
-    expect(screen.getByText('자동으로 맞추지 못했어요')).toBeTruthy()
-  })
-
-  it('맞추는 동안 「가사 맞추는 중 N%」를 보이고 가사를 흐리게 하며, 끝나면 「가사 시간 맞춤 완료」를 잠깐 띄운다', async () => {
-    let finish!: (v: unknown) => void
-    autoAlign.mockImplementation((_u: unknown, _l: unknown, _d: unknown, _s: unknown, onPhase: (p: string, n: number) => void) => {
-      onPhase('decode', 0)
-      onPhase('listen', 50)
-      return new Promise((r) => { finish = r })
-    })
-    const t = trk('5')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: true })
+describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
+  it('시간표가 없으면 추정하지 않고 일반 가사로 보인다: 강조·버튼·배너·추정 표시가 없다', async () => {
+    autoAlign.mockReturnValue(new Promise(() => {}))
+    open(trk('1'), { isPlaying: false })
     const { container } = render(<ImmersivePlayer />)
-    expect(screen.queryByTestId('align-banner')).toBeNull()
-    await settleAndWait()
-    expect(screen.getByTestId('align-banner').textContent).toBe('가사 맞추는 중 60%')
-    expect(container.querySelector('.imm-lyrics')!.className).toContain('is-aligning')
-    await act(async () => { finish({ ok: true, lrc: [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }] }) })
-    expect(screen.getByTestId('align-banner').textContent).toBe('가사 시간 맞춤 완료')
-    expect(container.querySelector('.imm-lyrics')!.className).not.toContain('is-aligning')
-    await act(async () => { await vi.advanceTimersByTimeAsync(3500) })
-    expect(screen.queryByTestId('align-banner')).toBeNull()
-  })
-
-  it('서버에 공유된 맞춤 결과가 있으면 브라우저에서 계산하지 않고 그것을 쓴다', async () => {
-    const shared = [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }]
-    vi.stubGlobal('fetch', vi.fn(async (u: string) => (String(u).includes('/api/song-lrc-auto')
-      ? { ok: true, json: async () => ({ lrc: shared, v: 2 }) }
-      : { ok: true })))
-    const t = trk('6')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 31, duration: 120, isPlaying: true })
-    render(<ImmersivePlayer />)
-    await settleAndWait()
-    expect(autoAlign).not.toHaveBeenCalled()
+    await flush()
+    expect(currentLines()).toEqual([])
+    expect(screen.getByText('둘째 줄입니다')).toBeTruthy()
+    expect(container.querySelector('.imm-lyrics')!.className).toContain('is-plain')
+    expect((screen.getByText('둘째 줄입니다') as HTMLElement).style.opacity).toBe('0.85')
     expect(screen.queryByText('가사 시간 추정')).toBeNull()
-    expect(screen.getByText('둘째 줄입니다').getAttribute('aria-current')).toBe('true')
+    expect(screen.queryByRole('button', { name: /가사 (빠르게|느리게|자동 맞추기|다시 맞추기)/ })).toBeNull()
+    expect(screen.queryByTestId('align-banner')).toBeNull()
+    expect(screen.queryByText(/0\.00s/)).toBeNull()
   })
 
-  it('서버 확인이 끝나기 전에는 계산을 시작하지 않고, 결과가 없으면 그때 브라우저에서 계산한다', async () => {
-    autoAlign.mockResolvedValue({ ok: true, lrc: [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }] })
-    let release!: (v: unknown) => void
-    vi.stubGlobal('fetch', vi.fn((u: string) => (String(u).includes('/api/song-lrc-auto')
-      ? new Promise((r) => { release = r })
-      : Promise.resolve({ ok: true }))))
-    const t = trk('7')
-    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: true })
+  it('일반 가사 줄을 눌러도 탐색하지 않는다', async () => {
+    open(trk('1'), { isPlaying: false })
     render(<ImmersivePlayer />)
-    await act(async () => { await vi.advanceTimersByTimeAsync(6000) })
+    await flush()
+    const seek = vi.fn()
+    await act(async () => { usePlayerStore.setState({ seek }) })
+    fireEvent.click(screen.getByText('셋째 줄입니다'))
+    expect(seek).not.toHaveBeenCalled()
+  })
+
+  it('서버에 판 3 시간표가 있으면 브라우저 계산 없이 강조가 시작되고 줄을 누르면 이동한다', async () => {
+    serverReturns(() => FULL)
+    open(trk('6'))
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(autoAlign).not.toHaveBeenCalled()
+    expect(currentLines()).toEqual(['둘째 줄입니다'])
+    const seek = vi.fn()
+    await act(async () => { usePlayerStore.setState({ seek }) })
+    fireEvent.click(screen.getByText('셋째 줄입니다'))
+    expect(seek).toHaveBeenCalledWith(60)
+  })
+
+  it('오프셋 localStorage 값은 읽지 않는다', async () => {
+    serverReturns(() => FULL)
+    localStorage.setItem('cm.lyric-offset.v2:6', '5')
+    open(trk('6'), { currentTime: 28 })
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(currentLines()).toEqual(['첫째 줄입니다'])
+  })
+
+  it('서버에 없고 재생 중이면 곧바로 현재 재생 위치부터 브라우저 계산을 시작하고, 부분 결과가 오면 강조한다', async () => {
+    let onPartial!: (s: (number | null)[]) => void
+    let finish!: (v: unknown) => void
+    autoAlign.mockImplementation((...a: any[]) => { onPartial = a[6].onPartial; return new Promise((r) => { finish = r }) })
+    open(trk('2'))
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(autoAlign).toHaveBeenCalledTimes(1)
+    expect(autoAlign.mock.calls[0][6].startSec).toBe(31)
+    expect(currentLines()).toEqual([]) // 아직 아는 줄이 없다
+    await act(async () => { onPartial([null, 30, null]) })
+    expect(currentLines()).toEqual(['둘째 줄입니다'])
+    // 다음 줄 시각을 모르는 줄은 8초가 지나면 강조를 멈추고 일반 가사로 돌아간다
+    await act(async () => { usePlayerStore.setState({ currentTime: 39 }) })
+    expect(currentLines()).toEqual([])
+    await act(async () => { onPartial([3, 30, null]); usePlayerStore.setState({ currentTime: 33 }) })
+    expect(currentLines()).toEqual(['둘째 줄입니다'])
+    await act(async () => { finish({ ok: true, lrc: FULL }) })
+    await act(async () => { usePlayerStore.setState({ currentTime: 61 }) })
+    expect(currentLines()).toEqual(['셋째 줄입니다'])
+  })
+
+  it('재생 중이 아니면 브라우저 계산을 시작하지 않는다', async () => {
+    open(trk('3'), { isPlaying: false })
+    render(<ImmersivePlayer />)
+    await flush(6000)
+    expect(autoAlign).not.toHaveBeenCalled()
+  })
+
+  it('서버 확인 응답이 오기 전에는 계산을 시작하지 않는다', async () => {
+    let release!: (v: unknown) => void
+    vi.stubGlobal('fetch', vi.fn((u: string) => (String(u).includes('/api/song-lrc-auto') ? new Promise((r) => { release = r }) : Promise.resolve({ ok: true }))))
+    autoAlign.mockReturnValue(new Promise(() => {}))
+    open(trk('7'))
+    render(<ImmersivePlayer />)
+    await flush(3000)
     expect(autoAlign).not.toHaveBeenCalled()
     await act(async () => { release({ ok: false }) })
-    await settleAndWait()
+    await flush()
     expect(autoAlign).toHaveBeenCalledTimes(1)
+  })
+
+  it('계산 도중 20초 뒤 서버에 결과가 생기면 폴백을 중단하고 서버 시간표로 교체한다', async () => {
+    let shared: unknown[] | null = null
+    serverReturns(() => shared)
+    let signal!: AbortSignal
+    autoAlign.mockImplementation((...a: any[]) => { signal = a[5]; return new Promise((_r, rej) => a[5].addEventListener('abort', () => rej(new Error('aborted')))) })
+    open(trk('8'))
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(autoAlign).toHaveBeenCalledTimes(1)
+    expect(signal.aborted).toBe(false)
+    shared = FULL
+    await flush(20_000)
+    expect(signal.aborted).toBe(true)
+    expect(markFailed).not.toHaveBeenCalled()
+    expect(currentLines()).toEqual(['둘째 줄입니다'])
+  })
+
+  it('재생이 멈춰 있는 동안에는 서버에 다시 묻지 않는다', async () => {
+    autoAlign.mockReturnValue(new Promise(() => {}))
+    open(trk('9'), { isPlaying: false })
+    render(<ImmersivePlayer />)
+    await flush()
+    const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+    const first = fetchMock.mock.calls.length
+    await flush(60_000)
+    expect(fetchMock.mock.calls.length).toBe(first)
+    await act(async () => { usePlayerStore.setState({ isPlaying: true }) })
+    await flush(20_000)
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(first)
+  })
+
+  it('맞추지 못하면 일반 가사 그대로 두고 7일간 실패로 기록한다', async () => {
+    autoAlign.mockResolvedValue({ ok: false })
+    open(trk('10'))
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(markFailed).toHaveBeenCalledWith('10')
+    expect(currentLines()).toEqual([])
+  })
+
+  it('내 스튜디오 곡은 맞춤 완료 후 lrc_auto 판 3 으로 저장한다', async () => {
+    autoAlign.mockResolvedValue({ ok: true, lrc: FULL })
+    open(trk('11', { album_id: 'studio-generated' }))
+    render(<ImmersivePlayer />)
+    await flush()
+    const calls = (globalThis.fetch as any).mock.calls.filter((c: any[]) => String(c[0]).includes('/api/song-history/11'))
+    expect(calls).toHaveLength(1)
+    expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 3 })
   })
 })

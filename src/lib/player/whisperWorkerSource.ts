@@ -1,7 +1,7 @@
 /**
  * 「가사 자동 맞추기」 강제 정렬 워커의 소스(일반 JS 문자열) — Blob 워커로 띄운다.
  * 원문 가사를 whisper 디코더에 그대로 넣고(교사 강제) 교차 어텐션을 DTW 로 훑어 줄 시작 시각을 얻는다.
- * 자유 인식(받아쓰기)은 노래에서 틀리고 환각이 많아 쓰지 않는다 — 4곡 측정에서 강제 정렬이 월등했다.
+ * 자유 인식(받아쓰기)은 노래에서 틀리고 환각이 많아 시작 줄 찾기(15초 청크)에만 쓴다 — 4곡 측정에서 강제 정렬이 월등했다.
  * 번들러를 거치지 않고 transformers.js 를 CDN 에서 불러오므로 앱 번들과 빌드에 영향이 없다.
  * 같은 코드를 Node 하네스에서도 돌려 정확도를 잰다(CORE 부분만 떼어 실행).
  * 주의: 이 문자열 안에는 백틱·달러 중괄호를 쓰지 않는다.
@@ -90,22 +90,26 @@ async function alignWindow(asr, Tensor, samples, a, b, lineIds) {
  * 창 앞쪽 20초 안에 시작하는 줄만 받아들인 뒤, 마지막으로 받아들인 줄 1초 앞에서 다음 창을 연다.
  * 줄 사이·앞뒤에 음표 토큰을 넣어 전주·간주·애드리브·후렴 반복처럼 가사가 아닌 소리가 줄에 붙지 않게 한다
  * (2026-11-01 측정: 애드리브가 있는 곡에서 12초, 후렴 반복으로 끝나는 곡에서 21초 어긋나던 것을 잡았다).
+ * opts: { from: 시작 줄, to: 끝 줄(미포함), winStart: 첫 창 시작 초, res: 결과를 채울 배열, onPartial: 창 하나가 끝날 때마다 호출 }
  * 반환: 줄마다 시작 초
  */
-async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress) {
+async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress, opts) {
+  opts = opts || {};
   var tok = asr.tokenizer, total = samples.length / SR;
   var ids = lines.map(function (l) { return tok.encode(' ' + String(l)); });
   var filler = tok.encode(' \u266a \u266a');
-  var res = new Array(lines.length).fill(null);
-  var i = 0, anchor = -1, winStart = spans && spans.length ? Math.max(0, spans[0].start - 0.5) : 0;
+  var res = opts.res || new Array(lines.length).fill(null);
+  var to = opts.to == null ? lines.length : opts.to;
+  var i = opts.from || 0, anchor = -1;
+  var winStart = opts.winStart != null ? opts.winStart : (spans && spans.length ? Math.max(0, spans[0].start - 0.5) : 0);
   var guard = 0;
-  while (i < lines.length && guard++ < 200) {
+  while (i < to && guard++ < 200) {
     onProgress && onProgress(i / lines.length);
     var a = Math.floor(winStart * SR), b = Math.min(samples.length, a + 30 * SR);
     if (b - a < SR * 3) break;
     /* 창에 넣을 줄: 바로 앞에 맞춘 줄(기준) + 다음 줄들, 토큰 합 150 이하, 최대 8줄 */
     var grp = [], n = anchor >= 0 ? ids[anchor].length : 0;
-    while (i + grp.length < lines.length && grp.length < 8 && n + ids[i + grp.length].length <= 150) { n += ids[i + grp.length].length; grp.push(ids[i + grp.length]); }
+    while (i + grp.length < to && grp.length < 8 && n + ids[i + grp.length].length <= 150) { n += ids[i + grp.length].length; grp.push(ids[i + grp.length]); }
     if (!grp.length) grp.push(ids[i].slice(0, 150));
     /* 음표 토큰을 맨 앞·줄 사이·맨 뒤에 넣어 전주·간주·애드리브·후주처럼 가사가 아닌 소리를 받아 내게 한다 */
     var seq = [filler], off = 1;
@@ -125,6 +129,7 @@ async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress) {
     var lastT = res[i + acceptedTo];
     anchor = i + acceptedTo;
     i += acceptedTo + 1;
+    opts.onPartial && opts.onPartial(res.slice());
     /* 다음 창은 마지막으로 맞춘 줄 바로 앞에서 연다 — 그 줄을 기준으로 다시 넣어 창 앞 소리가 다음 줄로 끌려가지 않게 한다 */
     winStart = Math.min(Math.max(0, total - 3), Math.max(0, lastT - 1));
   }
@@ -132,38 +137,133 @@ async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress) {
   return res;
 }
 
+/* ---- 재생 위치에서 시작하기: 받아쓰기로 지금 부르는 줄을 찾는다 ---- */
+
+function normText(s) { return String(s).toLowerCase().replace(/[^0-9a-zㄱ-ㆎ가-힣]/g, ''); }
+
+function bigramCounts(s) {
+  var m = {}, n = 0;
+  for (var i = 0; i + 1 < s.length; i++) { var g = s.substr(i, 2); m[g] = (m[g] || 0) + 1; n++; }
+  return { m: m, n: n };
+}
+
+/* 글자 2-gram Dice 유사도(0~1) */
+function diceSim(a, b) {
+  var A = bigramCounts(a), B = bigramCounts(b);
+  if (!A.n || !B.n) return 0;
+  var inter = 0;
+  for (var g in A.m) if (B.m[g]) inter += Math.min(A.m[g], B.m[g]);
+  return (2 * inter) / (A.n + B.n);
+}
+
+/*
+ * 받아쓴 글과 가장 비슷한 가사 줄 k 를 찾는다(줄 k 한 줄·k..k+1·k..k+2 를 이어 붙인 것 중 가장 비슷한 점수).
+ * 반복 후렴처럼 비슷한 점수가 여러 곳이면 expected(재생 위치 비례 줄 번호)에 가까운 쪽을 고른다.
+ * 반환: { k, score } — 글이 너무 짧거나 비슷한 곳이 없으면 score 가 낮다
+ */
+function matchLineIndex(text, lines, expected) {
+  var t = normText(text);
+  if (t.length < 4) return { k: 0, score: 0 };
+  var norm = lines.map(normText), sc = [], best = 0;
+  for (var k = 0; k < norm.length; k++) {
+    var w1 = norm[k], w2 = w1 + (norm[k + 1] || ''), w3 = w2 + (norm[k + 2] || '');
+    var s = Math.max(diceSim(t, w1), diceSim(t, w2), diceSim(t, w3));
+    sc.push(s);
+    if (s > best) best = s;
+  }
+  var pick = 0, gap = Infinity;
+  for (var j = 0; j < sc.length; j++) {
+    if (sc[j] >= best - 0.05) { var d = Math.abs(j - expected); if (d < gap) { gap = d; pick = j; } }
+  }
+  return { k: pick, score: best };
+}
+
+/* startSec 근처 15초([startSec-1, startSec+14])를 받아쓰고 가장 비슷한 줄 번호를 돌려준다. 약하면 0 */
+async function findStartLine(asr, samples, lines, startSec) {
+  var a = Math.max(0, Math.floor((startSec - 1) * SR)), b = Math.min(samples.length, a + 15 * SR);
+  if (b - a < SR * 3) return 0;
+  var lang = /[가-힣]/.test(lines.join('')) ? 'korean' : 'english';
+  var out = await asr(samples.slice(a, b), { language: lang, task: 'transcribe' });
+  var text = Array.isArray(out) ? out.map(function (x) { return x.text; }).join(' ') : String(out && out.text || '');
+  var r = matchLineIndex(text, lines, Math.round((startSec / (samples.length / SR)) * lines.length));
+  return r.score >= 0.3 ? r.k : 0;
+}
+
+/*
+ * 재생 위치(startSec)부터 맞춘다: (a) 받아쓰기로 줄 k 를 찾고 (b) k 부터 끝까지 따라간 뒤
+ * (c) 0..k-1 줄을 곡 처음부터 res[k] 전까지 맞춘다. startSec 가 3초 미만이거나 매칭이 약하면 k=0 부터 기존 방식.
+ * onPartial(starts) 는 창 하나가 끝날 때마다 불린다(아직 모르는 줄은 null).
+ */
+async function alignFrom(asr, Tensor, samples, lines, spans, startSec, onProgress, onPartial) {
+  var k = 0;
+  if (startSec >= 3) { try { k = await findStartLine(asr, samples, lines, startSec); } catch (e) { k = 0; } }
+  var res = new Array(lines.length).fill(null);
+  if (k === 0) { await forcedAlign(asr, Tensor, samples, lines, spans, onProgress, { res: res, onPartial: onPartial }); return res; }
+  await forcedAlign(asr, Tensor, samples, lines, spans, onProgress, { res: res, from: k, winStart: Math.max(0, startSec - 4), onPartial: onPartial });
+  var cut = res[k] != null ? Math.min(samples.length, Math.floor((res[k] + 1) * SR)) : samples.length;
+  await forcedAlign(asr, Tensor, samples.subarray(0, cut), lines, spans, onProgress, { res: res, from: 0, to: k, onPartial: onPartial });
+  return res;
+}
+
 `;
 
 export const WHISPER_GLUE_SRC = String.raw`
-var asrP = null, TensorCls = null;
-function load(tf) {
-  if (!asrP) {
-    tf.env.allowLocalModels = false;
-    TensorCls = tf.Tensor;
-    var files = {};
-    asrP = tf.pipeline('automatic-speech-recognition', MODEL, {
-      dtype: 'q8',
-      progress_callback: function (p) {
-        if (p && p.status === 'progress' && p.file) {
-          files[p.file] = [p.loaded, p.total];
-          var l = 0, t = 0;
-          for (var f in files) { l += files[f][0]; t += files[f][1]; }
-          if (t) self.postMessage({ type: 'download', pct: Math.round((l / t) * 100) });
-        }
-      }
-    });
-  }
+var asrP = null, asrDev = '', TensorCls = null;
+
+/* WebGPU 를 쓸 수 있으면 { f16 } 를, 아니면 null */
+async function pickGpu() {
+  try {
+    if (self.navigator && self.navigator.gpu) {
+      var ad = await self.navigator.gpu.requestAdapter();
+      if (ad) return { f16: !!(ad.features && ad.features.has('shader-f16')) };
+    }
+  } catch (e) { /* WASM 으로 */ }
+  return null;
+}
+
+function load(tf, gpu) {
+  var dev = gpu ? 'webgpu' : 'wasm';
+  if (asrP && asrDev === dev) return asrP;
+  tf.env.allowLocalModels = false;
+  TensorCls = tf.Tensor;
+  var files = {};
+  var opts = gpu
+    ? { device: 'webgpu', dtype: gpu.f16 ? 'fp16' : { encoder_model: 'fp32', decoder_model_merged: 'q4' } }
+    : { dtype: 'q8' };
+  opts.progress_callback = function (p) {
+    if (p && p.status === 'progress' && p.file) {
+      files[p.file] = [p.loaded, p.total];
+      var l = 0, t = 0;
+      for (var f in files) { l += files[f][0]; t += files[f][1]; }
+      if (t) self.postMessage({ type: 'download', pct: Math.round((l / t) * 100) });
+    }
+  };
+  asrDev = dev;
+  asrP = tf.pipeline('automatic-speech-recognition', MODEL, opts);
   return asrP;
 }
+
+async function runOnce(tf, gpu, m) {
+  var asr = await load(tf, gpu);
+  self.postMessage({ type: 'device', device: gpu ? 'webgpu' : 'wasm' });
+  self.postMessage({ type: 'listen', pct: 0 });
+  return alignFrom(asr, TensorCls, m.samples, m.lines, m.spans, m.startSec || 0, function (p) {
+    self.postMessage({ type: 'listen', pct: Math.round(p * 100) });
+  }, function (starts) {
+    self.postMessage({ type: 'partial', starts: starts });
+  });
+}
+
 self.onmessage = async function (e) {
   var m = e.data;
   try {
     var tf = await import(TF_URL);
-    var asr = await load(tf);
-    self.postMessage({ type: 'listen', pct: 0 });
-    var starts = await forcedAlign(asr, TensorCls, m.samples, m.lines, m.spans, function (p) {
-      self.postMessage({ type: 'listen', pct: Math.round(p * 100) });
-    });
+    var gpu = await pickGpu(), starts = null;
+    if (gpu) {
+      try { starts = await runOnce(tf, gpu, m); }
+      catch (err) { asrP = null; gpu = null; }   /* WebGPU 에서 막히면 WASM q8 로 다시 */
+    }
+    if (!starts) starts = await runOnce(tf, null, m);
     self.postMessage({ type: 'result', starts: starts });
   } catch (err) {
     asrP = null;

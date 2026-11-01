@@ -6,19 +6,17 @@
  */
 
 import { findVocalSpans, type Span } from './vocalSpans';
-import { finalizeAlignment } from './lyricAlign';
+import { finalizeAlignment, ONSET_LEAD_SEC } from './lyricAlign';
 import type { TimedLine } from './lyricTiming';
 import { whisperWorkerScript } from './whisperWorkerSource';
 
 const SR = 16000;
 const SPANS_KEY = 'cm.lyric-spans.v1:';
 /**
- * v2(2026-11-01): v1 캐시에는 1차 자동 맞추기(자유 인식 + 글자 수 보간) 결과가 남아 2~7초 어긋났다.
- * 키를 바꿔 옛 값은 읽지 않고 다시 계산한다. 그 어긋남에 맞춰 넣은 곡별 오프셋도 함께 초기화한다.
+ * v3(2026-11-02): 서버(회사 PC)가 판 3 을 미리 계산한다. 브라우저 폴백 결과도 판 3 키에 따로 담아 옛 v2 캐시는 읽지 않는다.
+ * (곡별 가사 오프셋 cm.lyric-offset.* 는 더 이상 읽지 않는다 — 지우지는 않는다.)
  */
-const LRC_KEY = 'cm.lyric-lrc.v2:';
-const OFFSET_KEY = 'cm.lyric-offset.v2:';
-const LEGACY_OFFSET_KEY = 'cm.lyric-offset.v1:';
+const LRC_KEY = 'cm.lyric-lrc.v3:';
 
 function read<T>(key: string): T | null {
   try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : null; } catch { return null; }
@@ -27,30 +25,22 @@ function write(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* 저장 공간 없음 — 캐시 없이 계속 */ }
 }
 
-export const loadCachedSpans = (id: string) => read<Span[]>(SPANS_KEY + id);
+const loadCachedSpans = (id: string) => read<Span[]>(SPANS_KEY + id);
 export const loadCachedLrc = (id: string) => read<TimedLine[]>(LRC_KEY + id);
 export const saveCachedLrc = (id: string, lrc: TimedLine[]) => write(LRC_KEY + id, lrc);
-export const clearCachedLrc = (id: string) => { try { localStorage.removeItem(LRC_KEY + id); } catch { /* ignore */ } };
-export const loadOffset = (id: string): number => {
-  const v = Number(read<number>(OFFSET_KEY + id));
-  return isFinite(v) ? v : 0;
-};
-export const saveOffset = (id: string, v: number) => write(OFFSET_KEY + id, v);
-/** 옛 오프셋(v1)이 있었으면 지우고 true — 화면에 「다시 맞췄어요」를 한 번 알린다 */
-export function takeLegacyOffset(id: string): boolean {
-  try {
-    const v = localStorage.getItem(LEGACY_OFFSET_KEY + id);
-    if (v === null) return false;
-    localStorage.removeItem(LEGACY_OFFSET_KEY + id);
-    return Number(JSON.parse(v)) !== 0;
-  } catch { return false; }
-}
 
 /** 지금 재생 중인 곡의 실제 재생 주소(서명·CORS 처리가 끝난 값) */
 export function currentAudioSrc(): string {
   if (typeof document === 'undefined') return '';
   for (const el of Array.from(document.querySelectorAll('audio'))) if (el.currentSrc) return el.currentSrc;
   return '';
+}
+
+/** 지금 재생 중인 오디오 요소의 재생 위치(초) */
+export function currentAudioTime(): number {
+  if (typeof document === 'undefined') return 0;
+  for (const el of Array.from(document.querySelectorAll('audio'))) if (el.currentSrc) return el.currentTime || 0;
+  return 0;
 }
 
 /** 주소의 음원을 16kHz 모노로 디코드한다 */
@@ -103,11 +93,23 @@ export const recentlyFailed = (id: string) => {
 };
 export type AlignPhase = 'decode' | 'download' | 'listen';
 export interface AlignOutcome { ok: boolean; lrc?: TimedLine[] }
+export interface AlignOptions {
+  /** 재생 위치(초) — 이 근처 가사 줄부터 먼저 맞춘다 */
+  startSec?: number;
+  /** 창 하나가 끝날 때마다 줄별 시작 초(아직 모르면 null, 소리보다 앞당긴 값)를 알린다 */
+  onPartial?: (starts: (number | null)[]) => void;
+  /** 어떤 장치로 돌리는지('webgpu' | 'wasm') */
+  onDevice?: (device: string) => void;
+}
 
 export const markFailed = (id: string) => write(FAIL_KEY + id, Date.now());
 
+/** 부분 결과의 시작 초를 화면용으로 바꾼다 — 소리보다 살짝 앞당기고(finalizeAlignment 와 같은 값), 모르는 줄은 null */
+export const leadStarts = (raw: (number | null)[]): (number | null)[] =>
+  raw.map((v) => (v === null || v === undefined || !isFinite(v) ? null : Math.round(Math.max(0, v - ONSET_LEAD_SEC) * 100) / 100));
+
 /** 워커에서 whisper small(양자화)로 줄 시작 시각을 강제 정렬한다. 끝나면 워커를 내린다(모델 파일은 브라우저 캐시에 남는다) */
-function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void, signal?: AbortSignal): Promise<(number | null)[]> {
+function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void, signal?: AbortSignal, opts?: AlignOptions): Promise<(number | null)[]> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(new Error('aborted')); return; }
     const url = URL.createObjectURL(new Blob([whisperWorkerScript()], { type: 'text/javascript' }));
@@ -119,12 +121,14 @@ function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null
       const m = e.data;
       if (m.type === 'download') onPhase('download', m.pct);
       else if (m.type === 'listen') onPhase('listen', m.pct);
+      else if (m.type === 'device') opts?.onDevice?.(m.device);
+      else if (m.type === 'partial') opts?.onPartial?.(leadStarts(m.starts as (number | null)[]));
       else if (m.type === 'result') { done(); resolve(m.starts as (number | null)[]); }
       else if (m.type === 'error') { done(); reject(new Error(m.message)); }
     };
     worker.onerror = (e) => { done(); reject(new Error(e.message || 'worker')); };
     const copy = new Float32Array(samples); // 원본은 호출한 쪽이 계속 쓴다
-    worker.postMessage({ samples: copy, lines, spans }, [copy.buffer]);
+    worker.postMessage({ samples: copy, lines, spans, startSec: opts?.startSec ?? 0 }, [copy.buffer]);
   });
 }
 
@@ -133,12 +137,13 @@ export async function autoAlign(
   url: string, lyricLines: string[], durationSec: number, spans: Span[] | null,
   onPhase: (phase: AlignPhase, pct: number) => void,
   signal?: AbortSignal,
+  opts?: AlignOptions,
 ): Promise<AlignOutcome> {
   onPhase('decode', 0);
   const samples = await decodeMono(url);
   if (signal?.aborted) throw new Error('aborted');
   onPhase('download', 0);
-  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase, signal), durationSec || samples.length / SR);
+  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase, signal, opts), durationSec || samples.length / SR);
   if (!starts) return { ok: false };
   return { ok: true, lrc: lyricLines.map((text, i) => ({ t: starts[i], text })) };
 }
