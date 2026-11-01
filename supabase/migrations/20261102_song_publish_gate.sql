@@ -5,7 +5,7 @@
 create or replace function public.song_history_publish_gate()
 returns trigger
 language plpgsql
-security definer
+-- security invoker(기본): current_user 가 요청한 역할(authenticated·anon·service_role·postgres)이어야 우회 판단이 맞다
 set search_path = public
 as $$
 declare
