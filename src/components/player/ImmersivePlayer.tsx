@@ -125,11 +125,14 @@ export function ImmersivePlayer() {
   }, [isImmersiveOpen, setImmersiveOpen]);
 
   const dur = duration || currentTrack?.duration_sec || 0;
-  const sync = useLyricSync(currentTrack, isImmersiveOpen && view === 'now' && designs.now === 'lyrics');
+  const sync = useLyricSync(currentTrack, isImmersiveOpen && view === 'now' && designs.now === 'lyrics', isPlaying);
   const timed = useMemo(
     () => buildTimedLyrics(currentTrack?.lyrics, dur, { lrc: sync.lrc, spans: sync.spans }),
     [currentTrack?.lyrics, dur, sync.lrc, sync.spans],
   );
+  // 자동 맞추기에 쓸 가사 줄 목록(구간 표지 제외)을 훅에 넘긴다
+  const lyricLineTexts = useMemo(() => timed.lines.filter((l) => l.kind === 'line').map((l) => l.text), [timed.lines]);
+  useEffect(() => { sync.setAutoInput(lyricLineTexts, dur); }, [sync.setAutoInput, lyricLineTexts, dur]);
   // 오프셋이 +면 가사가 그만큼 먼저 나온다(가사 빠르게)
   const active = timed.mode === 'none' ? -1 : activeLineIndex(timed.lines, currentTime + sync.offset);
 
@@ -238,7 +241,7 @@ export function ImmersivePlayer() {
                     onOffset={sync.setOffset}
                     align={sync.align}
                     onAlign={() => {
-                      sync.runAlign(currentTrack.lyrics ? timed.lines.filter((l) => l.kind === 'line').map((l) => l.text) : [], dur);
+                      sync.runAlign(lyricLineTexts, dur);
                     }}
                     canAlignAgain={sync.hasLocalLrc}
                   />

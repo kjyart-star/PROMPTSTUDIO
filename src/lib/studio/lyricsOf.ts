@@ -32,7 +32,12 @@ export function styleOfItem(item: any): string {
 
 /** 곡 기록에 저장된 가사 시간표(form.lrc). 마스터링본만 원곡 시간표를 물려받는다(재생성한 v2 등은 소리가 달라 물려받지 않는다) */
 export function lrcOfItem(item: any, all?: any[]): { t: number; text: string }[] | null {
-  const own = (x: any) => (Array.isArray(x?.form?.lrc) && x.form.lrc.length >= 2 ? (x.form.lrc as { t: number; text: string }[]) : null);
+  const own = (x: any) => {
+    const f = x?.form;
+    if (Array.isArray(f?.lrc) && f.lrc.length >= 2) return f.lrc as { t: number; text: string }[];
+    // 사용자가 올린 시간표가 없으면 자동 맞추기 결과(lrc_auto)
+    return Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2 ? (f.lrc_auto as { t: number; text: string }[]) : null;
+  };
   const mine = own(item);
   if (mine || !all?.length || item?.form?.kind !== 'mastering') return mine;
   const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));

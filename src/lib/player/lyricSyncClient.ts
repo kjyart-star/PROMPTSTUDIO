@@ -6,15 +6,14 @@
  */
 
 import { findVocalSpans, type Span } from './vocalSpans';
-import { alignLyricsToSegments, type AsrSegment } from './lyricAlign';
+import { finalizeAlignment } from './lyricAlign';
 import type { TimedLine } from './lyricTiming';
+import { whisperWorkerScript } from './whisperWorkerSource';
 
 const SR = 16000;
 const SPANS_KEY = 'cm.lyric-spans.v1:';
 const LRC_KEY = 'cm.lyric-lrc.v1:';
 const OFFSET_KEY = 'cm.lyric-offset.v1:';
-const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
-const WHISPER_MODEL = 'onnx-community/whisper-base_timestamped';
 
 function read<T>(key: string): T | null {
   try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : null; } catch { return null; }
@@ -41,7 +40,9 @@ export function currentAudioSrc(): string {
 }
 
 /** 주소의 음원을 16kHz 모노로 디코드한다 */
+let lastDecoded: { url: string; samples: Float32Array } | null = null;
 export async function decodeMono(url: string): Promise<Float32Array> {
+  if (lastDecoded?.url === url) return lastDecoded.samples;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`audio ${res.status}`);
   const buf = await res.arrayBuffer();
@@ -53,6 +54,7 @@ export async function decodeMono(url: string): Promise<Float32Array> {
     const ch = audio.getChannelData(c);
     for (let i = 0; i < out.length; i++) out[i] += ch[i] / audio.numberOfChannels;
   }
+  lastDecoded = { url, samples: out };
   return out;
 }
 
@@ -69,50 +71,54 @@ export async function analyzeSpans(id: string, url: string): Promise<Span[] | nu
   }
 }
 
-let asrPromise: Promise<any> | null = null;
-async function getAsr(onProgress: (pct: number) => void) {
-  if (!asrPromise) {
-    asrPromise = (async () => {
-      const tf: any = await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ TRANSFORMERS_URL);
-      tf.env.allowLocalModels = false;
-      try { tf.env.backends.onnx.wasm.proxy = true; } catch { /* 지원 안 하면 그냥 진행 */ }
-      const files = new Map<string, { loaded: number; total: number }>();
-      return tf.pipeline('automatic-speech-recognition', WHISPER_MODEL, {
-        dtype: 'q8',
-        progress_callback: (p: any) => {
-          if (p?.status === 'progress' && p.file) {
-            files.set(p.file, { loaded: p.loaded, total: p.total });
-            let l = 0, t = 0;
-            files.forEach((f) => { l += f.loaded; t += f.total; });
-            if (t) onProgress(Math.round((l / t) * 100));
-          }
-        },
-      });
-    })().catch((e) => { asrPromise = null; throw e; });
-  }
-  return asrPromise;
+/** 이 기기에서 자동으로 음성 인식을 돌려도 되는지 — 데이터 절약·저사양·모바일 회선이면 자동 실행하지 않는다(버튼은 그대로 쓸 수 있다) */
+export function canAutoAlign(): boolean {
+  if (typeof window === 'undefined' || typeof Worker === 'undefined') return false;
+  const nav = navigator as any;
+  if (nav.connection?.saveData) return false;
+  if (/(^|-)2g$|3g/.test(String(nav.connection?.effectiveType || ''))) return false;
+  if (typeof nav.deviceMemory === 'number' && nav.deviceMemory < 4) return false;
+  return true;
 }
 
+const FAIL_KEY = 'cm.lyric-autofail.v1:';
+const RETRY_AFTER_MS = 7 * 24 * 3600 * 1000;
+export const recentlyFailed = (id: string) => {
+  const t = Number(read<number>(FAIL_KEY + id));
+  return !!t && Date.now() - t < RETRY_AFTER_MS;
+};
 export type AlignPhase = 'download' | 'listen';
 export interface AlignOutcome { ok: boolean; lrc?: TimedLine[] }
 
-/** 음성 인식으로 원문 가사의 줄 시작 시간을 찾는다. 실패하면 ok:false */
+export const markFailed = (id: string) => write(FAIL_KEY + id, Date.now());
+
+/** 워커에서 whisper small(양자화)로 줄 시작 시각을 강제 정렬한다. 끝나면 워커를 내린다(모델 파일은 브라우저 캐시에 남는다) */
+function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void): Promise<(number | null)[]> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(new Blob([whisperWorkerScript()], { type: 'text/javascript' }));
+    const worker = new Worker(url, { type: 'module' });
+    const done = () => { worker.terminate(); URL.revokeObjectURL(url); };
+    worker.onmessage = (e: MessageEvent) => {
+      const m = e.data;
+      if (m.type === 'download') onPhase('download', m.pct);
+      else if (m.type === 'listen') onPhase('listen', m.pct);
+      else if (m.type === 'result') { done(); resolve(m.starts as (number | null)[]); }
+      else if (m.type === 'error') { done(); reject(new Error(m.message)); }
+    };
+    worker.onerror = (e) => { done(); reject(new Error(e.message || 'worker')); };
+    const copy = new Float32Array(samples); // 원본은 호출한 쪽이 계속 쓴다
+    worker.postMessage({ samples: copy, lines, spans }, [copy.buffer]);
+  });
+}
+
+/** 원문 가사의 줄 시작 시간을 찾는다. 실패하면 ok:false */
 export async function autoAlign(
-  url: string, lyricLines: string[], durationSec: number,
+  url: string, lyricLines: string[], durationSec: number, spans: Span[] | null,
   onPhase: (phase: AlignPhase, pct: number) => void,
 ): Promise<AlignOutcome> {
   const samples = await decodeMono(url);
   onPhase('download', 0);
-  const asr = await getAsr((pct) => onPhase('download', pct));
-  onPhase('listen', 0);
-  const out = await asr(samples, {
-    language: 'korean', task: 'transcribe', return_timestamps: true,
-    chunk_length_s: 30, stride_length_s: 5, no_repeat_ngram_size: 3, repetition_penalty: 1.3,
-  });
-  const segs: AsrSegment[] = (out?.chunks ?? [])
-    .filter((c: any) => c?.timestamp && isFinite(c.timestamp[0]))
-    .map((c: any) => ({ text: String(c.text || ''), start: c.timestamp[0], end: c.timestamp[1] ?? c.timestamp[0] }));
-  const res = alignLyricsToSegments(lyricLines, segs, durationSec || samples.length / SR);
-  if (!res.ok) return { ok: false };
-  return { ok: true, lrc: lyricLines.map((text, i) => ({ t: Math.round(res.lines[i].t * 100) / 100, text })) };
+  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase), durationSec || samples.length / SR);
+  if (!starts) return { ok: false };
+  return { ok: true, lrc: lyricLines.map((text, i) => ({ t: starts[i], text })) };
 }

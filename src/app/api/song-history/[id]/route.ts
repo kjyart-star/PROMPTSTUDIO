@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc, playlist_order } = body
+    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc, lrc_auto, playlist_order } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
@@ -63,6 +63,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         if (lrc === null) delete base.lrc
         else if (Array.isArray(lrc)) base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
         updateData.form = base
+      }
+      if (Array.isArray(lrc_auto) && lrc === undefined) {
+        // 자동 맞추기 결과 — 사용자가 올린 form.lrc 와 따로 form.lrc_auto 에 둔다(이미 사용자 시간표가 있으면 저장하지 않는다)
+        const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
+        if (!Array.isArray(base.lrc) || !base.lrc.length) {
+          base.lrc_auto = lrc_auto.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
+          updateData.form = base
+        }
       }
       if (image_url !== undefined) updateData.image_url = image_url
       if (video_url !== undefined) updateData.video_url = video_url
