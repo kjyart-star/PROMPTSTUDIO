@@ -44,9 +44,10 @@ describe('가사 시간표 출처', () => {
   it('표시 없는 옛 form.lrc(1차 자동 맞추기 결과)는 쓰지 않는다', () => {
     expect(lrcOfItem({ form: { lrc: L } })).toBeNull()
   })
-  it('판이 다른 lrc_auto 는 무시하고, 현재 판만 쓴다', () => {
+  it('읽을 수 있는 판(3 이상)만 쓴다 — 판 2 이하·표시 없음은 무시, 다시 계산 중인 판 3 은 쓴다', () => {
     expect(lrcOfItem({ form: { lrc_auto: A } })).toBeNull()
-    expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION - 1 } })).toBeNull()
+    expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: 2 } })).toBeNull()
+    expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: 3 } })).toBe(A)
     expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } })).toBe(A)
   })
   it('마스터링본은 원곡의 사용자 시간표만 물려받고, 자동 결과는 물려받지 않는다', () => {

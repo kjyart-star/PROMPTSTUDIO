@@ -89,3 +89,27 @@ describe('activePartialIndex (부분 시간표)', () => {
     expect(activePartialIndex([10, 20], 30)).toBe(-1)
   })
 })
+
+describe('lyricState (간주·신뢰도)', () => {
+  it('end 가 없으면 다음 줄 전까지 강조, 0.3초 먼저 켠다', async () => {
+    const { lyricState } = await import('./lyricTiming')
+    const L = [{ kind: 'line' as const, text: 'a', start: 5 }, { kind: 'line' as const, text: 'b', start: 20 }]
+    expect(lyricState(L, 4.6).active).toBe(-1)
+    expect(lyricState(L, 4.75).active).toBe(0)
+    expect(lyricState(L, 15).active).toBe(0)
+  })
+  it('end 를 지나 다음 줄까지 2초 넘게 남으면 간주, 2초 이하로 남으면 그대로', async () => {
+    const { lyricState } = await import('./lyricTiming')
+    const L = [{ kind: 'line' as const, text: 'a', start: 5, end: 9 }, { kind: 'line' as const, text: 'b', start: 20, end: 24 }]
+    expect(lyricState(L, 12)).toEqual({ active: -1, interludeAfter: 0, current: 0 })
+    expect(lyricState(L, 18)).toEqual({ active: 0, interludeAfter: -1, current: 0 })
+    expect(lyricState(L, 30)).toEqual({ active: -1, interludeAfter: 1, current: 1 })
+  })
+  it('신뢰도 낮은 줄은 강조하지 않는다', async () => {
+    const { lyricState } = await import('./lyricTiming')
+    const L = [{ kind: 'line' as const, text: 'a', start: 5, conf: 0.2 }, { kind: 'line' as const, text: 'b', start: 20, conf: 0.9 }]
+    expect(lyricState(L, 8)).toEqual({ active: -1, interludeAfter: -1, current: 0 })
+    expect(lyricState(L, 21).active).toBe(1)
+  })
+})
+

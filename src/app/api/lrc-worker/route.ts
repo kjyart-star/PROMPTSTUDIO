@@ -33,6 +33,22 @@ async function audioUrlOf(db: ReturnType<typeof admin>, path: string, published:
   return data?.signedUrl ?? null
 }
 
+/** 단어 시각 검증: 줄 수와 같은 길이, 줄마다 최대 300개의 [시작, 끝, 단어] */
+function wordsOf(input: unknown, n: number): [number, number, string][][] | null {
+  if (!Array.isArray(input) || input.length !== n) return null
+  const out: [number, number, string][][] = []
+  for (const row of input) {
+    if (!Array.isArray(row) || row.length > 300) return null
+    const r: [number, number, string][] = []
+    for (const w of row) {
+      if (!Array.isArray(w) || typeof w[0] !== 'number' || typeof w[1] !== 'number' || typeof w[2] !== 'string' || !isFinite(w[0]) || !isFinite(w[1])) return null
+      r.push([Math.round(w[0] * 100) / 100, Math.round(w[1] * 100) / 100, w[2].slice(0, 60)])
+    }
+    out.push(r)
+  }
+  return out
+}
+
 const COLS = 'id, title, created_at, lyrics, form, audio_url, is_published, trashed_at, status'
 
 export async function GET(request: Request) {
@@ -81,6 +97,10 @@ export async function POST(request: Request) {
     base.lrc_auto = check.lines
     base.lrc_auto_v = LRC_AUTO_VERSION
     base.lrc_auto_model = LRC_GPU_MODEL
+    // 단어 시각(줄마다 [시작, 끝, 단어]) — 이후 단어 강조용으로 저장만 한다. 목록 화면 데이터가 무거워지지 않게 lrc_auto 와 따로 둔다
+    const words = wordsOf(body?.words, check.lines.length)
+    if (words) base.lrc_auto_words = words
+    else delete base.lrc_auto_words
     const up = await db.from('song_history').update({ form: base }).eq('id', songId)
     if (up.error) return NextResponse.json({ error: up.error.message }, { status: 500 })
     const sh = await db.from('song_lrc_auto').upsert(

@@ -86,6 +86,29 @@ describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
     expect(seek).toHaveBeenCalledWith(60)
   })
 
+  it('줄 끝을 지나 다음 줄까지 2초 넘게 남으면 간주: 강조를 끄고 ♪ 를 보이며, 다음 줄은 0.3초 전에 켠다', async () => {
+    const withEnd = [{ t: 3, text: '첫째 줄입니다', end: 8, conf: 0.9 }, { t: 30, text: '둘째 줄입니다', end: 34, conf: 0.9 }, { t: 60, text: '셋째 줄입니다', end: 64, conf: 0.9 }]
+    open(trk('7', { lrc: withEnd }), { currentTime: 20 })
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(currentLines()).toEqual([])
+    expect(screen.getByTestId('lyric-interlude').textContent).toBe('♪')
+    await act(async () => { usePlayerStore.setState({ currentTime: 29.75 }) })
+    expect(currentLines()).toEqual(['둘째 줄입니다'])
+    expect(screen.queryByTestId('lyric-interlude')).toBeNull()
+  })
+
+  it('신뢰도가 낮은 줄 구간은 강조하지 않는다', async () => {
+    const low = [{ t: 3, text: '첫째 줄입니다', conf: 0.9 }, { t: 30, text: '둘째 줄입니다', conf: 0.1 }, { t: 60, text: '셋째 줄입니다', conf: 0.9 }]
+    open(trk('8', { lrc: low }), { currentTime: 40 })
+    render(<ImmersivePlayer />)
+    await flush()
+    expect(currentLines()).toEqual([])
+    expect(screen.queryByTestId('lyric-interlude')).toBeNull()
+    await act(async () => { usePlayerStore.setState({ currentTime: 61 }) })
+    expect(currentLines()).toEqual(['셋째 줄입니다'])
+  })
+
   it('오프셋 localStorage 값은 읽지 않는다', async () => {
     serverReturns(() => FULL)
     localStorage.setItem('cm.lyric-offset.v2:6', '5')
@@ -177,13 +200,13 @@ describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
     expect(currentLines()).toEqual([])
   })
 
-  it('내 스튜디오 곡은 맞춤 완료 후 lrc_auto 판 3 으로 저장한다', async () => {
+  it('내 스튜디오 곡은 맞춤 완료 후 lrc_auto 판 4 로 저장한다', async () => {
     autoAlign.mockResolvedValue({ ok: true, lrc: FULL })
     open(trk('11', { album_id: 'studio-generated' }))
     render(<ImmersivePlayer />)
     await flush()
     const calls = (globalThis.fetch as any).mock.calls.filter((c: any[]) => String(c[0]).includes('/api/song-history/11'))
     expect(calls).toHaveLength(1)
-    expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 3 })
+    expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 4 })
   })
 })

@@ -1,13 +1,21 @@
 import { buildTimedLyrics } from './lyricTiming';
 
 /** 자동 맞추기 결과(가사 줄 시작 시각) 검증 — 서버(제출 받기·저장)와 브라우저(저장 전 점검)가 같은 규칙을 쓴다 */
-export interface LrcLine { t: number; text: string }
+export interface LrcLine {
+  t: number; text: string;
+  /** 줄 끝(마지막 단어 끝, 초) — 회사 PC 결과(판 4)부터. 간주 판단에 쓴다 */
+  end?: number;
+  /** 줄 신뢰도 0~1 — 낮으면 화면이 그 구간을 강조하지 않는다 */
+  conf?: number;
+}
 
 export const MAX_LRC_LINES = 2000;
 /** 곡 길이를 모를 때의 상한(초). 스튜디오 곡은 보통 8분 안쪽이고 마스터링·연장본도 30분을 넘지 않는다 */
 export const MAX_SONG_SEC = 1800;
 /** 첫 줄과 마지막 줄 사이가 이보다 짧으면 정렬이 무너진 것(finalizeAlignment 와 같은 기준의 하한) */
 export const MIN_SPAN_SEC = 10;
+/** 이 신뢰도 아래 줄은 화면에서 강조하지 않는다(lyricTiming 과 같은 값) */
+export const LOW_CONF = 0.35;
 
 /**
  * 무너진 정렬 걸러 내기 — 여러 줄이 한 시각에 몰리거나(앞 줄과 0.05초 이내가 줄 수의 15% 넘음)
@@ -45,10 +53,22 @@ export function validateAutoLrc(input: unknown, opts: Opts = {}): LrcCheck {
     if (t < prev) return { ok: false, reason: 'not-monotonic' };
     if (t > cap) return { ok: false, reason: 'beyond-duration' };
     prev = t;
-    lines.push({ t: Math.round(t * 100) / 100, text });
+    const line: LrcLine = { t: Math.round(t * 100) / 100, text };
+    const end = (raw as any)?.end;
+    if (end !== undefined) {
+      if (typeof end !== 'number' || !isFinite(end) || end < t || end > cap + 5) return { ok: false, reason: 'bad-end' };
+      line.end = Math.round(end * 100) / 100;
+    }
+    const conf = (raw as any)?.conf;
+    if (conf !== undefined) {
+      if (typeof conf !== 'number' || !isFinite(conf) || conf < 0 || conf > 1) return { ok: false, reason: 'bad-conf' };
+      line.conf = Math.round(conf * 100) / 100;
+    }
+    lines.push(line);
   }
   if (lines[lines.length - 1].t - lines[0].t < MIN_SPAN_SEC) return { ok: false, reason: 'too-short-span' };
-  if (!plausibleSpacing(lines.map((l) => l.t))) return { ok: false, reason: 'implausible-spacing' };
+  // 신뢰도가 낮다고 표시된 줄(화면이 강조하지 않음)은 몰림 검사에서 뺀다 — 수노가 부르지 않은 끝 줄 등
+  if (!plausibleSpacing(lines.filter((l) => l.conf === undefined || l.conf >= LOW_CONF).map((l) => l.t))) return { ok: false, reason: 'implausible-spacing' };
   const exp = opts.expectedTexts;
   if (exp) {
     if (exp.length !== lines.length) return { ok: false, reason: 'lyrics-mismatch' };

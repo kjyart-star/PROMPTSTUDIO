@@ -50,6 +50,13 @@ describe('/api/lrc-worker', () => {
     expect(updates[0].v.form).toMatchObject({ keep: 1, lrc_auto_v: LRC_AUTO_VERSION, lrc_auto_model: LRC_GPU_MODEL })
     expect(upserts[0].v).toMatchObject({ song_id: SONG, v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL })
   })
+  it('POST: 줄 끝·신뢰도는 lrc_auto 에, 단어 시각은 lrc_auto_words 에 따로 저장', async () => {
+    const lrc = good.map((l) => ({ ...l, end: l.t + 3, conf: 0.8 }))
+    const words = [[[2, 2.5, '첫']], [[20, 21, '둘째']], [[41, 42, '셋째']]]
+    await POST(req('POST', { song_id: SONG, lrc, v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL, words }))
+    expect(updates[0].v.form.lrc_auto[0]).toEqual({ t: 2, text: '첫 줄', end: 5, conf: 0.8 })
+    expect(updates[0].v.form.lrc_auto_words).toEqual(words)
+  })
   it('POST: 가사와 다르면 422, 사용자 시간표가 있으면 저장하지 않는다', async () => {
     expect((await POST(req('POST', { song_id: SONG, lrc: good.slice(0, 2).concat([{ t: 50, text: '다른 줄' }]), v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL }))).status).toBe(422)
     rows[0].form = { lrc: good, lrc_by: 'user' }

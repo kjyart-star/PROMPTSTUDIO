@@ -61,3 +61,15 @@ describe('plausibleSpacing', () => {
     expect(plausibleSpacing([2, 20, 41])).toBe(true)
   })
 })
+
+describe('validateAutoLrc 줄 끝·신뢰도', () => {
+  it('end·conf 를 받아 다듬고, 범위를 벗어나면 거른다. 신뢰도 낮은 줄은 몰림 검사에서 뺀다', () => {
+    const ok = validateAutoLrc([{ t: 1, text: 'a', end: 3.456, conf: 0.912 }, { t: 12, text: 'b', end: 15, conf: 0.5 }])
+    expect(ok).toEqual({ ok: true, lines: [{ t: 1, text: 'a', end: 3.46, conf: 0.91 }, { t: 12, text: 'b', end: 15, conf: 0.5 }] })
+    expect(validateAutoLrc([{ t: 5, text: 'a', end: 2 }, { t: 20, text: 'b' }])).toMatchObject({ ok: false, reason: 'bad-end' })
+    expect(validateAutoLrc([{ t: 5, text: 'a', conf: 2 }, { t: 20, text: 'b' }])).toMatchObject({ ok: false, reason: 'bad-conf' })
+    const tail = [1, 5, 9, 13, 17, 21, 60, 60, 60, 60].map((t, i) => ({ t, text: String(i), conf: i >= 6 ? 0.05 : 0.9 }))
+    expect(validateAutoLrc(tail).ok).toBe(true)
+  })
+})
+

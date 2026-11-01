@@ -1,4 +1,4 @@
-import { LRC_AUTO_VERSION, lyricsOfItem } from '@/lib/studio/lyricsOf';
+import { lrcAutoReadable, lyricsOfItem } from '@/lib/studio/lyricsOf';
 import { alignLineTexts } from './lrcValidate';
 
 /**
@@ -13,7 +13,7 @@ export function pendingLrcSongs(history: any[], skip?: (id: string) => boolean):
     if (!(it.audio_url || it.stream_url || it.url)) return false;
     const f = it.form;
     if (f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2) return false; // 사용자 시간표가 우선
-    if (f?.lrc_auto_v === LRC_AUTO_VERSION && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return false;
+    if (lrcAutoReadable(f?.lrc_auto_v) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return false;
     if (skip?.(it.id)) return false;
     return alignLineTexts(lyricsOfItem(it, history)).length >= 2;
   });

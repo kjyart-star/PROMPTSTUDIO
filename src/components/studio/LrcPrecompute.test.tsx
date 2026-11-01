@@ -44,7 +44,7 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(call[0]).toBe('/api/song-history/a')
-    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 3 })
+    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 4 })
     expect(onSaved).toHaveBeenCalledWith('a', result.lrc)
     await act(async () => { await vi.advanceTimersByTimeAsync(3500) })
     expect(autoAlign).toHaveBeenCalledTimes(2)

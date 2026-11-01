@@ -36,7 +36,13 @@ export function styleOfItem(item: any): string {
  * 3: 회사 PC 사전 계산(LRC_GPU_MODEL) 도입 — 판 2 결과(브라우저 small)는 쓰지 않는다(2026-11-02).
  *    브라우저 폴백 결과도 판 3 으로 저장하되 lrc_auto_model 이 달라 GPU 워커가 나중에 덮어쓴다.
  */
-export const LRC_AUTO_VERSION = 3
+export const LRC_AUTO_VERSION = 4
+/**
+ * 4: 회사 PC 결과에 줄 끝(end)·신뢰도(conf)·단어 시각(form.lrc_auto_words)을 더함, 줄 시작 앞당김은 화면이 0.3초(2026-11-02).
+ * 읽을 때는 판 3 이상을 받는다 — 판 4 로 다시 계산하는 동안 판 3 결과로 계속 싱크한다.
+ */
+export const LRC_MIN_READ_VERSION = 3
+export const lrcAutoReadable = (v: unknown) => typeof v === 'number' && v >= LRC_MIN_READ_VERSION && v <= LRC_AUTO_VERSION
 
 /** 회사 PC 사전 계산 정렬기 이름 — form.lrc_auto_model·song_lrc_auto.model 에 남는다 */
 export const LRC_GPU_MODEL = 'gpu-whisper-large-v3'
@@ -49,7 +55,7 @@ export const LRC_BROWSER_MODEL = 'browser-whisper-small'
  * 마스터링본만 원곡의 사용자 시간표를 물려받는다(재생성한 v2 등은 소리가 달라 물려받지 않는다).
  * 자동 맞추기 결과는 물려받지 않는다 — 마스터링에서 앞을 잘라 냈을 수 있고(잘라 낸 길이는 기록되지 않음), 마스터링본 음원으로 다시 맞추는 데 비용이 들지 않는다.
  */
-export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: string }[]; by: 'user' | 'auto' } | null {
+export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: string; end?: number; conf?: number }[]; by: 'user' | 'auto' } | null {
   const user = (x: any) => {
     const f = x?.form
     return f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2 ? (f.lrc as { t: number; text: string }[]) : null
@@ -57,7 +63,7 @@ export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: s
   const u = user(item);
   if (u) return { lines: u, by: 'user' };
   const f = item?.form;
-  if (f?.lrc_auto_v === LRC_AUTO_VERSION && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string }[], by: 'auto' };
+  if (lrcAutoReadable(f?.lrc_auto_v) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string; end?: number; conf?: number }[], by: 'auto' };
   if (!all?.length || f?.kind !== 'mastering') return null;
   const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));
   let cur = item;
@@ -72,6 +78,6 @@ export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: s
   return null;
 }
 
-export function lrcOfItem(item: any, all?: any[]): { t: number; text: string }[] | null {
+export function lrcOfItem(item: any, all?: any[]): { t: number; text: string; end?: number; conf?: number }[] | null {
   return lrcPickOf(item, all)?.lines ?? null;
 }

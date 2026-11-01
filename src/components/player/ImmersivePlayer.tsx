@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCircle, Clock, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayerStore } from '@/stores/playerStore';
-import { buildTimedLyrics, activePartialIndex, activeLineIndex } from '@/lib/player/lyricTiming';
+import { buildTimedLyrics, activePartialIndex, lyricState } from '@/lib/player/lyricTiming';
 import { useLyricSync } from './useLyricSync';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
@@ -137,18 +137,22 @@ export function ImmersivePlayer() {
   // 시간표가 확정(exact)이거나 부분 시간표가 있을 때만 싱크 모드. 시간표가 없으면 추정하지 않고 일반 가사로 보인다
   const partial = timed.mode !== 'exact' && sync.partial && sync.partial.length === lineAt.length ? sync.partial : null;
   let active = -1;
-  if (timed.mode === 'exact') active = activeLineIndex(timed.lines, currentTime);
+  let interludeAfter = -1;
+  // 강조가 꺼진 순간(간주·신뢰도 낮은 줄)에도 스크롤·흐림은 지금 부르는 자리에 맞춘다
+  let focus = -1;
+  if (timed.mode === 'exact') ({ active, interludeAfter, current: focus } = lyricState(timed.lines, currentTime));
   else if (partial) { const p = activePartialIndex(partial, currentTime); active = p >= 0 ? lineAt[p] : -1; }
   const highlighting = timed.mode === 'exact' || active >= 0;
+  if (focus < 0) focus = active;
   /** 화면 줄 번호 → 눌렀을 때 이동할 시각(모르면 NaN) */
   const startOf = (i: number) => (timed.mode === 'exact' ? timed.lines[i].start : partial ? (partial[lineAt.indexOf(i)] ?? NaN) : NaN);
 
   useEffect(() => {
     const box = lyricBoxRef.current;
-    const el = lineRefs.current[active];
+    const el = lineRefs.current[focus];
     if (!box || !el || typeof box.scrollTo !== 'function') return;
     box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: reduced ? 'auto' : 'smooth' });
-  }, [active, reduced, view, isImmersiveOpen]);
+  }, [focus, reduced, view, isImmersiveOpen]);
 
   // 닫을 때도 사라지는 움직임이 끝난 뒤에 떼어 낸다
   const [mounted, setMounted] = useState(false);
@@ -224,9 +228,9 @@ export function ImmersivePlayer() {
                   <div className="imm-pad" />
                   {timed.lines.map((l, i) => {
                     if (l.kind === 'section') return <p key={i} className="imm-sec" ref={(el) => { lineRefs.current[i] = el; }}>{l.text}</p>;
-                    const d = active < 0 ? 3 : Math.abs(i - active);
+                    const d = focus < 0 ? 3 : Math.abs(i - focus) + (active < 0 ? 1 : 0);
                     const cls = !highlighting ? 'imm-line is-plain' : i === active ? 'imm-line is-active' : 'imm-line';
-                    return (
+                    const line = (
                       <p
                         key={i}
                         ref={(el) => { lineRefs.current[i] = el; }}
@@ -236,6 +240,10 @@ export function ImmersivePlayer() {
                         onClick={highlighting ? () => { const st = startOf(i); if (!isNaN(st)) seek(Math.max(0, st)); } : undefined}
                       >{l.text}</p>
                     );
+                    // 간주: 직전 줄 아래에 ♪ 대기 표시(강조는 끄고 다음 줄은 시작 0.3초 전에 켠다)
+                    return i === interludeAfter
+                      ? [line, <p key={`gap${i}`} className="imm-interlude" role="status" aria-label="간주" data-testid="lyric-interlude">♪</p>]
+                      : line;
                   })}
                   <div className="imm-pad" />
                 </div>
@@ -321,6 +329,9 @@ const IMM_CSS = `
 .imm-lyrics.is-plain{overflow-y:auto;scrollbar-width:thin}
 .imm-lyrics.is-plain .imm-pad{height:12%}
 .imm-line.is-plain{cursor:default}
+.imm-interlude{font-size:clamp(18px,2vw,26px);line-height:1;margin:-4px 0 14px;color:rgba(255,255,255,.7);animation:imm-gap 1.6s ease-in-out infinite}
+@keyframes imm-gap{0%,100%{opacity:.35}50%{opacity:.9}}
+@media (prefers-reduced-motion: reduce){.imm-interlude{animation:none;opacity:.6}}
 .imm-sec{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:rgba(255,255,255,.4);margin:18px 0 8px}
 .imm-nolyr{margin:auto 0;font-size:16px;color:rgba(255,255,255,.55);border-left:2px solid rgba(255,255,255,.18);padding-left:24px}
 .imm-bottom{padding:0 clamp(20px,6vw,96px) 22px}
