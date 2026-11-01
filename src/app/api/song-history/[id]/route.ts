@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc, lrc_auto, playlist_order } = body
+    const { is_published, playlist_id, liked, image_url, video_url, genre, channel_id, trashed, title, lyrics, lrc, lrc_auto, lrc_auto_v, playlist_order } = body
 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
@@ -60,15 +60,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (lrc !== undefined) {
         // 가사 시간표(LRC/SRT 를 읽은 결과) — form.lrc 에 보관, null 이면 지운다
         const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
-        if (lrc === null) delete base.lrc
-        else if (Array.isArray(lrc)) base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
+        // 이 경로로 들어오는 시간표는 사용자가 올리거나 편집한 것 — lrc_by 로 표시해 옛 자동 결과(표시 없음)와 구분한다
+        if (lrc === null) { delete base.lrc; delete base.lrc_by }
+        else if (Array.isArray(lrc)) { base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) })); base.lrc_by = 'user' }
         updateData.form = base
       }
       if (Array.isArray(lrc_auto) && lrc === undefined) {
-        // 자동 맞추기 결과 — 사용자가 올린 form.lrc 와 따로 form.lrc_auto 에 둔다(이미 사용자 시간표가 있으면 저장하지 않는다)
+        // 자동 맞추기 결과 — 사용자가 올린 form.lrc 와 따로 form.lrc_auto 에 판 번호와 함께 둔다(사용자 시간표가 있으면 저장하지 않는다)
         const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
-        if (!Array.isArray(base.lrc) || !base.lrc.length) {
+        if (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length) {
           base.lrc_auto = lrc_auto.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
+          base.lrc_auto_v = Number(lrc_auto_v) || 0
           updateData.form = base
         }
       }

@@ -6,8 +6,9 @@ import type { Span } from '@/lib/player/vocalSpans';
 import type { TimedLine } from '@/lib/player/lyricTiming';
 import {
   analyzeSpans, autoAlign, canAutoAlign, clearCachedLrc, currentAudioSrc, loadCachedLrc, loadCachedSpans,
-  loadOffset, markFailed, recentlyFailed, saveCachedLrc, saveOffset,
+  loadOffset, markFailed, recentlyFailed, saveCachedLrc, saveOffset, takeLegacyOffset,
 } from '@/lib/player/lyricSyncClient';
+import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf';
 
 export type AlignState =
   | { phase: 'idle' }
@@ -34,6 +35,8 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
   const [localLrc, setLocalLrc] = useState<TimedLine[] | null>(null);
   const [offset, setOffsetState] = useState(0);
   const [align, setAlign] = useState<AlignState>({ phase: 'idle' });
+  /** 옛 시간표에 맞춰 넣었던 오프셋을 초기화했는지 — 화면에 「다시 맞췄어요」 */
+  const [realigned, setRealigned] = useState(false);
   const curId = useRef('');
   const spansRef = useRef<Span[] | null>(null);
   spansRef.current = spans;
@@ -43,10 +46,11 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
   useEffect(() => {
     curId.current = id;
     setAlign({ phase: 'idle' });
-    if (!id) { setSpans(null); setLocalLrc(null); setOffsetState(0); return; }
+    if (!id) { setSpans(null); setLocalLrc(null); setOffsetState(0); setRealigned(false); return; }
     setSpans(loadCachedSpans(id));
     setLocalLrc(loadCachedLrc(id));
     setOffsetState(loadOffset(id));
+    setRealigned(takeLegacyOffset(id));
   }, [id]);
 
   const lrc = trackLrc ?? localLrc;
@@ -94,7 +98,7 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
       if (track?.album_id === 'studio-generated') {
         // 사용자가 올린 LRC(form.lrc)는 건드리지 않고 자동 맞춤 전용 필드(lrc_auto)에만 저장한다
         fetch(`/api/song-history/${mine}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc_auto: out.lrc }),
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc_auto: out.lrc, lrc_auto_v: LRC_AUTO_VERSION }),
         }).catch(() => { /* 저장 실패는 조용히 */ });
       }
     } catch {
@@ -133,5 +137,5 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
     return () => { dead = true; clearTimeout(t); };
   }, [canAuto, id, runAlign, spans]);
 
-  return { lrc, spans, offset, setOffset, align, runAlign, resetAlign, setAutoInput, hasLocalLrc: !!localLrc && !trackLrc };
+  return { lrc, spans, offset, setOffset, align, runAlign, resetAlign, setAutoInput, hasLocalLrc: !!localLrc && !trackLrc, realigned };
 }

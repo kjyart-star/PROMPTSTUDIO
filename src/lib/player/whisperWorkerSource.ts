@@ -86,8 +86,10 @@ async function alignWindow(asr, Tensor, samples, a, b, lineIds) {
 }
 
 /*
- * 줄 순서대로 따라가며 맞춘다: 창(30초)에 다음 줄들을 넣어 정렬하고, 창 앞쪽 20초 안에 시작하는 줄만 받아들인 뒤
- * 마지막으로 받아들인 줄 근처에서 다음 창을 연다. spans 가 있으면 쉬는 구간은 건너뛴다.
+ * 줄 순서대로 따라가며 맞춘다: 창(30초)에 「바로 앞에 맞춘 줄(기준) + 다음 줄들」을 넣어 정렬하고,
+ * 창 앞쪽 20초 안에 시작하는 줄만 받아들인 뒤, 마지막으로 받아들인 줄 1초 앞에서 다음 창을 연다.
+ * 줄 사이·앞뒤에 음표 토큰을 넣어 전주·간주·애드리브·후렴 반복처럼 가사가 아닌 소리가 줄에 붙지 않게 한다
+ * (2026-11-01 측정: 애드리브가 있는 곡에서 12초, 후렴 반복으로 끝나는 곡에서 21초 어긋나던 것을 잡았다).
  * 반환: 줄마다 시작 초
  */
 async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress) {
@@ -95,29 +97,36 @@ async function forcedAlign(asr, Tensor, samples, lines, spans, onProgress) {
   var ids = lines.map(function (l) { return tok.encode(' ' + String(l)); });
   var filler = tok.encode(' \u266a \u266a');
   var res = new Array(lines.length).fill(null);
-  var i = 0, winStart = spans && spans.length ? Math.max(0, spans[0].start - 0.5) : 0, interval = 4;
+  var i = 0, anchor = -1, winStart = spans && spans.length ? Math.max(0, spans[0].start - 0.5) : 0;
   var guard = 0;
   while (i < lines.length && guard++ < 200) {
     onProgress && onProgress(i / lines.length);
     var a = Math.floor(winStart * SR), b = Math.min(samples.length, a + 30 * SR);
     if (b - a < SR * 3) break;
-    /* 창에 넣을 줄: 토큰 합이 150 이하, 최대 8줄 */
-    var grp = [], n = 0;
+    /* 창에 넣을 줄: 바로 앞에 맞춘 줄(기준) + 다음 줄들, 토큰 합 150 이하, 최대 8줄 */
+    var grp = [], n = anchor >= 0 ? ids[anchor].length : 0;
     while (i + grp.length < lines.length && grp.length < 8 && n + ids[i + grp.length].length <= 150) { n += ids[i + grp.length].length; grp.push(ids[i + grp.length]); }
     if (!grp.length) grp.push(ids[i].slice(0, 150));
-    /* 창 앞이 전주·간주일 수 있어, 음표 토큰을 맨 앞에 붙여 그 구간의 어텐션을 받아 내게 한다 */
-    var st = (await alignWindow(asr, Tensor, samples, a, b, [filler].concat(grp))).slice(1);
+    /* 음표 토큰을 맨 앞·줄 사이·맨 뒤에 넣어 전주·간주·애드리브·후주처럼 가사가 아닌 소리를 받아 내게 한다 */
+    var seq = [filler], off = 1;
+    if (anchor >= 0) { seq.push(ids[anchor]); seq.push(filler); off = 3; }
+    for (var q = 0; q < grp.length; q++) { seq.push(grp[q]); seq.push(filler); }
+    var st0 = await alignWindow(asr, Tensor, samples, a, b, seq);
+    var st = []; for (var q2 = 0; q2 < grp.length; q2++) st.push(st0[off + q2 * 2]);
     var lastWin = b >= samples.length - SR;
+    var winLen = (b - a) / SR;
     var acceptedTo = -1;
-    for (var g = 0; g < grp.length; g++) { if (lastWin || st[g] <= 20 || g === 0) acceptedTo = g; else break; }
-    for (var g2 = 0; g2 <= acceptedTo; g2++) res[i + g2] = winStart + st[g2];
-    if (acceptedTo >= 1) interval = Math.max(2, (res[i + acceptedTo] - res[i]) / acceptedTo);
-    var lastT = res[i + acceptedTo];
-    i += acceptedTo + 1;
-    winStart = Math.min(Math.max(0, total - 3), lastT + interval * 0.7);
-    if (spans) { /* 쉬는 구간 안이면 다음 노래 구간 앞으로 */
-      for (var sp of spans) { if (winStart < sp.start - 0.5 && winStart > (sp.start - 40)) { var inSpan = spans.some(function (q) { return winStart >= q.start && winStart <= q.end; }); if (!inSpan) { winStart = sp.start - 0.5; break; } } }
+    for (var g = 0; g < grp.length; g++) {
+      /* 다음 줄이 창 끝에 몰려 있으면(창 밖에 있다는 뜻) 이 줄도 뒤쪽 소리를 떠안았을 수 있어 다음 창에서 다시 본다 */
+      var squeezed = !lastWin && g + 1 < grp.length && st[g + 1] >= winLen - 1;
+      if (g === 0 || (lastWin || st[g] <= 20) && !squeezed) acceptedTo = g; else break;
     }
+    for (var g2 = 0; g2 <= acceptedTo; g2++) res[i + g2] = winStart + st[g2];
+    var lastT = res[i + acceptedTo];
+    anchor = i + acceptedTo;
+    i += acceptedTo + 1;
+    /* 다음 창은 마지막으로 맞춘 줄 바로 앞에서 연다 — 그 줄을 기준으로 다시 넣어 창 앞 소리가 다음 줄로 끌려가지 않게 한다 */
+    winStart = Math.min(Math.max(0, total - 3), Math.max(0, lastT - 1));
   }
   onProgress && onProgress(1);
   return res;

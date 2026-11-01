@@ -12,8 +12,13 @@ import { whisperWorkerScript } from './whisperWorkerSource';
 
 const SR = 16000;
 const SPANS_KEY = 'cm.lyric-spans.v1:';
-const LRC_KEY = 'cm.lyric-lrc.v1:';
-const OFFSET_KEY = 'cm.lyric-offset.v1:';
+/**
+ * v2(2026-11-01): v1 캐시에는 1차 자동 맞추기(자유 인식 + 글자 수 보간) 결과가 남아 2~7초 어긋났다.
+ * 키를 바꿔 옛 값은 읽지 않고 다시 계산한다. 그 어긋남에 맞춰 넣은 곡별 오프셋도 함께 초기화한다.
+ */
+const LRC_KEY = 'cm.lyric-lrc.v2:';
+const OFFSET_KEY = 'cm.lyric-offset.v2:';
+const LEGACY_OFFSET_KEY = 'cm.lyric-offset.v1:';
 
 function read<T>(key: string): T | null {
   try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : null; } catch { return null; }
@@ -31,6 +36,15 @@ export const loadOffset = (id: string): number => {
   return isFinite(v) ? v : 0;
 };
 export const saveOffset = (id: string, v: number) => write(OFFSET_KEY + id, v);
+/** 옛 오프셋(v1)이 있었으면 지우고 true — 화면에 「다시 맞췄어요」를 한 번 알린다 */
+export function takeLegacyOffset(id: string): boolean {
+  try {
+    const v = localStorage.getItem(LEGACY_OFFSET_KEY + id);
+    if (v === null) return false;
+    localStorage.removeItem(LEGACY_OFFSET_KEY + id);
+    return Number(JSON.parse(v)) !== 0;
+  } catch { return false; }
+}
 
 /** 지금 재생 중인 곡의 실제 재생 주소(서명·CORS 처리가 끝난 값) */
 export function currentAudioSrc(): string {
@@ -81,7 +95,7 @@ export function canAutoAlign(): boolean {
   return true;
 }
 
-const FAIL_KEY = 'cm.lyric-autofail.v1:';
+const FAIL_KEY = 'cm.lyric-autofail.v2:';
 const RETRY_AFTER_MS = 7 * 24 * 3600 * 1000;
 export const recentlyFailed = (id: string) => {
   const t = Number(read<number>(FAIL_KEY + id));

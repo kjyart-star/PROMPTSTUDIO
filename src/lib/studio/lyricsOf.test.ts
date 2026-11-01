@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lyricsOfItem, styleOfItem } from './lyricsOf'
+import { lyricsOfItem, styleOfItem, lrcOfItem, LRC_AUTO_VERSION } from './lyricsOf'
 import { buildHistoryQueue, queueWithPlayable, historyItemToTrack } from './playQueue'
 
 const opts = { artistName: '나', slug: 'me' }
@@ -32,5 +32,30 @@ describe('스튜디오 곡 가사', () => {
   it('스타일은 prompt → form.style → genre', () => {
     expect(styleOfItem({ form: { style: 's' }, genre: 'g' })).toBe('s')
     expect(styleOfItem({ genre: 'g' })).toBe('g')
+  })
+})
+
+describe('가사 시간표 출처', () => {
+  const L = [{ t: 1, text: '가' }, { t: 5, text: '나' }]
+  const A = [{ t: 2, text: '가' }, { t: 6, text: '나' }]
+  it('사용자 시간표(lrc_by=user)가 자동 맞추기보다 먼저다', () => {
+    expect(lrcOfItem({ form: { lrc: L, lrc_by: 'user', lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } })).toBe(L)
+  })
+  it('표시 없는 옛 form.lrc(1차 자동 맞추기 결과)는 쓰지 않는다', () => {
+    expect(lrcOfItem({ form: { lrc: L } })).toBeNull()
+  })
+  it('판이 다른 lrc_auto 는 무시하고, 현재 판만 쓴다', () => {
+    expect(lrcOfItem({ form: { lrc_auto: A } })).toBeNull()
+    expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION - 1 } })).toBeNull()
+    expect(lrcOfItem({ form: { lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } })).toBe(A)
+  })
+  it('마스터링본은 원곡의 사용자 시간표만 물려받고, 자동 결과는 물려받지 않는다', () => {
+    const m = { id: 'm', form: { kind: 'mastering', source_id: 'o' } }
+    expect(lrcOfItem(m, [{ id: 'o', form: { lrc: L, lrc_by: 'user' } }, m])).toBe(L)
+    expect(lrcOfItem(m, [{ id: 'o', form: { lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } }, m])).toBeNull()
+  })
+  it('재생성 v2 는 원곡 시간표를 물려받지 않는다', () => {
+    const v2 = { id: 'v', form: { parent_id: 'o' } }
+    expect(lrcOfItem(v2, [{ id: 'o', form: { lrc: L, lrc_by: 'user' } }, v2])).toBeNull()
   })
 })

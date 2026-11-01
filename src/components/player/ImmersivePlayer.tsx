@@ -244,6 +244,7 @@ export function ImmersivePlayer() {
                       sync.runAlign(lyricLineTexts, dur);
                     }}
                     canAlignAgain={sync.hasLocalLrc}
+                    realigned={sync.realigned}
                   />
                 )}
               </>

@@ -4,6 +4,7 @@ import { render, screen, cleanup, act } from '@testing-library/react'
 import { usePlayerStore } from '@/stores/playerStore'
 
 const autoAlign = vi.fn()
+
 vi.mock('@/lib/player/lyricSyncClient', () => ({
   analyzeSpans: vi.fn(async () => null),
   autoAlign: (...a: unknown[]) => autoAlign(...a),
@@ -17,7 +18,9 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
   recentlyFailed: () => false,
   saveCachedLrc: vi.fn(),
   saveOffset: vi.fn(),
+  takeLegacyOffset: (id: string) => legacy.has(id),
 }))
+const legacy = new Set<string>()
 import { ImmersivePlayer } from './ImmersivePlayer'
 
 const trk = (id: string, extra: any = {}) =>
@@ -51,6 +54,18 @@ describe('가사 자동 맞추기 (재생 시작 시 백그라운드)', () => {
     render(<ImmersivePlayer />)
     await act(async () => { await vi.advanceTimersByTimeAsync(6000) })
     expect(autoAlign).not.toHaveBeenCalled()
+  })
+
+  it('옛 시간표에 맞춰 넣었던 오프셋이 있던 곡은 초기화 안내 뒤, 새로 맞추면 「다시 맞췄어요」를 보인다', async () => {
+    autoAlign.mockResolvedValue({ ok: true, lrc: [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }] })
+    legacy.add('4')
+    const t = trk('4')
+    usePlayerStore.setState({ isImmersiveOpen: true, currentTrack: t, queue: [t], queueIndex: 0, currentTime: 1, duration: 120, isPlaying: true })
+    render(<ImmersivePlayer />)
+    expect(screen.getByText(/직접 넣은 빠르게·느리게 값은 초기화했어요/)).toBeTruthy()
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
+    expect(screen.getByText('가사 시간을 다시 맞췄어요')).toBeTruthy()
+    expect(screen.getByText('0.00s')).toBeTruthy()
   })
 
   it('맞추지 못하면 추정을 그대로 두고 실패 안내만 보인다', async () => {
