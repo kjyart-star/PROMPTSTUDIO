@@ -9,6 +9,7 @@ const markFailed = vi.fn()
 vi.mock('@/lib/player/lyricSyncClient', () => ({
   autoAlign: (...a: unknown[]) => autoAlign(...a),
   canAutoAlign: () => true,
+  batteryLow: async () => false,
   currentAudioSrc: () => 'blob:song',
   currentAudioTime: () => 31,
   loadCachedLrc: () => null,
@@ -30,9 +31,9 @@ const open = (t: any, extra: any = {}) =>
 /** 서버 조회 응답을 흉내 낸다 — shared 가 null 이면 404 */
 const serverReturns = (get: () => unknown[] | null) =>
   vi.stubGlobal('fetch', vi.fn(async (u: string) => {
-    if (!String(u).includes('/api/song-lrc-auto')) return { ok: true }
-    const lrc = get()
-    return lrc ? { ok: true, json: async () => ({ lrc, v: 3 }) } : { ok: false, status: 404 }
+    if (!String(u).includes('/api/lyrics-sync/')) return { ok: true }
+    const lines = get()
+    return lines ? { ok: true, json: async () => ({ lines, v: 3, source: 'auto' }) } : { ok: false, status: 404 }
   }))
 
 beforeEach(() => {
@@ -149,7 +150,7 @@ describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
 
   it('서버 확인 응답이 오기 전에는 계산을 시작하지 않는다', async () => {
     let release!: (v: unknown) => void
-    vi.stubGlobal('fetch', vi.fn((u: string) => (String(u).includes('/api/song-lrc-auto') ? new Promise((r) => { release = r }) : Promise.resolve({ ok: true }))))
+    vi.stubGlobal('fetch', vi.fn((u: string) => (String(u).includes('/api/lyrics-sync/') ? new Promise((r) => { release = r }) : Promise.resolve({ ok: true }))))
     autoAlign.mockReturnValue(new Promise(() => {}))
     open(trk('7'))
     render(<ImmersivePlayer />)
@@ -200,13 +201,13 @@ describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
     expect(currentLines()).toEqual([])
   })
 
-  it('내 스튜디오 곡은 맞춤 완료 후 lrc_auto 판 4 로 저장한다', async () => {
+  it('내 스튜디오 곡은 맞춤 완료 후 lrc_auto 판 5(웹 정렬기 정보 포함)로 저장한다', async () => {
     autoAlign.mockResolvedValue({ ok: true, lrc: FULL })
     open(trk('11', { album_id: 'studio-generated' }))
     render(<ImmersivePlayer />)
     await flush()
     const calls = (globalThis.fetch as any).mock.calls.filter((c: any[]) => String(c[0]).includes('/api/song-history/11'))
     expect(calls).toHaveLength(1)
-    expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 4 })
+    expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 5, client: 'web', engine: 'transformers.js', model: 'browser-whisper-base' })
   })
 })

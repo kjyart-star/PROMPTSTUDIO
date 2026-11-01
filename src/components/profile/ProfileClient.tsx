@@ -9,6 +9,8 @@ import { parsePlaylistDescription, serializePlaylistDescription } from '@/lib/ut
 import { usePlayerStore } from '@/stores/playerStore'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
+import LrcPrecompute from '@/components/studio/LrcPrecompute'
+import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf'
 
 
 interface ProfileClientProps {
@@ -5376,6 +5378,14 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         </>,
         document.body
       )}
+
+      {/* 업로드한 곡도 올린 사람 브라우저에서 곧바로 가사 시간을 맞춘다(만든 사람 계산) */}
+      <LrcPrecompute
+        userId={user?.id}
+        history={history}
+        lang={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+        onSaved={(id, lrc) => setHistory((h) => h.map((x: any) => (x.id === id ? { ...x, form: { ...(x.form || {}), lrc_auto: lrc, lrc_auto_v: LRC_AUTO_VERSION } } : x)))}
+      />
     </>
   )
 }

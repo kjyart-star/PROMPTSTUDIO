@@ -74,7 +74,7 @@ export function GenerateClient({
   const [myChannels, setMyChannels] = useState<any[]>([])
   const [selectedPublishChannelId, setSelectedPublishChannelId] = useState<string>('')
   const [publishError, setPublishError] = useState<string>('')
-  const [publishedLink, setPublishedLink] = useState<{ title: string; href: string } | null>(null)
+  const [publishedLink, setPublishedLink] = useState<{ title: string; href: string; pending?: boolean } | null>(null)
   const [status, setStatus] = useState('대기 중')
   const [uiLanguage, setUiLanguage] = useState('KO')
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
@@ -620,11 +620,14 @@ export function GenerateClient({
         body: JSON.stringify(payload)
       })
       if (res.ok) {
+        // 가사 싱크가 아직이면 서버가 「공개 대기」로 둔다 — 싱크가 끝나면(최대 24시간) 자동 공개
+        const saved = await res.json().catch(() => null)
         await refreshHistoryList()
         const channel = myChannels.find((c: any) => c.id === selectedPublishChannelId)
         setPublishedLink({
           title: track.title || 'Untitled',
-          href: withBase(channel?.slug ? `/artists/${channel.slug}` : '/')
+          href: withBase(channel?.slug ? `/artists/${channel.slug}` : '/'),
+          pending: !!saved?.form?.publish_pending && !saved?.is_published,
         })
         setPublishConfirmItem(null)
         setSelectedPublishGenre('')
@@ -1325,7 +1328,9 @@ export function GenerateClient({
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#18181c] border border-primary/40 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <Check className="w-4 h-4 text-primary shrink-0" />
           <span className="text-xs text-zinc-200">
-            {uiLanguage === 'KO' ? `'${publishedLink.title}' 퍼블리싱 완료` : `Published '${publishedLink.title}'`}
+            {publishedLink.pending
+              ? (uiLanguage === 'KO' ? `'${publishedLink.title}' 가사 싱크 처리 중 — 끝나면 공개됩니다` : `'${publishedLink.title}' will be published once lyric sync finishes`)
+              : (uiLanguage === 'KO' ? `'${publishedLink.title}' 퍼블리싱 완료` : `Published '${publishedLink.title}'`)}
           </span>
           <a
             href={publishedLink.href}

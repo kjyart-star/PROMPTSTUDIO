@@ -7,7 +7,12 @@
  * 주의: 이 문자열 안에는 백틱·달러 중괄호를 쓰지 않는다.
  */
 
-export const WHISPER_MODEL = 'onnx-community/whisper-small_timestamped';
+/**
+ * 2026-11-02 실측(운영 곡 6곡 208줄, 회사 PC 판 4 대비): base 와 small 의 정확도가 같고(평균 0.44 대 0.42초, WebGPU fp32)
+ * base 가 절반 이하 시간·3분의 1 용량이다(WASM q8 77MB, WebGPU fp32 291MB). tiny 는 6곡 모두 무너져 쓰지 않는다.
+ * docs/research/lyrics-sync-service-architecture-2026-11-02.md
+ */
+export const WHISPER_MODEL = 'onnx-community/whisper-base_timestamped';
 export const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
 
 export const WHISPER_CORE_SRC = String.raw`
@@ -208,18 +213,18 @@ async function alignFrom(asr, Tensor, samples, lines, spans, startSec, onProgres
 `;
 
 export const WHISPER_GLUE_SRC = String.raw`
-var USE_WEBGPU = false;
+var USE_WEBGPU = true;
 var asrP = null, asrDev = '', TensorCls = null;
 
-/* WebGPU 를 쓸 수 있으면 { f16 } 를, 아니면 null */
+/* WebGPU 를 쓸 수 있으면 { f32 } 를, 아니면 null */
 async function pickGpu() {
   /* 2026-11-02 운영 실측: WebGPU fp16 의 교차 어텐션으로 정렬하면 줄이 창 길이(30초) 간격으로 밀리고 뒤쪽 줄이 한 시각에 몰렸다.
-     정확도가 확인된 WASM q8 만 쓴다(USE_WEBGPU 를 켜기 전에 반드시 정답 시각과 대조할 것). */
+     fp32 는 정답 시각과 대조해 6곡 모두 정상(평균 0.44초, 3분 곡 6.5초)이라 WebGPU 는 fp32 로만 쓴다. fp16·q4 는 쓰지 않는다. */
   if (!USE_WEBGPU) return null;
   try {
     if (self.navigator && self.navigator.gpu) {
       var ad = await self.navigator.gpu.requestAdapter();
-      if (ad) return { f16: !!(ad.features && ad.features.has('shader-f16')) };
+      if (ad) return { f32: true };
     }
   } catch (e) { /* WASM 으로 */ }
   return null;
@@ -232,7 +237,7 @@ function load(tf, gpu) {
   TensorCls = tf.Tensor;
   var files = {};
   var opts = gpu
-    ? { device: 'webgpu', dtype: gpu.f16 ? 'fp16' : { encoder_model: 'fp32', decoder_model_merged: 'q4' } }
+    ? { device: 'webgpu', dtype: 'fp32' }
     : { dtype: 'q8' };
   opts.progress_callback = function (p) {
     if (p && p.status === 'progress' && p.file) {

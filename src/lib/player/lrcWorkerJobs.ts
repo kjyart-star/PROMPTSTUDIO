@@ -1,7 +1,7 @@
-import { LRC_AUTO_VERSION, LRC_GPU_MODEL, lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { LRC_GPU_VERSION, LRC_GPU_MODEL, lyricsOfItem } from '@/lib/studio/lyricsOf'
 
 /** 현재 판으로 맞추다 믿을 수 없어 접은 곡(다시 시도하지 않는다 — 판을 올리면 다시 맞춘다) */
-export const gpuFailed = (f: any) => Number(f?.lrc_auto_fail?.v) === LRC_AUTO_VERSION
+export const gpuFailed = (f: any) => Number(f?.lrc_auto_fail?.v) === LRC_GPU_VERSION
 import { alignLineTexts } from './lrcValidate'
 
 /**
@@ -20,7 +20,7 @@ export interface LrcJob {
 }
 
 export function gpuDone(f: any): boolean {
-  return f?.lrc_auto_v === LRC_AUTO_VERSION && f?.lrc_auto_model === LRC_GPU_MODEL && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2
+  return f?.lrc_auto_v === LRC_GPU_VERSION && f?.lrc_auto_model === LRC_GPU_MODEL && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2
 }
 
 export function hasUserLrc(f: any): boolean {

@@ -1965,6 +1965,9 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                       ...(masteredSourceIds.has(item.id) ? [uiLanguage === 'KO' ? '원곡' : uiLanguage === 'JA' ? '原曲' : 'Original'] : []),
                       ...(() => { const by = lrcPickOf(item, history)?.by; return by === 'user' ? ['LRC'] : by === 'auto' ? [uiLanguage === 'KO' ? '자동' : uiLanguage === 'JA' ? '自動' : 'Auto'] : [] })(),
                       ...(item.form?.stems?.status === 'done' ? [uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'] : []),
+                      // 공개 요청 뒤 가사 싱크를 기다리는 곡(끝나면 자동 공개, 최대 24시간) · 사람 확인을 권하는 곡
+                      ...(item.form?.publish_pending ? [uiLanguage === 'KO' ? '가사 싱크 처리 중' : uiLanguage === 'JA' ? '歌詞同期処理中' : 'Syncing lyrics'] : []),
+                      ...(item.form?.lrc_review && item.form?.lrc_by !== 'user' ? [uiLanguage === 'KO' ? '가사 시간 확인' : uiLanguage === 'JA' ? '歌詞タイミング確認' : 'Check timing'] : []),
                     ]
                     const stemBadge = badgeList.length ? (
                       <>{badgeList.map((b) => <span key={b} className="px-1.5 py-0.5 rounded bg-black/70 text-[10px] font-bold text-primary">{b}</span>)}</>
@@ -3074,6 +3077,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
       <LrcPrecompute
         userId={user?.id}
         history={history}
+        onReview={(item) => setTimingItem(item)}
         lang={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
         onSaved={(id, lrc) => setHistory((h) => h.map((x: any) => (x.id === id ? { ...x, form: { ...(x.form || {}), lrc_auto: lrc, lrc_auto_v: LRC_AUTO_VERSION } } : x)))}
       />

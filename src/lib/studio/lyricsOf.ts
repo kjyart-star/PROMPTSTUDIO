@@ -36,10 +36,12 @@ export function styleOfItem(item: any): string {
  * 3: 회사 PC 사전 계산(LRC_GPU_MODEL) 도입 — 판 2 결과(브라우저 small)는 쓰지 않는다(2026-11-02).
  *    브라우저 폴백 결과도 판 3 으로 저장하되 lrc_auto_model 이 달라 GPU 워커가 나중에 덮어쓴다.
  */
-export const LRC_AUTO_VERSION = 4
+export const LRC_AUTO_VERSION = 5
 /**
  * 4: 회사 PC 결과에 줄 끝(end)·신뢰도(conf)·단어 시각(form.lrc_auto_words)을 더함, 줄 시작 앞당김은 화면이 0.3초(2026-11-02).
- * 읽을 때는 판 3 이상을 받는다 — 판 4 로 다시 계산하는 동안 판 3 결과로 계속 싱크한다.
+ * 5: 운영 경로에서 회사 PC 를 뺌 — 만든 사람·듣는 사람 브라우저의 whisper base(WebGPU fp32 / WASM q8)와 Workers AI 무료 큐(2026-11-02).
+ *    판 4(회사 PC) 결과는 그대로 읽는다. 판 3~5 가 있는 곡은 다시 계산하지 않는다.
+ * 읽을 때는 판 3 이상을 받는다.
  */
 export const LRC_MIN_READ_VERSION = 3
 export const lrcAutoReadable = (v: unknown) => typeof v === 'number' && v >= LRC_MIN_READ_VERSION && v <= LRC_AUTO_VERSION
@@ -54,8 +56,12 @@ export const lrcAutoFailed = (f: any) => {
 
 /** 회사 PC 사전 계산 정렬기 이름 — form.lrc_auto_model·song_lrc_auto.model 에 남는다 */
 export const LRC_GPU_MODEL = 'gpu-whisper-large-v3'
-/** 브라우저 폴백 정렬기 이름 */
-export const LRC_BROWSER_MODEL = 'browser-whisper-small'
+/** 회사 PC 워커가 쓰던 판(백필 전용, 운영 경로 아님) — 판을 올려도 회사 PC 결과·작업 목록의 뜻은 그대로다 */
+export const LRC_GPU_VERSION = 4
+/** 브라우저 정렬기 이름(만든 사람·듣는 사람) */
+export const LRC_BROWSER_MODEL = 'browser-whisper-base'
+/** Workers AI 무료 큐 정렬기 이름(받아쓰기 + 원문 매칭) */
+export const LRC_CF_MODEL = 'cf-whisper-large-v3-turbo'
 
 /**
  * 곡 기록에 저장된 가사 시간표. 사용자가 올리거나 편집한 form.lrc(lrc_by='user') → 현재 판의 자동 맞추기 결과(lrc_auto) 순.

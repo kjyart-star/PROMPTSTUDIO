@@ -7,6 +7,7 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
   analyzeSpans: vi.fn(async () => null),
   autoAlign: (...a: unknown[]) => autoAlign(...a),
   canAutoAlign: () => true,
+  batteryLow: async () => false,
   markFailed: vi.fn(),
   recentlyFailed: () => false,
   saveCachedLrc: vi.fn(),
@@ -44,7 +45,7 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(call[0]).toBe('/api/song-history/a')
-    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 4 })
+    expect(JSON.parse(call[1].body as string)).toMatchObject({ lrc_auto_v: 5 })
     expect(onSaved).toHaveBeenCalledWith('a', result.lrc)
     await act(async () => { await vi.advanceTimersByTimeAsync(3500) })
     expect(autoAlign).toHaveBeenCalledTimes(2)
@@ -67,5 +68,44 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(autoAlign).toHaveBeenCalledTimes(1)
     expect(fetchMock).not.toHaveBeenCalled()
     expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('생성·업로드가 막 끝난 곡은 12초를 기다리지 않고 곧바로 맞춘다', async () => {
+    autoAlign.mockResolvedValue(result)
+    const onSaved = vi.fn()
+    const done = { ...song('old'), form: { lrc_auto: result.lrc, lrc_auto_v: 4 } }
+    const generating = { ...song('new'), status: 'processing' }
+    const { rerender } = render(<LrcPrecompute userId="u1" history={[generating, done]} lang="KO" onSaved={onSaved} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(20_000) })
+    expect(autoAlign).not.toHaveBeenCalled() // 생성 중인 곡은 아직 맞추지 않는다
+    rerender(<LrcPrecompute userId="u1" history={[song('new'), done]} lang="KO" onSaved={onSaved} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(500) })
+    expect(autoAlign).toHaveBeenCalledTimes(1)
+    expect(onSaved).toHaveBeenCalledWith('new', result.lrc)
+  })
+
+  it('처음 들어왔을 때 남아 있던 곡(창을 닫아 못 끝낸 곡)은 다음 방문에 한가해진 뒤 이어서 맞춘다', async () => {
+    autoAlign.mockResolvedValue(result)
+    render(<LrcPrecompute userId="u1" history={[song('left')]} lang="KO" onSaved={vi.fn()} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_000) })
+    expect(autoAlign).not.toHaveBeenCalled()
+    await act(async () => { await vi.advanceTimersByTimeAsync(8_000) })
+    expect(autoAlign).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('LrcPrecompute — 가사 시간 확인 권유', () => {
+  it('신뢰도가 낮은 곡이 있으면 「가사 시간 확인」을 권하고 누르면 편집기를 연다', async () => {
+    const onReview = vi.fn()
+    const low = { ...song('low'), title: '조용히좀해', form: { lrc_auto: result.lrc, lrc_auto_v: 5, lrc_review: { reason: 'low-confidence' } } }
+    render(<LrcPrecompute userId="u1" history={[low]} lang="KO" onSaved={vi.fn()} onReview={onReview} />)
+    expect(screen.getByTestId('lrc-review').textContent).toContain('「조용히좀해」 가사 시간이 정확하지 않을 수 있어요')
+    await act(async () => { screen.getByText('가사 시간 확인').click() })
+    expect(onReview).toHaveBeenCalledWith(low)
+  })
+  it('사람이 고친 곡은 권하지 않는다', () => {
+    const fixed = { ...song('f'), form: { lrc_review: { reason: 'low-confidence' }, lrc_by: 'user', lrc: result.lrc } }
+    render(<LrcPrecompute userId="u1" history={[fixed]} lang="KO" onSaved={vi.fn()} onReview={vi.fn()} />)
+    expect(screen.queryByTestId('lrc-review')).toBeNull()
   })
 })

@@ -4,14 +4,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Track } from '@/types/music';
 import type { TimedLine } from '@/lib/player/lyricTiming';
 import {
-  autoAlign, canAutoAlign, currentAudioSrc, currentAudioTime, loadCachedLrc, markFailed, recentlyFailed, saveCachedLrc,
+  autoAlign, batteryLow, canAutoAlign, currentAudioSrc, currentAudioTime, loadCachedLrc, markFailed, recentlyFailed, saveCachedLrc,
 } from '@/lib/player/lyricSyncClient';
 import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf';
 import { acquireAlignLockSoon, releaseAlignLock } from '@/lib/player/alignLock';
-import { fetchSharedLrc, submitSharedLrc } from '@/lib/player/lrcShareClient';
+import { fetchSharedLrc, saveOwnLrc, submitSharedLrc } from '@/lib/player/lrcShareClient';
 import { plausibleSpacing } from '@/lib/player/lrcValidate';
 
 const hasStamps = (raw?: string | null) => /\[\d{1,3}:\d{2}/.test(raw ?? '');
+
+/**
+ * 운영 검증용 다시 계산 — localStorage 'cm.lrc-recompute' 에 곡 id 를 넣으면 그 곡은 저장된 결과를 비우지도 쓰지도 않고
+ * 이 브라우저에서 처음부터(재생 위치 0) 다시 맞춰 window.__cmLrcRecompute 에만 남긴다(서버·캐시에 저장하지 않는다).
+ */
+const recomputeId = (): string => { try { return localStorage.getItem('cm.lrc-recompute') || ''; } catch { return ''; } };
 
 /** 서버에 결과가 아직 없을 때 다시 묻는 간격·최대 시간 */
 const POLL_MS = 20_000;
@@ -42,8 +48,9 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   const fallbackCtl = useRef<AbortController | null>(null);
   const linesRef = useRef<{ lines: string[]; dur: number } | null>(null);
 
-  const lrc = trackLrc ?? serverLrc ?? localLrc;
-  const wantServer = !!id && !!track?.lyrics?.trim() && !trackLrc && !hasStamps(track?.lyrics);
+  const recompute = !!id && recomputeId() === id;
+  const lrc = recompute ? localLrc : trackLrc ?? serverLrc ?? localLrc;
+  const wantServer = !!id && !!track?.lyrics?.trim() && (!trackLrc || recompute) && !hasStamps(track?.lyrics);
 
   // 곡이 바뀌면 상태를 비우고, 이 브라우저의 폴백 캐시(판 3)만 미리 불러 둔다. 하던 폴백 작업은 멈춘다
   useEffect(() => {
@@ -51,7 +58,7 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
     setServerLrc(null);
     setPartial(null);
     setServerAskedFor('');
-    setLocalLrc(id ? loadCachedLrc(id) : null);
+    setLocalLrc(id && recomputeId() !== id ? loadCachedLrc(id) : null);
     return () => { fallbackCtl.current?.abort(); fallbackCtl.current = null; };
   }, [id]);
 
@@ -61,6 +68,7 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
     let dead = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const started = Date.now();
+    if (recomputeId() === id) { setServerAskedFor(id); return; } // 검증용 다시 계산: 저장된 결과를 받지 않는다
     const ask = async () => {
       const shared = await fetchSharedLrc(id, LRC_AUTO_VERSION);
       if (dead || curId.current !== id) return;
@@ -95,7 +103,8 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   const canFallback = wantServer && playing && serverAskedFor === id && failedFor !== id && !lrc && !!lineKey;
   useEffect(() => {
     if (!canFallback || autoTried.current === id) return;
-    if (!canAutoAlign() || recentlyFailed(id)) return;
+    const again = recomputeId() === id;
+    if (!again && (!canAutoAlign() || recentlyFailed(id))) return;
     const mine = id;
     let dead = false;
     const start = async (retries: number) => {
@@ -103,14 +112,18 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
       const src = currentAudioSrc();
       if (dead || curId.current !== mine || !input || input.lines.length < 2) return;
       if (!src) { if (retries > 0) setTimeout(() => void start(retries - 1), 1000); return; }
+      if (!again && (await batteryLow())) return; // 배터리 부족 — 듣는 사람 기기에서는 계산하지 않는다
       if (!(await acquireAlignLockSoon())) { if (!dead && retries > 0) setTimeout(() => void start(retries - 1), 3000); return; }
       if (dead || curId.current !== mine) { releaseAlignLock(); return; }
       autoTried.current = mine;
       const ctl = new AbortController();
       fallbackCtl.current = ctl;
       try {
+        const t0 = Date.now();
+        let device = '';
         const out = await autoAlign(src, input.lines, input.dur, null, () => { /* 진행률은 화면에 보이지 않는다 */ }, ctl.signal, {
-          startSec: currentAudioTime(),
+          startSec: again ? 0 : currentAudioTime(),
+          onDevice: (d) => { device = d; },
           onPartial: (starts) => {
             // 무너진 부분 결과(한 시각에 몰림·간격 과다)는 보이지 않는다 — 틀린 강조보다 강조 없음이 낫다
             if (ctl.signal.aborted || curId.current !== mine) return;
@@ -118,15 +131,19 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
           },
         });
         if (ctl.signal.aborted || curId.current !== mine) return;
+        if (again) {
+          (window as any).__cmLrcRecompute = { id: mine, ok: out.ok, lrc: out.lrc ?? null, device, ms: Date.now() - t0 };
+          if (out.ok && out.lrc) setLocalLrc(out.lrc);
+          setPartial(null);
+          return;
+        }
         if (!out.ok || !out.lrc) { markFailed(mine); setPartial(null); return; }
         saveCachedLrc(mine, out.lrc);
         setLocalLrc(out.lrc);
         setPartial(null);
         if (track?.album_id === 'studio-generated') {
           // 내 스튜디오 곡: 사용자가 올린 LRC(form.lrc)는 건드리지 않고 자동 맞춤 전용 필드(lrc_auto)에만 저장한다
-          fetch(`/api/song-history/${mine}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc_auto: out.lrc, lrc_auto_v: LRC_AUTO_VERSION }),
-          }).catch(() => { /* 저장 실패는 조용히 */ });
+          saveOwnLrc(mine, out.lrc, !!out.lowConfidence).catch(() => { /* 저장 실패는 조용히 */ });
         } else {
           // 공개 곡: 별도 공유 테이블에 제출(로그인한 사용자만, 서버가 검증하고 첫 유효값만 쓴다)
           void submitSharedLrc(mine, out.lrc, LRC_AUTO_VERSION);

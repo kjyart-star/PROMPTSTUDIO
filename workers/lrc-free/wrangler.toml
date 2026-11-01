@@ -1,0 +1,23 @@
+# cookiemusic-lrc-free — 가사 싱크 Workers AI 무료 큐(하루 9,000 뉴런 하드 상한, D1 카운터).
+# 배포는 반드시 --config 를 절대경로로:
+#   npx wrangler deploy --config <저장소 절대경로>/workers/lrc-free/wrangler.toml
+# 출력에 cookiemusic-lrc-free 가 아닌 워커 이름이 보이면 중단할 것.
+name = "cookiemusic-lrc-free"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+SERVER_URL = "https://cookieplay.app/music"
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cookiemusic-lrc"
+database_id = "7a69625b-1fb3-468f-ba30-e6bdd8be2baf"
+
+[triggers]
+crons = ["*/5 * * * *"]

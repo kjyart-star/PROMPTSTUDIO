@@ -162,3 +162,47 @@ Workers AI 는 Paid 플랜이면 한도를 넘는 순간 과금된다. 계정 �
 - 하네스: transformers.js 3.7.6 로 `WHISPER_CORE_SRC` 를 그대로 떼어 실행(Node, `intraOpNumThreads` 1·4). 브라우저는 같은 코어를 로컬 페이지에 올려 WebGPU fp32·WASM q8 로 실행.
 - Workers AI: `wrangler dev` 의 AI 바인딩으로 whisper-large-v3-turbo(`condition_on_previous_text:false`) 호출. 이번 측정에 쓴 양은 약 1,500 뉴런(무료 한도 안).
 - 매칭: 원문·받아쓰기를 한글·영문·숫자만 남기고 글자 단위 최장 일치 블록(difflib)으로 줄 첫 일치 시각을 찾음, 줄 글자 30% 이상 일치한 줄만 사용, 70% 미만이면 실패.
+
+## 8. 구현(2026-11-02, 판 5)
+
+### 공개 곡 싱크 보장 — 상태 전이
+```
+생성·업로드 완료 ──(가사 2줄 이상, 시간표 없음)── 공개 요청 ──► 공개 대기(form.publish_pending, is_published=false)
+   │                                                               │  곡 주인은 계속 들을 수 있음, 가사는 일반 표시
+   │                                                               ├─ 만든 사람 브라우저(PC) 정렬 저장 ─────────► 공개
+   │                                                               ├─ 사람이 시간 편집기로 고침(lrc_by=user) ──► 공개
+   │                                                               ├─ Workers AI 무료 큐(폰에서 만든 곡 먼저) ──► 공개
+   │                                                               └─ 24시간 지남(큐가 정리) ──► 싱크 없이 공개(lrc_sync_skipped, 일반 가사만)
+   └─(경음악·가사 없음·시간 표시 가사·이미 시간표 있음)── 공개 요청 ──► 바로 공개
+```
+- 강제: DB 트리거 `song_history_publish_gate`(supabase/migrations/20261102_song_publish_gate.sql)가 공개 키 REST 직접 쓰기까지 막는다. 서버(service_role)만 공개 대기를 풀 수 있다. 규칙은 `src/lib/lyricsSync/publishGate.ts` 와 같다.
+- 예외 경로: (1) 기존 공개 곡은 트리거가 건드리지 않는다(판 4 백필 결과 그대로). (2) 회사 PC 가 「믿을 수 없음」으로 접은 곡(lrc_auto_fail)은 일반 가사로 보인다. (3) 큐가 받아쓰기로도 못 맞춘 곡(lrc_free_fail)은 7일 뒤 다시 시도하고, 그동안은 24시간 뒤 싱크 없이 공개된다. (4) 정렬 신뢰도가 낮은 곡(직접 찾은 줄 90% 미만, 검수 중앙 오차 2초 초과)은 `lrc_review` 로 표시하고 스튜디오가 「가사 시간 확인」 편집기를 권한다. 사람이 고친 값이 언제나 최우선이다.
+
+### 경로별 처리
+| 경로 | 파일 | 동작 |
+|---|---|---|
+| 만든 사람 브라우저 | `src/components/studio/LrcPrecompute.tsx`(스튜디오·프로필 업로드) | 생성·업로드가 끝난 곡을 0.3초 뒤 바로 정렬(그 밖의 남은 곡은 12초 뒤 한가할 때). whisper base, WebGPU fp32 / WASM q8. 폰·태블릿·데이터 절약·느린 회선·메모리 4GB 미만·배터리 30% 미만(충전 아님)이면 돌리지 않는다 |
+| 듣는 사람 브라우저(데스크톱) | `src/components/player/useLyricSync.ts` | 서버에 시간표가 없을 때만. 남의 공개 곡은 제출만 하고, 다른 사람 결과와 줄 90% 이상이 1초 안이면 공개 결과(`song_lrc_submissions` → `song_lrc_auto`) |
+| Workers AI 무료 큐 | `workers/lrc-free`(5분마다), `src/app/api/lrc-free/route.ts` | 공개 대기 → 폰에서 만든 곡 → 오래 기다린 곡 → 재생 많은 곡 순. PC 곡은 만든 사람 브라우저에 10분을 준다. 하루 9,000 뉴런 하드 상한(D1 `ai_budget`, UTC 날짜별 예약→실사용, 실패도 예상치로 계산, 10분 넘는 곡 제외). 남는 한도로 브라우저 결과 검수(±20초 보정) |
+| 회사 PC | `lrc_align_worker.py` | 운영 경로에서 뺌(자동 실행 해제). 판 4 결과는 그대로 읽는다 |
+
+### 웹·앱 공용 API
+- 읽기: `GET /api/lyrics-sync/{songId}` → `{ song_id, v, source:'user'|'auto', model, lines:[{t,end?,conf?,text}], words? }`, `{failed:true}`, 처리 중이면 404 `{pending:true}`. ETag + `private, max-age=60` 이고, 같은 값이면 304. 재생 쪽은 표시만 한다.
+- 제출: 내 곡은 `PUT /api/song-history/{id}` `{ lrc_auto, lrc_auto_v, client, engine, model, lrc_review? }`, 남의 공개 곡은 `POST /api/song-lrc-auto` `{ song_id, v, lrc, client, engine, model }`. client = web/ios/android, engine = transformers.js/whisper.cpp/coreml/nnapi/onnxruntime/workers-ai.
+- 계산 로직(순수 TS, DOM 없음): `src/lib/lyricsSync/`(정렬 후처리 `finalizeAlignment`, 검증 `validateAutoLrc`, 두 사람 일치 `lrcAgree`, 받아쓰기 매칭 `matchWords`·`localFix`, 공개 게이트, 뉴런 상한, 플랫폼 판별). 앱이 온디바이스 엔진(whisper.cpp·Core ML·NNAPI)을 붙여도 줄 시작 초 배열만 만들면 같은 제출 API·같은 서버 검증을 통과한다.
+
+### COOP/COEP(브라우저 여러 스레드) 영향 분석 — 이번에는 넣지 않음
+- 얻는 것: WASM 이 여러 스레드로 돌아 정렬 시간이 약 1.7배 줄어든다(Node 측정 12.4초 → 7.3초). WebGPU 기기에는 이득이 없다.
+- 깨지는 것: `Cross-Origin-Embedder-Policy: require-corp` 는 CORP·CORS 헤더가 없는 다른 출처 리소스를 막는다. 막히는 것은 외부 커버 이미지(Supabase avatars·수노 cdn 이미지), 공개 CDN 음원(`cookiemusic-cdn` 은 CORS 노출 헤더는 있으나 CORP 헤더 없음), 유튜브 등 iframe 임베드, 결제·로그인 팝업(`Cross-Origin-Opener-Policy: same-origin` 이 팝업 창과의 연결을 끊음, Google OAuth 팝업 포함)이다. `credentialless` 를 쓰면 쿠키 없는 요청으로 바뀌어 서명 없는 공개 리소스는 살지만 iframe 임베드와 팝업 문제는 남는다.
+- 대안: 정렬만 하는 별도 경로(예: `/music/lrc-engine`)에만 COOP/COEP 를 붙인 숨은 iframe 에서 돌리고 결과를 postMessage 로 받는다. 본 화면은 영향이 없다. 지금은 WebGPU 가 주 경로라 우선순위가 낮다.
+
+### 앱 대응 체크리스트
+- [x] 재생은 `GET /api/lyrics-sync/{songId}` 하나로 표시만(ETag/304)
+- [x] 제출 형식에 client·engine·model, 서버 검증은 웹과 같음
+- [x] 폰에서는 계산하지 않음(모델을 받지 않음). 폰에서 만든 곡은 큐가 먼저 처리
+- [x] 계산 후처리·검증·매칭이 순수 TS 모듈(`src/lib/lyricsSync`)
+- [ ] 앱 온디바이스 엔진 시험(whisper.cpp base·Core ML): 같은 정답셋 6곡에서 평균 0.6초 이하를 확인하고 제출
+
+### 후속(규모가 커질 때)
+- 저장소를 Supabase 에서 R2 곡별 JSON 으로 옮긴다(2장: 약 4만 곡에서 DB 500MB 한도).
+- `/api/lrc-free`·`/api/lrc-worker` 는 곡 5,000행을 한 번에 읽는다. 곡이 늘면 대기 표시 열에 인덱스를 두고 페이지로 읽는다.

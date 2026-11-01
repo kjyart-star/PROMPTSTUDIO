@@ -106,3 +106,12 @@ export class LrcPrecomputeQueue {
     }
   }
 }
+
+/**
+ * 방금 생성·업로드가 끝나 새로 맞출 곡이 된 id — 이전 목록(prev)에 없던 것. 첫 화면(prev 가 null)에서는 없다고 본다
+ * (처음 들어왔을 때 남아 있던 곡은 화면이 한가해진 뒤에, 새로 끝난 곡은 곧바로 맞춘다).
+ */
+export function freshPendingIds(prev: ReadonlySet<string> | null, now: string[]): string[] {
+  if (!prev) return [];
+  return now.filter((id) => !prev.has(id));
+}

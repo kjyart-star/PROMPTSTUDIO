@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
 import { LRC_BROWSER_MODEL } from '@/lib/studio/lyricsOf'
 import { gpuDone } from '@/lib/player/lrcWorkerJobs'
+import { clientInfoOf, modelTagOf } from '@/lib/lyricsSync/submission'
+import { releaseIfSynced } from '@/lib/lyricsSync/publishGate'
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -65,7 +67,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
         // 이 경로로 들어오는 시간표는 사용자가 올리거나 편집한 것 — lrc_by 로 표시해 옛 자동 결과(표시 없음)와 구분한다
         if (lrc === null) { delete base.lrc; delete base.lrc_by }
-        else if (Array.isArray(lrc)) { base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) })); base.lrc_by = 'user' }
+        else if (Array.isArray(lrc)) { base.lrc = lrc.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) })); base.lrc_by = 'user'; delete base.lrc_review }
         updateData.form = base
       }
       if (Array.isArray(lrc_auto) && lrc === undefined) {
@@ -77,10 +79,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         if (check.ok && !gpuDone(base) && (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length)) {
           base.lrc_auto = check.lines
           base.lrc_auto_v = Number(lrc_auto_v) || 0
-          base.lrc_auto_model = LRC_BROWSER_MODEL
+          // 웹·앱 공용 제출 형식 — 클라이언트(web/ios/android)·엔진·모델을 함께 남긴다
+          base.lrc_auto_model = modelTagOf(clientInfoOf(body, LRC_BROWSER_MODEL))
+          // 정렬 신뢰도가 낮으면 만든 사람에게 「가사 시간 확인」을 권한다(사람이 고친 값이 최우선)
+          if (body?.lrc_review === true) base.lrc_review = { reason: 'low-confidence', at: new Date().toISOString() }
+          else delete base.lrc_review
           updateData.form = base
         }
       }
+      // 비공개로 돌리면 공개 대기도 끝낸다
+      const curForm = (songCheck as any).form
+      if (is_published === false && curForm?.publish_pending) {
+        updateData.form = { ...(updateData.form ?? curForm) }
+        delete updateData.form.publish_pending
+      }
+      // 가사 싱크가 끝나 공개를 기다리던 곡이면 이제 공개한다(DB 트리거도 시간표가 있으면 통과시킨다)
+      if (updateData.form) Object.assign(updateData, releaseIfSynced(updateData.form))
       if (image_url !== undefined) updateData.image_url = image_url
       if (video_url !== undefined) updateData.video_url = video_url
       if (genre !== undefined) updateData.genre = genre

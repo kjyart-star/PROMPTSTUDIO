@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { alignLineTexts, validateAutoLrc } from './lrcValidate'
+import { alignLineTexts, lrcAgree, validateAutoLrc } from './lrcValidate'
 
 const ok = [{ t: 1, text: '첫 줄' }, { t: 12.345, text: '둘째 줄' }, { t: 30, text: '셋째 줄' }]
 
@@ -73,3 +73,22 @@ describe('validateAutoLrc 줄 끝·신뢰도', () => {
   })
 })
 
+
+describe('lrcAgree (두 사람 결과 일치)', () => {
+  const base = Array.from({ length: 10 }, (_, i) => ({ t: 5 + i * 4, text: `줄 ${i}` }))
+  const shift = (d: number, idx: number[] = []) => base.map((l, i) => ({ ...l, t: l.t + (idx.length === 0 || idx.includes(i) ? d : 0) }))
+  it('모든 줄이 1초 안이면 일치', () => {
+    expect(lrcAgree(base, shift(0.9))).toBe(true)
+  })
+  it('1초를 넘게 어긋난 줄이 10% 이하면 일치, 넘으면 불일치', () => {
+    expect(lrcAgree(base, shift(5, [9]))).toBe(true)
+    expect(lrcAgree(base, shift(5, [8, 9]))).toBe(false)
+  })
+  it('전체가 1.5초 밀리면 불일치', () => {
+    expect(lrcAgree(base, shift(1.5))).toBe(false)
+  })
+  it('줄 수나 글이 다르면 불일치', () => {
+    expect(lrcAgree(base, base.slice(1))).toBe(false)
+    expect(lrcAgree(base, base.map((l, i) => (i === 3 ? { ...l, text: '다른 줄' } : l)))).toBe(false)
+  })
+})

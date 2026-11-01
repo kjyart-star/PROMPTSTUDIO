@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { LRC_AUTO_VERSION, LRC_GPU_MODEL } from '@/lib/studio/lyricsOf'
+import { LRC_GPU_VERSION, LRC_GPU_MODEL } from '@/lib/studio/lyricsOf'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
 import { hasUserLrc, lrcJobsOf } from '@/lib/player/lrcWorkerJobs'
 
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       const url = await audioUrlOf(db, j.audio, j.is_published)
       if (url) out.push({ id: j.id, title: j.title, audio_url: url, lines: j.lines, duration: j.duration })
     }
-    return NextResponse.json({ v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL, total, done, failed, pending: jobs.length, jobs: out })
+    return NextResponse.json({ v: LRC_GPU_VERSION, model: LRC_GPU_MODEL, total, done, failed, pending: jobs.length, jobs: out })
   } catch (err: any) {
     console.error('API GET lrc-worker error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null)
     const songId = body?.song_id
     if (typeof songId !== 'string' || !UUID.test(songId)) return NextResponse.json({ error: 'bad song_id' }, { status: 400 })
-    if (body?.v !== LRC_AUTO_VERSION || body?.model !== LRC_GPU_MODEL) return NextResponse.json({ error: 'version mismatch' }, { status: 409 })
+    if (body?.v !== LRC_GPU_VERSION || body?.model !== LRC_GPU_MODEL) return NextResponse.json({ error: 'version mismatch' }, { status: 409 })
     const db = admin()
     const { data: rows, error } = await db.from('song_history').select(COLS).limit(5000)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       // 믿을 수 없는 곡: 자동 결과를 쓰지 말라는 표시만 남긴다(값은 지우지 않는다)
       const { data: fresh } = await db.from('song_history').select('form').eq('id', songId).maybeSingle()
       const base = fresh?.form && typeof fresh.form === 'object' ? { ...fresh.form } : {}
-      base.lrc_auto_fail = { v: LRC_AUTO_VERSION, reason: String(body?.reason ?? '').slice(0, 200), at: new Date().toISOString() }
+      base.lrc_auto_fail = { v: LRC_GPU_VERSION, reason: String(body?.reason ?? '').slice(0, 200), at: new Date().toISOString() }
       const up = await db.from('song_history').update({ form: base }).eq('id', songId)
       if (up.error) return NextResponse.json({ error: up.error.message }, { status: 500 })
       return NextResponse.json({ ok: true, stored: false, failed: true })
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     const base = fresh?.form && typeof fresh.form === 'object' ? { ...fresh.form } : {}
     if (hasUserLrc(base)) return NextResponse.json({ ok: true, stored: false, reason: 'user-lrc' })
     base.lrc_auto = check.lines
-    base.lrc_auto_v = LRC_AUTO_VERSION
+    base.lrc_auto_v = LRC_GPU_VERSION
     base.lrc_auto_model = LRC_GPU_MODEL
     delete base.lrc_auto_fail
     // 단어 시각(줄마다 [시작, 끝, 단어]) — 이후 단어 강조용으로 저장만 한다. 목록 화면 데이터가 무거워지지 않게 lrc_auto 와 따로 둔다
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     const up = await db.from('song_history').update({ form: base }).eq('id', songId)
     if (up.error) return NextResponse.json({ error: up.error.message }, { status: 500 })
     const sh = await db.from('song_lrc_auto').upsert(
-      { song_id: songId, v: LRC_AUTO_VERSION, lrc: check.lines, model: LRC_GPU_MODEL, submitted_by: null },
+      { song_id: songId, v: LRC_GPU_VERSION, lrc: check.lines, model: LRC_GPU_MODEL, submitted_by: null },
       { onConflict: 'song_id,v' },
     )
     if (sh.error) return NextResponse.json({ error: sh.error.message }, { status: 500 })

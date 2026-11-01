@@ -6,9 +6,10 @@
  */
 
 import { findVocalSpans, type Span } from './vocalSpans';
-import { finalizeAlignment, ONSET_LEAD_SEC } from './lyricAlign';
+import { finalizeAlignment, lowConfidenceOf, ONSET_LEAD_SEC } from './lyricAlign';
 import type { TimedLine } from './lyricTiming';
 import { whisperWorkerScript } from './whisperWorkerSource';
+import { isMobileUA } from '@/lib/lyricsSync/platform';
 
 const SR = 16000;
 const SPANS_KEY = 'cm.lyric-spans.v1:';
@@ -75,14 +76,32 @@ export async function analyzeSpans(id: string, url: string): Promise<Span[] | nu
   }
 }
 
-/** 이 기기에서 자동으로 음성 인식을 돌려도 되는지 — 데이터 절약·저사양·모바일 회선이면 자동 실행하지 않는다(버튼은 그대로 쓸 수 있다) */
+/**
+ * 이 기기에서 자동으로 음성 인식을 돌려도 되는지 — 폰·태블릿, 데이터 절약, 느린 회선, 저메모리면 돌리지 않는다
+ * (모델 77~291MB 를 받지 않는다). 그 곡은 서버 무료 큐와 데스크톱 사용자가 채운다.
+ */
 export function canAutoAlign(): boolean {
   if (typeof window === 'undefined' || typeof Worker === 'undefined') return false;
   const nav = navigator as any;
+  if (nav.userAgentData?.mobile === true || isMobileUA(nav.userAgent)) return false;
+  // iPadOS 는 데스크톱 사파리처럼 보인다 — 터치 전용 기기면 폰·태블릿으로 본다
+  if (/Macintosh/.test(String(nav.userAgent || '')) && Number(nav.maxTouchPoints) > 1) return false;
   if (nav.connection?.saveData) return false;
   if (/(^|-)2g$|3g/.test(String(nav.connection?.effectiveType || ''))) return false;
   if (typeof nav.deviceMemory === 'number' && nav.deviceMemory < 4) return false;
   return true;
+}
+
+/** 배터리가 부족한지(충전 중이 아니고 30% 미만). 알 수 없으면 부족하지 않다고 본다 */
+export async function batteryLow(): Promise<boolean> {
+  try {
+    const get = (navigator as any).getBattery as undefined | (() => Promise<{ level: number; charging: boolean }>);
+    if (!get) return false;
+    const b = await get.call(navigator);
+    return !b.charging && b.level < 0.3;
+  } catch {
+    return false;
+  }
 }
 
 const FAIL_KEY = 'cm.lyric-autofail.v2:';
@@ -92,7 +111,11 @@ export const recentlyFailed = (id: string) => {
   return !!t && Date.now() - t < RETRY_AFTER_MS;
 };
 export type AlignPhase = 'decode' | 'download' | 'listen';
-export interface AlignOutcome { ok: boolean; lrc?: TimedLine[] }
+export interface AlignOutcome {
+  ok: boolean; lrc?: TimedLine[];
+  /** 정렬기가 직접 찾지 못하고 이웃 사이를 채운 줄이 10% 넘음 — 만든 사람에게 「가사 시간 확인」을 권한다 */
+  lowConfidence?: boolean;
+}
 export interface AlignOptions {
   /** 재생 위치(초) — 이 근처 가사 줄부터 먼저 맞춘다 */
   startSec?: number;
@@ -108,7 +131,7 @@ export const markFailed = (id: string) => write(FAIL_KEY + id, Date.now());
 export const leadStarts = (raw: (number | null)[]): (number | null)[] =>
   raw.map((v) => (v === null || v === undefined || !isFinite(v) ? null : Math.round(Math.max(0, v - ONSET_LEAD_SEC) * 100) / 100));
 
-/** 워커에서 whisper small(양자화)로 줄 시작 시각을 강제 정렬한다. 끝나면 워커를 내린다(모델 파일은 브라우저 캐시에 남는다) */
+/** 워커에서 whisper base(WebGPU fp32, 없으면 WASM q8)로 줄 시작 시각을 강제 정렬한다. 끝나면 워커를 내린다(모델 파일은 브라우저 캐시에 남는다) */
 function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void, signal?: AbortSignal, opts?: AlignOptions): Promise<(number | null)[]> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(new Error('aborted')); return; }
@@ -143,7 +166,8 @@ export async function autoAlign(
   const samples = await decodeMono(url);
   if (signal?.aborted) throw new Error('aborted');
   onPhase('download', 0);
-  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase, signal, opts), durationSec || samples.length / SR);
+  const raw = await forceAlign(samples, lyricLines, spans, onPhase, signal, opts);
+  const starts = finalizeAlignment(raw, durationSec || samples.length / SR);
   if (!starts) return { ok: false };
-  return { ok: true, lrc: lyricLines.map((text, i) => ({ t: starts[i], text })) };
+  return { ok: true, lrc: lyricLines.map((text, i) => ({ t: starts[i], text })), lowConfidence: lowConfidenceOf(raw) };
 }

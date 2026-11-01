@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import NodeID3 from 'node-id3'
+import { platformOfUA } from '@/lib/lyricsSync/platform'
 
 // GET: Fetch all song histories for the authenticated user (or all published songs for admin)
 export async function GET(request: Request) {
@@ -182,7 +183,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const updatedForm = form || { negativePrompt: negative_prompt || '' }
+    // 만든(올린) 기기 — 폰에서 만든 곡은 브라우저가 가사 시간을 계산하지 않으므로 서버 무료 큐가 먼저 맞춘다
+    const updatedForm = { ...(form || { negativePrompt: negative_prompt || '' }), client_platform: platformOfUA(request.headers.get('user-agent')) }
     const { data, error } = await supabase
       .from('song_history')
       .insert({

@@ -87,8 +87,12 @@ describe('워커 코어', () => {
   })
   it('워커 완성 소스에 모델·CDN 주소가 박히고 백틱이 없다', () => {
     const src = whisperWorkerScript()
-    expect(src).toContain('whisper-small_timestamped')
+    expect(src).toContain('whisper-base_timestamped')
     expect(src).toContain('cdn.jsdelivr.net')
+    // WebGPU 는 fp32 로만(fp16 은 2026-11-02 운영에서 정렬이 무너졌다)
+    expect(src).toContain('var USE_WEBGPU = true;')
+    expect(src).toContain("dtype: 'fp32'")
+    expect(src).not.toContain("'fp16'")
     expect(src).not.toContain('${')
   })
 })

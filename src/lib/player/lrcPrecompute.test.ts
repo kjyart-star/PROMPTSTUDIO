@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { LrcPrecomputeQueue, pendingLrcSongs } from './lrcPrecompute'
+import { LrcPrecomputeQueue, freshPendingIds, pendingLrcSongs } from './lrcPrecompute'
 
 const song = (id: string, extra: any = {}) => ({ id, audio_url: `p/${id}.mp3`, lyrics: '첫 줄\n둘째 줄\n셋째 줄', form: {}, status: 'completed', ...extra })
 const auto = [{ t: 1, text: 'a' }, { t: 20, text: 'b' }]
@@ -145,5 +145,13 @@ describe('LrcPrecomputeQueue', () => {
     const { q } = make(h, async (item: any) => { markDone(h, item.id); q.stop(); return 'saved' as const })
     await q.run()
     expect(h[1].form.lrc_auto_v).toBeUndefined()
+  })
+})
+
+describe('freshPendingIds (생성 직후 트리거)', () => {
+  it('첫 화면에서는 새 곡이 없다고 보고, 그 뒤 새로 생긴 곡만 돌려준다', () => {
+    expect(freshPendingIds(null, ['a', 'b'])).toEqual([])
+    expect(freshPendingIds(new Set(['a', 'b']), ['a', 'b', 'c'])).toEqual(['c'])
+    expect(freshPendingIds(new Set(['a']), ['a'])).toEqual([])
   })
 })

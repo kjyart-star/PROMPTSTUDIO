@@ -86,3 +86,22 @@ export function alignLineTexts(lyrics: string | null | undefined): string[] {
   if (timed.mode === 'exact') return [];
   return timed.lines.filter((l) => l.kind === 'line').map((l) => l.text);
 }
+
+/** 두 사람 결과 일치 기준 — 줄마다 시작 시각 차이가 이 안이면 같은 줄로 본다 */
+export const AGREE_SEC = 1.0;
+/** 이 비율 이상의 줄이 AGREE_SEC 안이어야 일치(간주 뒤 한두 줄이 흔들리는 것은 허용) */
+export const AGREE_RATIO = 0.9;
+
+/**
+ * 남의 공개 곡 결과를 공개로 쓸지 — 서로 다른 두 사람의 결과가 줄 수·글이 같고, 줄의 90% 이상이 1초 안에서 일치할 때만.
+ * 한 사람이 엉터리 시간표를 올려 모두의 화면을 망가뜨리지 못하게 한다.
+ */
+export function lrcAgree(a: LrcLine[], b: LrcLine[]): boolean {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length < 2 || a.length !== b.length) return false;
+  let close = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (String(a[i]?.text ?? '').trim() !== String(b[i]?.text ?? '').trim()) return false;
+    if (Math.abs(Number(a[i].t) - Number(b[i].t)) <= AGREE_SEC) close++;
+  }
+  return close / a.length >= AGREE_RATIO;
+}

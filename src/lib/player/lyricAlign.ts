@@ -44,3 +44,10 @@ export function finalizeAlignment(starts: (number | null)[], durationSec: number
   if (!plausibleSpacing(out)) return null;
   return out;
 }
+
+/** 정렬기가 직접 찾은 줄이 90% 미만이면 신뢰도 낮음(나머지는 이웃 사이를 채운 값) — 「가사 시간 확인」 권유 기준 */
+export function lowConfidenceOf(starts: (number | null)[]): boolean {
+  if (!starts.length) return true;
+  const known = starts.filter((v) => v !== null && isFinite(v as number)).length;
+  return known / starts.length < 0.9;
+}
