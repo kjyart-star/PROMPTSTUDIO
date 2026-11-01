@@ -9,10 +9,12 @@ import {
   loadOffset, markFailed, recentlyFailed, saveCachedLrc, saveOffset, takeLegacyOffset,
 } from '@/lib/player/lyricSyncClient';
 import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf';
+import { acquireAlignLockSoon, releaseAlignLock } from '@/lib/player/alignLock';
+import { fetchSharedLrc, submitSharedLrc } from '@/lib/player/lrcShareClient';
 
 export type AlignState =
   | { phase: 'idle' }
-  | { phase: 'download' | 'listen'; pct: number }
+  | { phase: 'decode' | 'download' | 'listen'; pct: number }
   | { phase: 'fail' }
   | { phase: 'done' };
 
@@ -22,9 +24,6 @@ const hasStamps = (raw?: string | null) => /\[\d{1,3}:\d{2}/.test(raw ?? '');
  * 「지금 재생」 가사 싱크 상태 — 저장된 시간표(트랙 → 자동 맞추기 캐시), 음원 분석으로 찾은 노래 구간,
  * 곡별 가사 오프셋(±0.25초 단위), 「가사 자동 맞추기」 진행 상태.
  */
-/** 한 번에 한 곡만 음성 인식을 돌린다(브라우저 부담) */
-let aligning = false;
-
 /**
  * playing: 지금 재생 중인지 — 곡을 처음 재생할 때 유휴 시간에 자동으로 가사 맞추기를 시작한다.
  */
@@ -41,6 +40,8 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
   const spansRef = useRef<Span[] | null>(null);
   spansRef.current = spans;
   const autoTried = useRef('');
+  /** 서버에 공유된 결과가 있는지 확인을 마친 곡 id — 확인 전에는 브라우저 계산을 시작하지 않는다 */
+  const [sharedFor, setSharedFor] = useState('');
   const linesRef = useRef<{ lines: string[]; dur: number } | null>(null);
 
   useEffect(() => {
@@ -54,6 +55,20 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
   }, [id]);
 
   const lrc = trackLrc ?? localLrc;
+  const wantShared = !!id && !!track?.lyrics?.trim() && !trackLrc && !hasStamps(track?.lyrics);
+
+  // 서버에 이 곡의 자동 맞춤 결과(공개 곡은 누군가 한 번 계산하면 공유)가 있으면 그것을 먼저 쓴다
+  useEffect(() => {
+    if (!wantShared) return;
+    if (loadCachedLrc(id)) { setSharedFor(id); return; } // 이 브라우저에 이미 있으면 서버에 묻지 않는다
+    let dead = false;
+    fetchSharedLrc(id, LRC_AUTO_VERSION).then((shared) => {
+      if (dead || curId.current !== id) return;
+      if (shared) { saveCachedLrc(id, shared); setLocalLrc(shared); setAlign({ phase: 'done' }); }
+      setSharedFor(id);
+    });
+    return () => { dead = true; };
+  }, [wantShared, id]);
   const needsAnalysis = (enabled || playing) && !!id && !!track?.lyrics?.trim() && !lrc && !hasStamps(track?.lyrics) && !spans;
 
   // 노래 구간 분석 — 재생 주소가 붙을 때까지 잠깐 기다리며 다시 시도한다
@@ -82,9 +97,8 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
     const src = currentAudioSrc();
     if (!id || !src || lyricLines.length < 2) { setAlign({ phase: 'fail' }); return; }
     const mine = id;
-    if (aligning) return;
-    aligning = true;
-    setAlign({ phase: 'download', pct: 0 });
+    if (!(await acquireAlignLockSoon())) return;
+    setAlign({ phase: 'decode', pct: 0 });
     try {
       const out = await autoAlign(src, lyricLines, dur, spansRef.current, (phase, pct) => {
         if (curId.current === mine) setAlign({ phase, pct });
@@ -94,18 +108,20 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
       saveCachedLrc(mine, out.lrc);
       setLocalLrc(out.lrc);
       setAlign({ phase: 'done' });
-      // 내 스튜디오 곡이면 LRC 로 저장(실패해도 이 브라우저 캐시는 남는다)
       if (track?.album_id === 'studio-generated') {
-        // 사용자가 올린 LRC(form.lrc)는 건드리지 않고 자동 맞춤 전용 필드(lrc_auto)에만 저장한다
+        // 내 스튜디오 곡: 사용자가 올린 LRC(form.lrc)는 건드리지 않고 자동 맞춤 전용 필드(lrc_auto)에만 저장한다
         fetch(`/api/song-history/${mine}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc_auto: out.lrc, lrc_auto_v: LRC_AUTO_VERSION }),
         }).catch(() => { /* 저장 실패는 조용히 */ });
+      } else {
+        // 공개 곡: 별도 공유 테이블에 제출(로그인한 사용자만, 서버가 검증하고 첫 유효값만 쓴다)
+        void submitSharedLrc(mine, out.lrc, LRC_AUTO_VERSION);
       }
     } catch {
       markFailed(mine);
       if (curId.current === mine) setAlign({ phase: 'fail' });
     } finally {
-      aligning = false;
+      releaseAlignLock();
     }
   }, [id, track?.album_id]);
 
@@ -118,7 +134,7 @@ export function useLyricSync(track: Track | null | undefined, enabled: boolean, 
 
   // 곡을 처음 재생할 때 유휴 시간에 자동으로 맞춘다. 줄 목록은 화면(추정 계산)이 넘겨 준다.
   const setAutoInput = useCallback((lines: string[], dur: number) => { linesRef.current = { lines, dur }; }, []);
-  const canAuto = playing && !!id && !!track?.lyrics?.trim() && !lrc && !hasStamps(track?.lyrics) && align.phase === 'idle';
+  const canAuto = playing && sharedFor === id && !!id && !!track?.lyrics?.trim() && !lrc && !hasStamps(track?.lyrics) && align.phase === 'idle';
   useEffect(() => {
     if (!canAuto || autoTried.current === id) return;
     if (!canAutoAlign() || recentlyFailed(id)) return;

@@ -11,7 +11,7 @@ import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCir
 import { usePlayerStore } from '@/stores/playerStore';
 import { buildTimedLyrics, activeLineIndex } from '@/lib/player/lyricTiming';
 import { useLyricSync } from './useLyricSync';
-import { LyricSyncBar, SYNC_LABELS, SYNC_CSS } from './LyricSyncBar';
+import { AlignBanner, LyricSyncBar, SYNC_LABELS, SYNC_CSS, alignPercent } from './LyricSyncBar';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
@@ -213,7 +213,8 @@ export function ImmersivePlayer() {
               <p className="imm-nolyr">{t.noLyr}</p>
             ) : (
               <>
-                <div className="imm-lyrics" ref={lyricBoxRef}>
+                <AlignBanner labels={SYNC_LABELS[lang]} align={sync.align} />
+                <div className={`imm-lyrics${alignPercent(sync.align) !== null ? ' is-aligning' : ''}`} ref={lyricBoxRef}>
                   <div className="imm-pad" />
                   {timed.lines.map((l, i) => {
                     if (l.kind === 'section') return <p key={i} className="imm-sec" ref={(el) => { lineRefs.current[i] = el; }}>{l.text}</p>;

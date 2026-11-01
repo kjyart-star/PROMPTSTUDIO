@@ -101,17 +101,20 @@ export const recentlyFailed = (id: string) => {
   const t = Number(read<number>(FAIL_KEY + id));
   return !!t && Date.now() - t < RETRY_AFTER_MS;
 };
-export type AlignPhase = 'download' | 'listen';
+export type AlignPhase = 'decode' | 'download' | 'listen';
 export interface AlignOutcome { ok: boolean; lrc?: TimedLine[] }
 
 export const markFailed = (id: string) => write(FAIL_KEY + id, Date.now());
 
 /** 워커에서 whisper small(양자화)로 줄 시작 시각을 강제 정렬한다. 끝나면 워커를 내린다(모델 파일은 브라우저 캐시에 남는다) */
-function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void): Promise<(number | null)[]> {
+function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null, onPhase: (p: AlignPhase, pct: number) => void, signal?: AbortSignal): Promise<(number | null)[]> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) { reject(new Error('aborted')); return; }
     const url = URL.createObjectURL(new Blob([whisperWorkerScript()], { type: 'text/javascript' }));
     const worker = new Worker(url, { type: 'module' });
-    const done = () => { worker.terminate(); URL.revokeObjectURL(url); };
+    const done = () => { signal?.removeEventListener('abort', onAbort); worker.terminate(); URL.revokeObjectURL(url); };
+    const onAbort = () => { done(); reject(new Error('aborted')); };
+    signal?.addEventListener('abort', onAbort);
     worker.onmessage = (e: MessageEvent) => {
       const m = e.data;
       if (m.type === 'download') onPhase('download', m.pct);
@@ -129,10 +132,13 @@ function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null
 export async function autoAlign(
   url: string, lyricLines: string[], durationSec: number, spans: Span[] | null,
   onPhase: (phase: AlignPhase, pct: number) => void,
+  signal?: AbortSignal,
 ): Promise<AlignOutcome> {
+  onPhase('decode', 0);
   const samples = await decodeMono(url);
+  if (signal?.aborted) throw new Error('aborted');
   onPhase('download', 0);
-  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase), durationSec || samples.length / SR);
+  const starts = finalizeAlignment(await forceAlign(samples, lyricLines, spans, onPhase, signal), durationSec || samples.length / SR);
   if (!starts) return { ok: false };
   return { ok: true, lrc: lyricLines.map((text, i) => ({ t: starts[i], text })) };
 }

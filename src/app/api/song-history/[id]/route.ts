@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validateAutoLrc } from '@/lib/player/lrcValidate'
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -68,8 +69,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (Array.isArray(lrc_auto) && lrc === undefined) {
         // 자동 맞추기 결과 — 사용자가 올린 form.lrc 와 따로 form.lrc_auto 에 판 번호와 함께 둔다(사용자 시간표가 있으면 저장하지 않는다)
         const base = (songCheck as any).form && typeof (songCheck as any).form === 'object' ? { ...(songCheck as any).form } : {}
-        if (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length) {
-          base.lrc_auto = lrc_auto.slice(0, 2000).map((l: any) => ({ t: Number(l.t) || 0, text: String(l.text || '').slice(0, 500) }))
+        // 시간이 단조 증가하고 곡 길이 안인 결과만 받는다(검증 규칙은 공개 곡 공유 라우트와 같다)
+        const check = validateAutoLrc(lrc_auto, { durationSec: Number(base.duration_sec ?? base.duration) || null })
+        if (check.ok && (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length)) {
+          base.lrc_auto = check.lines
           base.lrc_auto_v = Number(lrc_auto_v) || 0
           updateData.form = base
         }

@@ -39,7 +39,8 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
 import { formatPriceCredits } from '@/lib/credits/format'
 import { fetchSystemGuides, composeGuideText, type SystemGuide } from '@/lib/studio/systemGuides'
-import { lrcPickOf } from '@/lib/studio/lyricsOf'
+import { lrcPickOf, LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf'
+import LrcPrecompute from './LrcPrecompute'
 
 // AI 제공자 및 모델 설정
 const PROVIDERS = {
@@ -3069,6 +3070,13 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
           onBalance={(m) => setCreditBalance(m)}
         />
       )}
+
+      <LrcPrecompute
+        userId={user?.id}
+        history={history}
+        lang={uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN'}
+        onSaved={(id, lrc) => setHistory((h) => h.map((x: any) => (x.id === id ? { ...x, form: { ...(x.form || {}), lrc_auto: lrc, lrc_auto_v: LRC_AUTO_VERSION } } : x)))}
+      />
 
       {timingItem && (
         <LyricTimingEditor
