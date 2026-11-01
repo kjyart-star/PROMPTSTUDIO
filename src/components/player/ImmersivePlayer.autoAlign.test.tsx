@@ -18,6 +18,7 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
   saveCachedLrc: vi.fn(),
 }))
 import { releaseAlignLock } from '@/lib/player/alignLock'
+import { lyricSyncConfig } from './useLyricSync'
 import { ImmersivePlayer } from './ImmersivePlayer'
 
 const FULL = [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }]
@@ -37,6 +38,7 @@ const serverReturns = (get: () => unknown[] | null) =>
   }))
 
 beforeEach(() => {
+  lyricSyncConfig.listenerCompute = true // 이 묶음은 (지금은 꺼 둔) 듣는 사람 계산 경로를 검사한다
   vi.useFakeTimers()
   autoAlign.mockReset()
   markFailed.mockReset()
@@ -209,5 +211,24 @@ describe('가사 싱크 (서버 우선, 브라우저는 폴백)', () => {
     const calls = (globalThis.fetch as any).mock.calls.filter((c: any[]) => String(c[0]).includes('/api/song-history/11'))
     expect(calls).toHaveLength(1)
     expect(JSON.parse(calls[0][1].body)).toEqual({ lrc_auto: FULL, lrc_auto_v: 5, client: 'web', engine: 'transformers.js', model: 'browser-whisper-base' })
+  })
+})
+
+describe('가사 싱크 — 2026-11-02 구조(공개 단계에서 확정)', () => {
+  it('기본값에서는 서버에 시간표가 없어도 듣는 사람 브라우저가 계산하지 않는다(일반 가사)', async () => {
+    lyricSyncConfig.listenerCompute = false
+    open(trk('20'))
+    render(<ImmersivePlayer />)
+    await flush(3000)
+    expect(autoAlign).not.toHaveBeenCalled()
+  })
+  it('비공개 스튜디오 곡은 서버에 묻지도, 계산하지도 않고 일반 가사로 둔다', async () => {
+    lyricSyncConfig.listenerCompute = true
+    open(trk('21', { lyrics_private: true }))
+    render(<ImmersivePlayer />)
+    await flush(3000)
+    const asked = (globalThis.fetch as any).mock.calls.filter((c: any[]) => String(c[0]).includes('/api/lyrics-sync/21'))
+    expect(asked).toHaveLength(0)
+    expect(autoAlign).not.toHaveBeenCalled()
   })
 })

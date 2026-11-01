@@ -267,7 +267,8 @@ self.onmessage = async function (e) {
   var m = e.data;
   try {
     var tf = await import(TF_URL);
-    var gpu = await pickGpu(), starts = null;
+    /* forceWasm: 공개 단계 재시도 — 메모리가 가장 적게 드는 WASM q8(77MB) 로만 30초 창씩 다시 맞춘다 */
+    var gpu = m.forceWasm ? null : await pickGpu(), starts = null;
     if (gpu) {
       try { starts = await runOnce(tf, gpu, m); }
       catch (err) { asrP = null; gpu = null; }   /* WebGPU 에서 막히면 WASM q8 로 다시 */

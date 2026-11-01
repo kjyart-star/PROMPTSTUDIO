@@ -6,10 +6,14 @@ import { alignLineTexts } from './lrcValidate';
  * 브라우저 작업(디코드·음성 인식·저장)은 processOne 으로 주입받는다(테스트에서 가짜로 갈아 끼운다).
  */
 
-/** 맞춰야 할 곡 — 최신순 */
+/**
+ * 맞춰야 할 곡 — 공개를 요청해 「가사 싱크 처리 중」(form.publish_pending)인 내 곡만(2026-11-02 구조 결정).
+ * 생성·업로드 직후에는 계산하지 않는다(비공개 곡 대부분은 공개되지 않으므로). 공개 화면에서 확인하지 못하고 닫은 곡을 이어서 맞춘다.
+ */
 export function pendingLrcSongs(history: any[], skip?: (id: string) => boolean): any[] {
   return history.filter((it) => {
     if (!it?.id || it.trashed_at || it.status === 'processing') return false;
+    if (!it.form?.publish_pending) return false;
     if (!(it.audio_url || it.stream_url || it.url)) return false;
     const f = it.form;
     if (f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2) return false; // 사용자 시간표가 우선

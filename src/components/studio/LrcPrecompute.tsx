@@ -5,7 +5,7 @@ import { LRC_AUTO_VERSION, lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { acquireAlignLock, releaseAlignLock, setPreemptHandler } from '@/lib/player/alignLock'
 import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
 import { LrcPrecomputeQueue, freshPendingIds, pendingLrcSongs, type PrecomputeProgress } from '@/lib/player/lrcPrecompute'
-import { analyzeSpans, autoAlign, batteryLow, canAutoAlign, markFailed, recentlyFailed, saveCachedLrc } from '@/lib/player/lyricSyncClient'
+import { analyzeSpans, autoAlign, canAlignForPublish, markFailed, recentlyFailed, saveCachedLrc } from '@/lib/player/lyricSyncClient'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { historyAudioPath } from '@/lib/studio/playQueue'
 import { withCorsCacheKey } from '@/lib/audio/corsUrl'
@@ -66,7 +66,8 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
   }, [pendingIds])
 
   useEffect(() => {
-    if (!userId || !hasPending || !canAutoAlign()) return
+    // 공개 요청 곡만 맞추므로 공개 단계 규칙(태블릿 포함, 공개자 기기가 계산)을 쓴다
+    if (!userId || !hasPending || !canAlignForPublish()) return
     const queue = new LrcPrecomputeQueue({
       getHistory: () => historyRef.current,
       skip: recentlyFailed,
@@ -106,8 +107,8 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
       started = true
       runningRef.current = true
       freshRef.current = false
-      // 배터리가 부족하면 이번에는 돌리지 않는다(서버 큐가 채운다)
-      void batteryLow().then((low) => (low ? undefined : queue.run())).finally(() => { runningRef.current = false })
+      // 공개 요청 곡은 공개자 기기가 계산한다(배터리·태블릿 규칙은 듣기 단계에서만)
+      void queue.run().finally(() => { runningRef.current = false })
     }
     const fresh = freshRef.current
     const t = setTimeout(() => {

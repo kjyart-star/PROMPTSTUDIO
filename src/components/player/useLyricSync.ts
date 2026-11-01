@@ -14,6 +14,12 @@ import { plausibleSpacing } from '@/lib/player/lrcValidate';
 const hasStamps = (raw?: string | null) => /\[\d{1,3}:\d{2}/.test(raw ?? '');
 
 /**
+ * listenerCompute: 서버에 시간표가 없을 때 듣는 사람 브라우저가 계산할지. 2026-11-02 구조 결정으로 끔 —
+ * 싱크는 공개 단계(만든 사람 브라우저 → 서버 무료 큐)에서 확정하고, 공개된 곡은 늘 시간표가 있다. 코드는 남겨 둔다.
+ */
+export const lyricSyncConfig = { listenerCompute: false };
+
+/**
  * 운영 검증용 다시 계산 — localStorage 'cm.lrc-recompute' 에 곡 id 를 넣으면 그 곡은 저장된 결과를 비우지도 쓰지도 않고
  * 이 브라우저에서 처음부터(재생 위치 0) 다시 맞춰 window.__cmLrcRecompute 에만 남긴다(서버·캐시에 저장하지 않는다).
  */
@@ -49,8 +55,10 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   const linesRef = useRef<{ lines: string[]; dur: number } | null>(null);
 
   const recompute = !!id && recomputeId() === id;
-  const lrc = recompute ? localLrc : trackLrc ?? serverLrc ?? localLrc;
-  const wantServer = !!id && !!track?.lyrics?.trim() && (!trackLrc || recompute) && !hasStamps(track?.lyrics);
+  // 비공개 스튜디오 곡은 일반 가사(서버 조회·자동 계산 없음) — 싱크는 공개 단계에서 확정한다
+  const privateSong = (track as any)?.lyrics_private === true;
+  const lrc = recompute ? localLrc : trackLrc ?? serverLrc ?? (privateSong ? null : localLrc);
+  const wantServer = !!id && !!track?.lyrics?.trim() && (!trackLrc || recompute) && !hasStamps(track?.lyrics) && (!privateSong || recompute);
 
   // 곡이 바뀌면 상태를 비우고, 이 브라우저의 폴백 캐시(판 3)만 미리 불러 둔다. 하던 폴백 작업은 멈춘다
   useEffect(() => {
@@ -104,6 +112,8 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   useEffect(() => {
     if (!canFallback || autoTried.current === id) return;
     const again = recomputeId() === id;
+    // 공개 이후 듣는 사람은 서버 시간표만 표시한다 — 듣는 사람 기기 계산은 꺼 둔다(lyricSyncConfig.listenerCompute)
+    if (!again && !lyricSyncConfig.listenerCompute) return;
     if (!again && (!canAutoAlign() || recentlyFailed(id))) return;
     const mine = id;
     let dead = false;

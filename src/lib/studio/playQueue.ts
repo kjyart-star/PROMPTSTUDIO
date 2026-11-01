@@ -1,5 +1,5 @@
 import { withBase } from '@/lib/basePath'
-import { lyricsOfItem, lrcOfItem, styleOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem, lrcOfItem, lrcPickOf, styleOfItem } from '@/lib/studio/lyricsOf'
 import type { Track } from '@/types/music'
 
 /** 곡 기록(song_history 행)에서 재생 주소로 쓸 값 — 없으면 재생할 수 없는 곡 */
@@ -25,7 +25,10 @@ export function historyItemToTrack(item: any, opts: QueueOpts, fileUrl?: string,
     raw_file_url: /^https?:/i.test(path) ? undefined : path,
     duration_sec: 180,
     lyrics: lyricsOfItem(item, all) || null,
-    lrc: lrcOfItem(item, all),
+    // 비공개 곡(생성·작업 중)은 일반 가사로 — 자동 시간표 강조·자동 계산을 하지 않는다. 사람이 올리거나 고친 시간표만 쓴다.
+    // 공개 단계에서 싱크를 계산·확인하고, 공개된 곡은 늘 시간표가 있다(publishGate)
+    lrc: item.is_published ? lrcOfItem(item, all) : lrcPickOf(item, all)?.by === 'user' ? lrcOfItem(item, all) : null,
+    lyrics_private: !item.is_published,
     style_prompt: styleOfItem(item) || null,
     album_id: 'studio-generated',
     image_url: cover,

@@ -92,6 +92,14 @@ export function canAutoAlign(): boolean {
   return true;
 }
 
+/**
+ * 공개 단계에서 공개하는 사람 기기가 계산할 수 있는지 — 폰·태블릿·데이터 절약 규칙은 듣기 단계에만 적용하고 여기서는 풀어 둔다.
+ * (2026-11-02 결정: 처리 능력이 공개하는 사람 수에 비례해야 하므로 공개자 기기가 반드시 계산한다)
+ */
+export function canAlignForPublish(): boolean {
+  return typeof window !== 'undefined' && typeof Worker !== 'undefined';
+}
+
 /** 배터리가 부족한지(충전 중이 아니고 30% 미만). 알 수 없으면 부족하지 않다고 본다 */
 export async function batteryLow(): Promise<boolean> {
   try {
@@ -123,6 +131,8 @@ export interface AlignOptions {
   onPartial?: (starts: (number | null)[]) => void;
   /** 어떤 장치로 돌리는지('webgpu' | 'wasm') */
   onDevice?: (device: string) => void;
+  /** WebGPU 를 쓰지 않고 WASM q8 로만(메모리 부족 재시도) */
+  forceWasm?: boolean;
 }
 
 export const markFailed = (id: string) => write(FAIL_KEY + id, Date.now());
@@ -151,7 +161,7 @@ function forceAlign(samples: Float32Array, lines: string[], spans: Span[] | null
     };
     worker.onerror = (e) => { done(); reject(new Error(e.message || 'worker')); };
     const copy = new Float32Array(samples); // 원본은 호출한 쪽이 계속 쓴다
-    worker.postMessage({ samples: copy, lines, spans, startSec: opts?.startSec ?? 0 }, [copy.buffer]);
+    worker.postMessage({ samples: copy, lines, spans, startSec: opts?.startSec ?? 0, forceWasm: !!opts?.forceWasm }, [copy.buffer]);
   });
 }
 

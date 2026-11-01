@@ -7,6 +7,7 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
   analyzeSpans: vi.fn(async () => null),
   autoAlign: (...a: unknown[]) => autoAlign(...a),
   canAutoAlign: () => true,
+  canAlignForPublish: () => true,
   batteryLow: async () => false,
   markFailed: vi.fn(),
   recentlyFailed: () => false,
@@ -15,7 +16,7 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
 vi.mock('@/lib/studio/audioUrl', () => ({ resolveStudioAudioUrl: async (p: string) => `https://cdn/${p}` }))
 import LrcPrecompute from './LrcPrecompute'
 
-const song = (id: string) => ({ id, audio_url: `${id}.mp3`, lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다', form: {}, status: 'completed' })
+const song = (id: string) => ({ id, audio_url: `${id}.mp3`, lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다', form: { publish_pending: { at: '2026-11-02T00:00:00Z' } }, status: 'completed' })
 const result = { ok: true, lrc: [{ t: 2, text: '첫째 줄입니다' }, { t: 20, text: '둘째 줄입니다' }, { t: 41, text: '셋째 줄입니다' }] }
 const fetchMock = vi.fn(async () => ({ ok: true }))
 
@@ -70,11 +71,11 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(onSaved).not.toHaveBeenCalled()
   })
 
-  it('생성·업로드가 막 끝난 곡은 12초를 기다리지 않고 곧바로 맞춘다', async () => {
+  it('공개를 요청해 「가사 싱크 처리 중」이 된 곡은 12초를 기다리지 않고 곧바로 맞춘다(비공개 곡은 계산하지 않음)', async () => {
     autoAlign.mockResolvedValue(result)
     const onSaved = vi.fn()
     const done = { ...song('old'), form: { lrc_auto: result.lrc, lrc_auto_v: 4 } }
-    const generating = { ...song('new'), status: 'processing' }
+    const generating = { ...song('new'), form: {} } // 생성이 끝났지만 아직 비공개
     const { rerender } = render(<LrcPrecompute userId="u1" history={[generating, done]} lang="KO" onSaved={onSaved} />)
     await act(async () => { await vi.advanceTimersByTimeAsync(20_000) })
     expect(autoAlign).not.toHaveBeenCalled() // 생성 중인 곡은 아직 맞추지 않는다

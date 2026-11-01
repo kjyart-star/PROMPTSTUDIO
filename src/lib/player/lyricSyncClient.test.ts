@@ -31,3 +31,12 @@ describe('기기 조건 — 브라우저가 가사 시간을 계산해도 되는
     nav({}); expect(await batteryLow()).toBe(false)
   })
 })
+
+describe('공개 단계 계산 조건', () => {
+  it('태블릿·폰 UA 여도 공개 단계에서는 계산한다(워커만 있으면)', async () => {
+    const { canAlignForPublish } = await import('./lyricSyncClient')
+    nav({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15', maxTouchPoints: 5 })
+    expect(canAutoAlign()).toBe(false)
+    expect(canAlignForPublish()).toBe(true)
+  })
+})
