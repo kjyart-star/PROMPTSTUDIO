@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { LRC_AUTO_VERSION, LRC_CF_MODEL } from '@/lib/studio/lyricsOf'
-import { validateAutoLrc } from '@/lib/player/lrcValidate'
+import { LRC_AUTO_VERSION, LRC_CF_MODEL, lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
 import { finalizeAlignment, lowConfidenceOf, ONSET_LEAD_SEC } from '@/lib/player/lyricAlign'
 import { freeJobsOf } from '@/lib/lyricsSync/freeQueue'
 import { localFix, matchWords, type Word } from '@/lib/lyricsSync/match'
@@ -12,7 +12,9 @@ import { holdExpired, releaseIfSynced } from '@/lib/lyricsSync/publishGate'
  * 뉴런 상한(하루 9,000)은 워커가 D1 로 지킨다 — 이 라우트는 Workers AI 를 부르지 않는다.
  * GET  ?limit=          — 채우기(공개 대기·폰에서 만든 곡 먼저)와 검수 작업, 음원 주소
  * POST {action:'sweep'} — 공개 대기 24시간이 지난 곡을 싱크 없이 공개(일반 가사만 표시)
- * POST {song_id, kind:'fill'|'audit', words:[{word,start,end}], neurons}
+ * GET  ?probe=<id>     — 운영 검증용: 결과가 이미 있는 곡도 작업으로 돌려준다(kind 'probe')
+ * POST {song_id, kind:'fill'|'audit'|'probe', words:[{word,start,end}], neurons}
+ *   probe: fill 과 같은 계산을 하되 저장하지 않고 결과만 돌려준다(저장된 결과를 비우지도 바꾸지도 않는다)
  *   fill : 받아쓰기를 원문과 맞춰 시간표를 만들고 검증 뒤 저장, 공개 대기 중이면 공개
  *   audit: 브라우저 결과를 받아쓰기로 ±20초 보정, 크게 어긋나면 「가사 시간 확인」 표시
  */
@@ -60,9 +62,18 @@ export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const db = admin()
-    const limit = Math.min(10, Math.max(1, Number(new URL(request.url).searchParams.get('limit')) || 3))
+    const sp = new URL(request.url).searchParams
+    const limit = Math.min(10, Math.max(1, Number(sp.get('limit')) || 3))
     const { data, error } = await loadRows(db)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const probe = sp.get('probe')
+    if (probe) {
+      const r = (data ?? []).find((x: any) => x.id === probe) as any
+      const lines = r ? alignLineTexts(lyricsOfItem(r, data ?? [])) : []
+      if (!r || lines.length < 2) return NextResponse.json({ jobs: [] })
+      const url = await audioUrlOf(db, String(r.audio_url), !!r.is_published)
+      return NextResponse.json({ jobs: url ? [{ id: r.id, kind: 'probe', audio_url: url, lines, duration: Number(r.form?.duration_sec ?? r.form?.duration) || null }] : [] })
+    }
     const { fill, audit } = freeJobsOf(data ?? [])
     const out = []
     for (const j of [...fill, ...audit].slice(0, limit)) {
@@ -99,7 +110,19 @@ export async function POST(request: Request) {
     const songId = body?.song_id
     if (typeof songId !== 'string' || !UUID.test(songId)) return NextResponse.json({ error: 'bad song_id' }, { status: 400 })
     const words = wordsOf(body?.words)
-    if (!words || (body?.kind !== 'fill' && body?.kind !== 'audit')) return NextResponse.json({ error: 'bad body' }, { status: 400 })
+    if (!words || !['fill', 'audit', 'probe'].includes(body?.kind)) return NextResponse.json({ error: 'bad body' }, { status: 400 })
+    if (body.kind === 'probe') {
+      // 검증용 — 계산만 하고 저장하지 않는다
+      const { data: one } = await db.from('song_history').select(COLS).eq('id', songId).maybeSingle()
+      const lines = one ? alignLineTexts(lyricsOfItem(one)) : []
+      if (lines.length < 2) return NextResponse.json({ ok: false, reason: 'no-lyrics' })
+      const f = (one as any).form ?? {}
+      const dur = Number(f.duration_sec ?? f.duration) || null
+      const raw = matchWords(words, lines)
+      const starts = finalizeAlignment(raw.map((v) => (v === null ? null : v + ONSET_LEAD_SEC)), dur ?? (raw.filter((v) => v !== null).pop() ?? 0) + 30)
+      const check = starts ? validateAutoLrc(lines.map((text, i) => ({ t: starts[i], text })), { durationSec: dur, expectedTexts: lines }) : null
+      return NextResponse.json({ ok: !!check?.ok, reason: check && !check.ok ? check.reason : undefined, matched: raw.filter((v) => v !== null).length, total: lines.length, lines: check?.ok ? check.lines : null, stored: Array.isArray(f.lrc_auto) ? f.lrc_auto.map((l: any) => l.t) : null })
+    }
     const { data: rows, error } = await loadRows(db)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     const job = [...freeJobsOf(rows ?? [], Date.now() + 3600_000).fill, ...freeJobsOf(rows ?? []).audit].find((j) => j.id === songId && j.kind === body.kind)

@@ -49,14 +49,15 @@ function toBase64(buf: ArrayBuffer): string {
   return (globalThis as any).Buffer.from(buf).toString('base64')
 }
 
-async function runOnce(env: Env): Promise<Record<string, unknown>> {
+async function runOnce(env: Env, probe?: string): Promise<Record<string, unknown>> {
   const log: Record<string, unknown> = {}
-  log.sweep = (await api(env, 'POST', '/api/lrc-free', { action: 'sweep' })).data
+  if (!probe) log.sweep = (await api(env, 'POST', '/api/lrc-free', { action: 'sweep' })).data
   const store = new D1BudgetStore(env.DB)
   const day = dayKeyUTC()
   const before = await store.usage(day)
   if (before.used + before.reserved >= DAILY_NEURON_CAP - 50) return { ...log, stop: 'daily-cap', usage: before }
-  const { data } = await api(env, 'GET', `/api/lrc-free?limit=${JOBS_PER_RUN}`)
+  // probe=<곡 id>: 운영 검증용 — 결과가 있는 곡도 계산만 하고 저장하지 않는다(상한은 똑같이 센다)
+  const { data } = await api(env, 'GET', probe ? `/api/lrc-free?probe=${encodeURIComponent(probe)}` : `/api/lrc-free?limit=${JOBS_PER_RUN}`)
   const jobs: any[] = Array.isArray(data?.jobs) ? data.jobs : []
   const done: unknown[] = []
   for (const j of jobs) {
@@ -66,7 +67,7 @@ async function runOnce(env: Env): Promise<Record<string, unknown>> {
     // 길이 상한 추정: 곡 정보 길이와 파일 크기(128kbps 가정) 중 큰 값 — 짧게 잡아 상한을 넘기지 않게
     const sec = Math.max(Number(j.duration) || 0, buf.byteLength / 16000)
     if (sec > MAX_AUDIO_SEC) { done.push({ id: j.id, skip: 'too-long' }); continue }
-    const prompt = j.kind === 'fill' ? String((j.lines as string[]).join(' ')).slice(0, 400) : undefined
+    const prompt = j.kind !== 'audit' ? String((j.lines as string[]).join(' ')).slice(0, 400) : undefined
     let r: { value: any; neurons: number } | null
     try {
       r = await withBudget(store, sec, async () => {
@@ -103,7 +104,8 @@ export default {
     if (url.pathname === '/run' && req.method === 'POST') {
       if (!env.LRC_FREE_TOKEN || req.headers.get('x-lrc-free-token') !== env.LRC_FREE_TOKEN) return new Response('unauthorized', { status: 401 })
       if (!(await takeSlot(env))) return Response.json({ skipped: 'busy' }, { status: 202 })
-      try { return Response.json(await runOnce(env)) } catch (e) { return Response.json({ error: String((e as Error)?.message || e) }, { status: 500 }) }
+      const probe = url.searchParams.get('probe') || undefined
+      try { return Response.json(await runOnce(env, probe)) } catch (e) { return Response.json({ error: String((e as Error)?.message || e) }, { status: 500 }) }
     }
     if (url.pathname === '/status') {
       const day = dayKeyUTC()
