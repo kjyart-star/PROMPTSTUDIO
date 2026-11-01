@@ -63,4 +63,13 @@ describe('/api/lrc-worker', () => {
     expect(await (await POST(req('POST', { song_id: SONG, lrc: good, v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL }))).json()).toMatchObject({ stored: false })
     expect(updates).toHaveLength(0)
   })
+  it('POST failed: 접은 표시만 남기고 공유 테이블은 건드리지 않으며, 다음 목록에서 빠진다', async () => {
+    const r = await (await POST(req('POST', { song_id: SONG, failed: true, reason: 'x', v: LRC_AUTO_VERSION, model: LRC_GPU_MODEL }))).json()
+    expect(r).toMatchObject({ failed: true })
+    expect(updates[0].v.form).toMatchObject({ keep: 1, lrc_auto_fail: { v: LRC_AUTO_VERSION, reason: 'x' } })
+    expect(upserts).toHaveLength(0)
+    rows[0].form = updates[0].v.form
+    const j = await (await GET(req('GET'))).json()
+    expect(j).toMatchObject({ total: 1, done: 0, failed: 1, pending: 0 })
+  })
 })

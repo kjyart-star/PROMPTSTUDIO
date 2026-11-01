@@ -67,3 +67,14 @@ describe('가사 시간표 출처', () => {
     expect(lrcPickOf(m, [{ id: 'o', form: { lrc: L, lrc_by: 'user' } }, m])).toEqual({ lines: L, by: 'user' })
   })
 })
+
+describe('믿을 수 없다고 접은 곡', () => {
+  it('lrc_auto_fail 판이 결과 판 이상이면 자동 결과를 쓰지 않는다(사용자 LRC 는 그대로)', async () => {
+    const { lrcOfItem } = await import('./lyricsOf')
+    const A2 = [{ t: 1, text: 'a' }, { t: 9, text: 'b' }]
+    expect(lrcOfItem({ form: { lrc_auto: A2, lrc_auto_v: 3, lrc_auto_fail: { v: 4 } } })).toBeNull()
+    expect(lrcOfItem({ form: { lrc_auto: A2, lrc_auto_v: 4, lrc_auto_fail: { v: 3 } } })).toBe(A2)
+    expect(lrcOfItem({ form: { lrc: A2, lrc_by: 'user', lrc_auto_fail: { v: 4 } } })).toBe(A2)
+  })
+})
+

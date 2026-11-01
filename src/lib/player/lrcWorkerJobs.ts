@@ -1,4 +1,7 @@
 import { LRC_AUTO_VERSION, LRC_GPU_MODEL, lyricsOfItem } from '@/lib/studio/lyricsOf'
+
+/** 현재 판으로 맞추다 믿을 수 없어 접은 곡(다시 시도하지 않는다 — 판을 올리면 다시 맞춘다) */
+export const gpuFailed = (f: any) => Number(f?.lrc_auto_fail?.v) === LRC_AUTO_VERSION
 import { alignLineTexts } from './lrcValidate'
 
 /**
@@ -24,10 +27,11 @@ export function hasUserLrc(f: any): boolean {
   return f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2
 }
 
-export function lrcJobsOf(rows: any[]): { jobs: LrcJob[]; total: number; done: number } {
+export function lrcJobsOf(rows: any[]): { jobs: LrcJob[]; total: number; done: number; failed: number } {
   const jobs: LrcJob[] = []
   let total = 0
   let done = 0
+  let failed = 0
   const sorted = [...rows].sort((a, b) => String(b?.created_at ?? '').localeCompare(String(a?.created_at ?? '')))
   for (const it of sorted) {
     if (!it?.id || it.trashed_at || it.status === 'processing' || !it.audio_url) continue
@@ -37,10 +41,11 @@ export function lrcJobsOf(rows: any[]): { jobs: LrcJob[]; total: number; done: n
     if (lines.length < 2) continue
     total++
     if (gpuDone(f)) { done++; continue }
+    if (gpuFailed(f)) { failed++; continue }
     jobs.push({
       id: it.id, title: String(it.title ?? ''), audio: String(it.audio_url), is_published: !!it.is_published, lines,
       duration: Number(f?.duration_sec ?? f?.duration) || null,
     })
   }
-  return { jobs, total, done }
+  return { jobs, total, done, failed }
 }

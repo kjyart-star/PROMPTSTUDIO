@@ -43,6 +43,14 @@ export const LRC_AUTO_VERSION = 4
  */
 export const LRC_MIN_READ_VERSION = 3
 export const lrcAutoReadable = (v: unknown) => typeof v === 'number' && v >= LRC_MIN_READ_VERSION && v <= LRC_AUTO_VERSION
+/**
+ * 회사 PC 가 현재 판으로 맞추다 「믿을 수 없음」으로 끝낸 곡 — 그 판 이하의 자동 결과(옛 판 포함)는 쓰지 않는다.
+ * 틀린 강조보다 강조 없음이 낫다(일반 가사로 보인다). 값은 지우지 않고 표시만 한다.
+ */
+export const lrcAutoFailed = (f: any) => {
+  const fv = Number(f?.lrc_auto_fail?.v)
+  return Number.isFinite(fv) && fv >= LRC_MIN_READ_VERSION && fv >= (Number(f?.lrc_auto_v) || 0)
+}
 
 /** 회사 PC 사전 계산 정렬기 이름 — form.lrc_auto_model·song_lrc_auto.model 에 남는다 */
 export const LRC_GPU_MODEL = 'gpu-whisper-large-v3'
@@ -63,7 +71,7 @@ export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: s
   const u = user(item);
   if (u) return { lines: u, by: 'user' };
   const f = item?.form;
-  if (lrcAutoReadable(f?.lrc_auto_v) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string; end?: number; conf?: number }[], by: 'auto' };
+  if (!lrcAutoFailed(f) && lrcAutoReadable(f?.lrc_auto_v) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string; end?: number; conf?: number }[], by: 'auto' };
   if (!all?.length || f?.kind !== 'mastering') return null;
   const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));
   let cur = item;

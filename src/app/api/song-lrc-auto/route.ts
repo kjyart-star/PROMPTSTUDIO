@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { LRC_AUTO_VERSION, LRC_BROWSER_MODEL, LRC_MIN_READ_VERSION, lrcAutoReadable, ownLyrics } from '@/lib/studio/lyricsOf'
+import { LRC_AUTO_VERSION, LRC_BROWSER_MODEL, LRC_MIN_READ_VERSION, lrcAutoFailed, lrcAutoReadable, ownLyrics } from '@/lib/studio/lyricsOf'
 import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
 
 /**
@@ -17,12 +17,14 @@ export async function GET(request: Request) {
   const v = Number(searchParams.get('v') ?? LRC_AUTO_VERSION)
   if (!UUID.test(id) || !Number.isInteger(v)) return NextResponse.json({ error: 'bad request' }, { status: 400 })
   const supabase = await createClient()
+  // 볼 수 있는 곡(공개 곡·소유자, RLS)의 기록 — 회사 PC 가 믿을 수 없다고 접은 곡이면 자동 결과를 주지 않는다(브라우저도 계산하지 않게 failed 표시)
+  const { data: song } = await supabase.from('song_history').select('form').eq('id', id).maybeSingle()
+  const f = (song as any)?.form
+  if (lrcAutoFailed(f)) return NextResponse.json({ error: 'not found', failed: true }, { status: 404 })
   // 요청한 판 이하에서 읽을 수 있는 가장 새 판(판 4 로 다시 계산하는 동안 판 3 도 쓴다)
   const { data } = await supabase.from('song_lrc_auto').select('lrc, v').eq('song_id', id).gte('v', LRC_MIN_READ_VERSION).lte('v', v).order('v', { ascending: false }).limit(1).maybeSingle()
   if (data) return NextResponse.json({ lrc: data.lrc, v: data.v }, { headers: { 'Cache-Control': 'private, max-age=60' } })
   // 비공개 곡은 공유 테이블이 보이지 않는다 — 볼 수 있는 곡(소유자 등, RLS)이면 곡 기록의 자동 맞춤 결과를 준다
-  const { data: song } = await supabase.from('song_history').select('form').eq('id', id).maybeSingle()
-  const f = (song as any)?.form
   if (lrcAutoReadable(f?.lrc_auto_v) && f.lrc_auto_v <= v && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) {
     return NextResponse.json({ lrc: f.lrc_auto, v: f.lrc_auto_v }, { headers: { 'Cache-Control': 'private, max-age=60' } })
   }

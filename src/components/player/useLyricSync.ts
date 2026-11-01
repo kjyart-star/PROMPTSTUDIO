@@ -32,6 +32,8 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   const [partial, setPartial] = useState<(number | null)[] | null>(null);
   /** 서버 첫 응답을 받은 곡 id — 응답 전에는 브라우저 계산을 시작하지 않는다 */
   const [serverAskedFor, setServerAskedFor] = useState('');
+  /** 회사 PC 가 믿을 수 없다고 접은 곡 id — 브라우저 계산도 하지 않는다 */
+  const [failedFor, setFailedFor] = useState('');
   const [lineKey, setLineKey] = useState('');
   const curId = useRef('');
   const playingRef = useRef(playing);
@@ -62,6 +64,7 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
     const ask = async () => {
       const shared = await fetchSharedLrc(id, LRC_AUTO_VERSION);
       if (dead || curId.current !== id) return;
+      if (shared === 'failed') { setFailedFor(id); setServerAskedFor(id); return; } // 믿을 수 없는 곡 — 일반 가사로 두고 더 묻지 않는다
       if (shared) {
         fallbackCtl.current?.abort(); // 서버 결과가 오면 브라우저 계산은 그만둔다
         setServerLrc(shared);
@@ -89,7 +92,7 @@ export function useLyricSync(track: Track | null | undefined, playing = false) {
   }, []);
 
   // 폴백: 서버에 결과가 없고 재생 중이면 바로, 현재 재생 위치부터 맞춘다
-  const canFallback = wantServer && playing && serverAskedFor === id && !lrc && !!lineKey;
+  const canFallback = wantServer && playing && serverAskedFor === id && failedFor !== id && !lrc && !!lineKey;
   useEffect(() => {
     if (!canFallback || autoTried.current === id) return;
     if (!canAutoAlign() || recentlyFailed(id)) return;
