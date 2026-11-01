@@ -191,6 +191,12 @@ export function ImmersivePlayer() {
             <button key={d} aria-pressed={designs[view === 'now' ? 'now' : 'list'] === d} onClick={() => pickDesign(d)}>{t[d]}</button>
           ))}
         </div>
+        {/* 폰(640px 이하): 디자인 버튼 줄 대신 드롭다운 — 글자가 세로로 꺾이지 않게, 가로 스크롤 없이 */}
+        <select className="imm-design-select" aria-label={t.design} value={designs[view === 'now' ? 'now' : 'list']} onChange={(e) => pickDesign(e.target.value as Design)}>
+          {(view === 'now' ? NOW_DESIGNS : LIST_DESIGNS).map((d) => (
+            <option key={d} value={d}>{t[d]}</option>
+          ))}
+        </select>
         <button className="imm-close imm-help" onClick={() => window.dispatchEvent(new CustomEvent(CLOCK_EVENT))} aria-label="시계 보이기·숨기기 (C)" title="시계 보이기·숨기기 (C)">
           <Clock size={17} />
         </button>
@@ -307,6 +313,18 @@ const IMM_CSS = `
 .imm-designs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);margin-left:auto;margin-right:12px}
 .imm-designs button{padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:rgba(255,255,255,.65);cursor:pointer}
 .imm-designs button[aria-pressed=true]{background:rgba(255,255,255,.22);color:#fff}
+.imm-tabs button,.imm-designs button{white-space:nowrap;flex-shrink:0}
+.imm-design-select{display:none;height:34px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:700;border:0;min-width:0}
+.imm-design-select option{color:#111}
+@media (max-width:640px){
+  /* 폰: 1줄 = 보기 탭 + 시계·도움말·닫기, 2줄 = 디자인 드롭다운(줄바꿈, 가로 스크롤 없음) */
+  .imm-top{flex-wrap:wrap;gap:8px 6px;padding:12px}
+  .imm-tabs{flex-shrink:0;margin-right:auto}
+  .imm-tabs button{padding:6px 9px;font-size:12px;gap:4px}
+  .imm-designs{display:none}
+  .imm-top .imm-close{order:1;width:34px;height:34px;flex-shrink:0}
+  .imm-design-select{display:block;order:2;flex:0 0 auto;min-width:120px}
+}
 .imm-framed .imm-now{grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;text-align:center;margin:var(--clk-t,0px) clamp(16px,4vw,64px) calc(8px + var(--clk-b,0px));border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(0,0,0,.28);backdrop-filter:blur(18px);padding:clamp(16px,3vw,40px) clamp(20px,4vw,64px)}
 .imm-close{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.12);cursor:pointer}
 .imm-help{margin-right:8px}
