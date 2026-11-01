@@ -475,8 +475,8 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
             onClick={() => setImmersiveOpen(true)}
             disabled={!currentTrack}
             className="text-on-surface-variant hover:text-on-surface transition-colors ml-[4px] cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-default"
-            title={lang === 'KO' ? '전체 화면으로 보기' : lang === 'JA' ? '全画面で見る' : 'Full screen'}
-            aria-label={lang === 'KO' ? '전체 화면으로 보기' : lang === 'JA' ? '全画面で見る' : 'Full screen'}
+            title={lang === 'KO' ? '크게 보기' : lang === 'JA' ? '拡大表示' : 'Expand'}
+            aria-label={lang === 'KO' ? '크게 보기' : lang === 'JA' ? '拡大表示' : 'Expand'}
           >
             <Maximize2 className="w-5 h-5" />
           </button>
@@ -587,6 +587,8 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
 
         {/* 우: 볼륨 및 기능 */}
         <div className="flex items-center justify-end gap-[16px] w-1/4">
+          {/* 오른쪽 패널이 있는 쿠키뮤직에서만 보인다. 패널이 없는 화면(스튜디오)에서는 같은 동작인 ⤢ 「크게 보기」 하나로 통일한다. */}
+          {hasSidePanel && (
           <button
             onClick={() => toggleInfo()}
             aria-expanded={hasSidePanel ? isNowPlayingOpen : undefined}
@@ -598,6 +600,7 @@ export function PersistentPlayer({ hasMobileNav = false, hasSidePanel = false }:
           >
             <PanelRight className="w-5 h-5" />
           </button>
+          )}
 
           <div className="relative" ref={queueRef}>
             <button 

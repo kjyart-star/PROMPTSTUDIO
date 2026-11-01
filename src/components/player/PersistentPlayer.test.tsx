@@ -154,11 +154,12 @@ describe('PersistentPlayer', () => {
     expect(usePlayerStore.getState().isPlaying).toBe(true)
   })
 
-  it('오른쪽 패널이 없는 화면(스튜디오)에서는 「지금 재생 중 열기」가 전체 화면 지금 재생을 연다', () => {
+  it('오른쪽 패널이 없는 화면(스튜디오)에서는 ⤢ 「크게 보기」 하나로 전체 화면을 열고, 중복 아이콘은 없다', () => {
     usePlayerStore.setState({ isImmersiveOpen: false, isNowPlayingOpen: false })
     const { getByTitle } = render(<PersistentPlayer />)
     act(() => usePlayerStore.getState().playTrack(track('a')))
-    act(() => { getByTitle('지금 재생 중 열기').click() })
+    expect(document.querySelector('button[title="지금 재생 중 열기"]')).toBeNull()
+    act(() => { getByTitle('크게 보기').click() })
     expect(usePlayerStore.getState().isImmersiveOpen).toBe(true)
     expect(usePlayerStore.getState().isNowPlayingOpen).toBe(false)
   })
