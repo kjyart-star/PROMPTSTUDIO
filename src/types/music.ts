@@ -54,6 +54,8 @@ export interface Track {
   style_prompt: string | null;
   /** 공개 곡 정보 — 싱크 가사(LRC)·마스터링본 여부 */
   has_lrc?: boolean;
+  /** 시간표 출처 — user: 직접 올리거나 편집, auto: 자동 맞춤 */
+  lrc_by?: 'user' | 'auto';
   /** 곡에 저장된 가사 시간표(초 단위) — 있으면 플레이어가 그대로 쓴다 */
   lrc?: { t: number; text: string }[] | null;
   is_mastered?: boolean;

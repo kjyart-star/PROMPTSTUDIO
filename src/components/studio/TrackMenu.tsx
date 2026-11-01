@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import LyricsHelper from './LyricsHelper'
+import { lrcPickOf } from '@/lib/studio/lyricsOf'
 import { parseTiming, toLrc, type TimedLine } from './lrc'
 import { PriceBadge } from './PaidConfirm'
 import { stemAvailability } from '@/lib/studio/stem'
@@ -87,6 +88,7 @@ export default function TrackMenu(p: TrackMenuProps) {
   const stemOk = stemAvailability(p.item) !== 'none'
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  const lrcPick = lrcPickOf(p.item)
   const hasLrc = Array.isArray(p.item.form?.lrc) && p.item.form.lrc.length > 0
 
   useEffect(() => {
@@ -147,8 +149,8 @@ export default function TrackMenu(p: TrackMenuProps) {
           </button>}
           <button role="menuitem" className={row} onClick={() => { p.onEditTiming(); close() }}>{T.timing[l]}</button>
           <button role="menuitem" className={row} onClick={() => { fileRef.current?.click(); close() }}>{T.lrc[l]}</button>
-          {hasLrc && <button role="menuitem" className={row} onClick={() => {
-            const url = URL.createObjectURL(new Blob([toLrc(p.item.form.lrc)], { type: 'text/plain;charset=utf-8' }))
+          {lrcPick && <button role="menuitem" className={row} onClick={() => {
+            const url = URL.createObjectURL(new Blob([toLrc(lrcPick.lines)], { type: 'text/plain;charset=utf-8' }))
             const a = document.createElement('a'); a.href = url; a.download = `${(p.item.title || 'lyrics').replace(/[\\/:*?"<>|]/g, '_')}.lrc`; a.click()
             setTimeout(() => URL.revokeObjectURL(url), 1000); close()
           }}>{T.lrcOut[l]}</button>}

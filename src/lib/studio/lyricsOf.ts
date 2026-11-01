@@ -42,23 +42,29 @@ export const LRC_AUTO_VERSION = 2
  * 마스터링본만 원곡의 사용자 시간표를 물려받는다(재생성한 v2 등은 소리가 달라 물려받지 않는다).
  * 자동 맞추기 결과는 물려받지 않는다 — 마스터링에서 앞을 잘라 냈을 수 있고(잘라 낸 길이는 기록되지 않음), 마스터링본 음원으로 다시 맞추는 데 비용이 들지 않는다.
  */
-export function lrcOfItem(item: any, all?: any[]): { t: number; text: string }[] | null {
-  const own = (x: any) => {
+export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: string }[]; by: 'user' | 'auto' } | null {
+  const user = (x: any) => {
     const f = x?.form
-    if (f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2) return f.lrc as { t: number; text: string }[]
-    return f?.lrc_auto_v === LRC_AUTO_VERSION && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2 ? (f.lrc_auto as { t: number; text: string }[]) : null
+    return f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2 ? (f.lrc as { t: number; text: string }[]) : null
   };
-  const mine = own(item);
-  if (mine || !all?.length || item?.form?.kind !== 'mastering') return mine;
+  const u = user(item);
+  if (u) return { lines: u, by: 'user' };
+  const f = item?.form;
+  if (f?.lrc_auto_v === LRC_AUTO_VERSION && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string }[], by: 'auto' };
+  if (!all?.length || f?.kind !== 'mastering') return null;
   const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));
   let cur = item;
   for (let i = 0; i < 4; i++) {
     const pid = cur?.form?.source_id || cur?.form?.parent_id || cur?.parent_id;
     const parent = pid ? byId.get(pid) : null;
     if (!parent) break;
-    const f = parent.form
-    if (f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2) return f.lrc as { t: number; text: string }[]
+    const pu = user(parent);
+    if (pu) return { lines: pu, by: 'user' };
     cur = parent;
   }
   return null;
+}
+
+export function lrcOfItem(item: any, all?: any[]): { t: number; text: string }[] | null {
+  return lrcPickOf(item, all)?.lines ?? null;
 }

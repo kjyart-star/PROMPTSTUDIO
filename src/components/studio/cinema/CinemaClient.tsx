@@ -23,6 +23,7 @@ import type { ElAdjust, ElKey, Layout } from '@/lib/cinema/types'
 import { LyricsStep } from './LyricsStep'
 import { TemplateThumb, VizThumb } from './thumbs'
 import { DEFAULT_SETTINGS, loadAudioBlob, loadCoverBlob, loadSampleCoverBlob, newId, probeDuration, type CTrack, type FullSettings } from './model'
+import { lrcOfItem } from '@/lib/studio/lyricsOf'
 import './cinema.css'
 
 const LS_SETTINGS = 'cm.cinema.settings.v1'
@@ -111,7 +112,7 @@ export default function CinemaClient() {
       setTracks(ts => [...ts, t])
     } catch { setNotice(`「${t.title}」 을(를) 불러오지 못했어요. 로그인과 파일 형식을 확인해 주세요.`) } finally { setAdding('') }
   }
-  const addSong = (s: LibrarySong) => addTrack({ title: s.title || '제목 없음', song: s, lyricsRaw: s.lyrics ?? '' }, (s as LibrarySong & { form?: { lrc?: { t: number; text: string }[] } }).form?.lrc)
+  const addSong = (s: LibrarySong) => addTrack({ title: s.title || '제목 없음', song: s, lyricsRaw: s.lyrics ?? '' }, lrcOfItem(s, lib?.songs) ?? undefined)
   const addFiles = async (files: FileList | null) => {
     for (const f of Array.from(files ?? [])) await addTrack({ title: f.name.replace(/\.[^.]+$/, ''), file: f, lyricsRaw: '' })
   }

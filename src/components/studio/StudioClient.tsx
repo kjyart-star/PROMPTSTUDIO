@@ -39,6 +39,7 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import type { CreditAction } from '@/lib/credits/suite'
 import { formatPriceCredits } from '@/lib/credits/format'
 import { fetchSystemGuides, composeGuideText, type SystemGuide } from '@/lib/studio/systemGuides'
+import { lrcPickOf } from '@/lib/studio/lyricsOf'
 
 // AI 제공자 및 모델 설정
 const PROVIDERS = {
@@ -1961,7 +1962,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                     const badgeList: string[] = [
                       ...(item.form?.kind === 'mastering' ? [uiLanguage === 'KO' ? '마스터링 완료' : uiLanguage === 'JA' ? 'マスタリング済み' : 'Mastered'] : []),
                       ...(masteredSourceIds.has(item.id) ? [uiLanguage === 'KO' ? '원곡' : uiLanguage === 'JA' ? '原曲' : 'Original'] : []),
-                      ...(Array.isArray(item.form?.lrc) && item.form.lrc.length ? ['LRC'] : []),
+                      ...(() => { const by = lrcPickOf(item, history)?.by; return by === 'user' ? ['LRC'] : by === 'auto' ? [uiLanguage === 'KO' ? '자동' : uiLanguage === 'JA' ? '自動' : 'Auto'] : [] })(),
                       ...(item.form?.stems?.status === 'done' ? [uiLanguage === 'KO' ? '스템' : uiLanguage === 'JA' ? 'ステム' : 'Stems'] : []),
                     ]
                     const stemBadge = badgeList.length ? (

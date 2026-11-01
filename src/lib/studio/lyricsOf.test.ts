@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lyricsOfItem, styleOfItem, lrcOfItem, LRC_AUTO_VERSION } from './lyricsOf'
+import { lyricsOfItem, styleOfItem, lrcOfItem, lrcPickOf, LRC_AUTO_VERSION } from './lyricsOf'
 import { buildHistoryQueue, queueWithPlayable, historyItemToTrack } from './playQueue'
 
 const opts = { artistName: '나', slug: 'me' }
@@ -57,5 +57,12 @@ describe('가사 시간표 출처', () => {
   it('재생성 v2 는 원곡 시간표를 물려받지 않는다', () => {
     const v2 = { id: 'v', form: { parent_id: 'o' } }
     expect(lrcOfItem(v2, [{ id: 'o', form: { lrc: L, lrc_by: 'user' } }, v2])).toBeNull()
+  })
+  it('출처를 함께 돌려준다 — 사용자 LRC 는 user, 자동 결과는 auto, 옛 표시 없는 값은 없음', () => {
+    expect(lrcPickOf({ form: { lrc: L, lrc_by: 'user', lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } })).toEqual({ lines: L, by: 'user' })
+    expect(lrcPickOf({ form: { lrc: L, lrc_auto: A, lrc_auto_v: LRC_AUTO_VERSION } })).toEqual({ lines: A, by: 'auto' })
+    expect(lrcPickOf({ form: { lrc: L } })).toBeNull()
+    const m = { id: 'm', form: { kind: 'mastering', source_id: 'o' } }
+    expect(lrcPickOf(m, [{ id: 'o', form: { lrc: L, lrc_by: 'user' } }, m])).toEqual({ lines: L, by: 'user' })
   })
 })

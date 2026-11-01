@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { fetchSongBlob } from './mastering/actions'
+import { lrcPickOf } from '@/lib/studio/lyricsOf'
 import { formatClock, linesFromLyrics, parseClock, toLrc, type TimedLine } from './lrc'
 
 /** 가사 시간 편집기 — 재생하면서 줄마다 시간을 찍고, 숫자로 고치고, 한 줄씩 확인한다. 전부 브라우저(무료). */
@@ -13,7 +14,7 @@ export default function LyricTimingEditor({
   onClose: () => void
 }) {
   const [lines, setLines] = useState<TimedLine[]>(() =>
-    Array.isArray(song.form?.lrc) && song.form.lrc.length ? song.form.lrc : linesFromLyrics(song.lyrics || ''))
+    lrcPickOf(song)?.lines ?? linesFromLyrics(song.lyrics || ''))
   const [raw, setRaw] = useState<Record<number, string>>({})
   const [cur, setCur] = useState(0)
   const [src, setSrc] = useState('')

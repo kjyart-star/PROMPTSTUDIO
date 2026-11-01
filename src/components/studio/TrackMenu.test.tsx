@@ -95,7 +95,13 @@ describe('TrackMenu', () => {
     fireEvent.click(screen.getByLabelText('더보기'))
     expect(screen.queryByText('LRC 내보내기')).toBeNull()
     unmount()
-    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc: [{ t: 1, text: 'x' }] } } })} />)
+    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc: [{ t: 1, text: 'x' }, { t: 2, text: 'y' }], lrc_by: 'user' } } })} />)
+    fireEvent.click(screen.getByLabelText('더보기'))
+    expect(screen.getByText('LRC 내보내기')).toBeTruthy()
+  })
+
+  it('자동 맞춤(lrc_auto v2)만 있는 곡도 LRC 내보내기가 보인다', () => {
+    render(<TrackMenu {...base({ item: { id: 'a', form: { lrc_auto: [{ t: 1, text: 'x' }, { t: 2, text: 'y' }], lrc_auto_v: 2 } } })} />)
     fireEvent.click(screen.getByLabelText('더보기'))
     expect(screen.getByText('LRC 내보내기')).toBeTruthy()
   })
