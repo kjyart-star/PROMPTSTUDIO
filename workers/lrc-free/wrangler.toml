@@ -14,6 +14,11 @@ SERVER_URL = "https://cookieplay.app/music"
 [ai]
 binding = "AI"
 
+# 공개 음원(R2) 읽기 — 같은 계정 workers.dev 워커(cookiemusic-cdn)끼리는 fetch 가 막혀(404) 버킷을 직접 읽는다. 쓰지 않는다.
+[[r2_buckets]]
+binding = "TRACKS"
+bucket_name = "cookiemusic-tracks"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "cookiemusic-lrc"

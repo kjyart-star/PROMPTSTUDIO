@@ -10,6 +10,7 @@ import { DAILY_NEURON_CAP, MAX_AUDIO_SEC, dayKeyUTC, withBudget, type BudgetStor
 interface Env {
   AI: { run: (model: string, input: unknown) => Promise<any> }
   DB: D1Database
+  TRACKS: R2Bucket
   SERVER_URL: string
   LRC_FREE_TOKEN: string
 }
@@ -44,6 +45,17 @@ async function api(env: Env, method: string, path: string, body?: unknown) {
   return { status: res.status, data: (await res.json().catch(() => ({}))) as any }
 }
 
+/** 음원 바이트 — 공개 CDN 주소면 R2 에서 바로, 아니면(서명 주소) 그대로 받는다 */
+async function audioOf(env: Env, url: string): Promise<ArrayBuffer | null> {
+  const u = new URL(url)
+  if (u.hostname.startsWith('cookiemusic-cdn.')) {
+    const obj = await env.TRACKS.get(decodeURIComponent(u.pathname.replace(/^\/+/, '')))
+    return obj ? await obj.arrayBuffer() : null
+  }
+  const res = await fetch(url, { headers: { 'User-Agent': 'cookiemusic-lrc-free/1' } })
+  return res.ok ? await res.arrayBuffer() : null
+}
+
 function toBase64(buf: ArrayBuffer): string {
   // nodejs_compat 의 Buffer 는 네이티브 인코딩이라 CPU 시간이 짧다
   return (globalThis as any).Buffer.from(buf).toString('base64')
@@ -61,9 +73,8 @@ async function runOnce(env: Env, probe?: string): Promise<Record<string, unknown
   const jobs: any[] = Array.isArray(data?.jobs) ? data.jobs : []
   const done: unknown[] = []
   for (const j of jobs) {
-    const audio = await fetch(j.audio_url, { headers: { 'User-Agent': 'cookiemusic-lrc-free/1' } })
-    if (!audio.ok) { done.push({ id: j.id, error: `audio ${audio.status}` }); continue }
-    const buf = await audio.arrayBuffer()
+    const buf = await audioOf(env, String(j.audio_url))
+    if (!buf) { done.push({ id: j.id, error: 'audio' }); continue }
     // 길이 상한 추정: 곡 정보 길이와 파일 크기(128kbps 가정) 중 큰 값 — 짧게 잡아 상한을 넘기지 않게
     const sec = Math.max(Number(j.duration) || 0, buf.byteLength / 16000)
     if (sec > MAX_AUDIO_SEC) { done.push({ id: j.id, skip: 'too-long' }); continue }
