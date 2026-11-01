@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getSunoStatus } from '@/lib/suno/channel'
 import { createHash } from 'node:crypto'
+import { kickFreeQueue } from '@/lib/lyricsSync/kick'
+import { isMobileUA } from '@/lib/lyricsSync/platform'
 
 /**
  * 스토리지 쓰기 전용 클라이언트.
@@ -179,6 +181,8 @@ export async function GET(request: Request) {
         .eq('id', historyId).eq('user_id', user.id).eq('suno_task_id', taskId)
         .select('id').maybeSingle()
       if (error || !saved) return NextResponse.json({ error: 'Could not save generated track' }, { status: 500 })
+      // 폰에서 만든 곡은 브라우저가 가사 시간을 계산하지 않는다 — 생성이 끝나는 즉시 서버 무료 큐를 깨운다
+      if (originalItem.form?.client_platform === 'mobile' || isMobileUA(request.headers.get('user-agent'))) after(kickFreeQueue)
 
       return NextResponse.json({
         status: 'completed',

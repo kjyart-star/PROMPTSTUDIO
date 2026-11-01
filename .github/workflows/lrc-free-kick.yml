@@ -1,0 +1,17 @@
+# 가사 싱크 Workers AI 무료 큐 깨우기 — Cloudflare 계정 cron 한도(Free 5개)가 차 있어 여기서 10분마다 부른다.
+# 워커가 하루 9,000 뉴런 하드 상한(D1)과 겹침 방지를 스스로 지킨다. 비밀값: LRC_FREE_TOKEN
+name: lrc-free-kick
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+jobs:
+  kick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: POST /run
+        env:
+          TOKEN: ${{ secrets.LRC_FREE_TOKEN }}
+        run: |
+          curl -sS -m 150 -X POST -H "x-lrc-free-token: $TOKEN" https://cookiemusic-lrc-free.kjyart.workers.dev/run | head -c 2000 || true

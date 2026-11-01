@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
 import { LRC_BROWSER_MODEL } from '@/lib/studio/lyricsOf'
 import { gpuDone } from '@/lib/player/lrcWorkerJobs'
 import { clientInfoOf, modelTagOf } from '@/lib/lyricsSync/submission'
 import { releaseIfSynced } from '@/lib/lyricsSync/publishGate'
+import { kickFreeQueue } from '@/lib/lyricsSync/kick'
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -127,6 +128,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    // 공개 요청이 「가사 싱크 처리 중」으로 바뀌었으면 서버 무료 큐도 깨운다(PC 브라우저가 먼저 끝내면 큐는 건너뛴다)
+    if (is_published === true && (data as any)?.form?.publish_pending) after(kickFreeQueue)
 
     return NextResponse.json(data)
   } catch (err: any) {

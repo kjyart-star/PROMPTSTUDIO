@@ -1,4 +1,4 @@
-# cookiemusic-lrc-free — 가사 싱크 Workers AI 무료 큐(하루 9,000 뉴런 하드 상한, D1 카운터).
+# cookiemusic-lrc-free — 가사 싱크 Workers AI 무료 큐(하루 9,000 뉴런 하드 상한, D1 카운터). 계정은 Workers Free(한도 초과 시 과금 없이 오류).
 # 배포는 반드시 --config 를 절대경로로:
 #   npx wrangler deploy --config <저장소 절대경로>/workers/lrc-free/wrangler.toml
 # 출력에 cookiemusic-lrc-free 가 아닌 워커 이름이 보이면 중단할 것.
@@ -19,5 +19,5 @@ binding = "DB"
 database_name = "cookiemusic-lrc"
 database_id = "7a69625b-1fb3-468f-ba30-e6bdd8be2baf"
 
-[triggers]
-crons = ["*/5 * * * *"]
+# 계정 cron 한도(Workers Free 5개)가 차 있어 cron 을 쓰지 않는다.
+# 깨우기: GitHub Actions(.github/workflows/lrc-free-kick.yml, 10분마다) + 서버 이벤트(공개 대기·폰에서 만든 곡) → POST /run

@@ -1,5 +1,5 @@
 /**
- * cookiemusic-lrc-free — 가사 싱크 Workers AI 무료 큐(5분마다).
+ * cookiemusic-lrc-free — 가사 싱크 Workers AI 무료 큐. POST /run(토큰)으로 깨운다 — GitHub Actions 10분마다 + 서버 이벤트.
  * 1) 공개 대기 24시간 지난 곡 정리(싱크 없이 공개) 2) 작업 받기(공개 대기·폰에서 만든 곡 먼저) 3) 곡마다 하루 뉴런 상한을 D1 에서 예약한 뒤
  *    whisper-large-v3-turbo 로 받아쓰기 4) 단어 시각을 서버(/music/api/lrc-free)에 보내 원문과 맞추고 검증·저장.
  * 과금 방지: 하루 9,000 뉴런(무료 10,000) 하드 상한, 예약 → 실사용 기록, 실패도 예상치로 센다, 10분 넘는 곡은 보내지 않는다.
@@ -16,6 +16,8 @@ interface Env {
 
 const MODEL = '@cf/openai/whisper-large-v3-turbo'
 const JOBS_PER_RUN = 3
+/** 이 간격 안에 다시 깨우면 건너뛴다(겹쳐 돌지 않게) */
+const MIN_GAP_MS = 50_000
 
 class D1BudgetStore implements BudgetStore {
   constructor(private db: D1Database) {}
@@ -85,13 +87,24 @@ async function runOnce(env: Env): Promise<Record<string, unknown>> {
   return { ...log, jobs: done, usage: await store.usage(day) }
 }
 
+/** 마지막 실행에서 MIN_GAP_MS 가 지났을 때만 이번 실행 자리를 잡는다(한 문장, 원자적) */
+async function takeSlot(env: Env): Promise<boolean> {
+  const now = Date.now()
+  await env.DB.prepare("INSERT OR IGNORE INTO meta (k, v) VALUES ('last_run', '0')").run()
+  const r = await env.DB.prepare("UPDATE meta SET v = ?1 WHERE k = 'last_run' AND CAST(v AS INTEGER) <= ?2").bind(String(now), now - MIN_GAP_MS).run()
+  return (r.meta?.changes ?? 0) === 1
+}
+
 export default {
-  async scheduled(_c: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(runOnce(env).then((r) => console.log(JSON.stringify(r))).catch((e) => console.error(String(e))))
-  },
+  // 깨우기: POST /run (x-lrc-free-token) — 요청이 끝날 때까지 기다리며 최대 3곡을 처리한다
   // 상태 확인만(무엇도 부르지 않는다): GET /status
   async fetch(req: Request, env: Env) {
     const url = new URL(req.url)
+    if (url.pathname === '/run' && req.method === 'POST') {
+      if (!env.LRC_FREE_TOKEN || req.headers.get('x-lrc-free-token') !== env.LRC_FREE_TOKEN) return new Response('unauthorized', { status: 401 })
+      if (!(await takeSlot(env))) return Response.json({ skipped: 'busy' }, { status: 202 })
+      try { return Response.json(await runOnce(env)) } catch (e) { return Response.json({ error: String((e as Error)?.message || e) }, { status: 500 }) }
+    }
     if (url.pathname === '/status') {
       const day = dayKeyUTC()
       const usage = await new D1BudgetStore(env.DB).usage(day)

@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import NodeID3 from 'node-id3'
 import { platformOfUA } from '@/lib/lyricsSync/platform'
+import { kickFreeQueue } from '@/lib/lyricsSync/kick'
 
 // GET: Fetch all song histories for the authenticated user (or all published songs for admin)
 export async function GET(request: Request) {
@@ -208,6 +209,8 @@ export async function POST(request: Request) {
       console.error('Error inserting song history:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    // 폰에서 올린(만든) 곡이나 공개 대기로 들어간 곡은 브라우저가 계산하지 않으므로 서버 무료 큐를 바로 깨운다
+    if ((data as any)?.audio_url && ((data as any)?.form?.publish_pending || updatedForm.client_platform === 'mobile')) after(kickFreeQueue)
 
     return NextResponse.json(data)
   } catch (err: any) {

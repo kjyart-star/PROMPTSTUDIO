@@ -12,3 +12,8 @@ CREATE TABLE IF NOT EXISTS runs (
   neurons REAL,
   result TEXT
 );
+-- 동시 실행 막기(마지막 실행 시각)
+CREATE TABLE IF NOT EXISTS meta (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL
+);
