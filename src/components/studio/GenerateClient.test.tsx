@@ -194,3 +194,22 @@ describe('GenerateClient 배치(수노식 Create)', () => {
     expect(queryByText('+ City Pop')).toBeNull()
   })
 })
+
+describe('GenerateClient 공개 — 모든 공개는 「가사 싱크 확인」을 거친다', () => {
+  beforeEach(() => { localStorage.setItem('language', 'ko') })
+  it('보컬곡의 지구본(공개로 설정)을 누르면 공개 창에 싱크 확인 단계 안내와 「다음: 가사 싱크 확인」 버튼이 보인다', async () => {
+    const vocal = [{ ...rows[0], lyrics: '[Verse]\n첫째 줄입니다\n둘째 줄입니다' }, rows[1]]
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => vocal })))
+    const { findByText, getAllByTestId, findByText: find2 } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    await findByText('Song A')
+    fireEvent.click(getAllByTestId('gen-song-row')[0].querySelector('[aria-label="공개로 설정"]') as HTMLElement)
+    expect(await find2('다음: 가사 싱크 확인')).toBeTruthy()
+    expect(await find2(/② 가사 싱크 확인/)).toBeTruthy()
+  })
+  it('경음악(가사 없음)은 바로 「퍼블리싱하기」', async () => {
+    const { findByText, getAllByTestId } = render(<GenerateClient user={{ id: 'u', email: 'u@x.y' }} />)
+    await findByText('Song B')
+    fireEvent.click(getAllByTestId('gen-song-row')[1].querySelector('[aria-label="공개로 설정"]') as HTMLElement)
+    expect(await findByText('퍼블리싱하기')).toBeTruthy()
+  })
+})

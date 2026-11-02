@@ -53,11 +53,17 @@ export async function decodeMono(url: string): Promise<Float32Array> {
   const buf = await res.arrayBuffer();
   const Ctx = (window.OfflineAudioContext || (window as any).webkitOfflineAudioContext) as typeof OfflineAudioContext;
   const ctx = new Ctx(1, SR, SR);
-  const audio = await ctx.decodeAudioData(buf);
+  const audio = await ctx.decodeAudioData(buf); // 디코드는 브라우저가 별도 스레드에서 한다
   const out = new Float32Array(audio.length);
+  // 채널 합치기는 메인 스레드라 잘게 나눠 쉬어 간다(한 번에 50ms 를 넘기지 않게)
+  const STEP = 1 << 18;
   for (let c = 0; c < audio.numberOfChannels; c++) {
     const ch = audio.getChannelData(c);
-    for (let i = 0; i < out.length; i++) out[i] += ch[i] / audio.numberOfChannels;
+    for (let s = 0; s < out.length; s += STEP) {
+      const e = Math.min(out.length, s + STEP);
+      for (let i = s; i < e; i++) out[i] += ch[i] / audio.numberOfChannels;
+      await new Promise((r) => setTimeout(r, 0));
+    }
   }
   lastDecoded = { url, samples: out };
   return out;

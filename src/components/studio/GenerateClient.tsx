@@ -16,8 +16,7 @@ import { useSuiteCredits } from '@/lib/credits/useSuiteCredits'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { groupSongsByDay } from './songDayGroups'
 import LyricsHelper from './LyricsHelper'
-import LyricTimingEditor from './LyricTimingEditor'
-import { prepareSyncForPublish, type PublishSyncPrep } from '@/lib/lyricsSync/publishFlow'
+import { publishNeedsSyncStep, usePublishLyricSync } from './usePublishLyricSync'
 import GenerateQueue from './GenerateQueue'
 import { formatCredits, formatPriceCredits } from '@/lib/credits/format'
 import { normalizeSunoModelVersion, SUNO_DEFAULT_MODEL_VERSION, SUNO_MODEL_VERSIONS } from '@/lib/suno/versions'
@@ -78,10 +77,10 @@ export function GenerateClient({
   const [publishError, setPublishError] = useState<string>('')
   const [publishedLink, setPublishedLink] = useState<{ title: string; href: string; pending?: boolean } | null>(null)
   /** 공개 단계 가사 싱크 계산 진행률(null = 계산 안 함) · 확인할 곡 */
-  const [syncPct, setSyncPct] = useState<number | null>(null)
-  const [syncReview, setSyncReview] = useState<any | null>(null)
   const [status, setStatus] = useState('대기 중')
   const [uiLanguage, setUiLanguage] = useState('KO')
+  const lyricSync = usePublishLyricSync(uiLanguage === 'KO' ? 'KO' : uiLanguage === 'JA' ? 'JA' : 'EN')
+  const syncPct = lyricSync.syncPct
   /* 크레딧은 스위트 공용 지갑(워커 원장)에만 있다 — 브라우저는 읽기만 한다 */
   const { prices: creditPrices, setBalance: setCreditBalance } = useSuiteCredits(user)
   /* 버튼에 적는 차감액은 워커 단가표에서 온다 — 숫자를 화면 코드에 박아 두면 갈라진다.
@@ -617,13 +616,8 @@ export function GenerateClient({
     if (!publishConfirmItem) return
     if (!selectedPublishGenre) return
     setPublishError('')
-    setSyncPct(0)
-    let prep: PublishSyncPrep = { status: 'manual', song: publishConfirmItem }
-    try { prep = await prepareSyncForPublish(publishConfirmItem, historyList, setSyncPct) } catch { /* 수동 싱크로 */ }
-    setSyncPct(null)
-    // 공개 = 이 기기의 계산 완료(확인 단계) 또는 수동 싱크 완료 — 둘 다 같은 편집기에서 「확인하고 공개」
-    if (prep.status !== 'none') { setSyncReview({ ...prep.song, _manual: prep.status === 'manual' }); return }
-    await doPublish(publishConfirmItem)
+    const item = publishConfirmItem
+    await lyricSync.run(item, historyList, () => doPublish(item))
   }
 
   const doPublish = async (track: any) => {
@@ -1312,6 +1306,12 @@ export function GenerateClient({
               )}
             </div>
 
+            {publishNeedsSyncStep(publishConfirmItem, historyList) && syncPct === null && (
+              <p className="text-[11px] text-zinc-400 leading-relaxed bg-white/5 border border-white/10 rounded-lg p-2.5">
+                {uiLanguage === 'KO' ? '공개 전에 가사 싱크를 확인합니다 — ① 장르·채널 → ② 가사 싱크 확인(미리 듣기·고치기) → 공개' : 'Before publishing you will check the lyric sync: ① genre & channel → ② check lyric sync → publish'}
+              </p>
+            )}
+
             {syncPct !== null && (
               <p role="status" className="text-[11px] text-zinc-300 leading-relaxed bg-white/5 border border-white/10 rounded-lg p-2.5 tabular-nums">
                 {uiLanguage === 'KO' ? `가사 싱크 맞추는 중${syncPct ? ` · ${syncPct}%` : ''} — 1~2분 걸릴 수 있어요. 끝나면 확인 화면이 열립니다` : `Syncing lyrics${syncPct ? ` · ${syncPct}%` : ''} — may take 1–2 min`}
@@ -1341,30 +1341,14 @@ export function GenerateClient({
                 disabled={!selectedPublishGenre || syncPct !== null}
                 className="flex-1 py-2 bg-primary hover:bg-primary text-black disabled:opacity-50 rounded-lg text-xs font-bold transition-colors cursor-pointer"
               >
-                퍼블리싱하기
+                {publishNeedsSyncStep(publishConfirmItem, historyList) ? (uiLanguage === 'KO' ? '다음: 가사 싱크 확인' : 'Next: check lyric sync') : '퍼블리싱하기'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {syncReview && (
-        <LyricTimingEditor
-          song={syncReview}
-          title={uiLanguage === 'KO' ? '가사 싱크 확인' : 'Check lyric sync'}
-          hint={syncReview._manual
-            ? (uiLanguage === 'KO' ? '이 기기에서 자동으로 맞추지 못했어요. 재생하면서 줄이 시작할 때마다 「지금 찍기」를 눌러 주세요.' : 'Automatic sync failed on this device. Play and press "Stamp now" as each line starts.')
-            : (uiLanguage === 'KO' ? '재생하면 지금 부르는 줄이 강조됩니다. 어긋난 줄은 번호를 눌러 고른 뒤 그 줄이 시작할 때 「지금 찍기」를 누르세요.' : 'Play to see the current line highlighted. Fix a line by selecting it and pressing "Stamp now" when it starts.')}
-          saveLabel={uiLanguage === 'KO' ? '확인하고 공개' : 'Confirm and publish'}
-          onSave={async (lines) => {
-            // 사람이 확인한 시간표 — 가장 우선이다. 저장 뒤 공개(시간표가 있으므로 바로 공개된다)
-            const res = await fetch(`/api/song-history/${syncReview.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc: lines }) })
-            if (res.ok) await doPublish(syncReview)
-            else setPublishError(uiLanguage === 'KO' ? '가사 시간을 저장하지 못했습니다.' : 'Could not save lyric timing.')
-          }}
-          onClose={() => setSyncReview(null)}
-        />
-      )}
+      {lyricSync.element}
 
       {publishedLink && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#18181c] border border-primary/40 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">

@@ -105,7 +105,10 @@ export default function TracksPage() {
       })
 
       if (res.ok) {
-        alert(`음원이 성공적으로 ${actionLabel}되었습니다.`)
+        // 관리자는 남의 곡 가사를 확인할 수 없다 — 시간표가 없는 곡은 「가사 싱크 처리 중」으로 보류된다(곡 주인 확인 또는 24시간 뒤 일반 가사로 공개)
+        const saved = await res.json().catch(() => null)
+        if (nextStatus && saved?.form?.publish_pending && !saved?.is_published) alert('가사 싱크가 없는 곡이라 「가사 싱크 처리 중」으로 보류했습니다. 곡 주인이 확인하거나 24시간 뒤 일반 가사로 공개됩니다.')
+        else alert(`음원이 성공적으로 ${actionLabel}되었습니다.`)
         fetchTracks()
         
         // 재생 중인 경우 비공개 전환 시 일시정지 처리

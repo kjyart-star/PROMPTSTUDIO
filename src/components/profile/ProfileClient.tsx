@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/playerStore'
 import { GENRES } from '@/lib/constants'
 import { withBase } from '@/lib/basePath'
 import LrcPrecompute from '@/components/studio/LrcPrecompute'
+import { usePublishLyricSync } from '@/components/studio/usePublishLyricSync'
 import { LRC_AUTO_VERSION } from '@/lib/studio/lyricsOf'
 
 
@@ -450,6 +451,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
   const [activeSettingSection, setActiveSettingSection] = useState<'credits' | 'profile' | 'preferences'>('credits')
   /* 잔액은 스위트 공용 지갑(워커 원장)에만 있다 — 이 화면은 잔액도 요금제도 그리지 않는다 */
   const [uiLanguage, setUiLanguage] = useState<'KO' | 'EN' | 'JA'>('KO')
+  // 모든 공개 진입점이 같은 흐름: 가사 싱크 확인 → 공개
+  const lyricSync = usePublishLyricSync(uiLanguage)
   const [audioQuality, setAudioQuality] = useState<'standard' | 'high'>('high')
   const [autoplay, setAutoplay] = useState<boolean>(true)
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -1089,7 +1092,8 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           audio_url: audioUrl,
           image_url: uploadCoverUrl || '',
           status: 'completed',
-          is_published: uploadIsPublished,
+          // 공개는 아래에서 「가사 싱크 확인」을 거쳐 한다(먼저 비공개로 올림)
+          is_published: false,
           form: {
             duration_sec: uploadDuration,
             genre: uploadGenre,
@@ -1106,9 +1110,20 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
         throw new Error(insertData.error || '음원 등록 실패')
       }
 
+      const created = await insertRes.json().catch(() => null)
       showToast('음원이 성공적으로 등록되었습니다.', 'success')
       setIsUploadModalOpen(false)
       fetchHistory()
+      if (uploadIsPublished && created?.id) {
+        const genre = uploadGenre
+        await lyricSync.run(created, [created, ...history], async () => {
+          const res = await fetch(`/api/song-history/${created.id}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_published: true, genre }),
+          })
+          if (res.ok) fetchHistory()
+        })
+      }
     } catch (err: any) {
       console.error(err)
       showToast(err.message || '음원 등록 실패', 'error')
@@ -1728,13 +1743,15 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
             showToast('장르 카테고리를 선택해야 퍼블리싱할 수 있습니다.', 'error')
             return
           }
+          // 가사가 있는 곡은 「가사 싱크 확인」 단계를 거쳐 공개한다(공개 API 사용 — DB 트리거·공개 대기 규칙 적용)
           try {
-            const supabase = createClient()
-            const { error } = await supabase.from('song_history').update({ 
-              is_published: true, 
-              genre: selectedGenre 
-            }).eq('id', historyId)
-            if (!error) fetchHistory()
+            await lyricSync.run(song ?? { id: historyId }, history, async () => {
+              const res = await fetch(`/api/song-history/${historyId}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_published: true, genre: selectedGenre }),
+              })
+              if (res.ok) fetchHistory()
+            })
           } catch (e) { console.error(e) }
         }
       })
@@ -5377,6 +5394,13 @@ export function ProfileClient({ user, isAdmin = false, initialProfile }: Profile
           </div>
         </>,
         document.body
+      )}
+
+      {lyricSync.element}
+      {lyricSync.syncPct !== null && (
+        <p role="status" className="fixed bottom-24 left-1/2 z-[110] -translate-x-1/2 rounded-lg border border-white/10 bg-black/80 px-3 py-2 text-xs text-zinc-200 tabular-nums">
+          {uiLanguage === 'KO' ? `가사 싱크 맞추는 중${lyricSync.syncPct ? ` · ${lyricSync.syncPct}%` : ''} — 끝나면 확인 화면이 열립니다` : `Syncing lyrics${lyricSync.syncPct ? ` · ${lyricSync.syncPct}%` : ''}…`}
+        </p>
       )}
 
       {/* 업로드한 곡도 올린 사람 브라우저에서 곧바로 가사 시간을 맞춘다(만든 사람 계산) */}

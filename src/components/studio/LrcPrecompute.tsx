@@ -5,7 +5,7 @@ import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { acquireAlignLock, releaseAlignLock, setPreemptHandler } from '@/lib/player/alignLock'
 import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
 import { LrcPrecomputeQueue, freshPendingIds, pendingLrcSongs } from '@/lib/player/lrcPrecompute'
-import { analyzeSpans, autoAlign, canAlignForPublish, markFailed, recentlyFailed, saveCachedLrc } from '@/lib/player/lyricSyncClient'
+import { autoAlign, canAlignForPublish, markFailed, recentlyFailed, saveCachedLrc } from '@/lib/player/lyricSyncClient'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { historyAudioPath } from '@/lib/studio/playQueue'
 import { withCorsCacheKey } from '@/lib/audio/corsUrl'
@@ -13,6 +13,11 @@ import { saveOwnLrc } from '@/lib/player/lrcShareClient'
 import { runAlignJob } from '@/lib/player/alignJobs'
 
 const START_DELAY_MS = 12_000
+/** 브라우저가 한가할 때까지(최대 2초) 기다린다 */
+const idle = () => new Promise<void>((r) => {
+  const ric = typeof window !== 'undefined' ? (window as any).requestIdleCallback : undefined
+  if (ric) ric(() => r(), { timeout: 2000 }); else setTimeout(r, 0)
+})
 /** 생성·업로드가 막 끝난 곡은 기다리지 않고 바로 맞춘다 */
 const FRESH_DELAY_MS = 300
 
@@ -76,11 +81,13 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
           if (!base || signal.aborted) throw new Error(signal.aborted ? 'aborted' : 'no-audio')
           const url = withCorsCacheKey(base)
           const lines = alignLineTexts(lyricsOfItem(item, historyRef.current))
-          const spans = await analyzeSpans(item.id, url)
-          const out = await autoAlign(url, lines, 0, spans, (phase, pct) => {
+          // 화면이 버벅이지 않게: 메인 스레드 분석(노래 구간 찾기)은 하지 않고, 정렬은 Web Worker 의 WASM(CPU)으로만 —
+          // WebGPU 는 화면 그리기와 GPU 를 나눠 쓰므로 사용자가 기다리는 공개 창에서만 쓴다
+          await idle()
+          const out = await autoAlign(url, lines, 0, null, (phase, pct) => {
             const v = phase === 'listen' ? Math.min(99, Math.round(20 + pct * 0.8)) : phase === 'download' ? Math.round(5 + pct * 0.15) : 2
             onPct(v); onJob(v)
-          }, signal)
+          }, signal, { forceWasm: true })
           if (!out.ok || !out.lrc || !validateAutoLrc(out.lrc, { expectedTexts: lines }).ok) return null
           saveCachedLrc(item.id, out.lrc)
           // 초안 저장 — 비공개 곡은 화면에 일반 가사로 보이고, 공개할 때 확인 단계에서 확정한다
