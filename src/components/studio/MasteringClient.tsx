@@ -8,12 +8,12 @@
  *  - 내보내기: 같은 체인을 청크 단위 오프라인 렌더 → WAV(16/24/32f, 디더)·MP3, 태그, ZIP
  *  - 보관함 저장: 결과만 tracks 버킷에 올리고 새 곡으로 기록(원곡은 그대로)
  * 한 화면에서 단계적으로 펼친다: 기본은 초보 흐름(스타일 → 자동 적용 → 노브 → 비교 → 내보내기),
- * 「전문 설정」을 펼치면 같은 화면에 체인 14 모듈·도구·전체 미터가 나온다. 보기는 「마스터링」/「믹서」 두 가지.
+ * 「전문 설정」을 펼치면 같은 화면에 체인 15 모듈·도구·전체 미터가 나온다. 보기는 「마스터링」/「믹서」 두 가지.
  * 골격: 메뉴 줄 / 전송 줄 / 타임라인 / 본문 3열(왼쪽 목록 · 가운데 패널 · 오른쪽 미터) / 하단 줄.
  * 상태는 store.ts, 동작은 actions.ts.
  */
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { X, Loader2, Undo2, Redo2, FileDown, FileUp, Library, FolderOpen, SlidersHorizontal, AudioWaveform, SlidersVertical, ChevronDown, ChevronRight } from 'lucide-react'
+import { X, Loader2, Undo2, Redo2, FileDown, FileUp, Library, FolderOpen, SlidersHorizontal, AudioWaveform, SlidersVertical, ChevronDown, ChevronRight, BadgeCheck } from 'lucide-react'
 import type { AutoTarget, ChainParams } from '@/lib/mastering/dsp'
 import { fmtClock } from './mastering/Timeline'
 import { useMastering, readChainLS, normalizeChain, type LibrarySong } from './mastering/store'
@@ -30,6 +30,9 @@ import { MixerView } from './mastering/MixerView'
 import { HelpButton } from './mastering/HelpPanel'
 import { Tour } from './mastering/Tour'
 import { destById, DEFAULT_DEST } from './mastering/destination'
+import { takeHandoff } from './mastering/handoff'
+import { ReleaseCheckDialog } from './mastering/ReleaseCheckDialog'
+import { withAiClean } from '@/lib/mastering/aiclean'
 import './mastering/mastering.css'
 
 const LS_PRESETS = 'cm.mastering.userPresets.v1'
@@ -74,6 +77,7 @@ export function MasteringClient() {
   const [libraryPick, setLibraryPick] = useState<null | ((s: LibrarySong) => void)>(null)
   const [userPresets, setUserPresets] = useState<{ name: string; params: ChainParams }[]>([])
   const [dropActive, setDropActive] = useState(false)
+  const [checkOpen, setCheckOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const sessionRef = useRef<HTMLInputElement>(null)
   const presetFileRef = useRef<HTMLInputElement>(null)
@@ -94,6 +98,16 @@ export function MasteringClient() {
     setExpanded(readLS<unknown>(LS_MODE, 'simple') === 'pro')
     setView(readLS<unknown>(LS_VIEW, 'master') === 'mixer' ? 'mixer' : 'master')
     /* eslint-enable react-hooks/set-state-in-effect */
+    // 간단 마스터링에서 「이어서」로 왔으면 그 곡과 설정을 그대로 싣는다
+    const h = takeHandoff()
+    if (h) void (async () => {
+      await addLibrarySong(h.song)
+      const s = useMastering.getState()
+      if (h.params) s.setParams(() => normalizeChain(h.params), 'quick-handoff')
+      else if (h.aiClean !== undefined) s.setParams(p => withAiClean(p, h.aiClean ?? null), 'quick-handoff')
+      s.setTarget(h.target)
+      useUi.getState().set({ notice: { kind: 'ok', text: h.params ? '간단 마스터링 설정을 그대로 가져왔어요. 여기서 이어서 다듬어 보세요.' : '간단 마스터링에서 고른 설정으로 곡을 열었어요.' } })
+    })()
   }, [])
   const toggleExpanded = () => {
     const next = !expanded
@@ -235,12 +249,13 @@ export function MasteringClient() {
           <button type="button" role="tab" aria-selected={view === 'master'} onClick={() => changeView('master')}><AudioWaveform className="w-4 h-4" /> 마스터링</button>
           <button type="button" role="tab" aria-selected={view === 'mixer'} onClick={() => changeView('mixer')}><SlidersVertical className="w-4 h-4" /> 믹서</button>
         </div>
-        <button type="button" className="ms-protoggle" aria-pressed={expanded} onClick={toggleExpanded} title="체인 14 모듈·도구·전체 미터를 같은 화면에 펼쳐요">
+        <button type="button" className="ms-protoggle" aria-pressed={expanded} onClick={toggleExpanded} title="체인 15 모듈·도구·전체 미터를 같은 화면에 펼쳐요">
           <SlidersHorizontal className="w-3.5 h-3.5" /> 전문 설정
         </button>
         <span className="w-1" />
         <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => openLibrary()}><Library className="w-3.5 h-3.5" /> 보관함</button>
         <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => fileRef.current?.click()}><FolderOpen className="w-3.5 h-3.5" /> 파일</button>
+        <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => setCheckOpen(true)} title="업로드 없이 이 브라우저에서 6가지를 재서 발매해도 되는지 알려 줘요"><BadgeCheck className="w-3.5 h-3.5" /> 발매 점검</button>
         {expanded && (
           <>
             <button type="button" className="ms-menubtn inline-flex items-center gap-1" onClick={() => sessionRef.current?.click()}><FileUp className="w-3.5 h-3.5" /> 세션 열기</button>
@@ -347,6 +362,14 @@ export function MasteringClient() {
 
       <BottomBar expanded={expanded} />
       {expanded && <StatusLine engine={engine} />}
+
+      {checkOpen && (
+        <ReleaseCheckDialog
+          onClose={() => setCheckOpen(false)}
+          pickFromLibrary={cb => openLibrary(cb)}
+          onMaster={src => { if ('song' in src) void addLibrarySong(src.song); else addFiles([src.file]) }}
+        />
+      )}
 
       {libraryPick && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="보관함에서 불러오기" onClick={() => setLibraryPick(null)}>

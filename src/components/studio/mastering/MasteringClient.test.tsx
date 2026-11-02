@@ -15,10 +15,10 @@ const fakeEngine = vi.hoisted(() => ({
   updateStems: () => {}, leaveStems: () => {},
 }))
 
-const exportSpy = vi.hoisted(() => ({ dests: vi.fn(), active: vi.fn() }))
+const exportSpy = vi.hoisted(() => ({ dests: vi.fn(), active: vi.fn(), addSong: vi.fn(async () => {}) }))
 vi.mock('./actions', async importOriginal => {
   const orig = await importOriginal<typeof import('./actions')>()
-  return { ...orig, getEngine: () => fakeEngine, exportForDestinations: exportSpy.dests, exportActive: exportSpy.active }
+  return { ...orig, getEngine: () => fakeEngine, exportForDestinations: exportSpy.dests, exportActive: exportSpy.active, addLibrarySong: exportSpy.addSong }
 })
 
 import { MasteringClient } from '../MasteringClient'
@@ -27,6 +27,7 @@ import { useUi } from './actions'
 import { useStyleSel } from './StylePanel'
 import { useDock, CHAIN_LIST_MAX_H } from './ChainList'
 import { METER_COL_MAX_H } from './Meters'
+import { setHandoff } from './handoff'
 
 const ctxStub = new Proxy({}, {
   get: (_t, k) => (k === 'measureText' ? () => ({ width: 0 }) : k === 'createLinearGradient' ? () => ({ addColorStop() {} }) : () => {}),
@@ -73,12 +74,12 @@ describe('마스터링 화면 — 한 화면 단계적 펼침', () => {
     expect(screen.getByRole('heading', { name: '마스터링할 곡을 열어 주세요' })).toBeTruthy()
   })
 
-  it('전문 설정을 펼치면 모듈 14행, 모듈을 누르면 타임라인 바로 아래(3열 본문 앞) 패널에 열리고 떠 있는 창은 없다', () => {
+  it('전문 설정을 펼치면 모듈 15행, 모듈을 누르면 타임라인 바로 아래(3열 본문 앞) 패널에 열리고 떠 있는 창은 없다', () => {
     const { container } = render(<MasteringClient />)
     fireEvent.click(proToggle())
     closeTour()
     const list = screen.getByTestId('chain-list')
-    expect(within(list).getAllByRole('listitem')).toHaveLength(14)
+    expect(within(list).getAllByRole('listitem')).toHaveLength(15)
     fireEvent.click(screen.getByRole('button', { name: '압축(컴프레서) 설정 열기' }))
     const panel = screen.getByRole('region', { name: '모듈 패널' })
     expect(within(panel).getByRole('heading', { level: 3 }).textContent).toBe('마스터 · 압축(컴프레서)')
@@ -326,5 +327,38 @@ describe('마스터링 화면 — 옛 저장값', () => {
     render(<MasteringClient />)
     expect(useMastering.getState().target.id).toBe('custom')
     expect(useMastering.getState().target.lufs).toBe(-11.5)
+  })
+})
+
+describe('간단 마스터링에서 이어서 · 발매 점검 입구', () => {
+  it('「고급 마스터링에서 이어서」로 넘긴 곡·체인·목표가 그대로 실린다', async () => {
+    const params = defaultChain(); params.limiter.gain = 6.6; params.bypass.aiclean = false; params.aiclean = { mode: 'strong' }
+    setHandoff({ song: { id: 's9', title: '넘긴 곡', audio_url: 'x.mp3' }, params, target: { id: 'custom', label: '간단 마스터링 설정', lufs: -12, tp: -1 } })
+    render(<MasteringClient />)
+    await act(async () => {})
+    expect(exportSpy.addSong).toHaveBeenCalledWith(expect.objectContaining({ id: 's9' }))
+    const p = useMastering.getState().params
+    expect(p.limiter.gain).toBe(6.6)
+    expect(p.bypass.aiclean).toBe(false)
+    expect(p.aiclean.mode).toBe('strong')
+    expect(useMastering.getState().target).toMatchObject({ id: 'custom', lufs: -12, tp: -1 })
+  })
+
+  it('메뉴 줄의 「발매 점검」이 업로드 없는 점검 창을 연다', () => {
+    render(<MasteringClient />)
+    fireEvent.click(screen.getByRole('button', { name: /발매 점검/ }))
+    const d = screen.getByRole('dialog', { name: '발매 점검' })
+    expect(within(d).getByRole('button', { name: /보관함에서 고르기/ })).toBeTruthy()
+    expect(within(d).getByText(/어디에도 올리지 않고/)).toBeTruthy()
+  })
+
+  it('전문 설정 체인 맨 앞이 「AI 곡 고음 정리」다', () => {
+    seedTrack()
+    render(<MasteringClient />)
+    closeTour()
+    fireEvent.click(proToggle())
+    closeTour()
+    const items = within(screen.getByTestId('chain-list')).getAllByRole('listitem')
+    expect(items[0].textContent).toContain('AI 곡 고음 정리')
   })
 })

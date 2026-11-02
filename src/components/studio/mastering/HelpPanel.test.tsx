@@ -25,7 +25,7 @@ describe('사용 설명서 패널', () => {
     const unverified = DESTINATIONS.filter(x => !(x.verified.lufs && x.verified.tp)).length
     expect(within(d).getAllByText('미확인·보수적 값')).toHaveLength(unverified)
   })
-  it('모듈 탭에 14 모듈이 화면 이름으로 나온다', () => {
+  it('모듈 탭에 15 모듈이 화면 이름으로 나온다', () => {
     const d = open()
     fireEvent.click(within(d).getByRole('tab', { name: '모듈별 설명' }))
     for (const label of Object.values(MODULE_LABEL)) expect(within(d).getByRole('heading', { name: label })).toBeTruthy()
@@ -43,10 +43,10 @@ describe('사용 설명서 패널', () => {
 })
 
 describe('설명서 내용이 화면과 일치', () => {
-  it('모듈 설명이 MODULE_LABEL 의 14개 모듈을 한 번씩 정확히 가리킨다', () => {
+  it('모듈 설명이 MODULE_LABEL 의 15개 모듈을 한 번씩 정확히 가리킨다', () => {
     const slots = Object.keys(MODULE_LABEL)
     expect(MODULE_HELP.map(m => m.slot).sort()).toEqual([...slots].sort())
-    expect(slots).toHaveLength(14)
+    expect(slots).toHaveLength(15)
   })
   it('추천값이 defaultChain 과 같다', () => {
     const c = defaultChain()

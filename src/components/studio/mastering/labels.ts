@@ -5,6 +5,7 @@ import type { SlotId } from '@/lib/mastering/dsp'
 import type { MasteringEngine } from './engine'
 
 export const MODULE_LABEL: Record<SlotId, string> = {
+  aiclean: 'AI 곡 고음 정리',
   gate: '잡음 정리(게이트)',
   eq: '다듬기(EQ)',
   mseq: '가운데·양옆 다듬기(M/S EQ)',
@@ -26,6 +27,7 @@ export const SLOT_UI = MODULE_LABEL
 
 /** 모듈이 하는 일 한 줄 */
 export const SLOT_HELP: Record<SlotId, string> = {
+  aiclean: 'AI로 만든 곡의 쇳소리·지글거림이 튈 때만 줄여요',
   gate: '조용한 부분의 잡음을 줄여요',
   eq: '저음·중음·고음의 양을 다듬어요',
   mseq: '가운데 소리와 양옆 소리를 따로 다듬어요',
@@ -44,7 +46,7 @@ export const SLOT_HELP: Record<SlotId, string> = {
 
 export type SlotKind = 'clean' | 'eq' | 'dyn' | 'stereo' | 'color' | 'limit'
 export const SLOT_KIND: Record<SlotId, SlotKind> = {
-  gate: 'clean', deesser: 'clean',
+  aiclean: 'clean', gate: 'clean', deesser: 'clean',
   eq: 'eq', mseq: 'eq', dyneq: 'eq', match: 'eq',
   comp: 'dyn', multiband: 'dyn', transient: 'dyn',
   imager: 'stereo', stereo: 'stereo',
@@ -68,6 +70,7 @@ export const GR_PICK: Partial<Record<SlotId, (m: M) => number>> = {
   limiter: m => m.limGr,
   gate: m => m.gateGr,
   deesser: m => m.deessGr,
+  aiclean: m => m.aicleanGr,
   multiband: m => Math.min(...m.mbGr),
   dyneq: m => -Math.max(0, ...m.dyneqGr.map(v => Math.abs(v ?? 0))),
 }

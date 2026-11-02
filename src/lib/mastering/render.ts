@@ -1,3 +1,4 @@
+import { viaOffthread, type RenderOpts } from './offthread'
 import { MasterChain, LoudnessMeter, TruePeakMeter, Biquad, designShelf, designPeaking, defaultEdit, linToDb, dbToLin, type ChainParams, type EditParams } from './dsp'
 
 const CHUNK = 4096
@@ -39,17 +40,26 @@ export interface RenderResult {
   channels?: Float32Array<ArrayBuffer>[]
   integrated: number
   truePeak: number
+  /** AI 곡 고음 정리가 가장 많이 줄인 양(dB, 0 이하) */
+  aiCleanMaxCut?: number
+}
+
+/**
+ * 체인 렌더 — 브라우저에서는 Web Worker 에서 돌고(메인 스레드가 멈추지 않게), 그 밖에서는 그 자리에서 돈다.
+ */
+export function renderChain(src: Float32Array[], fs: number, params: ChainParams, opts: RenderOpts = {}): Promise<RenderResult> {
+  return viaOffthread(o => o.render(src, fs, params, opts), () => renderChainLocal(src, fs, params, opts))
 }
 
 /**
  * 체인을 청크 단위로 돌린다. 지연(룩어헤드)은 앞을 잘라 보정한다.
  * write=false 면 출력 버퍼를 만들지 않고 측정만 한다(자동 맞춤 분석용).
  */
-export async function renderChain(
+export async function renderChainLocal(
   src: Float32Array[],
   fs: number,
   params: ChainParams,
-  opts: { start?: number; end?: number; write?: boolean; edit?: EditParams; onProgress?: (p: number) => void; signal?: { cancelled: boolean } } = {},
+  opts: RenderOpts = {},
 ): Promise<RenderResult> {
   const edit = opts.edit ?? defaultEdit()
   // 앞뒤 자르기(편집)와 요청 구간 중 좁은 쪽
@@ -102,6 +112,7 @@ export async function renderChain(
     channels: outL && outR ? [outL, outR] : undefined,
     integrated: meter.integrated(),
     truePeak: linToDb(tp.max),
+    aiCleanMaxCut: chain.aicleanMaxCut,
   }
 }
 

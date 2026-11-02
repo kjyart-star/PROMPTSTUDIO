@@ -9,6 +9,10 @@ import { withBase } from '@/lib/basePath'
 import { createClient } from '@/lib/supabase/client'
 import { encodeAudioBufferToMp3 } from '@/lib/audioUtils'
 import { defaultEdit, measureIntegratedLufs, TruePeakMeter, linToDb, type ChainParams, type EditParams } from '@/lib/mastering/dsp'
+import '@/lib/mastering/worker/client'
+import { viaOffthread } from '@/lib/mastering/offthread'
+import { isAiSong, withAiClean } from '@/lib/mastering/aiclean'
+import { releaseCheck, autoFix, worstStatus, type CheckItem, type CheckTarget } from '@/lib/mastering/releaseCheck'
 import { decodeAudio, computePeaks, renderChain, autoMatchLoudness, mixStems, joinAlbum, type DecodedAudio } from '@/lib/mastering/render'
 import { analyzeAudio, loudestWindow, matchingCurve, type Analysis } from '@/lib/mastering/analyze'
 import { masterToTarget, refineGain } from '@/lib/mastering/automaster'
@@ -33,6 +37,12 @@ export interface ExportReport {
   plr: number
   target: Target
   pass: { loudness: boolean; peak: boolean }
+  /** 내보내기 전 자동 검수 6항목 */
+  checks?: CheckItem[]
+  /** 자동으로 한 번 다시 처리했으면 바꾼 내용 */
+  retried?: string[]
+  /** AI 곡 고음 정리가 가장 많이 줄인 양(dB) */
+  aiCleanMaxCut?: number
 }
 
 interface Ui {
@@ -196,6 +206,11 @@ export async function activate(id: string) {
   ui().set({ peaks: null, processedPeaks: null, loop: null, loopOn: false, autoNotes: [] })
   eng.load(t.blob)
   eng.setEdit(t.edit)
+  // 보관함의 AI 곡이면 체인 맨 앞의 「AI 곡 고음 정리」를 자동으로 켠다(사용자가 강도를 바꿨으면 그대로)
+  if (isAiSong(t) && st().params.bypass.aiclean) {
+    st().setParams(p => withAiClean(p, p.aiclean?.mode ?? 'natural'), 'aiclean-auto')
+    notify('info', 'AI로 만든 곡이라 「AI 곡 고음 정리」를 켰어요(자연스럽게). 전문 설정의 체인 맨 앞에서 끄거나 강도를 바꿀 수 있어요.')
+  }
   if (t.useStems && t.stems.length) await enterStems(t)
   try {
     const dec = await decodeTrack(t)
@@ -259,7 +274,18 @@ export function autoInputGain() {
   notify('ok', `입력을 ${trim > 0 ? '+' : ''}${trim.toFixed(1)}dB 맞췄어요 (원본 ${a.integrated.toFixed(1)} LUFS → -18 LUFS).`)
 }
 
-export function applyTemplate(tpl: MasterTemplate) {
+/** 템플릿을 고쳐도 AI 곡이면 고음 정리는 지금 상태(켜짐·강도)를 지킨다 */
+function keepAiClean(tpl: MasterTemplate): MasterTemplate {
+  const t = activeTrackNow()
+  const cur = st().params
+  if (!t || !isAiSong(t)) return tpl
+  const mode = cur.bypass.aiclean ? null : cur.aiclean.mode
+  if (!mode) return tpl
+  return { ...tpl, build: () => withAiClean(tpl.build(), mode) }
+}
+
+export function applyTemplate(tpl0: MasterTemplate) {
+  const tpl = keepAiClean(tpl0)
   const c = tpl.build()
   st().setParams(() => c, 'template')
   st().setTemplateId(tpl.id)
@@ -269,7 +295,8 @@ export function applyTemplate(tpl: MasterTemplate) {
 }
 
 /** 템플릿 + 곡 분석 보정 + 라우드니스 맞춤 */
-export async function runAutoMaster(tpl: MasterTemplate): Promise<boolean> {
+export async function runAutoMaster(tpl0: MasterTemplate): Promise<boolean> {
+  const tpl = keepAiClean(tpl0)
   const t = activeTrackNow()
   if (!t) return false
   busy('곡을 분석하는 중')
@@ -400,9 +427,10 @@ export async function renderTrackFile(t: TrackItem, opts: ExportOpts, onP: (p: n
   })
   const ch = res.channels!
   const meta: TrackMeta = extra?.noMeta ? {} : { title: t.meta.title, artist: t.meta.artist, album: t.meta.album, isrc: t.meta.isrc, trackNo: extra?.trackNo, cover: await coverBytes(t.meta.coverUrl) }
-  const blob = encodeWav(ch, dec.sampleRate, opts.bits, opts.bits === 32 ? 'none' : opts.dither, meta)
+  const dither = opts.bits === 32 ? 'none' : opts.dither
+  const blob = await viaOffthread(o => o.encodeWav(ch, dec.sampleRate, opts.bits, dither, meta), async () => encodeWav(ch, dec.sampleRate, opts.bits, dither, meta))
   onP(1)
-  return { blob, ext: 'wav' as const, channels: ch, sampleRate: dec.sampleRate }
+  return { blob, ext: 'wav' as const, channels: ch, sampleRate: dec.sampleRate, aiCleanMaxCut: res.aiCleanMaxCut ?? 0 }
 }
 
 /**
@@ -418,7 +446,7 @@ async function renderMp3Safe(t: TrackItem, dec: DecodedAudio, base: ChainParams,
   const ref = await renderChain(dec.channels, dec.sampleRate, base, { ...range, write: false, onProgress: x => onP(x * 0.1) })
   const want = base.limiter.ceiling
   let ceil = want - 1, gain = base.limiter.gain + 1
-  let best: { blob: Blob; channels: Float32Array<ArrayBuffer>[]; err: number } | null = null
+  let best: { blob: Blob; channels: Float32Array<ArrayBuffer>[]; err: number; cut: number } | null = null
   for (let k = 0; k < 4; k++) {
     const p = { ...base, limiter: { ...base.limiter, ceiling: ceil, gain } }
     const res = await renderChain(dec.channels, dec.sampleRate, p, { ...range, onProgress: x => onP(0.1 + k * 0.22 + x * 0.12) })
@@ -428,33 +456,90 @@ async function renderMp3Safe(t: TrackItem, dec: DecodedAudio, base: ChainParams,
     const mp3 = await encodeAudioBufferToMp3(ab, 320, x => onP(0.1 + k * 0.22 + 0.12 + (x / 100) * 0.08))
     // 인코딩 결과를 다시 풀어 트루 피크·라우드니스를 잰다
     const back = await decodeAudio(await mp3.arrayBuffer(), dec.sampleRate)
-    const tp = new TruePeakMeter()
-    tp.process(back.channels[0], back.channels[1], back.channels[0].length)
-    const over = linToDb(tp.max) - want
-    const lufsGap = Number.isFinite(ref.integrated) ? ref.integrated - measureIntegratedLufs(back.channels, dec.sampleRate) : 0
+    const m = await measureTpLufs(back.channels, dec.sampleRate)
+    const over = m.truePeak - want
+    const lufsGap = Number.isFinite(ref.integrated) ? ref.integrated - m.integrated : 0
     const err = Math.max(0, over) * 2 + Math.abs(lufsGap)
-    if (!best || err < best.err) best = { blob: mp3, channels: ch, err }
+    if (!best || err < best.err) best = { blob: mp3, channels: ch, err, cut: res.aiCleanMaxCut ?? 0 }
     if (over <= 0 && Math.abs(lufsGap) <= 0.5) break
     // 피크가 넘치면 천장을 내리고, 작아졌으면 게인을 올린다(천장 아래에서만 커진다)
     if (over > 0) ceil -= over + 0.2
     gain += lufsGap
   }
   onP(1)
-  return { blob: await tagMp3(best!.blob, meta), ext: 'mp3' as const, channels: best!.channels, sampleRate: dec.sampleRate }
+  return { blob: await tagMp3(best!.blob, meta), ext: 'mp3' as const, channels: best!.channels, sampleRate: dec.sampleRate, aiCleanMaxCut: best!.cut }
+}
+
+/** 트루피크·통합 음량 — 워커에서(없으면 그 자리에서) */
+function measureTpLufs(ch: Float32Array[], fs: number) {
+  return viaOffthread(o => o.tpLufs(ch, fs), async () => {
+    const tp = new TruePeakMeter()
+    tp.process(ch[0], ch[1], ch[0].length)
+    return { truePeak: linToDb(tp.max), integrated: measureIntegratedLufs(ch, fs) }
+  })
 }
 
 /** 내보낸 파일을 다시 열어 재측정 */
-export async function measureFile(blob: Blob, name: string, opts: ExportOpts, targetOverride?: Target): Promise<ExportReport> {
-  const dec = await decodeAudio(await blob.arrayBuffer(), opts.rate)
-  const a = await analyzeAudio(dec.channels, dec.sampleRate, { spectrogramCols: 8 })
+/** 파일을 다시 열어 분석 — 발매 점검(고음 거칠기 포함)까지 */
+export async function analyzeFile(blob: Blob, rate = 44100, onProgress?: (p: number) => void): Promise<Analysis> {
+  const dec = await decodeAudio(await blob.arrayBuffer(), rate)
+  return analyzeAudio(dec.channels, dec.sampleRate, { spectrogramCols: 8, harsh: true, onProgress })
+}
+
+export async function measureFile(blob: Blob, name: string, opts: ExportOpts, targetOverride?: Target, analysis?: Analysis): Promise<ExportReport> {
+  const a = analysis ?? await analyzeFile(blob, opts.rate)
   const target = targetOverride ?? st().target
   return {
     file: name,
     format: opts.format === 'mp3' ? 'MP3 320k' : `WAV ${opts.bits === 32 ? '32f' : opts.bits}bit · ${opts.rate / 1000}kHz`,
     integrated: a.integrated, truePeak: a.truePeak, lra: a.lra, plr: a.plr, target,
     pass: { loudness: Math.abs(a.integrated - target.lufs) <= 1, peak: a.truePeak <= target.tp + 0.1 },
+    checks: releaseCheck(a, { lufs: target.lufs, tp: target.tp }),
   }
 }
+
+/** 자동 검수를 다시 처리할 만큼 나쁜가 — 문제(빨강)이거나, 피크·클리핑은 주의(노랑)여도 */
+const needsRetry = (c: CheckItem[]) => c.some(i => i.status === 'bad' || (i.status === 'warn' && (i.id === 'truePeak' || i.id === 'clipping')))
+
+export interface CheckedFile {
+  out: Awaited<ReturnType<typeof renderTrackFile>>
+  analysis: Analysis
+  checks: CheckItem[]
+  params: ChainParams
+  target: CheckTarget
+  /** 자동으로 한 번 다시 처리했으면 바꾼 내용 */
+  retried: string[]
+}
+
+/**
+ * 내보내기 전 자동 검수 — 렌더한 파일을 다시 풀어 6항목을 재고, 문제가 있으면 설정을 고쳐 한 번만 다시 만든다.
+ * 다시 만든 쪽이 더 나쁘면 처음 것을 쓴다. 그래도 남은 문제는 checks 의 원인·해결 방법으로 사용자에게 보여 준다.
+ */
+export async function renderChecked(t: TrackItem, opts: ExportOpts, onP: (p: number) => void, ctx: { params: ChainParams; target: CheckTarget; extra?: { trackNo?: string; noMeta?: boolean } }): Promise<CheckedFile> {
+  const rate = opts.format === 'mp3' && opts.rate === 96000 ? 48000 : opts.rate
+  let out = await renderTrackFile(t, opts, p => onP(p * 0.45), { ...ctx.extra, params: ctx.params })
+  let analysis = await analyzeFile(out.blob, rate, p => onP(0.45 + p * 0.05))
+  let checks = releaseCheck(analysis, ctx.target)
+  let params = ctx.params, target = ctx.target
+  let retried: string[] = []
+  const fix = needsRetry(checks) ? autoFix(checks, params, target, analysis) : null
+  if (fix && !cancelRef.cancelled) {
+    const dec = await decodeTrack(t)
+    const fit = await refineGain(dec.channels, dec.sampleRate, fix.params, fix.target.lufs, t.edit)
+    const out2 = await renderTrackFile(t, opts, p => onP(0.5 + p * 0.45), { ...ctx.extra, params: fit.params })
+    const a2 = await analyzeFile(out2.blob, rate, p => onP(0.95 + p * 0.05))
+    const c2 = releaseCheck(a2, fix.target)
+    const score = (c: CheckItem[]) => c.reduce((s, i) => s + (i.status === 'bad' ? 3 : i.status === 'warn' ? 1 : 0), 0)
+    if (score(c2) <= score(checks)) {
+      out = out2; analysis = a2; checks = c2; params = fit.params; target = fix.target
+      retried = fix.changes
+    }
+  }
+  onP(1)
+  return { out, analysis, checks, params, target, retried }
+}
+
+export { worstStatus }
 
 function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob)
@@ -471,13 +556,15 @@ export async function exportActive() {
   const opts = ui().exportOpts
   busy('내보내는 중')
   try {
-    const out = await renderTrackFile(t, opts, progress)
+    const { target } = st()
+    const ck = await renderChecked(t, opts, progress, { params: { ...st().params, listenOriginal: false, originalTrim: 0 }, target: { lufs: target.lufs, tp: target.tp } })
+    const out = ck.out
     const name = `${safe(t.meta.title || t.title)} (마스터링).${out.ext}`
     download(out.blob, name)
-    busy('내보낸 파일을 다시 재는 중', 0.95)
-    const rep = await measureFile(out.blob, name, opts)
+    const rep = { ...(await measureFile(out.blob, name, opts, { ...target, lufs: ck.target.lufs }, ck.analysis)), checks: ck.checks, retried: ck.retried, aiCleanMaxCut: out.aiCleanMaxCut }
     ui().set({ reports: [rep, ...ui().reports].slice(0, 30) })
-    notify(rep.pass.loudness && rep.pass.peak ? 'ok' : 'info', `내보냈어요 — ${rep.integrated.toFixed(1)} LUFS · 트루 피크 ${rep.truePeak.toFixed(1)} dBTP · ${rep.pass.loudness && rep.pass.peak ? '목표 합격' : '목표와 차이 있음(리포트 참고)'}`)
+    const w = worstStatus(ck.checks)
+    notify(w === 'ok' ? 'ok' : 'info', `내보냈어요 — ${rep.integrated.toFixed(1)} LUFS · 트루 피크 ${rep.truePeak.toFixed(1)} dBTP · ${w === 'ok' ? '발매 점검 통과' : '점검에서 확인할 항목이 있어요(아래 카드 참고)'}${ck.retried.length ? ' · 자동으로 한 번 다시 처리했어요' : ''}`)
   } catch (e) {
     if (isCancel(e)) notify('info', '내보내기를 멈췄어요.')
     else { console.error(e); notify('err', '내보내다 문제가 생겼어요.') }
@@ -514,10 +601,11 @@ export async function exportForDestinations(dests: { id: string; label: string; 
         progress(p0 + span * (0.15 + 0.05 * (k + 1)))
       }
       busy(`「${d.label}」 파일을 만드는 중`, p0 + span * 0.3)
-      const out = await renderTrackFile(t, opts, x => progress(p0 + span * (0.3 + x * 0.6)), { params: fit.params })
+      const ck = await renderChecked(t, opts, x => progress(p0 + span * (0.3 + x * 0.6)), { params: fit.params, target: { lufs: d.lufs, tp: d.tp } })
+      const out = ck.out
       const name = `${safe(t.meta.title || t.title)} (마스터링 · ${d.label}).${out.ext}`
       download(out.blob, name)
-      const rep = await measureFile(out.blob, name, opts, { id: d.id, label: d.label, lufs: d.lufs, tp: d.tp })
+      const rep = { ...(await measureFile(out.blob, name, opts, { id: d.id, label: d.label, lufs: ck.target.lufs, tp: d.tp }, ck.analysis)), checks: ck.checks, retried: ck.retried, aiCleanMaxCut: out.aiCleanMaxCut }
       ui().set({ reports: [rep, ...ui().reports].slice(0, 30) })
     }
     const fresh = ui().reports.slice(0, dests.length)

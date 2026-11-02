@@ -42,8 +42,16 @@ describe('실행 취소 · 다시 실행', () => {
   it('옛 체인(슬롯 6개)을 불러와도 새 슬롯이 채워진다', () => {
     const old = { order: ['eq', 'comp', 'multiband', 'stereo', 'saturation', 'limiter'], bypass: { eq: false }, comp: { threshold: -10 } }
     const c = normalizeChain(old as never)
-    expect(c.order.length).toBe(14)
+    expect(c.order.length).toBe(15)
     expect(c.comp.threshold).toBe(-10)
     expect(c.dyneq.bands.length).toBe(4)
+  })
+  it('고음 정리 칸이 생기기 전(14칸)의 내 순서는 지키고 맨 앞에 고음 정리만 끼운다', () => {
+    const mine = ['eq', 'gate', 'mseq', 'dyneq', 'deesser', 'match', 'comp', 'multiband', 'transient', 'imager', 'stereo', 'saturation', 'clipper', 'limiter']
+    const c = normalizeChain({ order: mine } as never)
+    expect(c.order).toEqual(['aiclean', ...mine])
+    expect(c.bypass.aiclean).toBe(true)
+    expect(c.aiclean.mode).toBe('natural')
+    expect(normalizeChain({ aiclean: { mode: 'strong' } } as never).aiclean.mode).toBe('strong')
   })
 })

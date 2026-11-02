@@ -15,6 +15,8 @@ import { METER_HELP, loudTone, peakTone } from './labels'
 import { applyStyle } from './StylePanel'
 import { useDock, ToolPanel } from './ChainList'
 import { ModulePanel } from './ModulePanel'
+import { ReleaseCheckCard } from './ReleaseCheckCard'
+import { worstStatus } from '@/lib/mastering/releaseCheck'
 import type { MasteringEngine } from './engine'
 
 export interface ViewCtx {
@@ -348,6 +350,17 @@ export function BottomBar({ expanded }: { expanded: boolean }) {
             </li>
           ))}
         </ul>
+      )}
+      {recent[0]?.checks && (
+        <div className="max-w-[720px]">
+          <ReleaseCheckCard
+            items={recent[0].checks}
+            title={`내보낸 파일 점검 · ${recent[0].target.label}`}
+            retried={recent[0].retried}
+            compact={worstStatus(recent[0].checks) === 'ok'}
+            note={recent[0].aiCleanMaxCut !== undefined && recent[0].aiCleanMaxCut < -0.05 ? `줄인 고음: 최대 ${recent[0].aiCleanMaxCut.toFixed(1)} dB (튀는 순간에만)` : undefined}
+          />
+        </div>
       )}
     </div>
   )

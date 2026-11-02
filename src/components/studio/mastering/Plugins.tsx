@@ -437,6 +437,7 @@ export function PluginPanel({ slot, p, set, engine }: { slot: SlotId; p: ChainPa
     case 'transient': return <TransientPanel p={p} set={set} engine={engine} />
     case 'imager': return <ImagerPanel p={p} set={set} />
     case 'clipper': return <ClipperPanel p={p} set={set} />
+    case 'aiclean': return <AiCleanPanel p={p} set={set} engine={engine} />
   }
 }
 
@@ -462,6 +463,7 @@ export function slotSummary(slot: SlotId, p: ChainParams): string {
     case 'transient': return `어택 ${p.transient.attack} · 서스테인 ${p.transient.sustain}`
     case 'imager': return p.imager.widths.map(w => `${w}`).join(' / ') + '%'
     case 'clipper': return `${p.clipper.threshold.toFixed(1)}dB · 부드럽게 ${p.clipper.softness}%`
+    case 'aiclean': return p.aiclean.mode === 'strong' ? '강하게' : '자연스럽게'
   }
 }
 
@@ -573,6 +575,25 @@ function DeesserPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine:
       </div>
       <GrBar engine={engine} pick={pickDeess} label="감쇠" />
       <p className="text-[11px] text-[var(--m-faint)] max-w-[260px] leading-relaxed">「ㅅ·ㅊ」 같은 치찰음이 튈 때만 그 위 고역을 내려요. 감지 소리 듣기를 켜고 주파수를 치찰음이 가장 크게 들리는 곳에 맞추세요.</p>
+    </div>
+  )
+}
+
+// ───────────────────────── AI 곡 고음 정리 ─────────────────────────
+
+const pickAiClean = (m: NonNullable<MasteringEngine['meters']>) => m.aicleanGr
+
+function AiCleanPanel({ p, set, engine }: { p: ChainParams; set: Setter; engine: MasteringEngine }) {
+  const mode = p.aiclean.mode
+  const pick = (v: 'natural' | 'strong') => set(x => ({ ...x, aiclean: { ...x.aiclean, mode: v } }))
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <div className="ms-seg" role="group" aria-label="고음 정리 강도">
+        <button type="button" aria-pressed={mode === 'natural'} onClick={() => pick('natural')}>자연스럽게</button>
+        <button type="button" aria-pressed={mode === 'strong'} onClick={() => pick('strong')}>강하게</button>
+      </div>
+      <GrBar engine={engine} pick={pickAiClean} label="줄이는 양" />
+      <p className="text-[11px] text-[var(--m-faint)] max-w-[300px] leading-relaxed">3~12kHz 를 다섯 대역으로 나눠, 한 대역만 갑자기 튀는 쇳소리·지글거림이 나올 때만 그 대역을 내려요. 하이햇·심벌처럼 고음 전체가 같이 오르는 소리는 건드리지 않아요. 체인 맨 앞에 두면 음량을 올려도 거친 소리가 같이 커지지 않아요.</p>
     </div>
   )
 }

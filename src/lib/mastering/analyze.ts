@@ -4,6 +4,8 @@
  */
 import { LoudnessMeter, TruePeakMeter, MATCH_FREQS, linToDb, loudnessRange } from './dsp'
 import { FFT } from './fft'
+import { harshMetrics, type HarshMetrics } from './aiclean'
+import { viaOffthread, type AnalyzeOpts } from './offthread'
 
 export interface ClipEvent { t: number; count: number }
 
@@ -34,11 +36,18 @@ export interface Analysis {
   sideLowDb: number
   /** 5~9kHz 에너지 - 1~4kHz 에너지 (dB) */
   sibilanceDb: number
+  /** 3~12kHz 거칠기(opts.harsh 일 때만) — 발매 점검 「고음 거칠기」·고음 정리 전후 비교 */
+  harsh?: HarshMetrics
 }
 
 const tick = () => new Promise<void>(r => setTimeout(r, 0))
 
-export async function analyzeAudio(ch: Float32Array[], fs: number, opts: { spectrogramCols?: number; onProgress?: (p: number) => void } = {}): Promise<Analysis> {
+/** 곡 분석 — 브라우저에서는 Web Worker 에서, 그 밖에서는 그 자리에서 */
+export function analyzeAudio(ch: Float32Array[], fs: number, opts: AnalyzeOpts = {}): Promise<Analysis> {
+  return viaOffthread(o => o.analyze(ch, fs, opts), () => analyzeAudioLocal(ch, fs, opts))
+}
+
+export async function analyzeAudioLocal(ch: Float32Array[], fs: number, opts: AnalyzeOpts = {}): Promise<Analysis> {
   const L = ch[0], R = ch[1] ?? ch[0]
   const n = L.length
   const meter = new LoudnessMeter(fs)
@@ -182,6 +191,7 @@ export async function analyzeAudio(ch: Float32Array[], fs: number, opts: { spect
     correlation: Math.sqrt(sLL * sRR) > 1e-12 ? sLR / Math.sqrt(sLL * sRR) : 1,
     sideLowDb,
     sibilanceDb,
+    ...(opts.harsh ? { harsh: harshMetrics([L, R], fs) } : {}),
   }
 }
 

@@ -16,6 +16,7 @@ import LibraryToolbar from './LibraryToolbar'
 import TrackMenu from './TrackMenu'
 import { DRAG_TYPE } from './FolderSidebar'
 import QuickMasterDialog from './QuickMasterDialog'
+import { setHandoff } from './mastering/handoff'
 import LyricTimingEditor from './LyricTimingEditor'
 import AlbumArtDialog from './AlbumArtDialog'
 import StemDialog from './StemDialog'
@@ -3095,7 +3096,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
           song={quickMasterItem}
           onClose={() => setQuickMasterItem(null)}
           onDone={() => { fetchSongHistory() }}
-          onAdvanced={() => { setQuickMasterItem(null); setCurrentTab('mastering') }}
+          onAdvanced={(h) => { setHandoff(h ?? null); setQuickMasterItem(null); setCurrentTab('mastering') }}
         />
       )}
 

@@ -57,6 +57,9 @@ function msSet(side: 'mid' | 'side', name: string): Row[] {
 }
 
 export const SCHEMA: Record<SlotId, Row[]> = {
+  aiclean: [
+    sel('강도', 'aiclean.mode', [{ value: 'natural', label: '자연스럽게' }, { value: 'strong', label: '강하게' }]),
+  ],
   eq: [
     sel('처리 방식', 'eq.mode', [{ value: 'min', label: '최소 위상' }, { value: 'linear', label: '리니어 페이즈' }]),
     n('입력', 'eq.input', -18, 18, 0, { unit: 'dB' }),

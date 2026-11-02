@@ -17,7 +17,7 @@ export const HELP_TABS: { id: HelpTabId; label: string }[] = [
 
 export interface QuickStep { n: number; title: string; body: string }
 export const QUICK_STEPS: QuickStep[] = [
-  { n: 1, title: '두 가지 보기', body: '맨 위 왼쪽에서 「마스터링」과 「믹서」를 바꿔요. 마스터링은 곡 하나의 최종 음량·톤을 맞추는 화면이고, 믹서는 스템(악기별 파일)을 채널로 나눠 섞는 화면이에요. 처음엔 「마스터링」으로 시작하세요. 「전문 설정」을 켜면 체인 14 모듈과 전체 미터가 같은 화면에 펼쳐져요.' },
+  { n: 1, title: '두 가지 보기', body: '맨 위 왼쪽에서 「마스터링」과 「믹서」를 바꿔요. 마스터링은 곡 하나의 최종 음량·톤을 맞추는 화면이고, 믹서는 스템(악기별 파일)을 채널로 나눠 섞는 화면이에요. 처음엔 「마스터링」으로 시작하세요. 「전문 설정」을 켜면 체인 15 모듈과 전체 미터가 같은 화면에 펼쳐져요.' },
   { n: 2, title: '곡 열기', body: '메뉴 줄의 「보관함」에서 내 곡을 고르거나, 「파일」로 컴퓨터의 WAV·MP3 등을 열어요. 파일을 화면에 끌어다 놓아도 돼요. 한 번에 20곡까지 올릴 수 있어요.' },
   { n: 3, title: '자동 분석·적용', body: '왼쪽에서 스타일을 고르면 곡을 분석해 마스터링이 자동으로 적용되고, 가장 큰 부분부터 바로 재생돼요. 마음에 안 들면 다른 스타일을 눌러 보세요.' },
   { n: 4, title: '납품처 확인', body: '화면 아래 「용도」에서 곡이 갈 곳을 골라요. 기본은 「음반」이에요. 고르면 목표 음량·음량 상한·파일 형식이 그곳에 맞게 바뀌고, 옆에 목표 음량(LUFS)과 천장(dB)이 보여요.' },
@@ -31,6 +31,7 @@ export const QUICK_IMG_COUNT = 6
 
 export interface ModuleHelp { slot: SlotId; what: string; when: string }
 export const MODULE_HELP: ModuleHelp[] = [
+  { slot: 'aiclean', what: 'AI로 만든 곡의 고음(3~12kHz)에서 쇳소리·지글거림·찌그러짐이 튀는 순간만 골라 줄여요. 평소 고음과 공기감은 그대로 둬요.', when: '보관함에서 불러온 AI 곡이면 자동으로 켜져요. 음량을 키우기 전에 먼저 처리해야 거친 소리가 같이 커지지 않아요.' },
   { slot: 'gate', what: '곡이 조용한 구간의 잡음(히스, 웅웅거림)을 줄여요.', when: '녹음 잡음이 들릴 때. 곡이 이미 깨끗하면 꺼 두세요.' },
   { slot: 'eq', what: '저음·중음·고음의 양을 다듬어요.', when: '답답하거나 너무 날카로울 때. 기본은 평평하게 켜져 있어요.' },
   { slot: 'mseq', what: '가운데 소리(보컬·베이스)와 양옆 소리를 따로 다듬어요.', when: '양옆만 밝게 하거나, 가운데 저음을 정리하고 싶을 때.' },
@@ -53,6 +54,7 @@ export function moduleRecommend(slot: SlotId): string {
   const c = defaultChain()
   const on = ON(!c.bypass[slot])
   switch (slot) {
+    case 'aiclean': return `${on}(보관함의 AI 곡은 자동으로 켜짐) · 강도 「자연스럽게」에서 시작`
     case 'gate': return `${on} · 기준 ${c.gate.threshold} dB, 비율 ${c.gate.ratio}:1, 줄이는 양 ${c.gate.range} dB`
     case 'eq': return `${on} · 모든 대역 0 dB(평평)에서 시작`
     case 'mseq': return `${on} · 가운데·양옆 모두 0 dB(평평)에서 시작`

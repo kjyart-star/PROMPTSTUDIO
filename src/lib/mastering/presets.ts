@@ -1,6 +1,7 @@
 import { MATCH_FREQS, type ChainParams, type EqParams, type SlotId } from './dsp'
 
 export const SLOT_LABEL: Record<SlotId, string> = {
+  aiclean: 'AI 곡 고음 정리',
   gate: '게이트',
   eq: '7밴드 EQ',
   mseq: 'M/S EQ',
@@ -36,14 +37,15 @@ export function defaultChain(): ChainParams {
     low: { freq: 120, gain: 0 }, b1: { freq: 400, gain: 0, q: 1 }, b2: { freq: 3000, gain: 0, q: 1 }, high: { freq: 10000, gain: 0 },
   })
   return {
-    order: ['gate', 'eq', 'mseq', 'dyneq', 'deesser', 'match', 'comp', 'multiband', 'transient', 'imager', 'stereo', 'saturation', 'clipper', 'limiter'],
+    order: ['aiclean', 'gate', 'eq', 'mseq', 'dyneq', 'deesser', 'match', 'comp', 'multiband', 'transient', 'imager', 'stereo', 'saturation', 'clipper', 'limiter'],
     bypass: {
-      gate: true, eq: false, mseq: true, dyneq: true, deesser: true, match: true, comp: false, multiband: true,
+      aiclean: true, gate: true, eq: false, mseq: true, dyneq: true, deesser: true, match: true, comp: false, multiband: true,
       transient: true, imager: true, stereo: false, saturation: true, clipper: true, limiter: false,
     },
     listenOriginal: false,
     originalTrim: 0,
     inputTrim: 0,
+    aiclean: { mode: 'natural' },
     gate: { threshold: -60, ratio: 2, range: 20, attack: 1, hold: 50, release: 200 },
     eq: structuredClone(DEFAULT_EQ),
     mseq: { mid: msFlat(), side: msFlat() },

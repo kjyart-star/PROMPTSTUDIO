@@ -167,7 +167,7 @@ export class PartitionedConvolver {
 export const dbToLin = (db) => Math.pow(10, db / 20);
 export const linToDb = (x) => (x > 1e-12 ? 20 * Math.log10(x) : -240);
 export const ALL_SLOTS = [
-    'gate', 'eq', 'mseq', 'dyneq', 'deesser', 'match', 'comp', 'multiband',
+    'aiclean', 'gate', 'eq', 'mseq', 'dyneq', 'deesser', 'match', 'comp', 'multiband',
     'transient', 'imager', 'stereo', 'saturation', 'clipper', 'limiter',
 ];
 export const AUTO_TARGETS = ['volume', 'eq.lf', 'eq.lmf', 'eq.mf', 'eq.hmf', 'eq.hf', 'limiter.gain'];
@@ -603,6 +603,111 @@ class DeesserStage {
                 L[i] = this.band.dl;
                 R[i] = this.band.dr;
             }
+        }
+    }
+}
+// ───────────────────────── AI 곡 고음 정리 (대역별 스펙트럴 플럭스 다이내믹 EQ) ─────────────────────────
+/**
+ * 3~12kHz 를 5개 대역(반 옥타브)으로 나눠, 한 대역이 「양옆 대역보다 갑자기 도드라질 때」만 그 대역을 벨 EQ 로 줄인다.
+ *  - 감지: 대역 에너지(8ms)의 dB 에서 양옆 대역 평균을 뺀 「스펙트럼 모양」을 매 순간 재고,
+ *    그 모양이 자기 평소 값(느린 기준)보다 튄 만큼(= 모양 방향 스펙트럴 플럭스)이 기준을 넘으면 줄인다.
+ *  - 하이햇·심벌처럼 고음 전체가 같이 오르는 소리, 후렴처럼 전체가 커지는 구간은 모양이 그대로라 건드리지 않는다.
+ *    한 대역만 솟는 쇳소리·지글거림·찌그러짐 성분과 치찰음만 걸린다.
+ *  - 평소(튀지 않을 때)는 0dB 라 공기감·밝기는 그대로다.
+ */
+export const AICLEAN_FREQS = [3200, 4350, 5930, 8070, 11000];
+/** 감지용 양 끝 이웃 대역(줄이지 않음) */
+const AIC_GUARD = [2350, 15000];
+export const AICLEAN_MODES = {
+    natural: { thr: 1.5, ratio: 4, range: 6 },
+    strong: { thr: 0.5, ratio: 10, range: 10 },
+};
+const AIC_K = 16;
+class AiCleanStage {
+    constructor(fs) {
+        this.fs = fs;
+        this.det = [];
+        this.flt = [];
+        this.m = AICLEAN_MODES.natural;
+        this.cnt = 0;
+        /** 지금 가장 많이 줄인 양(dB, 0 이하) */
+        this.now = 0;
+        /** 처음부터 가장 많이 줄인 양(dB, 0 이하) */
+        this.maxCut = 0;
+        const all = [AIC_GUARD[0], ...AICLEAN_FREQS, AIC_GUARD[1]];
+        for (const f of all) {
+            const d = new Biquad();
+            d.set(designPass('bp', f, 4, fs));
+            this.det.push(d);
+        }
+        for (let k = 0; k < AICLEAN_FREQS.length; k++)
+            this.flt.push(new Biquad());
+        const nb = AICLEAN_FREQS.length;
+        this.fast = new Float64Array(all.length);
+        this.lv = new Float64Array(all.length);
+        this.base = new Float64Array(nb);
+        this.init = new Array(nb).fill(false);
+        this.gr = new Float64Array(nb);
+        this.last = new Float64Array(nb).fill(0);
+        this.aF = Math.exp(-1 / (0.008 * fs));
+        const ctl = fs / AIC_K;
+        // 기준은 튀는 순간에 끌려 올라가지 않게 올라갈 땐 느리게, 내려갈 땐 보통 속도로 따라간다
+        this.aUp = Math.exp(-1 / (1.5 * ctl));
+        this.aDn = Math.exp(-1 / (1.5 * ctl));
+        this.aA = Math.exp(-1 / (0.002 * ctl));
+        this.aR = Math.exp(-1 / (0.08 * ctl));
+    }
+    set(p) { this.m = AICLEAN_MODES[p?.mode] ?? AICLEAN_MODES.natural; }
+    control() {
+        const nb = AICLEAN_FREQS.length, m = this.m, lv = this.lv;
+        for (let j = 0; j < lv.length; j++)
+            lv[j] = 10 * Math.log10(this.fast[j] + 1e-14);
+        let lo = 0;
+        for (let k = 0; k < nb; k++) {
+            const j = k + 1;
+            const d = lv[j] - 0.5 * (lv[j - 1] + lv[j + 1]);
+            if (!this.init[k]) {
+                this.base[k] = d;
+                this.init[k] = true;
+            }
+            const a = d > this.base[k] ? this.aUp : this.aDn;
+            this.base[k] = a * this.base[k] + (1 - a) * d;
+            const excess = lv[j] < -80 ? 0 : d - this.base[k] - m.thr;
+            const want = excess > 0 ? -Math.min(m.range, excess * (1 - 1 / m.ratio)) : 0;
+            const s = want < this.gr[k] ? this.aA : this.aR;
+            this.gr[k] = s * this.gr[k] + (1 - s) * want;
+            const g = this.gr[k];
+            if (!(Math.abs(g - this.last[k]) <= 0.03)) {
+                this.last[k] = g;
+                this.flt[k].set(g > -0.03 ? IDENTITY : designPeaking(AICLEAN_FREQS[k], g, 3, this.fs));
+            }
+            if (g < lo)
+                lo = g;
+        }
+        this.now = lo;
+        if (lo < this.maxCut)
+            this.maxCut = lo;
+    }
+    process(L, R, n) {
+        const nd = this.det.length, nb = this.flt.length, aF = this.aF, bF = 1 - aF;
+        for (let i = 0; i < n; i++) {
+            let l = L[i], r = R[i];
+            for (let j = 0; j < nd; j++) {
+                const d = this.det[j];
+                const dl = d.l(l), dr = d.r(r);
+                this.fast[j] = aF * this.fast[j] + bF * 0.5 * (dl * dl + dr * dr);
+            }
+            if (++this.cnt >= AIC_K) {
+                this.cnt = 0;
+                this.control();
+            }
+            for (let k = 0; k < nb; k++) {
+                const f = this.flt[k];
+                l = f.l(l);
+                r = f.r(r);
+            }
+            L[i] = l;
+            R[i] = r;
         }
     }
 }
@@ -1368,6 +1473,7 @@ export class MasterChain {
         this.cLL = 0;
         this.cRR = 0;
         this.fs = fs;
+        this.aic = new AiCleanStage(fs);
         this.gate = new GateStage(fs);
         this.eq = new EqStage(fs);
         this.mseq = new MsEqStage(fs);
@@ -1399,6 +1505,7 @@ export class MasterChain {
         this.p = p;
         this.inTrim = dbToLin(p.inputTrim);
         this.origTrim = dbToLin(p.originalTrim);
+        this.aic.set(p.aiclean);
         this.gate.set(p.gate);
         this.eq.set(p.eq);
         this.eqAutoKey = '';
@@ -1419,6 +1526,8 @@ export class MasterChain {
         this.dryDelay.delay = this.latency;
     }
     setEdit(e) { this.edit = e; this.eqAutoKey = ''; }
+    /** AI 곡 고음 정리가 지금까지 가장 많이 줄인 양(dB, 0 이하) */
+    get aicleanMaxCut() { return this.p?.bypass.aiclean ? 0 : this.aic.maxCut; }
     setPosition(sec) { this.pos = Math.max(0, Math.round(sec * this.fs)); }
     resetMeters() {
         this.loud.reset();
@@ -1498,6 +1607,9 @@ export class MasterChain {
             if (p.bypass[id])
                 continue;
             switch (id) {
+                case 'aiclean':
+                    this.aic.process(wL, wR, n);
+                    break;
                 case 'gate':
                     this.gate.process(wL, wR, n);
                     break;
@@ -1640,6 +1752,7 @@ export class MasterChain {
             limGrMax: this.lim.maxGr,
             dyneqGr: p?.bypass.dyneq ? [] : this.dyneq.bands.map(b => b.dyn),
             deessGr: p?.bypass.deesser ? 0 : this.deess.band.dyn,
+            aicleanGr: p?.bypass.aiclean ? 0 : this.aic.now,
             gateGr: p?.bypass.gate ? 0 : this.gate.gr,
             transientDb: p?.bypass.transient ? 0 : this.trans.gainDb,
             latency: this.latency,

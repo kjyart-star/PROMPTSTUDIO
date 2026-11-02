@@ -92,7 +92,9 @@ const LS_CHAIN = 'cm.mastering.chain.v3'
 export function normalizeChain(saved: Partial<ChainParams> | null | undefined): ChainParams {
   const d = defaultChain()
   if (!saved || typeof saved !== 'object') return d
-  const order = Array.isArray(saved.order) && saved.order.length === ALL_SLOTS.length && ALL_SLOTS.every(s => saved.order!.includes(s)) ? saved.order : d.order
+  // 「AI 곡 고음 정리」가 생기기 전에 저장한 순서는 맨 앞에 그 칸만 끼워 사용자 순서를 지킨다
+  const so = Array.isArray(saved.order) && !saved.order.includes('aiclean') ? ['aiclean' as const, ...saved.order] : saved.order
+  const order = Array.isArray(so) && so.length === ALL_SLOTS.length && ALL_SLOTS.every(s => so.includes(s)) ? so : d.order
   const s = saved as ChainParams
   return {
     ...d,
@@ -100,6 +102,7 @@ export function normalizeChain(saved: Partial<ChainParams> | null | undefined): 
     order,
     listenOriginal: false, originalTrim: 0,
     bypass: { ...d.bypass, ...(s.bypass ?? {}) },
+    aiclean: { mode: s.aiclean?.mode === 'strong' ? 'strong' : 'natural' },
     gate: { ...d.gate, ...(s.gate ?? {}) },
     eq: { ...d.eq, ...(s.eq ?? {}) },
     mseq: { mid: { ...d.mseq.mid, ...(s.mseq?.mid ?? {}) }, side: { ...d.mseq.side, ...(s.mseq?.side ?? {}) } },

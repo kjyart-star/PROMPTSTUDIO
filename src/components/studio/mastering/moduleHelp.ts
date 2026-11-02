@@ -7,6 +7,7 @@ import { MODULE_HELP, moduleRecommend } from './helpContent'
 
 /** 흔한 실수 한 가지 */
 const MISTAKE: Record<SlotId, string> = {
+  aiclean: '「강하게」는 쇳소리가 심한 곡에만 써요. 깨끗한 곡에 쓰면 하이햇·자음이 조금 무뎌질 수 있어요.',
   gate: '기준을 너무 높이면 노래 끝 울림까지 뚝 끊겨요.',
   eq: '한 대역을 6 dB 넘게 크게 올리면 소리가 부자연스러워져요. 보통 ±3 dB 안에서 조절해요.',
   mseq: '양옆 저음을 크게 올리면 모노로 들을 때 저음이 사라져요.',
