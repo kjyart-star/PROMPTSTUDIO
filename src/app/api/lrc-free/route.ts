@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { LRC_AUTO_VERSION, LRC_CF_MODEL, lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { LRC_AUTO_VERSION, LRC_CF_MODEL, audioKeyOf, lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
 import { finalizeAlignment, lowConfidenceOf, ONSET_LEAD_SEC } from '@/lib/player/lyricAlign'
 import { freeJobsOf } from '@/lib/lyricsSync/freeQueue'
@@ -145,6 +145,7 @@ export async function POST(request: Request) {
       form.lrc_auto = check.lines
       form.lrc_auto_v = LRC_AUTO_VERSION
       form.lrc_auto_model = LRC_CF_MODEL
+      form.lrc_auto_audio = audioKeyOf(song.audio_url)
       delete form.lrc_free_fail
       if (lowConfidenceOf(raw)) form.lrc_review = { reason: 'low-confidence', at: now }
       const rel = releaseIfSynced(form)

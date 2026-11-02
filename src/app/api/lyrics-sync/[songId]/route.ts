@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createHash } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
-import { LRC_AUTO_VERSION, LRC_MIN_READ_VERSION, lrcAutoFailed, lrcAutoReadable } from '@/lib/studio/lyricsOf'
+import { LRC_AUTO_VERSION, LRC_MIN_READ_VERSION, lrcAutoFailed, lrcAutoMatchesAudio, lrcAutoReadable } from '@/lib/studio/lyricsOf'
 
 /**
  * 곡 가사 시간표 — 웹과 앞으로 만들 앱(iOS·Android)이 같은 API 를 쓴다. 재생 쪽은 이 값을 표시만 한다.
@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ song
   if (!UUID.test(songId)) return NextResponse.json({ error: 'bad request' }, { status: 400 })
   try {
     const supabase = await createClient()
-    const { data: song } = await supabase.from('song_history').select('id, form').eq('id', songId).maybeSingle()
+    const { data: song } = await supabase.from('song_history').select('id, form, audio_url').eq('id', songId).maybeSingle()
     if (!song) return NextResponse.json({ error: 'not found' }, { status: 404 })
     const f = (song as any).form ?? {}
     const review = !!f.lrc_review
@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ song
     if (lrcAutoFailed(f)) return reply(request, { song_id: songId, failed: true })
     const { data: shared } = await supabase.from('song_lrc_auto').select('lrc, v, model').eq('song_id', songId)
       .gte('v', LRC_MIN_READ_VERSION).lte('v', LRC_AUTO_VERSION).order('v', { ascending: false }).limit(1).maybeSingle()
-    const fromForm = lrcAutoReadable(f.lrc_auto_v) && Array.isArray(f.lrc_auto) && f.lrc_auto.length >= 2
+    const fromForm = lrcAutoReadable(f.lrc_auto_v) && lrcAutoMatchesAudio(f, (song as any).audio_url) && Array.isArray(f.lrc_auto) && f.lrc_auto.length >= 2
     // 곡 기록 쪽이 같거나 새 판이면 그쪽(단어 시각까지 있음), 아니면 공유 결과
     if (fromForm && (!shared || Number(f.lrc_auto_v) >= Number((shared as any).v))) {
       const words = Array.isArray(f.lrc_auto_words) && f.lrc_auto_words.length === f.lrc_auto.length ? f.lrc_auto_words : undefined

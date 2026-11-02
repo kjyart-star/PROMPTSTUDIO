@@ -78,3 +78,16 @@ describe('믿을 수 없다고 접은 곡', () => {
   })
 })
 
+
+describe('자동 시간표 ↔ 음원 파일 1:1', () => {
+  it('저장 경로와 CDN 주소는 같은 파일로 보고, 다른 파일이면 시간표를 쓰지 않는다', async () => {
+    const { audioKeyOf, lrcPickOf } = await import('./lyricsOf')
+    expect(audioKeyOf('audio/abc.mp3')).toBe('abc.mp3')
+    expect(audioKeyOf('https://cdn.example/audio/abc.mp3?cors=1')).toBe('abc.mp3')
+    const lines = [{ t: 1, text: 'a' }, { t: 9, text: 'b' }]
+    const form = { lrc_auto: lines, lrc_auto_v: 5, lrc_auto_audio: 'abc.mp3' }
+    expect(lrcPickOf({ audio_url: 'https://cdn.example/audio/abc.mp3', form })?.by).toBe('auto')
+    expect(lrcPickOf({ audio_url: 'audio/zzz.mp3', form })).toBeNull()
+    expect(lrcPickOf({ audio_url: 'audio/zzz.mp3', form: { lrc_auto: lines, lrc_auto_v: 4 } })?.by).toBe('auto') // 묶인 표시가 없는 옛 결과
+  })
+})

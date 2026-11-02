@@ -232,3 +232,21 @@ describe('가사 싱크 — 2026-11-02 구조(공개 단계에서 확정)', () =
     expect(autoAlign).not.toHaveBeenCalled()
   })
 })
+
+describe('가사 자동 스크롤', () => {
+  it('사용자가 직접 스크롤하면 4초 동안 자동 스크롤을 멈추고, 그 뒤 다시 따라간다', async () => {
+    const lines = [{ t: 3, text: '첫째 줄입니다' }, { t: 30, text: '둘째 줄입니다' }, { t: 60, text: '셋째 줄입니다' }]
+    open(trk('30', { lrc: lines }), { currentTime: 10, isPlaying: false })
+    const { container } = render(<ImmersivePlayer />)
+    await flush()
+    const box = container.querySelector('.imm-lyrics') as HTMLDivElement
+    const scrollTo = vi.fn()
+    ;(box as any).scrollTo = scrollTo
+    fireEvent.wheel(box)
+    await act(async () => { usePlayerStore.setState({ currentTime: 31 }) })
+    expect(scrollTo).not.toHaveBeenCalled()
+    await flush(4100)
+    await act(async () => { usePlayerStore.setState({ currentTime: 61 }) })
+    expect(scrollTo).toHaveBeenCalled()
+  })
+})

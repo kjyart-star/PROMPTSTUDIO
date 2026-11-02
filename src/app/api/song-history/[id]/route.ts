@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
-import { LRC_BROWSER_MODEL } from '@/lib/studio/lyricsOf'
+import { LRC_BROWSER_MODEL, audioKeyOf } from '@/lib/studio/lyricsOf'
 import { gpuDone } from '@/lib/player/lrcWorkerJobs'
 import { clientInfoOf, modelTagOf } from '@/lib/lyricsSync/submission'
 import { releaseIfSynced } from '@/lib/lyricsSync/publishGate'
@@ -23,7 +23,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     // 1. 소유권 확인
     const { data: songCheck } = await supabase
       .from('song_history')
-      .select('user_id, form')
+      .select('user_id, form, audio_url')
       .eq('id', id)
       .single()
 
@@ -80,6 +80,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         if (check.ok && !gpuDone(base) && (base.lrc_by !== 'user' || !Array.isArray(base.lrc) || !base.lrc.length)) {
           base.lrc_auto = check.lines
           base.lrc_auto_v = Number(lrc_auto_v) || 0
+          // 계산한 음원 파일에 묶는다(파일이 바뀌면 이 시간표는 쓰지 않는다)
+          base.lrc_auto_audio = audioKeyOf((songCheck as any).audio_url)
           // 웹·앱 공용 제출 형식 — 클라이언트(web/ios/android)·엔진·모델을 함께 남긴다
           base.lrc_auto_model = modelTagOf(clientInfoOf(body, LRC_BROWSER_MODEL))
           // 정렬 신뢰도가 낮으면 만든 사람에게 「가사 시간 확인」을 권한다(사람이 고친 값이 최우선)

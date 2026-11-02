@@ -11,6 +11,7 @@ import { Play, Pause, SkipBack, SkipForward, X, Mic2, GalleryHorizontal, HelpCir
 import { usePlayerStore } from '@/stores/playerStore';
 import { buildTimedLyrics, activePartialIndex, lyricState } from '@/lib/player/lyricTiming';
 import { useLyricSync } from './useLyricSync';
+import { useLyricClock } from './useLyricClock';
 import { withBase } from '@/lib/basePath';
 import { PlaylistCoverflow, PCF_CSS } from './PlaylistCoverflow';
 import { CCF_CSS } from './ClassicCoverflow';
@@ -86,6 +87,9 @@ export function ImmersivePlayer() {
   const onClock = useCallback((c: { hidden: boolean; pos: string; t: number; b: number }) => setClockLay((o) => (o.hidden === c.hidden && o.pos === c.pos && o.t === c.t && o.b === c.b ? o : c)), []);
   const closeRef = useRef<HTMLButtonElement>(null);
   const lyricBoxRef = useRef<HTMLDivElement>(null);
+  /** 사용자가 가사를 직접 스크롤하면 이 시각까지 자동 스크롤을 멈춘다(스포티파이·애플 뮤직처럼 잠시 뒤 다시 따라감) */
+  const userScrollUntil = useRef(0);
+  const USER_SCROLL_HOLD_MS = 4000;
   const lineRefs = useRef<Record<number, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -136,18 +140,28 @@ export function ImmersivePlayer() {
   const lineAt = useMemo(() => timed.lines.map((l, i) => (l.kind === 'line' ? i : -1)).filter((i) => i >= 0), [timed.lines]);
   // 시간표가 확정(exact)이거나 부분 시간표가 있을 때만 싱크 모드. 시간표가 없으면 추정하지 않고 일반 가사로 보인다
   const partial = timed.mode !== 'exact' && sync.partial && sync.partial.length === lineAt.length ? sync.partial : null;
-  let active = -1;
-  let interludeAfter = -1;
+  // 줄 강조 시각은 오디오의 실제 재생 시각을 프레임마다 읽는다(timeupdate 약 250ms 간격에 기대지 않음) — 줄이 바뀔 때만 다시 그린다
+  const lyricNow = useLyricClock(
+    isPlaying && isImmersiveOpen && view === 'now',
+    currentTime,
+    (t) => {
+      if (timed.mode === 'exact') { const st = lyricState(timed.lines, t); return { active: st.active, interludeAfter: st.interludeAfter, focus: st.current }; }
+      if (partial) { const p = activePartialIndex(partial, t); return { active: p >= 0 ? lineAt[p] : -1, interludeAfter: -1, focus: -1 }; }
+      return { active: -1, interludeAfter: -1, focus: -1 };
+    },
+    (a, b) => a.active === b.active && a.interludeAfter === b.interludeAfter && a.focus === b.focus,
+  );
+  const active = lyricNow.active;
+  const interludeAfter = lyricNow.interludeAfter;
   // 강조가 꺼진 순간(간주·신뢰도 낮은 줄)에도 스크롤·흐림은 지금 부르는 자리에 맞춘다
-  let focus = -1;
-  if (timed.mode === 'exact') ({ active, interludeAfter, current: focus } = lyricState(timed.lines, currentTime));
-  else if (partial) { const p = activePartialIndex(partial, currentTime); active = p >= 0 ? lineAt[p] : -1; }
+  let focus = lyricNow.focus;
   const highlighting = timed.mode === 'exact' || active >= 0;
   if (focus < 0) focus = active;
   /** 화면 줄 번호 → 눌렀을 때 이동할 시각(모르면 NaN) */
   const startOf = (i: number) => (timed.mode === 'exact' ? timed.lines[i].start : partial ? (partial[lineAt.indexOf(i)] ?? NaN) : NaN);
 
   useEffect(() => {
+    if (Date.now() < userScrollUntil.current) return; // 직접 스크롤 중 — 잠시 따라가지 않는다
     const box = lyricBoxRef.current;
     const el = lineRefs.current[focus];
     if (!box || !el || typeof box.scrollTo !== 'function') return;
@@ -230,7 +244,9 @@ export function ImmersivePlayer() {
               <p className="imm-nolyr">{t.noLyr}</p>
             ) : (
               <>
-                <div className={`imm-lyrics${highlighting ? '' : ' is-plain'}`} ref={lyricBoxRef}>
+                <div className={`imm-lyrics${highlighting ? '' : ' is-plain'}`} ref={lyricBoxRef}
+                  onWheel={() => { userScrollUntil.current = Date.now() + USER_SCROLL_HOLD_MS; }}
+                  onTouchMove={() => { userScrollUntil.current = Date.now() + USER_SCROLL_HOLD_MS; }}>
                   <div className="imm-pad" />
                   {timed.lines.map((l, i) => {
                     if (l.kind === 'section') return <p key={i} className="imm-sec" ref={(el) => { lineRefs.current[i] = el; }}>{l.text}</p>;

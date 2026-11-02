@@ -54,6 +54,15 @@ export const lrcAutoFailed = (f: any) => {
   return Number.isFinite(fv) && fv >= LRC_MIN_READ_VERSION && fv >= (Number(f?.lrc_auto_v) || 0)
 }
 
+/**
+ * 음원 파일 키 — 저장 경로(audio/<id>.mp3)든 CDN 주소든 같은 파일이면 같은 값(마지막 경로 조각, 쿼리 제외).
+ * 자동 시간표는 계산한 음원 파일에 1:1 로 묶는다(form.lrc_auto_audio). v2·마스터링본은 곡 기록이 따로라 시간표도 따로다.
+ */
+export const audioKeyOf = (url: unknown): string => String(url ?? '').split('?')[0].split('/').filter(Boolean).pop() ?? ''
+/** 자동 시간표가 지금 음원 파일과 맞는지 — 묶인 파일 표시가 없는 옛 결과는 맞는 것으로 본다 */
+export const lrcAutoMatchesAudio = (form: any, audioUrl: unknown): boolean =>
+  !form?.lrc_auto_audio || !audioKeyOf(audioUrl) || form.lrc_auto_audio === audioKeyOf(audioUrl)
+
 /** 회사 PC 사전 계산 정렬기 이름 — form.lrc_auto_model·song_lrc_auto.model 에 남는다 */
 export const LRC_GPU_MODEL = 'gpu-whisper-large-v3'
 /** 회사 PC 워커가 쓰던 판(백필 전용, 운영 경로 아님) — 판을 올려도 회사 PC 결과·작업 목록의 뜻은 그대로다 */
@@ -77,7 +86,7 @@ export function lrcPickOf(item: any, all?: any[]): { lines: { t: number; text: s
   const u = user(item);
   if (u) return { lines: u, by: 'user' };
   const f = item?.form;
-  if (!lrcAutoFailed(f) && lrcAutoReadable(f?.lrc_auto_v) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string; end?: number; conf?: number }[], by: 'auto' };
+  if (!lrcAutoFailed(f) && lrcAutoReadable(f?.lrc_auto_v) && lrcAutoMatchesAudio(f, item?.audio_url) && Array.isArray(f?.lrc_auto) && f.lrc_auto.length >= 2) return { lines: f.lrc_auto as { t: number; text: string; end?: number; conf?: number }[], by: 'auto' };
   if (!all?.length || f?.kind !== 'mastering') return null;
   const byId = new Map<string, any>(all.filter(Boolean).map((x) => [x.id, x]));
   let cur = item;
