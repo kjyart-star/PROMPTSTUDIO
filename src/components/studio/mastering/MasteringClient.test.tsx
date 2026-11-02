@@ -15,7 +15,7 @@ const fakeEngine = vi.hoisted(() => ({
   updateStems: () => {}, leaveStems: () => {},
 }))
 
-const exportSpy = vi.hoisted(() => ({ dests: vi.fn(), active: vi.fn(), addSong: vi.fn(async () => {}) }))
+const exportSpy = vi.hoisted(() => ({ dests: vi.fn(), active: vi.fn(), addSong: vi.fn(async (_s: { id: string; title: string; audio_url: string }) => { void _s }) }))
 vi.mock('./actions', async importOriginal => {
   const orig = await importOriginal<typeof import('./actions')>()
   return { ...orig, getEngine: () => fakeEngine, exportForDestinations: exportSpy.dests, exportActive: exportSpy.active, addLibrarySong: exportSpy.addSong }
@@ -24,7 +24,7 @@ vi.mock('./actions', async importOriginal => {
 import { MasteringClient } from '../MasteringClient'
 import { useMastering, newTrack } from './store'
 import { useUi } from './actions'
-import { useStyleSel } from './StylePanel'
+import { useStyleSel, applyStyle } from './StylePanel'
 import { useDock, CHAIN_LIST_MAX_H } from './ChainList'
 import { METER_COL_MAX_H } from './Meters'
 import { setHandoff } from './handoff'
@@ -342,6 +342,32 @@ describe('간단 마스터링에서 이어서 · 발매 점검 입구', () => {
     expect(p.bypass.aiclean).toBe(false)
     expect(p.aiclean.mode).toBe('strong')
     expect(useMastering.getState().target).toMatchObject({ id: 'custom', lufs: -12, tp: -1 })
+  })
+
+  it('곡을 연 뒤 자동 추천(원클릭)이 돌아도 넘겨받은 설정을 덮지 않는다', async () => {
+    const params = defaultChain(); params.limiter.gain = 5.5
+    exportSpy.addSong.mockImplementationOnce(async (song: { id: string; title: string; audio_url: string }) => {
+      const t = newTrack({ title: song.title, source: 'library', blob: Object.assign(new Blob([new Uint8Array(8)]), { arrayBuffer: async () => new ArrayBuffer(8) }), song })
+      const fakeA = { integrated: -14, crest: 12, bands: Array(31).fill(-30), duration: 120 } as never
+      useMastering.setState(s => ({ tracks: [...s.tracks, t], activeId: t.id, srcAnalysis: { ...s.srcAnalysis, [t.id]: fakeA } }))
+    })
+    setHandoff({ song: { id: 's10', title: '넘긴 곡 2', audio_url: 'y.mp3' }, params, target: { id: 'custom', label: '간단 마스터링 설정', lufs: -12, tp: -1 } })
+    render(<MasteringClient />)
+    await act(async () => {})
+    await act(async () => {})
+    expect(useMastering.getState().params.limiter.gain).toBe(5.5)
+    // 원클릭 자동 추천이 이 곡에는 스타일을 입히지 않았다(입혔다면 templateId 가 style:… 이 된다)
+    expect(useMastering.getState().templateId ?? '').not.toMatch(/^style:/)
+  })
+
+  it('스타일을 바꿔도 「AI 곡 고음 정리」 켜짐·강도는 그대로', () => {
+    seedTrack()
+    useMastering.setState(s => ({ params: { ...s.params, bypass: { ...s.params.bypass, aiclean: false }, aiclean: { mode: 'strong' } } }))
+    applyStyle('template')
+    const p = useMastering.getState().params
+    expect(p.bypass.aiclean).toBe(false)
+    expect(p.aiclean.mode).toBe('strong')
+    expect(p.order[0]).toBe('aiclean')
   })
 
   it('메뉴 줄의 「발매 점검」이 업로드 없는 점검 창을 연다', () => {

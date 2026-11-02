@@ -13,5 +13,9 @@ export interface MasteringHandoff {
 }
 
 let pending: MasteringHandoff | null = null
+/** 설정째 넘어온 곡 — 곡을 연 뒤 「자동 추천」 원클릭이 그 설정을 덮지 않게 한 번 건너뛴다 */
+const keep = new Set<string>()
+export const keepSettingsFor = (songId: string) => { keep.add(songId) }
+export function takeKeepSettings(songId: string): boolean { return keep.delete(songId) }
 export const setHandoff = (h: MasteringHandoff | null) => { pending = h }
 export function takeHandoff(): MasteringHandoff | null { const h = pending; pending = null; return h }

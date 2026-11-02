@@ -326,7 +326,8 @@ export async function previewTemplate(tpl: MasterTemplate) {
   const prev = cur ? cur.prev : st().params
   const a = st().srcAnalysis[t.id]
   const start = a ? loudestWindow(a, 10) : 0
-  useMastering.setState({ params: { ...tpl.build(), listenOriginal: false } })
+  // 미리듣기에서도 고음 정리(켜짐·강도)는 지금 값 그대로
+  useMastering.setState({ params: { ...withAiClean(tpl.build(), prev.bypass.aiclean ? null : prev.aiclean.mode), listenOriginal: false } })
   ui().set({ preview: { templateId: tpl.id, prev }, loop: { start, end: start + 10 }, loopOn: true })
   eng.seek(start)
   await eng.play().catch(() => {})

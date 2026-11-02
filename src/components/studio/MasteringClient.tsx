@@ -30,7 +30,7 @@ import { MixerView } from './mastering/MixerView'
 import { HelpButton } from './mastering/HelpPanel'
 import { Tour } from './mastering/Tour'
 import { destById, DEFAULT_DEST } from './mastering/destination'
-import { takeHandoff } from './mastering/handoff'
+import { takeHandoff, keepSettingsFor } from './mastering/handoff'
 import { ReleaseCheckDialog } from './mastering/ReleaseCheckDialog'
 import { withAiClean } from '@/lib/mastering/aiclean'
 import './mastering/mastering.css'
@@ -101,6 +101,7 @@ export function MasteringClient() {
     // 간단 마스터링에서 「이어서」로 왔으면 그 곡과 설정을 그대로 싣는다
     const h = takeHandoff()
     if (h) void (async () => {
+      if (h.params) keepSettingsFor(h.song.id)
       await addLibrarySong(h.song)
       const s = useMastering.getState()
       if (h.params) s.setParams(() => normalizeChain(h.params), 'quick-handoff')

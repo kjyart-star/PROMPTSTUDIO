@@ -14,6 +14,8 @@ import { TEMPLATES, type MasterTemplate } from '@/lib/mastering/templates'
 import type { Analysis } from '@/lib/mastering/analyze'
 import { Knob } from './controls'
 import { useMastering } from './store'
+import { withAiClean } from '@/lib/mastering/aiclean'
+import { takeKeepSettings } from './handoff'
 import { useUi, autoMatch, analyzeForAuto, playFromLoudest, getEngine, previewTemplate, endPreview } from './actions'
 import { EqWithSpectrum } from './ModulePanel'
 import type { ViewCtx } from './Shell'
@@ -85,8 +87,10 @@ export function applyStyle(key = 'template', srcOverride?: Analysis | null, keep
   const style = { ...base, texture: sel.character ?? base.texture }
   const d = destById(s.target.id)
   const { params } = chainFor(style, d, s.target.id, sel.strength, src)
+  // 스타일은 「AI 곡 고음 정리」(켜짐·강도)를 건드리지 않는다 — 곡을 열 때 정한 값을 지킨다
+  const keepAi = withAiClean(params, s.params.bypass.aiclean ? null : s.params.aiclean.mode)
   const next = {
-    ...params,
+    ...keepAi,
     limiter: { ...params.limiter, ceiling: d ? d.tp : s.target.tp, truePeak: true, gain: keepGain ? s.params.limiter.gain : params.limiter.gain },
     listenOriginal: s.params.listenOriginal, originalTrim: s.params.originalTrim,
   }
@@ -123,6 +127,9 @@ export function StyleList({ ctx }: { expanded?: boolean; ctx: ViewCtx }) {
   useEffect(() => {
     if (!activeId || !src || autoDone.has(activeId)) return
     autoDone.add(activeId)
+    // 간단 마스터링에서 설정째 넘어온 곡은 그 설정을 덮지 않는다
+    const song = useMastering.getState().tracks.find(t => t.id === activeId)?.song
+    if (song && takeKeepSettings(song.id)) return
     oneClickMaster(src).catch(e => {
       console.error(e)
       useUi.getState().set({ notice: { kind: 'err', text: '자동으로 맞추지 못했어요. 스타일을 눌러 다시 시도해 주세요.' } })
