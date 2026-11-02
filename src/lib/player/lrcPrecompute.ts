@@ -7,13 +7,12 @@ import { alignLineTexts } from './lrcValidate';
  */
 
 /**
- * 맞춰야 할 곡 — 공개를 요청해 「가사 싱크 처리 중」(form.publish_pending)인 내 곡만(2026-11-02 구조 결정).
- * 생성·업로드 직후에는 계산하지 않는다(비공개 곡 대부분은 공개되지 않으므로). 공개 화면에서 확인하지 못하고 닫은 곡을 이어서 맞춘다.
+ * 맞춰야 할 곡 — 가사가 있고 시간표가 없는 내 곡(최신순). 생성·업로드가 끝나면 만든 사람 기기가 보이지 않게 백그라운드로 맞춰
+ * 초안으로 저장하고, 「공개하기」 때 확인 단계에서 확정한다(2026-11-02 대표 기준: 0원, 기다림 없음).
  */
 export function pendingLrcSongs(history: any[], skip?: (id: string) => boolean): any[] {
   return history.filter((it) => {
     if (!it?.id || it.trashed_at || it.status === 'processing') return false;
-    if (!it.form?.publish_pending) return false;
     if (!(it.audio_url || it.stream_url || it.url)) return false;
     const f = it.form;
     if (f?.lrc_by === 'user' && Array.isArray(f?.lrc) && f.lrc.length >= 2) return false; // 사용자 시간표가 우선

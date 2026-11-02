@@ -15,6 +15,7 @@ import { LRC_AUTO_VERSION, lyricsOfItem } from '@/lib/studio/lyricsOf';
 import { alignLineTexts } from '@/lib/player/lrcValidate';
 import { autoAlign, canAlignForPublish, type AlignOutcome } from '@/lib/player/lyricSyncClient';
 import { saveOwnLrc } from '@/lib/player/lrcShareClient';
+import { runAlignJob, watchAlignJob } from '@/lib/player/alignJobs';
 import { hasSyncedLrc, needsSync } from './publishGate';
 
 export type PublishSyncPrep = { status: 'none' } | { status: 'manual'; song: any } | { status: 'confirm'; song: any };
@@ -25,26 +26,37 @@ export async function prepareSyncForPublish(item: any, all: any[], onPct?: (pct:
   if (f.lrc_by === 'user' && Array.isArray(f.lrc) && f.lrc.length >= 2) return { status: 'none' };
   if (hasSyncedLrc(f)) return { status: 'confirm', song: item };
   const manual = { status: 'manual' as const, song: item };
+  const confirm = (lrc: { t: number; text: string }[]) => ({ status: 'confirm' as const, song: { ...item, form: { ...f, lrc_auto: lrc, lrc_auto_v: LRC_AUTO_VERSION } } });
+  // 생성 직후 백그라운드 계산이 아직 돌고 있으면 그것을 기다리며 남은 진행률만 보여 준다
+  const running = watchAlignJob(item.id, (p) => onPct?.(p));
+  if (running) {
+    const lrc = await running.catch(() => null);
+    if (lrc) return confirm(lrc);
+  }
   if (!canAlignForPublish()) return manual;
-  const base = await resolveStudioAudioUrl(historyAudioPath(item)).catch(() => null);
-  if (!base) return manual;
-  const url = withCorsCacheKey(base);
-  const lines = alignLineTexts(lyricsOfItem(item, all));
-  const run = async (forceWasm: boolean): Promise<AlignOutcome | null> => {
-    try {
-      return await autoAlign(url, lines, 0, null, (phase, pct) => {
-        onPct?.(phase === 'listen' ? Math.min(99, Math.round(20 + pct * 0.8)) : phase === 'download' ? Math.round(2 + pct * 0.18) : 1);
-      }, signal, { forceWasm });
-    } catch {
-      if (signal?.aborted) throw new Error('aborted');
-      return null; // 메모리 부족(모델·WebGPU 버퍼) 등 — 아래에서 WASM q8 로 다시
-    }
-  };
-  onPct?.(1);
-  let out = await run(false);
-  if (!out?.ok) out = await run(true); // 재시도: WebGPU 를 끄고 가장 가벼운 WASM q8(77MB)로 30초 창씩
-  if (!out?.ok || !out.lrc) return manual;
-  // 확인 화면에서 닫아도 계산 결과는 남겨 둔다(다음 공개 때 다시 계산하지 않는다)
-  await saveOwnLrc(item.id, out.lrc, !!out.lowConfidence).catch(() => undefined);
-  return { status: 'confirm', song: { ...item, form: { ...f, lrc_auto: out.lrc, lrc_auto_v: LRC_AUTO_VERSION } } };
+  const lrc = await runAlignJob(item.id, async (onJob) => {
+    const base = await resolveStudioAudioUrl(historyAudioPath(item)).catch(() => null);
+    if (!base) return null;
+    const url = withCorsCacheKey(base);
+    const lines = alignLineTexts(lyricsOfItem(item, all));
+    const run = async (forceWasm: boolean): Promise<AlignOutcome | null> => {
+      try {
+        return await autoAlign(url, lines, 0, null, (phase, pct) => {
+          const v = phase === 'listen' ? Math.min(99, Math.round(20 + pct * 0.8)) : phase === 'download' ? Math.round(2 + pct * 0.18) : 1;
+          onPct?.(v); onJob(v);
+        }, signal, { forceWasm });
+      } catch {
+        if (signal?.aborted) throw new Error('aborted');
+        return null; // 메모리 부족(모델·WebGPU 버퍼) 등 — 아래에서 WASM q8 로 다시
+      }
+    };
+    onPct?.(1);
+    let out = await run(false);
+    if (!out?.ok) out = await run(true); // 재시도: WebGPU 를 끄고 가장 가벼운 WASM q8(77MB)로 30초 창씩
+    if (!out?.ok || !out.lrc) return null;
+    // 초안 저장 — 확인 화면에서 닫아도 남겨 둔다(다음 공개 때 다시 계산하지 않는다)
+    await saveOwnLrc(item.id, out.lrc, !!out.lowConfidence).catch(() => undefined);
+    return out.lrc;
+  });
+  return lrc ? confirm(lrc) : manual;
 }

@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { LRC_AUTO_VERSION, lyricsOfItem } from '@/lib/studio/lyricsOf'
+import { lyricsOfItem } from '@/lib/studio/lyricsOf'
 import { acquireAlignLock, releaseAlignLock, setPreemptHandler } from '@/lib/player/alignLock'
 import { alignLineTexts, validateAutoLrc } from '@/lib/player/lrcValidate'
-import { LrcPrecomputeQueue, freshPendingIds, pendingLrcSongs, type PrecomputeProgress } from '@/lib/player/lrcPrecompute'
+import { LrcPrecomputeQueue, freshPendingIds, pendingLrcSongs } from '@/lib/player/lrcPrecompute'
 import { analyzeSpans, autoAlign, canAlignForPublish, markFailed, recentlyFailed, saveCachedLrc } from '@/lib/player/lyricSyncClient'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
 import { historyAudioPath } from '@/lib/studio/playQueue'
 import { withCorsCacheKey } from '@/lib/audio/corsUrl'
 import { saveOwnLrc } from '@/lib/player/lrcShareClient'
+import { runAlignJob } from '@/lib/player/alignJobs'
 
 const START_DELAY_MS = 12_000
 /** 생성·업로드가 막 끝난 곡은 기다리지 않고 바로 맞춘다 */
@@ -25,11 +26,6 @@ interface Props {
   onReview?: (item: any) => void
 }
 
-const LABEL = {
-  KO: (n: number, t: number, pct: number) => `내 곡 가사 시간 맞추는 중 ${n}/${t}${pct ? ` · ${pct}%` : ''}`,
-  EN: (n: number, t: number, pct: number) => `Syncing lyric timing for my songs ${n}/${t}${pct ? ` · ${pct}%` : ''}`,
-  JA: (n: number, t: number, pct: number) => `マイ曲の歌詞タイミングを合わせ中 ${n}/${t}${pct ? ` · ${pct}%` : ''}`,
-} as const
 const REVIEW = {
   KO: (t: string) => `「${t}」 가사 시간이 정확하지 않을 수 있어요`,
   EN: (t: string) => `Lyric timing of "${t}" may be off`,
@@ -44,7 +40,6 @@ const CLOSE = { KO: '닫기', EN: 'Close', JA: '閉じる' } as const
  * 재생은 하지 않고 음원 디코드만 한다. 동시에 1곡, 탭이 숨겨지면 멈춘다, 저사양·데이터 절약이면 돌리지 않는다.
  */
 export default function LrcPrecompute({ userId, history, lang, onSaved, onReview }: Props) {
-  const [prog, setProg] = useState<PrecomputeProgress | null>(null)
   const historyRef = useRef(history)
   historyRef.current = history
   const onSavedRef = useRef(onSaved)
@@ -66,34 +61,35 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
   }, [pendingIds])
 
   useEffect(() => {
-    // 공개 요청 곡만 맞추므로 공개 단계 규칙(태블릿 포함, 공개자 기기가 계산)을 쓴다
+    // 만든 사람 기기가 백그라운드로 계산한다(태블릿 포함 — 폰·태블릿 「계산 안 함」 규칙은 듣기 단계에만)
     if (!userId || !hasPending || !canAlignForPublish()) return
     const queue = new LrcPrecomputeQueue({
       getHistory: () => historyRef.current,
       skip: recentlyFailed,
       acquire: acquireAlignLock,
       release: releaseAlignLock,
-      onProgress: setProg,
+      onProgress: () => { /* 백그라운드 — 진행 표시 없음 */ },
       processOne: async (item, signal, onPct) => {
-        const base = await resolveStudioAudioUrl(historyAudioPath(item))
-        if (!base || signal.aborted) throw new Error(signal.aborted ? 'aborted' : 'no-audio')
-        const url = withCorsCacheKey(base)
-        const lines = alignLineTexts(lyricsOfItem(item, historyRef.current))
-        try {
+        // 공개 창이 같은 곡을 맞추고 있으면 그 작업을 함께 기다린다(두 번 계산하지 않음)
+        const lrc = await runAlignJob(item.id, async (onJob) => {
+          const base = await resolveStudioAudioUrl(historyAudioPath(item))
+          if (!base || signal.aborted) throw new Error(signal.aborted ? 'aborted' : 'no-audio')
+          const url = withCorsCacheKey(base)
+          const lines = alignLineTexts(lyricsOfItem(item, historyRef.current))
           const spans = await analyzeSpans(item.id, url)
           const out = await autoAlign(url, lines, 0, spans, (phase, pct) => {
-            onPct(phase === 'listen' ? Math.min(99, Math.round(20 + pct * 0.8)) : phase === 'download' ? Math.round(5 + pct * 0.15) : 2)
+            const v = phase === 'listen' ? Math.min(99, Math.round(20 + pct * 0.8)) : phase === 'download' ? Math.round(5 + pct * 0.15) : 2
+            onPct(v); onJob(v)
           }, signal)
-          if (!out.ok || !out.lrc || !validateAutoLrc(out.lrc, { expectedTexts: lines }).ok) { markFailed(item.id); return 'failed' }
+          if (!out.ok || !out.lrc || !validateAutoLrc(out.lrc, { expectedTexts: lines }).ok) return null
           saveCachedLrc(item.id, out.lrc)
+          // 초안 저장 — 비공개 곡은 화면에 일반 가사로 보이고, 공개할 때 확인 단계에서 확정한다
           const res = await saveOwnLrc(item.id, out.lrc, !!out.lowConfidence)
-          if (!res.ok) return 'failed'
-          onSavedRef.current(item.id, out.lrc)
-          return 'saved'
-        } catch (e) {
-          if (!signal.aborted) markFailed(item.id)
-          throw e
-        }
+          return res.ok ? out.lrc : null
+        }).catch((e) => { if (!signal.aborted) markFailed(item.id); throw e })
+        if (!lrc) { markFailed(item.id); return 'failed' }
+        onSavedRef.current(item.id, lrc)
+        return 'saved'
       },
     })
     setPreemptHandler(() => queue.preempt())
@@ -107,7 +103,6 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
       started = true
       runningRef.current = true
       freshRef.current = false
-      // 공개 요청 곡은 공개자 기기가 계산한다(배터리·태블릿 규칙은 듣기 단계에서만)
       void queue.run().finally(() => { runningRef.current = false })
     }
     const fresh = freshRef.current
@@ -121,15 +116,10 @@ export default function LrcPrecompute({ userId, history, lang, onSaved, onReview
 
   const review = onReview ? history.find((it) => it?.form?.lrc_review && it.form?.lrc_by !== 'user' && !it.trashed_at) : null
   const [dismissed, setDismissed] = useState('')
-  if (!prog && (!review || dismissed === review.id)) return null
+  // 백그라운드 계산은 진행 표시를 하지 않는다(생성 화면에서는 가사만). 남은 진행률은 공개 창에서만 보인다
+  if (!review || dismissed === review.id) return null
   return (
     <div className="fixed left-4 bottom-24 z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-start gap-1.5">
-      {prog && (
-        <div role="status" aria-live="polite" data-testid="lrc-precompute"
-          className="max-w-full rounded-lg border border-white/10 bg-black/70 px-3 py-1.5 text-xs text-zinc-300 backdrop-blur tabular-nums">
-          {LABEL[lang](Math.min(prog.done + 1, prog.total), prog.total, prog.pct)}
-        </div>
-      )}
       {review && dismissed !== review.id && (
         <div data-testid="lrc-review" className="flex max-w-full items-center gap-2 rounded-lg border border-amber-400/30 bg-black/80 px-3 py-1.5 text-xs text-zinc-200 backdrop-blur">
           <span className="min-w-0 truncate">{REVIEW[lang](String(review.title || ''))}</span>

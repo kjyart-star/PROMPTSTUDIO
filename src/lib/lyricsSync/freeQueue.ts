@@ -1,6 +1,6 @@
 /**
  * Workers AI 무료 큐 작업 고르기(순수 TS).
- * 채우기(fill): 맞출 가사가 있는데 시간표가 없는 곡. 순서 = 공개 대기 중 → 폰에서 만든 곡 → 오래 기다린 곡 → 재생 많은 곡.
+ * 채우기(fill, 보조): 공개를 요청했는데(공개 대기) 시간표가 없는 곡만. 순서 = 브라우저 계산을 못 한 기기(폰 등)에서 만든 곡 → 오래 기다린 곡 → 재생 많은 곡.
  *   PC 에서 막 만든 곡은 만든 사람 브라우저가 1분 안에 끝내므로 10분 기다린 뒤에만 집는다(무료 한도 아끼기).
  * 검수(audit): 브라우저가 만든 결과 중 아직 검수하지 않은 공개 곡, 재생 많은 곡부터 — 받아쓰기로 ±20초 보정.
  */
@@ -30,6 +30,8 @@ export function freeJobsOf(rows: any[], now = Date.now()): { fill: FreeJob[]; au
       if (lrcAutoFailed(f)) continue;
       if (now - time(f.lrc_free_fail?.at) < FILL_RETRY_MS) continue;
       const pending = !!f.publish_pending;
+      // 보조 경로: 공개를 요청했는데 공개자 기기가 아직 못 끝낸 곡만 채운다(비공개 초안은 만든 사람 기기가 백그라운드로 만든다)
+      if (!pending) continue;
       const mobile = f.client_platform === 'mobile';
       const waited = now - time(f.publish_pending?.at ?? r.created_at);
       if (!mobile && waited < DESKTOP_GRACE_MS) continue;

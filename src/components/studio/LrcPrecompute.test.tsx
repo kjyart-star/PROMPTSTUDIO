@@ -15,12 +15,14 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
 }))
 vi.mock('@/lib/studio/audioUrl', () => ({ resolveStudioAudioUrl: async (p: string) => `https://cdn/${p}` }))
 import LrcPrecompute from './LrcPrecompute'
+import { resetAlignJobs } from '@/lib/player/alignJobs'
 
-const song = (id: string) => ({ id, audio_url: `${id}.mp3`, lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다', form: { publish_pending: { at: '2026-11-02T00:00:00Z' } }, status: 'completed' })
+const song = (id: string) => ({ id, audio_url: `${id}.mp3`, lyrics: '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다', form: {}, status: 'completed' })
 const result = { ok: true, lrc: [{ t: 2, text: '첫째 줄입니다' }, { t: 20, text: '둘째 줄입니다' }, { t: 41, text: '셋째 줄입니다' }] }
 const fetchMock = vi.fn(async () => ({ ok: true }))
 
 beforeEach(() => {
+  resetAlignJobs()
   vi.useFakeTimers()
   autoAlign.mockReset()
   fetchMock.mockClear()
@@ -30,7 +32,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers() })
 
 describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
-  it('한가해지면 곡마다 한 곡씩 맞춰 서버에 저장하고 「n/총」 표시를 보인다', async () => {
+  it('한가해지면 곡마다 한 곡씩 백그라운드로 맞춰 초안으로 저장하고, 진행 표시는 하지 않는다', async () => {
     let finish1!: (v: unknown) => void
     autoAlign.mockImplementationOnce((_u: string, _l: string[], _d: number, _s: unknown, onPhase: (p: string, n: number) => void) => {
       onPhase('listen', 25)
@@ -40,7 +42,7 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     render(<LrcPrecompute userId="u1" history={[song('a'), song('b')]} lang="KO" onSaved={onSaved} />)
     expect(screen.queryByTestId('lrc-precompute')).toBeNull()
     await act(async () => { await vi.advanceTimersByTimeAsync(12_500) })
-    expect(screen.getByTestId('lrc-precompute').textContent).toBe('내 곡 가사 시간 맞추는 중 1/2 · 40%')
+    expect(screen.queryByTestId('lrc-precompute')).toBeNull() // 생성 화면에서는 가사만, 진행 표시 없음
     expect(autoAlign).toHaveBeenCalledTimes(1) // 동시에 1곡
     await act(async () => { finish1(result) })
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -71,11 +73,11 @@ describe('LrcPrecompute (스튜디오 가사 시간 미리 계산)', () => {
     expect(onSaved).not.toHaveBeenCalled()
   })
 
-  it('공개를 요청해 「가사 싱크 처리 중」이 된 곡은 12초를 기다리지 않고 곧바로 맞춘다(비공개 곡은 계산하지 않음)', async () => {
+  it('생성·업로드가 막 끝난 곡은 12초를 기다리지 않고 곧바로 백그라운드로 맞춘다', async () => {
     autoAlign.mockResolvedValue(result)
     const onSaved = vi.fn()
     const done = { ...song('old'), form: { lrc_auto: result.lrc, lrc_auto_v: 4 } }
-    const generating = { ...song('new'), form: {} } // 생성이 끝났지만 아직 비공개
+    const generating = { ...song('new'), status: 'processing' } // 아직 생성 중
     const { rerender } = render(<LrcPrecompute userId="u1" history={[generating, done]} lang="KO" onSaved={onSaved} />)
     await act(async () => { await vi.advanceTimersByTimeAsync(20_000) })
     expect(autoAlign).not.toHaveBeenCalled() // 생성 중인 곡은 아직 맞추지 않는다

@@ -6,9 +6,9 @@ const song = (id: string, extra: any = {}) => ({ id, audio_url: `p/${id}.mp3`, l
 const auto = [{ t: 1, text: 'a' }, { t: 20, text: 'b' }]
 
 describe('pendingLrcSongs', () => {
-  it('공개를 요청한(가사 싱크 처리 중) 곡만 — 생성·업로드 직후의 비공개 곡은 계산하지 않는다', () => {
+  it('생성·업로드가 끝난 비공개 곡도 백그라운드 계산 대상이다(공개 전에 초안을 만들어 둔다)', () => {
     const priv = { id: 'p', audio_url: 'p/p.mp3', lyrics: '첫 줄\n둘째 줄', status: 'completed', form: {} }
-    expect(pendingLrcSongs([priv, song('req')]).map((x) => x.id)).toEqual(['req'])
+    expect(pendingLrcSongs([priv, song('req')]).map((x) => x.id)).toEqual(['p', 'req'])
   })
   it('가사가 있고 자동 맞춤(v2)이 없는 곡만 고른다', () => {
     const h = [

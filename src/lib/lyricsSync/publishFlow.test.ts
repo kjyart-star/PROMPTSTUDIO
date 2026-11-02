@@ -10,11 +10,12 @@ const saveOwnLrc = vi.fn(async () => ({ ok: true }))
 vi.mock('@/lib/player/lrcShareClient', () => ({ saveOwnLrc: (...a: unknown[]) => (saveOwnLrc as any)(...a) }))
 vi.mock('@/lib/studio/audioUrl', () => ({ resolveStudioAudioUrl: async (p: string) => `https://cdn/${p}` }))
 import { prepareSyncForPublish } from './publishFlow'
+import { resetAlignJobs, runAlignJob } from '@/lib/player/alignJobs'
 
 const lrc = [{ t: 2, text: '첫째 줄' }, { t: 20, text: '둘째 줄' }]
 const song = (form: any = {}, lyrics = '첫째 줄\n둘째 줄') => ({ id: 's1', audio_url: 'audio/s1.mp3', lyrics, form })
 
-beforeEach(() => { autoAlign.mockReset(); saveOwnLrc.mockClear(); canPublish = true })
+beforeEach(() => { resetAlignJobs(); autoAlign.mockReset(); saveOwnLrc.mockClear(); canPublish = true })
 
 describe('공개 단계 가사 싱크(공개자 기기가 계산)', () => {
   it('경음악이나 사람이 확인한 시간표가 있으면 바로 공개', async () => {
@@ -47,5 +48,21 @@ describe('공개 단계 가사 싱크(공개자 기기가 계산)', () => {
     expect((await prepareSyncForPublish(song(), [])).status).toBe('confirm')
     canPublish = false
     expect((await prepareSyncForPublish(song(), [])).status).toBe('manual')
+  })
+  it('백그라운드 계산이 돌고 있으면 새로 계산하지 않고 그 작업의 남은 진행률을 보여 주며 기다린다', async () => {
+    let done!: (v: any) => void
+    let report!: (p: number) => void
+    void runAlignJob('s1', (onPct) => { report = onPct; return new Promise((r) => { done = r }) })
+    await Promise.resolve()
+    report(60)
+    const seen: number[] = []
+    const p = prepareSyncForPublish(song(), [], (x) => seen.push(x))
+    await Promise.resolve()
+    report(90)
+    done(lrc)
+    const r = await p
+    expect(r.status).toBe('confirm')
+    expect(seen).toEqual([60, 90])
+    expect(autoAlign).not.toHaveBeenCalled()
   })
 })

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { playingAudioTime } from '@/lib/player/mediaClock';
 
 /**
@@ -11,9 +11,8 @@ import { playingAudioTime } from '@/lib/player/mediaClock';
  */
 export function useLyricClock<T>(running: boolean, fallbackTime: number, compute: (t: number) => T, same: (a: T, b: T) => boolean): T {
   const computeRef = useRef(compute);
-  computeRef.current = compute;
   const sameRef = useRef(same);
-  sameRef.current = same;
+  useLayoutEffect(() => { computeRef.current = compute; sameRef.current = same; });
   const [val, setVal] = useState<T>(() => compute(fallbackTime));
   const valRef = useRef(val);
 
