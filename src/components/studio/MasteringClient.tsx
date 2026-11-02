@@ -373,7 +373,7 @@ export function MasteringClient() {
       )}
 
       {libraryPick && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="보관함에서 불러오기" onClick={() => setLibraryPick(null)}>
+        <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="보관함에서 불러오기" onClick={() => setLibraryPick(null)}>
           <div className="ms w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl rounded-lg" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 h-11 border-b border-[var(--m-line-soft)]">
               <h2 className="text-[14px] font-bold">보관함에서 불러오기</h2>

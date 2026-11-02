@@ -41,7 +41,7 @@ export function ReleaseCheckDialog({ onClose, pickFromLibrary, onMaster }: {
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="발매 점검" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={() => !busy && onClose()}>
+    <div role="dialog" aria-modal="true" aria-label="발매 점검" className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 p-4" onClick={() => !busy && onClose()}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[#232323] bg-[#141414] p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">

@@ -28,6 +28,8 @@ describe('발매 점검 단독 도구', () => {
     render(<ReleaseCheckDialog onClose={onClose} pickFromLibrary={() => {}} onMaster={onMaster} />)
     const d = screen.getByRole('dialog', { name: '발매 점검' })
     expect(within(d).getByText(/어디에도 올리지 않고/)).toBeTruthy()
+    // 둘러보기 말풍선(z 91)보다 위, 보관함 선택 창(z 96)보다 아래
+    expect(d.className).toContain('z-[95]')
     const input = d.querySelector('input[type="file"]') as HTMLInputElement
     // jsdom 의 Blob 에는 arrayBuffer 가 없을 수 있다
     const file = Object.assign(new File([new Uint8Array(16)], '내 곡.wav', { type: 'audio/wav' }), { arrayBuffer: async () => new ArrayBuffer(16) })
