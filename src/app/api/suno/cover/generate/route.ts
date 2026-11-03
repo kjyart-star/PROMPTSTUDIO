@@ -114,7 +114,11 @@ export async function POST(request: Request) {
     })
 
     const { data: saved, error: saveError } = await supabase.from('song_history')
-      .update({ suno_task_id: outcome.taskRef, status: 'processing' })
+      .update({
+        suno_task_id: outcome.taskRef, status: 'processing',
+        // 실패 확정 시 자동 환불에 쓸 차감 원장 id
+        ...(spend.ledgerId ? { form: { ...body, kind: 'cover', ledger_id: spend.ledgerId } } : {}),
+      })
       .eq('id', requestId).eq('user_id', user.id).select('id').maybeSingle()
     if (saveError || !saved) {
       return NextResponse.json({ error: 'Cover accepted but history update failed. Contact support.', taskId: outcome.taskRef, historyId: requestId }, { status: 500 })

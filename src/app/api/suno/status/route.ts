@@ -5,6 +5,7 @@ import { getSunoStatus } from '@/lib/suno/channel'
 import { createHash } from 'node:crypto'
 import { kickFreeQueue } from '@/lib/lyricsSync/kick'
 import { isMobileUA } from '@/lib/lyricsSync/platform'
+import { REFUNDED_MESSAGE, REFUND_PENDING_MESSAGE, refundFailedSong } from '@/lib/suno/failRefund'
 
 /**
  * 스토리지 쓰기 전용 클라이언트.
@@ -99,6 +100,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ status: 'completed', audio_url: originalItem.audio_url, image_url: originalItem.image_url })
     }
 
+    if (originalItem.status === 'failed' && originalItem.suno_task_id) {
+      const { refunded } = await refundFailedSong(supabase, originalItem, user.id)
+      return NextResponse.json({ status: 'failed', refunded, message: refunded ? REFUNDED_MESSAGE : REFUND_PENDING_MESSAGE })
+    }
+
     // 접수한 그 채널에만 묻는다 — 작업 id 의 접두사가 길을 정한다.
     // 접두사가 없는 id 는 2채널 이전에 만들어진 것이라 APIPASS 로 간다.
     const outcome = await getSunoStatus(taskId)
@@ -191,14 +197,20 @@ export async function GET(request: Request) {
         results: resultsArr
       })
     } else if (outcome.state === 'failed') {
-      // Update database row to failed to avoid being stuck in processing
+      // 실패 확정 — 행을 실패로 닫고, 차감한 크레딧을 한 번만 돌려준다
       await supabase
         .from('song_history')
         .update({ status: 'failed' })
         .eq('id', historyId)
         .eq('user_id', user.id)
 
-      return NextResponse.json({ status: 'failed', message: outcome.message })
+      const { refunded } = await refundFailedSong(supabase, originalItem, user.id)
+      return NextResponse.json({
+        status: 'failed',
+        refunded,
+        message: refunded ? REFUNDED_MESSAGE : REFUND_PENDING_MESSAGE,
+        reason: outcome.message,
+      })
     } else {
       return NextResponse.json({ status: 'processing', state: outcome.message })
     }

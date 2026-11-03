@@ -166,7 +166,7 @@ export function CoverClient({ user }: CoverClientProps) {
             clearInterval(interval)
             setPollingTaskId(null)
             setIsMusicGenerating(false)
-            alert(`커버 곡 생성 실패: ${data.message || '알 수 없는 오류'}`)
+            alert(data.message || '커버 곡을 만들지 못했어요.')
             setStatus(uiLanguage === 'KO' ? "생성 실패" : uiLanguage === 'JA' ? "生成に失敗しました" : "Generation failed")
           }
         } else {

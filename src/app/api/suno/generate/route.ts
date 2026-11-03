@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     // Never charge for a missing or another user's history entry.
     const { data: history, error: historyError } = await supabase.from('song_history')
-      .select('id,suno_task_id').eq('id', historyId).eq('user_id', user.id).maybeSingle()
+      .select('id,suno_task_id,form').eq('id', historyId).eq('user_id', user.id).maybeSingle()
     if (historyError) return NextResponse.json({ error: 'History lookup failed' }, { status: 500 })
     if (!history) return NextResponse.json({ error: 'History not found' }, { status: 404 })
     if (history.suno_task_id) {
@@ -123,7 +123,9 @@ export async function POST(request: Request) {
       .from('song_history')
       .update({
         suno_task_id: taskId,
-        status: 'processing'
+        status: 'processing',
+        // 실패 확정 시 자동 환불에 쓸 차감 원장 id
+        ...(spend.ledgerId ? { form: { ...(history.form || {}), ledger_id: spend.ledgerId } } : {}),
       })
       .eq('id', historyId)
       .eq('user_id', user.id)

@@ -303,6 +303,7 @@ export function GenerateClient({
               } else if (data.status === 'failed') {
                 hasChanges = true
                 completedOrFailedCount++
+                if (typeof data.message === 'string') setStatus(data.message)
                 return { ...task, status: 'failed' }
               } else if (data.status === 'processing') {
                 const nextState = data.state || task.state || 'queuing'

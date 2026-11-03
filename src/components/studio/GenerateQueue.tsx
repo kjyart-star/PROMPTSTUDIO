@@ -8,6 +8,7 @@ const T = {
   generating: { KO: '생성 중', JA: '生成中', EN: 'Generating' },
   done: { KO: '완료', JA: '完了', EN: 'Done' },
   failed: { KO: '실패', JA: '失敗', EN: 'Failed' },
+  refunded: { KO: '크레딧을 돌려드렸어요', JA: 'クレジットを返却しました', EN: 'Credits refunded' },
   retry: { KO: '설정 다시 불러오기', JA: '設定を読み込む', EN: 'Reload settings' },
   dismiss: { KO: '지우기', JA: '消す', EN: 'Dismiss' },
   hint: {
@@ -25,7 +26,7 @@ export default function GenerateQueue({
 }: {
   uiLanguage: Lang
   tasks: QueueTask[]
-  failedRows: { id: string; title?: string }[]
+  failedRows: { id: string; title?: string; form?: any }[]
   onRetry: (row: any) => void
   onDismiss: (row: any) => void
 }) {
@@ -54,6 +55,7 @@ export default function GenerateQueue({
           <li key={r.id} className="flex flex-wrap items-center gap-2 text-xs">
             <span className="flex-1 min-w-0 truncate text-zinc-300">{r.title || 'Untitled'}</span>
             <span className="text-[11px] font-bold text-red-400">{T.failed[l]}</span>
+            {r.form?.refund?.ok && <span className="text-[11px] text-zinc-400">{T.refunded[l]}</span>}
             <button type="button" onClick={() => onRetry(r)} className="px-2 py-1 rounded-lg border border-[#262626] bg-[#161616] text-[11px] font-bold text-zinc-300 hover:text-primary hover:border-primary/40 cursor-pointer">{T.retry[l]}</button>
             <button type="button" onClick={() => onDismiss(r)} className="px-2 py-1 text-[11px] font-bold text-zinc-500 hover:text-white cursor-pointer">{T.dismiss[l]}</button>
           </li>
