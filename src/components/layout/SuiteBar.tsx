@@ -99,7 +99,7 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
         /* 제 줄로 내려간 메뉴는 헤더 좌우 패딩까지 덮어야 가운데가 맞는다. `-mx-10` 만
            주고 `w-full` 로 두면 폭은 그대로인 채 왼쪽으로 40px 밀려 메뉴가 그만큼
            왼쪽에 선다 — 폭도 같이 키운다(패딩 40+40 = 5rem). */
-        className="order-5 -mx-5 flex w-full min-w-0 items-center gap-1 overflow-x-auto scrollbar-none border-t border-[#292929] px-5 min-[768px]:-mx-10 min-[768px]:w-[calc(100%+5rem)] md:justify-center-safe md:gap-2 min-[768px]:px-10 min-[1360px]:order-none min-[1360px]:mx-0 min-[1360px]:w-auto min-[1360px]:border-t-0 min-[1360px]:px-0"
+        className="order-5 -mx-5 flex w-full min-w-0 items-center gap-1 flex-wrap gap-y-1 border-t border-[#292929] px-5 min-[768px]:-mx-10 min-[768px]:w-[calc(100%+5rem)] md:justify-center-safe md:gap-2 min-[768px]:px-10 min-[1360px]:order-none min-[1360px]:mx-0 min-[1360px]:w-auto min-[1360px]:border-t-0 min-[1360px]:px-0"
       >
         {floors.map((f) => {
           if (f.items.length > 1) {
