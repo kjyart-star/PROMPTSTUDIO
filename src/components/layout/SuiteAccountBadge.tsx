@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Coins, FolderOpen, LifeBuoy, LogOut, Settings, UserRound } from 'lucide-react'
+import { Coins, FolderOpen, LifeBuoy, LogOut, Plug, Settings, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { BASE_PATH, suiteHref, withBase } from '@/lib/basePath'
 
@@ -54,6 +54,7 @@ const MENU_LINKS = [
   { href: suiteHref('/account'), icon: UserRound, label: '프로필' },
   { href: suiteHref('/account/credits'), icon: Coins, label: '크레딧' },
   { href: suiteHref('/account/library'), icon: FolderOpen, label: '보관함' },
+  { href: suiteHref('/connect'), icon: Plug, label: 'MCP 연결' },
   { href: suiteHref('/account/settings'), icon: Settings, label: '설정' },
   { href: suiteHref('/support'), icon: LifeBuoy, label: '고객지원' },
 ] as const

@@ -130,6 +130,13 @@ export function SuiteBar({ active }: { active?: SuiteServiceId }) {
             </a>
           )
         })}
+        {/* 층 번호 없는 보조 링크 — 쿠키플레이 공용 메뉴(links)와 같은 자리 */}
+        <a
+          href={suiteHref('/connect')}
+          className="flex h-11 shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-[14px] text-[#a1a1a1] transition-colors hover:text-[#dedede]"
+        >
+          MCP 연결
+        </a>
       </nav>
 
       <div className="contents min-[768px]:ml-auto md:flex min-[768px]:shrink-0 md:items-center md:gap-2 min-[1360px]:ml-0 min-[1360px]:flex-1 min-[1360px]:basis-0 min-[1360px]:justify-end">
