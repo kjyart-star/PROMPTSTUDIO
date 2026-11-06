@@ -14,8 +14,8 @@ import { takeQuota } from '@/lib/studio/usageLimit'
  *   POST { prompt, requestId } 접수 → { taskId }
  *   GET ?taskId=…             진행 확인 → 끝나면 우리 스토리지로 복사한 공개 주소
  */
-export const ALBUM_ART_MODEL = 'gpt-image-2-5'
-export const ALBUM_ART_ACTION = 'image.generate.gpt-image-2-5'
+const ALBUM_ART_MODEL = 'gpt-image-2-5'
+const ALBUM_ART_ACTION = 'image.generate.gpt-image-2-5'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 async function quoteMilli(): Promise<number | null> {
