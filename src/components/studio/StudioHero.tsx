@@ -35,7 +35,8 @@ export function StudioHero({ badge, title, desc, bg, children }: StudioHeroProps
       {bg && (
         <>
           <div
-            className="absolute inset-0 bg-cover bg-center"
+            data-testid="studio-hero-bg"
+            className="cm-img-in absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url("${withBase(bg)}")` }}
             aria-hidden="true"
           />
@@ -56,7 +57,7 @@ export function StudioHero({ badge, title, desc, bg, children }: StudioHeroProps
       <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-primary/5 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/4" />
 
       <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="space-y-2 min-w-0">
+        <div data-testid="studio-hero-copy" className="rv-enter space-y-2 min-w-0">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-black tracking-wider uppercase">
             {badge}
           </div>

@@ -30,6 +30,7 @@ import { GenreModal } from './GenreModal'
 import { StudioHeader } from './StudioHeader'
 import { StudioHero } from './StudioHero'
 import { StudioWorkspace } from './StudioWorkspace'
+import { FadeImg } from './FadeImg'
 import { TrackDetailPanel } from './TrackDetailPanel'
 import { withBase } from '@/lib/basePath'
 import { resolveStudioAudioUrl } from '@/lib/studio/audioUrl'
@@ -2144,7 +2145,7 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
                           }`}
                         >
                           {item.image_url ? (
-                            <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                            <FadeImg src={item.image_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Music className={`text-primary/60 ${isLarge ? 'w-8 h-8' : isSmall ? 'w-4 h-4' : 'w-6 h-6'}`} />
                           )}

@@ -8,5 +8,5 @@ import type { ReactNode } from 'react'
  * fill 이면 판 높이를 그대로 채운다.
  */
 export function WideFit({ children, fill = false }: { children: ReactNode; fill?: boolean }) {
-  return <div className={`w-full ${fill ? 'flex-1 min-h-0 flex flex-col' : ''}`}>{children}</div>
+  return <div data-testid="wide-fit" className={`rv-in w-full ${fill ? 'flex-1 min-h-0 flex flex-col' : ''}`}>{children}</div>
 }
