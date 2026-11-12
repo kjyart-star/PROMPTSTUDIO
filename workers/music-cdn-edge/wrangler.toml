@@ -1,0 +1,14 @@
+# cookiemusic-media — Cloudflare Pages 프로젝트(쿠키뮤직 음원 에지, 2026-11-12).
+# KT 회선에서 *.workers.dev(cookiemusic-cdn)는 LAX 로 우회되고 *.pages.dev 는 ICN(서울)으로 간다.
+# cookiemusic-cdn 워커는 폴백으로 그대로 둔다(삭제 금지). 같은 R2 버킷(cookiemusic-tracks)을 읽기만 한다.
+#
+# Pages 는 --config 를 못 받고 상위 wrangler 설정을 오인할 수 있어, R2 바인딩은 프로젝트 설정(Pages API
+# deployment_configs.r2_buckets)에 걸어 두었다. 이 파일은 그 기록이다. 이 폴더에서 실행:
+#   cd workers/music-cdn-edge && npx wrangler pages deploy public --project-name cookiemusic-media --branch main --commit-dirty=true
+name = "cookiemusic-media"
+compatibility_date = "2025-09-01"
+pages_build_output_dir = "./public"
+
+[[r2_buckets]]
+binding = "TRACKS"
+bucket_name = "cookiemusic-tracks"
