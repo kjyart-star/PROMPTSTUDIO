@@ -1,6 +1,7 @@
 'use client'
 
 import { BASE_PATH } from '@/lib/basePath'
+import { installEdgeMedia } from '@/lib/edgeMedia'
 
 /**
  * 클라이언트의 `fetch('/api/...')` 를 `fetch('/music/api/...')` 로 바꿔 준다.
@@ -43,6 +44,8 @@ function patchFetch() {
 }
 
 patchFetch()
+// 음원 주소를 서울 에지(cookiemusic-media)로 — 실패하면 원래 주소로 폴백(src/lib/edgeMedia.ts)
+if (typeof window !== 'undefined') installEdgeMedia()
 
 /** 레이아웃에 얹기 위한 껍데기. 실제 일은 위에서 이미 끝났다. */
 export default function BasePathFetch() {
