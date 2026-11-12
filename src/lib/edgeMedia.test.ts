@@ -36,6 +36,15 @@ describe('쿠키뮤직 에지', () => {
     expect(a.getAttribute('src')).toBe(TRACK)
     expect(a.dataset.edgeFallback).toBe('1')
   })
+  it('<img> 커버도 에지로, 에러면 원래 주소로', () => {
+    setEdgeMediaEnabled(true)
+    const img = document.createElement('img')
+    document.body.appendChild(img)
+    img.setAttribute('src', `${ORIGIN}/covers/x.jpg`)
+    expect(img.getAttribute('src')).toBe(`${EDGE}/covers/x.jpg`)
+    img.dispatchEvent(new Event('error'))
+    expect(img.getAttribute('src')).toBe(`${ORIGIN}/covers/x.jpg`)
+  })
   it('fetch GET 은 에지 우선·실패 시 원래 주소, POST·인증 헤더는 그대로', async () => {
     setEdgeMediaEnabled(true)
     handler = (u) => (u.startsWith(EDGE) ? new Response('', { status: 404 }) : new Response('ok'))

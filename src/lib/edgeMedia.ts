@@ -1,7 +1,7 @@
 /**
  * 쿠키뮤직 음원 에지 — KT 회선에서 workers.dev 로 가는 요청이 LAX(미국)로 우회돼 곡 시작이 느리다.
  * 같은 R2 버킷을 서울(ICN) pages.dev(`cookiemusic-media`)가 직접 읽으므로, 음원 주소의 **호스트만**
- * 화면 요소(`<audio>`·`<video>`·`<source>`)에 실리는 순간과 `fetch` GET 에서 바꾼다.
+ * 화면 요소(`<audio>`·`<video>`·`<source>`·`<img>` 커버)에 실리는 순간과 `fetch` GET 에서 바꾼다.
  * 쿠키플레이 본체 `src/lib/media/edgeMedia.ts` 와 같은 규칙(분리 배포라 카피 후 수정).
  *
  *  · 서버가 돌려주는 주소·DB 에 저장된 값은 그대로다(`NEXT_PUBLIC_R2_PUBLIC_BASE` = 폴백 원본).
@@ -100,7 +100,7 @@ export function installEdgeMedia(win: Window & typeof globalThis = window): void
   if (w.__musicEdgePatched || typeof win.document === 'undefined') return
   w.__musicEdgePatched = true
 
-  const protos: object[] = [win.HTMLMediaElement.prototype, win.HTMLSourceElement.prototype]
+  const protos: object[] = [win.HTMLImageElement.prototype, win.HTMLMediaElement.prototype, win.HTMLSourceElement.prototype]
   const baseSetAttribute = win.Element.prototype.setAttribute
   for (const proto of protos) {
     const desc = Object.getOwnPropertyDescriptor(proto, 'src')
@@ -131,7 +131,7 @@ export function installEdgeMedia(win: Window & typeof globalThis = window): void
       const target = event.target as Element | null
       if (!target || !('getAttribute' in target)) return
       const tag = target.tagName
-      if (tag !== 'AUDIO' && tag !== 'VIDEO' && tag !== 'SOURCE') return
+      if (tag !== 'IMG' && tag !== 'AUDIO' && tag !== 'VIDEO' && tag !== 'SOURCE') return
       const current = target.getAttribute('src') ?? ''
       const origin = current ? toOriginMediaUrl(current) : null
       if (!origin || (target as HTMLElement).dataset.edgeFallback === '1') return
