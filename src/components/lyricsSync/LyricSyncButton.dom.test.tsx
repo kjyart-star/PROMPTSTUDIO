@@ -9,7 +9,9 @@ vi.mock('@/lib/player/lyricSyncClient', () => ({
 }))
 vi.mock('@/lib/studio/audioUrl', () => ({ resolveStudioAudioUrl: async () => 'https://x/a.mp3' }))
 vi.mock('@/lib/audio/corsUrl', () => ({ withCorsCacheKey: (u: string) => u }))
-vi.mock('@/components/studio/LyricTimingEditor', () => ({ default: () => <div data-testid="editor" /> }))
+vi.mock('@/components/studio/LyricTimingEditor', () => ({
+  default: ({ onSave }: any) => <button data-testid="editor" onClick={() => onSave([{ t: 2, text: '첫째 줄입니다' }, { t: 6, text: '둘째 줄입니다' }])}>editor</button>,
+}))
 import LyricSyncButton from './LyricSyncButton'
 
 const LY = '첫째 줄입니다\n둘째 줄입니다\n셋째 줄입니다'
@@ -29,6 +31,25 @@ afterEach(() => cleanup())
 const props = { songId: 's1', lyrics: LY, audioPath: 'u/a.mp3', synced: false }
 
 describe('LyricSyncButton', () => {
+  it('다시 맞추기도 자동 결과(lrc_auto)로 저장하고, 직접 확인한 시간표가 남아 있으면 안내한다', async () => {
+    mem['cm.align-model-ready'] = '1'
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ form: { lrc_by: 'user', lrc: OUT } }) })
+    render(<LyricSyncButton {...props} synced />)
+    fireEvent.click(screen.getByTestId('lyric-sync-run'))
+    await waitFor(() => expect(screen.getByTestId('lyric-sync-error').textContent).toContain('직접 확인한 시간표'))
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).lrc).toBeUndefined()
+  })
+  it('사용자가 「시간 확인·고치기」에서 저장했을 때만 user(lrc)로 저장한다', async () => {
+    mem['cm.align-model-ready'] = '1'
+    render(<LyricSyncButton {...props} song={{ id: 's1' }} />)
+    fireEvent.click(screen.getByTestId('lyric-sync-run'))
+    await waitFor(() => expect(screen.getByTestId('lyric-sync-edit')).toBeTruthy())
+    fireEvent.click(screen.getByTestId('lyric-sync-edit'))
+    fetchMock.mockClear()
+    fireEvent.click(screen.getByTestId('editor'))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).lrc).toHaveLength(2)
+  })
   it('무료 배지를 달고 ✦ 비용 표시는 없다', () => {
     render(<LyricSyncButton {...props} />)
     expect(screen.getByText('가사 동기화')).toBeTruthy()
@@ -54,7 +75,9 @@ describe('LyricSyncButton', () => {
     const [url, init] = fetchMock.mock.calls[0]
     expect(url).toBe('/api/song-history/s1')
     expect(init.method).toBe('PUT')
-    expect(JSON.parse(init.body)).toEqual({ lrc: OUT }) // 업로드는 결과 JSON 뿐
+    const body = JSON.parse(init.body)
+    expect(body.lrc_auto).toEqual(OUT) // 업로드는 결과 JSON 뿐
+    expect(body.lrc).toBeUndefined() // 출처 user 로 저장하지 않는다 — 공개 때 싱크 확인을 거친다
     expect(screen.getByTestId('lyric-sync-done')).toBeTruthy()
     // 두 번째부터는 안내 없이 바로 시작
     fireEvent.click(screen.getByTestId('lyric-sync-run'))

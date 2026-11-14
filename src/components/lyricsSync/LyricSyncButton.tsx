@@ -23,6 +23,7 @@ export function syncErrorMessage(code: string): string {
     case 'unsupported': return '이 브라우저에서는 가사 동기화를 쓸 수 없어요. 최신 크롬이나 엣지에서 열어 주세요.'
     case 'login': return '로그인이 필요해요. 로그인한 뒤 다시 시도해 주세요.'
     case 'save': return '가사 시간을 저장하지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.'
+    case 'user-kept': return '직접 확인한 시간표가 있어 자동 결과로 바꾸지 않았어요. 「시간 확인·고치기」로 고쳐 주세요.'
     case 'memory': return '이 컴퓨터의 메모리가 부족해 끝내지 못했어요. 다른 탭을 닫고 다시 시도해 주세요.'
     default: return '소리에서 가사 위치를 찾지 못했어요. 목소리가 또렷한 곡인지, 가사가 곡과 같은지 확인해 주세요.'
   }
@@ -89,18 +90,18 @@ export default function LyricSyncButton({
       if (!out?.ok || !out.lrc) throw new Error('fail')
       markModelReady()
       // 결과 시간표만 저장한다(음원·모델은 올리지 않는다)
-      // 확신이 낮은 결과만 자동 초안(lrc_auto + 확인 권유)으로, 나머지는 내가 직접 맞춘 시간표(lrc)로 저장해 비공개 곡에서도 바로 쓴다
-      const res = !out.lowConfidence
-        ? await fetch(`/api/song-history/${songId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lrc: out.lrc }) })
-        : await saveOwnLrc(songId, out.lrc, !!out.lowConfidence)
+      // 자동 결과는 출처 auto(lrc_auto)로만 저장한다 — 공개 때 「가사 싱크 확인」을 그대로 거친다. 사람이 확인·수정해 저장할 때만 user
+      const res = await saveOwnLrc(songId, out.lrc, !!out.lowConfidence)
       if (!res.ok) throw new Error(res.status === 401 ? 'login' : 'save')
+      const saved = typeof res.json === 'function' ? await res.json().catch(() => null) : null
+      if (saved?.form?.lrc_by === 'user' && Array.isArray(saved.form.lrc) && saved.form.lrc.length >= 2) throw new Error('user-kept')
       if (!alive.current) return
       onApplied?.(out.lrc)
       setDone(true); setPhase('idle')
     } catch (e: any) {
       if (!alive.current) return
       if (e?.message === 'aborted') return // 취소·일시정지는 아래 핸들러가 상태를 정한다
-      setErr(syncErrorMessage(['no-audio', 'login', 'save', 'unsupported'].includes(e?.message) ? e.message : e?.message === 'fail' ? 'fail' : 'memory'))
+      setErr(syncErrorMessage(['no-audio', 'login', 'save', 'unsupported', 'user-kept'].includes(e?.message) ? e.message : e?.message === 'fail' ? 'fail' : 'memory'))
       setPhase('idle')
     }
   }, [lyrics, audioPath, synced, songId, onApplied])
