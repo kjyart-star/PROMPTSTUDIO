@@ -24,6 +24,7 @@ import { useCoverColor } from './coverColor';
 import { ImmBackground, BG_CSS } from './ImmBackground';
 import { VolumeControl, VOL_CTL_CSS } from './VolumeControl';
 import type { Track } from '@/types/music';
+import LyricSyncButton from '@/components/lyricsSync/LyricSyncButton';
 
 type View = 'now' | 'list';
 const VIEW_KEY = 'cm.immersive-view';
@@ -269,6 +270,21 @@ export function ImmersivePlayer() {
                   })}
                   <div className="imm-pad" />
                 </div>
+                {currentTrack.album_id === 'studio-generated' && (
+                  <div className="imm-syncbtn">
+                    <LyricSyncButton
+                      songId={currentTrack.id}
+                      lyrics={currentTrack.lyrics}
+                      audioPath={currentTrack.raw_file_url || currentTrack.file_url}
+                      synced={timed.mode === 'exact'}
+                      song={{ id: currentTrack.id, title: currentTrack.title, lyrics: currentTrack.lyrics, audio_url: currentTrack.raw_file_url || currentTrack.file_url, form: { lrc: currentTrack.lrc ?? undefined } }}
+                      onApplied={(lines) => usePlayerStore.setState((st) => ({
+                        currentTrack: st.currentTrack && st.currentTrack.id === currentTrack.id ? { ...st.currentTrack, lrc: lines } as Track : st.currentTrack,
+                        queue: st.queue.map((q) => (q.id === currentTrack.id ? { ...q, lrc: lines } as Track : q)),
+                      }))}
+                    />
+                  </div>
+                )}
               </>
             )}
           </section>
@@ -356,6 +372,7 @@ const IMM_CSS = `
 .imm-title{font-size:clamp(28px,3.6vw,52px);line-height:1.1;font-weight:800;margin:8px 0 0;letter-spacing:-.02em;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .imm-artist{margin-top:8px;font-size:15px;color:rgba(255,255,255,.7)}
 .imm-right{min-width:0;height:min(calc(58vh - (var(--clk-t,0px) + var(--clk-b,0px)) * .95),560px);display:flex;flex-direction:column}
+.imm-syncbtn{display:flex;justify-content:flex-end;padding:8px 4px 0}
 .imm-lyrics{position:relative;flex:1;min-height:0;overflow:hidden;border-left:2px solid rgba(255,255,255,.18);padding-left:clamp(16px,2.4vw,32px);mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent)}
 .imm-pad{height:40%}
 .imm-line{font-size:clamp(18px,2vw,28px);line-height:1.45;font-weight:700;margin:0 0 14px;cursor:pointer;transition:opacity .35s,color .35s,transform .35s;transform-origin:left center;word-break:keep-all}

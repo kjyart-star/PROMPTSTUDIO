@@ -5,6 +5,9 @@ import {
   Music, X, ChevronLeft, ChevronRight, Copy, Check, Trash2,
   Play, Pause, Heart, Download, Globe, Wand2
 } from 'lucide-react'
+import LyricSyncButton from '@/components/lyricsSync/LyricSyncButton'
+import { hasSyncedLrc } from '@/lib/lyricsSync/publishGate'
+import { historyAudioPath } from '@/lib/studio/playQueue'
 
 interface TrackDetailPanelProps {
   track: any | null
@@ -65,6 +68,7 @@ export function TrackDetailPanel({
   durationSlot
 }: TrackDetailPanelProps) {
   const [copied, setCopied] = useState<'style' | 'lyrics' | null>(null)
+  const [syncedIds, setSyncedIds] = useState<string[]>([])
   const [styleExpanded, setStyleExpanded] = useState(false)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const asideRef = useRef<HTMLElement | null>(null)
@@ -339,6 +343,18 @@ export function TrackDetailPanel({
             </h4>
             {copyButton('lyrics', lyricsText)}
           </div>
+          {lyricsText && track.status === 'completed' && historyAudioPath(track) && (
+            <div className="flex justify-end">
+              <LyricSyncButton
+                songId={track.id}
+                lyrics={lyricsText}
+                audioPath={historyAudioPath(track)}
+                synced={hasSyncedLrc(track.form) || syncedIds.includes(track.id)}
+                song={track}
+                onApplied={() => setSyncedIds((ids) => [...ids, track.id])}
+              />
+            </div>
+          )}
           {lyricsText ? <LyricsBody lyrics={lyricsText} /> : emptyNote}
         </section>
       </div>
