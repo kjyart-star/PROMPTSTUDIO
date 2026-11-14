@@ -1,5 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validateAudioUrl } from '@/lib/audioPath'
 import NodeID3 from 'node-id3'
 import { platformOfUA } from '@/lib/lyricsSync/platform'
 import { kickFreeQueue } from '@/lib/lyricsSync/kick'
@@ -145,6 +146,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
+    // 음원 경로는 서버가 정한 것만 받는다(본인 접두사·본인 곡 id·외부 https 주소). 남의 저장소 경로는 거절.
+    const audioCheck = await validateAudioUrl(supabase, user.id, audio_url)
+    if (!audioCheck.ok) {
+      return NextResponse.json({ error: 'Invalid audio_url' }, { status: 400 })
+    }
+
     let finalImageUrl = image_url || ''
 
     // If no cover image was provided but we have an uploaded audio file,
@@ -198,7 +205,7 @@ export async function POST(request: Request) {
         audio_url: audio_url || null,
         image_url: finalImageUrl,
         status: status || 'completed',
-        is_published: is_published || false,
+        is_published: false, // 공개는 PUT /api/song-history/[id] (가사 싱크 게이트)로만
         channel_id: channel_id || null,
         form: updatedForm
       })

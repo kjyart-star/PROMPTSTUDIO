@@ -18,11 +18,18 @@ export async function GET(request: Request) {
     // 2. Query the track in song_history to check permissions.
     // If the track is published (is_published = true), anyone (including guest users) can play it.
     // If the track is a draft, only the owner (user_id = user.id) or an administrator can play it.
-    const { data: trackData, error: dbError } = await userSupabase
+    // 같은 경로를 가진 행이 여러 개일 수 있다(복사본). RLS 로 내게 보이는 행(본인 것 + 공개 곡)만 온다.
+    const { data: trackRows } = await userSupabase
       .from('song_history')
       .select('is_published, user_id')
       .eq('audio_url', filePath)
-      .maybeSingle()
+      .limit(20)
+    const rows = trackRows || []
+    // 공개 판정은 「그 경로의 원래 주인」 행이어야 한다: 본인 행이거나, 경로 소유가 행 소유자와 맞는 공개 곡.
+    const ownerPrefix = /^(?:audio|stems)\/([0-9a-f-]{36})\//i.exec(filePath)?.[1]
+    const trackData = rows.find(r => user && r.user_id === user.id)
+      || rows.find(r => r.is_published && (!ownerPrefix || ownerPrefix === r.user_id))
+      || null
 
     let isAllowed = false
 

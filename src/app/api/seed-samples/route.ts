@@ -44,7 +44,11 @@ const SAMPLE_SONGS = [
   }
 ]
 
-export async function GET() {
+// 개발 전용: 운영에서는 존재하지 않는 경로로 처리. GET 삭제/삽입 금지 → POST 만.
+export async function POST() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 })
+  }
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

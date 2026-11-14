@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     )
-    const path = `audio/mastered-${crypto.randomUUID()}.${ext}`
+    const path = `audio/${user.id}/mastered-${crypto.randomUUID()}.${ext}`
     const { data, error } = await admin.storage.from('tracks').createSignedUploadUrl(path)
     if (error) throw error
     return NextResponse.json({ path, token: data.token, contentType: TYPES[ext] })

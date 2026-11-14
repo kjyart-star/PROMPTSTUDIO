@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     // 2. 고유 경로 생성
     const fileExt = filename.split('.').pop()
     const uniqueId = crypto.randomUUID()
-    const filePath = `audio/${uniqueId}.${fileExt}`
+    const filePath = `audio/${user.id}/${uniqueId}.${fileExt}`
 
     // 3. 서명 업로드 URL 발급 (60초 유효)
     const { data, error } = await supabase.storage
