@@ -93,7 +93,7 @@ export default async function PublicHomePage() {
       ? supabase.from('song_history').select('id').eq('user_id', user.id).eq('liked', true)
       : Promise.resolve({ data: null }),
     userIds.length > 0
-      ? supabase.from('profiles').select('*').in('id', userIds)
+      ? supabase.from('public_profiles').select('*').in('id', userIds)
       : Promise.resolve({ data: null }),
     channelIds.length > 0 || userIds.length > 0
       ? supabase.from('artists')

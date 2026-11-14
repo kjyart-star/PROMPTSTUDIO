@@ -35,7 +35,7 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
     // Escape LIKE wildcards in the slug so it can't broaden the match.
     const escapedSlug = slug.replace(/[\\%_]/g, (ch: string) => `\\${ch}`)
     const { data: profiles } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('*')
       .like('email', `${escapedSlug}@%`)
       .limit(10)

@@ -20,7 +20,7 @@ export default async function PublicArtistChartPage({
 
   // 2. Fetch profiles and system artists
   const [profilesRes, artistsRes] = await Promise.all([
-    supabase.from('profiles')
+    supabase.from('public_profiles')
       .select('*')
       .order('followers', { ascending: false })
       .limit(100),

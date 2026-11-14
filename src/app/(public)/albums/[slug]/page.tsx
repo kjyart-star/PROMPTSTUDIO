@@ -54,7 +54,7 @@ export default async function PublicAlbumDetailPage({ params, searchParams }: Pa
 
       // 3. 앨범 제작자 (아티스트) 정보 로드
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('*')
         .eq('id', playlistData.user_id)
         .single()

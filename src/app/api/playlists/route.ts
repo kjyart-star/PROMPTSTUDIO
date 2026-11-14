@@ -63,13 +63,13 @@ export async function GET(request: Request) {
       let profilesErr: any = null
 
       const res = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, display_name, is_banned')
         .in('id', userIds)
 
       if (res.error && res.error.code === '42703') {
         const fallback = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, display_name')
           .in('id', userIds)
         if (!fallback.error && fallback.data) {

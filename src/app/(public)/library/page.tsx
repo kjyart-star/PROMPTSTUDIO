@@ -49,7 +49,7 @@ export default async function LibraryPage() {
 
     const [profilesRes, playlistsRes] = await Promise.all([
       userIds.length > 0
-        ? supabase.from('profiles').select('*').in('id', userIds)
+        ? supabase.from('public_profiles').select('*').in('id', userIds)
         : Promise.resolve({ data: [] as any[] }),
       playlistIds.length > 0
         ? supabase.from('user_playlists').select('*').in('id', playlistIds)

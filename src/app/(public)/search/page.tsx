@@ -41,7 +41,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
 
   const [profilesRes, playlistsRes] = await Promise.all([
     userIds.length > 0
-      ? supabase.from('profiles').select('id, email, display_name, avatar_url, is_admin, created_at').in('id', userIds)
+      ? supabase.from('public_profiles').select('id, email, display_name, avatar_url, is_admin, created_at').in('id', userIds)
       : Promise.resolve({ data: [] as any[] }),
     playlistIds.length > 0
       ? supabase.from('user_playlists').select('*').in('id', playlistIds)

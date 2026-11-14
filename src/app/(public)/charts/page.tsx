@@ -104,7 +104,7 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
 
     const [profilesRes, channelsRes, playlistsRes] = await Promise.all([
       userIds.length > 0
-        ? supabase.from('profiles').select('*').in('id', userIds)
+        ? supabase.from('public_profiles').select('*').in('id', userIds)
         : Promise.resolve({ data: [] as any[] }),
       channelIds.length > 0
         ? supabase.from('artists').select('*').in('id', channelIds)

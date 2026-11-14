@@ -204,7 +204,7 @@ export function LibraryClient({
         const userIds = Array.from(new Set(completedData.map((song: any) => song.user_id).filter(Boolean))) as string[]
         if (userIds.length > 0) {
           const { data: profiles, error } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('id, display_name, email, avatar_url')
             .in('id', userIds)
           
