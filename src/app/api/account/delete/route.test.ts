@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 let sessionUser: { id: string } | null = null
 const calls: string[] = []
 let workerDone = true
+let channelError: { code: string } | null = null
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
@@ -21,7 +22,10 @@ vi.mock('@supabase/supabase-js', () => ({
         signOut: async () => ({ error: null }),
       },
     },
-    from: (t: string) => ({ update: (v: any) => ({ eq: async (_c: string, id: string) => { calls.push(`profile:${t}:${id}:${v.display_name}`); return { error: null } } }) }),
+    from: (t: string) => ({ update: (v: any) => ({ eq: async (c: string, id: string) => {
+      if (t === 'artists') { calls.push(`channel:${c}:${id}:${v.name}:${v.bio}:${v.avatar_url}:${v.banner_url}:${JSON.stringify(v.links)}`); return { error: channelError } }
+      calls.push(`profile:${t}:${id}:${v.display_name}`); return { error: null }
+    } }) }),
   }),
 }))
 vi.stubGlobal('fetch', vi.fn(async () => {
@@ -36,7 +40,7 @@ import { POST, } from './route'
 const req = (body: unknown, headers: Record<string, string> = {}) =>
   new Request('https://cookieplay.app/music/api/account/delete', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) })
 
-beforeEach(() => { sessionUser = null; calls.length = 0; workerDone = true })
+beforeEach(() => { sessionUser = null; calls.length = 0; workerDone = true; channelError = null })
 
 describe('POST /api/account/delete', () => {
   it('비로그인 401 — 아무것도 호출하지 않는다', async () => {
@@ -59,7 +63,15 @@ describe('POST /api/account/delete', () => {
     expect(res.status).toBe(200)
     expect(calls[0]).toBe('worker')
     expect(calls[1]).toBe('profile:profiles:u1:탈퇴한 사용자')
-    expect(calls[2]).toBe('ban:u1:876000h')
+    expect(calls[2]).toBe('channel:owner_user_id:u1:탈퇴한 사용자:null:null:null:{}')
+    expect(calls[3]).toBe('ban:u1:876000h')
+  })
+  it('공개 채널 익명화가 실패하면 502 이고 계정 정지는 하지 않는다(재호출로 이어짐)', async () => {
+    sessionUser = { id: 'u1' }
+    channelError = { code: 'x' }
+    const res = await POST(req({ confirm: '계정 삭제' }))
+    expect(res.status).toBe(502)
+    expect(calls.some((c) => c.startsWith('ban:'))).toBe(false)
   })
   it('Bearer 토큰(쿠키드림)도 같은 흐름, 틀린 토큰은 401', async () => {
     expect((await POST(req({ confirm: '계정 삭제' }, { authorization: 'Bearer bad' }))).status).toBe(401)

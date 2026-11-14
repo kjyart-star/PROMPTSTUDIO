@@ -68,3 +68,8 @@ export function anonymizedProfile(shortId: string) {
     handle: `deleted-${shortId}`,
   }
 }
+
+/** 공개 채널(artists) 익명화 값 — 이름은 「탈퇴한 사용자」, 소개·아바타·배너·외부 링크는 비운다. 채널과 곡은 남긴다. */
+export function anonymizedChannel() {
+  return { name: DELETED_NAME, bio: null, avatar_url: null, banner_url: null, links: {} as Record<string, never> }
+}

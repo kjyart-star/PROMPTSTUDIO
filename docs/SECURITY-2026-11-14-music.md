@@ -25,3 +25,5 @@
 - **철회(30일 안, 자동화)**: owner 가 워커 `POST /v1/admin/users/<id>/cancel-deletion` 한 번 — 삭제 예정 취소 + 이 앱의 내부 라우트 `POST /api/internal/account/restore` 로 로그인 정지 해제. 해제가 실패하면 응답에 `authRestored:false` 가 나오고 같은 호출을 다시 하면 해제만 재시도한다. `profiles` 의 이름·이메일은 복구되지 않으므로 본인이 다시 입력.
 - **유예 만료(자동)**: 워커 일일 크론이 R2 정리 뒤 `POST /api/internal/account/finalize` 를 불러 `auth.users` 의 원래 이메일을 `deleted-<12자>@deleted.invalid` 로 바꾼다(계정은 삭제하지 않는다 — 공개 곡이 FK 로 딸려 지워지지 않게). 실패하면 다음 날 다시 한다.
 - 내부 라우트 인증: 기존 서비스 토큰(`COOKIEPLAY_SERVICE_TOKEN` = 워커의 `cookiemusic` 토큰), 상수 시간 비교, 탈퇴 처리된 계정(`profiles.handle` 이 `deleted-` 로 시작)에만 동작, 사용자 세션으로는 열리지 않는다.
+
+- **공개 채널(`artists`) (대표 확정 2026-11-14)**: 탈퇴 시 본인 소유 채널의 이름은 「탈퇴한 사용자」, 소개·아바타·배너·외부 링크(`links`)는 비운다. 채널과 공개 곡은 남긴다. `profiles` 익명화와 같은 단계에서 처리하고, 실패하면 계정 정지 전에 멈춰 재호출로 이어진다. 채널 주소(`slug`)는 공개 곡 링크가 깨지지 않게 그대로 둔다.

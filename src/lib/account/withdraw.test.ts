@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { anonymizedProfile, originAllowed, runWithdrawal } from './withdraw'
+import { anonymizedChannel, anonymizedProfile, originAllowed, runWithdrawal } from './withdraw'
 
 const deps = (over: Record<string, any> = {}) => ({
   callWorker: vi.fn(async () => ({ ok: true as const, done: true })),
@@ -69,5 +69,11 @@ describe('anonymizedProfile', () => {
     expect(a.bio).toBeNull()
     expect(a.handle).toBe('deleted-abc123')
     expect(a.email.endsWith('@deleted.invalid')).toBe(true)
+  })
+})
+
+describe('anonymizedChannel', () => {
+  it('이름은 「탈퇴한 사용자」, 소개·아바타·배너·외부 링크는 비운다', () => {
+    expect(anonymizedChannel()).toEqual({ name: '탈퇴한 사용자', bio: null, avatar_url: null, banner_url: null, links: {} })
   })
 })

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { SUITE_API_BASE } from '@/lib/credits/suite'
-import { anonymizedProfile, BAN_DURATION, CONFIRM_PHRASE, originAllowed, runWithdrawal } from '@/lib/account/withdraw'
+import { anonymizedChannel, anonymizedProfile, BAN_DURATION, CONFIRM_PHRASE, originAllowed, runWithdrawal } from '@/lib/account/withdraw'
 
 // 계정 탈퇴(감사 L-10). POST 전용 — 로그인 세션(쿠키) 또는 Authorization: Bearer(쿠키드림 등 같은 계정) 필요.
 // 순서와 이유는 lib/account/withdraw.ts.
@@ -62,7 +62,11 @@ export async function POST(request: Request) {
     anonymizeProfile: async () => {
       const { error } = await admin.from('profiles').update(anonymizedProfile(shortId)).eq('id', userId)
       if (error) console.error('[withdraw] profiles 익명화 실패', error.code)
-      return !error
+      if (error) return false
+      // 공개 채널도 같은 기준으로 — 이름만 「탈퇴한 사용자」, 소개·사진·링크 비움(채널·곡은 남긴다)
+      const { error: chErr } = await admin.from('artists').update(anonymizedChannel()).eq('owner_user_id', userId)
+      if (chErr) console.error('[withdraw] 채널 익명화 실패', chErr.code)
+      return !chErr
     },
     disableAuth: async () => {
       // 삭제하지 않고 정지 + 소셜 이름·사진 등 메타데이터 비우기. 세션은 모두 끊는다.
