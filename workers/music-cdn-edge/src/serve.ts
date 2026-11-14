@@ -2,7 +2,9 @@
  * cookiemusic-cdn 워커(`workers/music-cdn/src/index.ts`)와 같은 응답을 Pages Function 한 번으로 낸다.
  * 차이: Cache API 를 쓰지 않는다(Function 호출 수는 같고, R2 읽기는 무료 한도 안). 공개 음원이라 서명 없음.
  */
-export interface Env {
+import { isPublicKey, type GateEnv } from './gate';
+
+export interface Env extends GateEnv {
   TRACKS?: R2Bucket;
 }
 
@@ -86,6 +88,9 @@ export async function handle(request: Request, env: Env): Promise<Response> {
     h.set('content-length', String(head.size));
     return out(new Response(null, { status: 200, headers: h }));
   }
+
+  // 비공개·정지 곡은 R2 를 열기 전에 404 (감사 M-7). HEAD 는 마이그레이션 스크립트의 존재 확인용이라 위에서 먼저 처리된다.
+  if (!(await isPublicKey(key, env))) return notFound();
 
   let range = request.headers.get('range');
   const ifRange = request.headers.get('if-range');

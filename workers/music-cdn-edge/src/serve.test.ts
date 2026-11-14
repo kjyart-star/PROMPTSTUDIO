@@ -23,7 +23,8 @@ function bucket(files: Record<string, string>): R2Bucket {
   } as unknown as R2Bucket
 }
 
-const env = { TRACKS: bucket({ 'audio/a.mp3': '0123456789' }) }
+const allow = (async () => new Response('{}', { status: 200 })) as unknown as typeof fetch
+const env = { TRACKS: bucket({ 'audio/a.mp3': '0123456789' }), GATE_FETCH: allow }
 const req = (path: string, init: RequestInit = {}) => new Request(`https://m.test/${path}`, init)
 
 describe('cookiemusic-media', () => {
@@ -48,5 +49,29 @@ describe('cookiemusic-media', () => {
     expect((await handle(req('audio/a.mp3', { method: 'PUT' }), env)).status).toBe(405)
     const etag = (await handle(req('audio/a.mp3'), env)).headers.get('etag')!
     expect((await handle(req('audio/a.mp3', { headers: { 'if-none-match': etag } }), env)).status).toBe(304)
+  })
+})
+
+describe('공개 게이트 (감사 M-7)', () => {
+  const files = { TRACKS: bucket({ 'audio/a.mp3': '0123456789' }) }
+  const gate = (status: number | 'throw') => (async (url: string) => {
+    if (status === 'throw') throw new Error('network')
+    expect(String(url)).toContain('/api/tracks/public-check?key=audio%2Fa.mp3')
+    return new Response('{}', { status })
+  }) as unknown as typeof fetch
+
+  it('비공개·정지 곡(앱이 404)은 전체·Range 모두 404', async () => {
+    const e = { ...files, GATE_FETCH: gate(404) }
+    expect((await handle(req('audio/a.mp3'), e)).status).toBe(404)
+    expect((await handle(req('audio/a.mp3', { headers: { range: 'bytes=0-3' } }), e)).status).toBe(404)
+  })
+  it('공개 곡(앱이 200)은 그대로 재생된다', async () => {
+    const res = await handle(req('audio/a.mp3'), { ...files, GATE_FETCH: gate(200) })
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('0123456789')
+  })
+  it('앱 오류(5xx·네트워크)면 재생을 끊지 않는다(fail-open)', async () => {
+    expect((await handle(req('audio/a.mp3'), { ...files, GATE_FETCH: gate(503) })).status).toBe(200)
+    expect((await handle(req('audio/a.mp3'), { ...files, GATE_FETCH: gate('throw') })).status).toBe(200)
   })
 })

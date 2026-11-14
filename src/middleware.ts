@@ -31,6 +31,6 @@ export const config = {
    * 한 번씩 부르면 요청 수만 늘어난다.
    */
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon.svg|images/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|wav|woff|woff2)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon.svg|images/|api/tracks/public-check|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|wav|woff|woff2)$).*)',
   ],
 }

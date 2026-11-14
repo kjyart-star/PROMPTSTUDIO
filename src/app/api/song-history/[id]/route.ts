@@ -1,4 +1,5 @@
 import { NextResponse, after } from 'next/server'
+import { purgeTrackCache } from '@/lib/cdnPurge'
 import { createClient } from '@/lib/supabase/server'
 import { validateAutoLrc } from '@/lib/player/lrcValidate'
 import { LRC_BROWSER_MODEL, audioKeyOf } from '@/lib/studio/lyricsOf'
@@ -132,6 +133,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
     // 공개 요청이 「가사 싱크 처리 중」으로 바뀌었으면 서버 무료 큐도 깨운다(PC 브라우저가 먼저 끝내면 큐는 건너뛴다)
     if (is_published === true && (data as any)?.form?.publish_pending) after(kickFreeQueue)
+    // 비공개로 돌린 곡: CDN 캐시 퍼지(파일은 그대로, 공개 게이트가 이미 막는다 — 감사 M-7)
+    if (is_published === false && (data as any)?.audio_url) after(() => purgeTrackCache([(data as any).audio_url]).then(() => undefined))
 
     return NextResponse.json(data)
   } catch (err: any) {

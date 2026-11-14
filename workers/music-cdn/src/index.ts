@@ -7,7 +7,9 @@
  * 반복 재생이 R2 를 다시 때리지 않게 한다.
  */
 
-interface Env {
+import { isPublicKey, type GateEnv } from './gate';
+
+interface Env extends GateEnv {
   TRACKS: R2Bucket;
 }
 
@@ -119,6 +121,11 @@ export default {
       const headers = baseHeaders(key, head, origin);
       headers.set('content-length', String(head.size));
       return new Response(null, { status: 200, headers });
+    }
+
+    // 비공개·정지 곡은 Cache API 도 R2 도 열기 전에 404 (감사 M-7) — 예전에 캐시된 사본도 나가지 않는다.
+    if (!(await isPublicKey(key, env))) {
+      return new Response('Not Found', { status: 404, headers: corsHeaders(origin) });
     }
 
     const cache = caches.default;

@@ -10,7 +10,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({ from: (t: string) => ({ update: (v: any) => { writes.push(`${t}:${JSON.stringify(v)}`); const o: any = { eq: () => o, then: (r: any) => r({ error: null }) }; return o } }) }),
+  createClient: () => ({ from: (t: string) => ({ update: (v: any) => { writes.push(`${t}:${JSON.stringify(v)}`); const o: any = { eq: () => o, select: () => o, then: (r: any) => r({ error: null }) }; return o } }) }),
 }))
 let second = true
 vi.mock('@/lib/auth/adminSecond', () => ({ hasAdminSecondFactor: async () => second }))

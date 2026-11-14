@@ -1,3 +1,4 @@
+import { purgeTrackCache } from '@/lib/cdnPurge'
 import { NextResponse } from 'next/server'
 import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
@@ -73,7 +74,8 @@ export async function PUT(request: Request) {
         admin
           .from('song_history')
           .update({ is_published: false })
-          .eq('user_id', target_user_id),
+          .eq('user_id', target_user_id)
+          .select('audio_url'),
         admin
           .from('user_playlists')
           .update({ is_published: false })
@@ -81,6 +83,7 @@ export async function PUT(request: Request) {
       ])
 
       if (songErr.error) console.error('Error unpublishing banned user songs:', songErr.error)
+      else await purgeTrackCache(((songErr.data ?? []) as { audio_url: string | null }[]).map((r) => r.audio_url ?? ''))
       if (playlistErr.error) console.error('Error unpublishing banned user playlists:', playlistErr.error)
     }
 

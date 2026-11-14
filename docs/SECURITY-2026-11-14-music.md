@@ -12,5 +12,6 @@
 | M-11 | `next.config.ts` 보안 헤더(nosniff·SAMEORIGIN·Referrer-Policy·Permissions-Policy·CSP Report-Only) |
 | M-12 | download 허용 호스트 목록+오디오 80MB·이미지 10MB 상한(스트리밍으로 읽다가 초과 시 중단) |
 | L-6 L-7 L-8 L-9 | debug-download 라우트 제거, upload 의 개인정보 로그 제거, profile PUT 의 followers 등 무시·creditDelta 정수 검증, `.env.development`·운영 스크립트·로그 추적 해제 |
-| **보류 M-7** | 비공개 전환·정지 시 CDN: R2 오브젝트는 immutable 1년 캐시로 키만 알면 무인증 재생. 막으려면 삭제·이동(사용자 음원 삭제 금지 규칙에 걸림) 또는 비공개 곡용 서명 URL 구조 변경이 필요 → 대표 결정 대기 |
+| **M-7 수정(2026-11-14)** | 파일은 삭제·이동하지 않는다. ① 음원 CDN 두 곳(`cookiemusic-cdn` 워커·`cookiemusic-media` Pages)이 GET 마다 앱 `/music/api/tracks/public-check?key=` 에 「공개 곡이고 주인이 정지 안 됐나」를 묻고 404 면 R2·Cache API 를 열기 전에 404(예전 캐시 사본도 안 나감). 에지 캐시 성공 60초·거절 5초 → 전환이 약 1분 안에 반영. 앱 오류·시간 초과는 재생을 끊지 않도록 통과(fail-open), 명시적 404 만 거절. ② 비공개·정지 곡 재생은 기존 `signed-url` 의 소유자 전용 Supabase 서명(1시간)으로만. ③ 비공개 전환·정지 시 `purgeTrackCache`(Cloudflare 퍼지) 호출 — 자격(`CF_API_TOKEN`·`CF_ZONE_ID`·`CDN_PURGE_BASE`) 없으면 건너뜀. 알려진 한계: HEAD 는 이전 스크립트용으로 게이트 밖(존재·크기만), 이미 브라우저 HTTP 캐시에 받아 둔 사본은 못 비움 |
+| **대표 작업(M-7 퍼지)** | 음원 CDN 이 `*.workers.dev`·`*.pages.dev` 라 Cloudflare zone 이 없어 퍼지 API 대상이 없고, 게이트가 캐시보다 앞이라 지금은 필요 없음. 나중에 음원을 커스텀 도메인(zone)으로 앞단에 둘 때만: Cloudflare API 토큰(Cache Purge 권한) 발급 → Vercel 환경변수 `CF_API_TOKEN`·`CF_ZONE_ID`·`CDN_PURGE_BASE`(예 `https://cdn.example.com`) 등록 |
 | 확인 필요 L-3 | `IP_SALT` 운영 설정 여부(환경변수는 열람 금지라 확인 못 함) |
