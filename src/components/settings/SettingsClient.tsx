@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { User, Users, Check, Upload, ArrowLeft, Settings, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { withBase } from '@/lib/basePath'
+import { AccountDeleteDialog } from '@/components/account/AccountDeleteDialog'
 
 interface SettingsClientProps {
   user: any
@@ -184,20 +185,14 @@ export function SettingsClient({ user }: SettingsClientProps) {
     setConfirmDeleteOpen(true)
   }
 
-  const confirmWithdraw = async () => {
-    const supabase = createClient()
-    const { error } = await supabase.rpc('delete_user')
-    if (error) {
-      alert(`탈퇴 실패: ${error.message}`)
-    } else {
-      try {
-        await fetch('/api/auth/signout', { method: 'POST' })
-        await supabase.auth.signOut()
-      } catch (err) {
-        console.error('SignOut error:', err)
-      }
-      window.location.href = withBase('/')
+  const afterWithdraw = async () => {
+    try {
+      await fetch(withBase('/api/auth/signout'), { method: 'POST' })
+      await createClient().auth.signOut()
+    } catch (err) {
+      console.error('SignOut error:', err)
     }
+    window.location.href = withBase('/')
   }
 
   const saveProfile = async () => {
@@ -529,7 +524,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 <div className="flex items-center justify-between bg-red-500/5 border border-red-500/10 rounded-xl p-4">
                   <div className="flex flex-col gap-1 text-left">
                     <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '계정 탈퇴' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}</span>
-                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.' : uiLanguage === 'JA' ? 'アカウントとすべてのデータを完全に削除します。' : 'Permanently delete your account and all data.'}</span>
+                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '개인 정보는 바로 지워지고, 비공개 결과물은 30일 뒤 삭제됩니다.' : uiLanguage === 'JA' ? 'アカウントとすべてのデータを完全に削除します。' : 'Permanently delete your account and all data.'}</span>
                   </div>
                   <button 
                     onClick={handleWithdraw}
@@ -544,44 +539,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
         </div>
       </div>
 
-      {/* User Withdrawal Confirm Modal */}
-      {confirmDeleteOpen && (
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-          onClick={() => setConfirmDeleteOpen(false)}
-        >
-          <div 
-            className="w-full max-w-sm rounded-2xl border border-outline-variant/20 bg-surface-container shadow-2xl overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <h3 className="text-sm font-extrabold text-on-surface mb-2 tracking-tight text-left">
-                {uiLanguage === 'KO' ? '계정 삭제' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}
-              </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed text-left">
-                {uiLanguage === 'KO' 
-                  ? '정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.' 
-                  : uiLanguage === 'JA' ? '本当にアカウントを削除しますか？すべてのデータは完全に消去されます。' : 'Are you sure you want to delete your account? All data will be permanently erased.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border-t border-outline-variant/10">
-              <button 
-                onClick={() => setConfirmDeleteOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-on-surface bg-white/[0.04] hover:bg-white/[0.08] transition-colors focus:outline-none cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '취소' : uiLanguage === 'JA' ? 'キャンセル' : 'Cancel'}
-              </button>
-              <button 
-                onClick={confirmWithdraw}
-                className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-red-500 hover:brightness-105 shadow-md transition-all focus:outline-none cursor-pointer"
-              >
-                {uiLanguage === 'KO' ? '확인' : uiLanguage === 'JA' ? '確認' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* 계정 삭제: 문구 입력 → 최종 확인 → 로그아웃 */}
+      {confirmDeleteOpen && <AccountDeleteDialog onClose={() => setConfirmDeleteOpen(false)} onDone={afterWithdraw} />}
 
     </div>
   )
