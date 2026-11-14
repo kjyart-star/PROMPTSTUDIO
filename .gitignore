@@ -13,3 +13,13 @@ yarn-error.log
 
 # 빌드 산출물 — 커밋할 때마다 바뀌어 diff 를 더럽힌다
 tsconfig.tsbuildinfo
+
+# 운영 스크립트·로그·환경 파일은 추적하지 않는다 (보안 감사 L-9, 2026-11-14)
+.env.development
+vercel_logs.txt
+check-credits.js
+check-db.js
+check-profiles.js
+check-users.js
+check_db.js
+make-admin.js

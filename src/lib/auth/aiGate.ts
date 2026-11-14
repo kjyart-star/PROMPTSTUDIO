@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isStudioOpen } from '@/lib/studio/openSwitch'
+import { isBannedUser } from '@/lib/auth/ban'
 
 /**
  * [임시 게이트] 비용이 나가는 외부 API 실행을 관리자에게만 허용한다.
@@ -69,7 +70,7 @@ export async function hasAiAccess(): Promise<boolean> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
-  if (await isStudioOpen()) return true
+  if (await isStudioOpen()) return !(await isBannedUser(supabase, user.id))
 
   const { data: profile } = await supabase
     .from('profiles')

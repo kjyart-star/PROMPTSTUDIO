@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
 
 // Helper to verify if the user is an admin
@@ -9,7 +10,7 @@ async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
     .eq('id', userId)
     .single()
   if (error || !data) return false
-  return !!data.is_admin
+  return !!data.is_admin && (await hasAdminSecondFactor(userId))
 }
 
 export async function GET() {

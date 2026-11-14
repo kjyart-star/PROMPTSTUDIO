@@ -131,8 +131,8 @@ export default async function PublicHomePage() {
     const playlist = playlistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
 
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
-    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
-    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'suno-ai')
+    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI')
+    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.handle : 'suno-ai')
     const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator')
 
@@ -278,8 +278,8 @@ export default async function PublicHomePage() {
     const songProfile = profilesData.find((p: any) => p.id === playlist.user_id)
 
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
-    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
-    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
+    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.handle) : 'Unknown Artist')
+    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.handle : 'user')
     const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
 
@@ -323,8 +323,8 @@ export default async function PublicHomePage() {
   const profileArtists: Artist[] = profilesData.map((profile: any) => {
     return {
       id: profile.id,
-      name: profile.display_name || profile.email.split('@')[0],
-      slug: profile.email.split('@')[0],
+      name: profile.display_name || profile.handle,
+      slug: profile.handle,
       avatar_url: profile.avatar_url || '',
       bio: profile.is_admin ? 'Admin Creator' : 'AI Creator',
       created_at: profile.created_at,

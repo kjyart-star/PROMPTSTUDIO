@@ -127,8 +127,8 @@ export default async function PublicChartPage({ searchParams }: PageProps) {
       const playlist = playlistsData.find((p: any) => p.id === song.playlist_id && !p.description?.startsWith('[folder]'))
 
       const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `suno-artist-${song.id}`)
-      const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI')
-      const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'suno-ai')
+      const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI')
+      const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.handle : 'suno-ai')
       const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
       const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator')
 

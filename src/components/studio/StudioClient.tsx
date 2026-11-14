@@ -1035,8 +1035,8 @@ export function StudioClient({ user, canUseAi = false }: StudioClientProps) {
     // 저장소 경로는 서버 서명 주소로 바꿔 넘긴다(브라우저 직접 서명은 관리자만 된다). 못 받으면 경로 그대로.
     const playable = (await resolveStudioAudioUrl(audioUrl)) || audioUrl
     const qOpts = {
-      artistName: profile?.display_name || user?.email?.split('@')[0] || 'AI Studio',
-      slug: user?.email?.split('@')[0] || 'ai-generator',
+      artistName: profile?.display_name || profile?.handle || 'AI Studio',
+      slug: profile?.handle || 'ai-generator',
       avatarUrl: profile?.avatar_url,
     }
     const trackToPlay = historyItemToTrack(item, qOpts, playable)

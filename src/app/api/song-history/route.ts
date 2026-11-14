@@ -1,6 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validateAudioUrl } from '@/lib/audioPath'
+import { isBannedUser } from '@/lib/auth/ban'
 import NodeID3 from 'node-id3'
 import { platformOfUA } from '@/lib/lyricsSync/platform'
 import { kickFreeQueue } from '@/lib/lyricsSync/kick'
@@ -124,6 +125,10 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (await isBannedUser(supabase, user.id)) {
+      return NextResponse.json({ error: '이용이 제한된 계정입니다.' }, { status: 403 })
     }
 
     const body = await request.json()

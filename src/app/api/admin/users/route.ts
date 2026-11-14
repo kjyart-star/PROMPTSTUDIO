@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
@@ -14,7 +15,7 @@ async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
     return false
   }
 
-  return !!data.is_admin
+  return !!data.is_admin && (await hasAdminSecondFactor(userId))
 }
 
 // GET: Fetch all profiles (Admin only)
@@ -70,6 +71,9 @@ export async function POST(request: Request) {
 
     if (!targetUserId || creditDelta === undefined) {
       return NextResponse.json({ error: 'targetUserId and creditDelta are required' }, { status: 400 })
+    }
+    if (typeof targetUserId !== 'string' || typeof creditDelta !== 'number' || !Number.isInteger(creditDelta) || Math.abs(creditDelta) > 1_000_000) {
+      return NextResponse.json({ error: 'creditDelta must be an integer within ±1,000,000' }, { status: 400 })
     }
 
     // Create a service role client to bypass RLS for admin operations.

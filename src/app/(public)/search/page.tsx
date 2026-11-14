@@ -41,7 +41,7 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
 
   const [profilesRes, playlistsRes] = await Promise.all([
     userIds.length > 0
-      ? supabase.from('public_profiles').select('id, email, display_name, avatar_url, is_admin, created_at').in('id', userIds)
+      ? supabase.from('public_profiles').select('id, handle, display_name, avatar_url, is_admin, created_at').in('id', userIds)
       : Promise.resolve({ data: [] as any[] }),
     playlistIds.length > 0
       ? supabase.from('user_playlists').select('*').in('id', playlistIds)
@@ -88,8 +88,8 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
         artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
         artist: {
           id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
-          name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
-          slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
+          name: songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI',
+          slug: songProfile ? songProfile.handle : 'suno-ai',
           avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
           bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
           created_at: song.created_at
@@ -106,8 +106,8 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
         artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
         artist: {
           id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
-          name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
-          slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
+          name: songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI',
+          slug: songProfile ? songProfile.handle : 'suno-ai',
           avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
           bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
           created_at: song.created_at
@@ -131,8 +131,8 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
   const profileArtists = profiles.map((profile: any) => {
     return {
       id: profile.id,
-      name: profile.display_name || profile.email.split('@')[0],
-      slug: profile.email.split('@')[0],
+      name: profile.display_name || profile.handle,
+      slug: profile.handle,
       avatar_url: profile.avatar_url || '',
       bio: profile.is_admin ? 'Admin Creator' : 'AI Creator',
       created_at: profile.created_at,
@@ -165,8 +165,8 @@ export default async function PublicSearchPage({ searchParams }: PageProps) {
     const songProfile = profiles.find((p: any) => p.id === playlist.user_id)
 
     const finalArtistId = songChannel ? songChannel.id : (songProfile ? songProfile.id : `artist-user-${playlist.user_id}`)
-    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Unknown Artist')
-    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.email.split('@')[0] : 'user')
+    const finalArtistName = songChannel ? songChannel.name : (songProfile ? (songProfile.display_name || songProfile.handle) : 'Unknown Artist')
+    const finalArtistSlug = songChannel ? songChannel.slug : (songProfile ? songProfile.handle : 'user')
     const finalAvatarUrl = songChannel ? (songChannel.avatar_url || withBase('/default-album.png')) : (songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'))
     const finalBio = songChannel ? (songChannel.bio || '') : (songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : '')
 

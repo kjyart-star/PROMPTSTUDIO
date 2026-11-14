@@ -11,13 +11,13 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    // 탭을 닫으면 지워지는 sessionStorage를 이용해 보안성 강화
-    const auth = sessionStorage.getItem('admin_authenticated')
-    if (auth === 'true') {
-      setIsAuthenticated(true)
-    } else {
-      setIsAuthenticated(false)
-    }
+    // 서버가 서명 쿠키로 2차 인증 여부를 알고 있다(브라우저 저장값은 믿지 않는다)
+    let alive = true
+    fetch('/api/admin/verify')
+      .then((r) => (r.ok ? r.json() : { verified: false }))
+      .then((d) => { if (alive) setIsAuthenticated(d?.verified === true) })
+      .catch(() => { if (alive) setIsAuthenticated(false) })
+    return () => { alive = false }
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,10 +33,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ id: idInput, password: pwInput }),
       })
       if (res.ok) {
-        sessionStorage.setItem('admin_authenticated', 'true')
         setIsAuthenticated(true)
       } else {
-        setErrorMsg('아이디 또는 비밀번호가 올바르지 않습니다.')
+        setErrorMsg(res.status === 429 ? '시도가 너무 많습니다. 잠시 후 다시 해 주세요.' : '아이디 또는 비밀번호가 올바르지 않습니다.')
         setPwInput('')
       }
     } catch {

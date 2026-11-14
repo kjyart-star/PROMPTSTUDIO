@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
 
 // GET: Fetch all system (common) guidelines
@@ -35,7 +36,7 @@ async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
     return false
   }
 
-  return !!data.is_admin
+  return !!data.is_admin && (await hasAdminSecondFactor(userId))
 }
 
 // Helper to extract storage relative path from public URL

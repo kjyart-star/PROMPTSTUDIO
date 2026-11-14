@@ -263,12 +263,12 @@ function LoginContent() {
                 id="password-input"
                 type="password"
                 required
-                minLength={isSignup ? 6 : undefined}
+                minLength={isSignup ? 10 : undefined}
                 autoComplete={isSignup ? 'new-password' : 'current-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3.5 rounded-[8px] bg-[#0d0d0d] border border-[#292929] text-white placeholder-[#5a5a5a] focus:outline-none focus:border-[#8251f6] focus:ring-1 focus:ring-[#8251f6]/50 transition-colors text-sm"
-                placeholder={isSignup ? '6자 이상' : '••••••••'}
+                placeholder={isSignup ? '10자 이상' : '••••••••'}
               />
             </div>
 

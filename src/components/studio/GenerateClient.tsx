@@ -468,8 +468,8 @@ export function GenerateClient({
       return
     }
     const qOpts = {
-      artistName: profile?.display_name || user?.email?.split('@')[0] || 'AI Generator',
-      slug: user?.email?.split('@')[0] || 'ai-generator',
+      artistName: profile?.display_name || profile?.handle || 'AI Generator',
+      slug: profile?.handle || 'ai-generator',
       avatarUrl: profile?.avatar_url,
     }
     const playable = (await resolveStudioAudioUrl(track.audio_url)) || track.audio_url

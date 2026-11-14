@@ -36,8 +36,8 @@ export default async function PublicArtistChartPage({
   // 3. Map profiles to Artist type
   const profileArtists: Artist[] = dbProfiles.map((p: any) => ({
     id: p.id,
-    name: p.display_name || p.email?.split('@')[0] || 'Unknown Creator',
-    slug: p.email?.split('@')[0] || p.id,
+    name: p.display_name || p.handle || 'Unknown Creator',
+    slug: p.handle || p.id,
     avatar_url: p.avatar_url || '',
     bio: p.bio || (p.is_admin ? 'Admin Creator' : 'AI Creator'),
     created_at: p.created_at,

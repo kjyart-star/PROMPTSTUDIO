@@ -2,7 +2,8 @@ import { lyricsOfItem, lrcOfItem } from '@/lib/studio/lyricsOf'
 import { createClient } from '@/lib/supabase/server'
 import { ArtistClient } from '@/components/artist/ArtistClient'
 import { Artist, Album, Track } from '@/types/music'
-import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect, permanentRedirect } from 'next/navigation'
+import { legacySlugToHandle } from '@/lib/artistSlug'
 import { withBase } from '@/lib/basePath'
 
 interface PageProps {
@@ -30,26 +31,22 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
   if (dbArtist) {
     artistData = dbArtist
   } else {
-    // Try to load from profiles table using slug/email prefix.
-    // Query by email prefix instead of scanning the whole table.
-    // Escape LIKE wildcards in the slug so it can't broaden the match.
+    // 사용자 프로필은 handle 주소로 찾는다(이메일 앞부분은 공개하지 않는다).
     const escapedSlug = slug.replace(/[\\%_]/g, (ch: string) => `\\${ch}`)
     const { data: profiles } = await supabase
       .from('public_profiles')
       .select('*')
-      .like('email', `${escapedSlug}@%`)
-      .limit(10)
+      .ilike('handle', escapedSlug)
+      .limit(1)
 
-    const matchingProfile = (profiles || []).find(
-      (p: any) => (p.email && p.email.split('@')[0] === slug)
-    )
+    const matchingProfile = (profiles || [])[0]
 
     if (matchingProfile) {
       isUserProfile = true
       artistData = {
         id: matchingProfile.id,
-        name: matchingProfile.display_name || matchingProfile.email.split('@')[0],
-        slug: slug,
+        name: matchingProfile.display_name || matchingProfile.handle,
+        slug: matchingProfile.handle,
         bio: matchingProfile.is_admin ? 'Admin Creator & Producer' : 'AI Creator',
         avatar_url: matchingProfile.avatar_url || '',
         banner_url: null,
@@ -58,6 +55,10 @@ export default async function PublicArtistDetailPage({ params }: PageProps) {
         updated_at: matchingProfile.updated_at,
         is_user: true
       }
+    } else {
+      // 옛 주소(이메일 앞부분)로 들어왔으면 새 handle 주소로 영구 이동 — 링크가 깨지지 않게
+      const handle = await legacySlugToHandle(slug)
+      if (handle) permanentRedirect(`/artists/${encodeURIComponent(handle)}`)
     }
   }
 

@@ -140,8 +140,8 @@ export default function AccountClient({ user }: Props) {
   const savePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordStatus(null)
-    if (newPassword.length < 6) {
-      setPasswordStatus({ type: 'error', message: '비밀번호는 6자 이상이어야 합니다.' })
+    if (newPassword.length < 10) {
+      setPasswordStatus({ type: 'error', message: '비밀번호는 10자 이상이어야 합니다.' })
       return
     }
     if (newPassword !== confirmPassword) {
@@ -309,7 +309,7 @@ export default function AccountClient({ user }: Props) {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
-              placeholder="새 비밀번호 (6자 이상)"
+              placeholder="새 비밀번호 (10자 이상)"
               className={inputCls}
             />
             <input

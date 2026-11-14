@@ -93,8 +93,8 @@ export default async function LibraryPage() {
           artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
           artist: {
             id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
-            name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
-            slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
+            name: songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI',
+            slug: songProfile ? songProfile.handle : 'suno-ai',
             avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
             bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
             created_at: song.created_at
@@ -110,8 +110,8 @@ export default async function LibraryPage() {
           artist_id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
           artist: {
             id: songProfile ? songProfile.id : `suno-artist-${song.id}`,
-            name: songProfile ? (songProfile.display_name || songProfile.email.split('@')[0]) : 'Suno AI',
-            slug: songProfile ? songProfile.email.split('@')[0] : 'suno-ai',
+            name: songProfile ? (songProfile.display_name || songProfile.handle) : 'Suno AI',
+            slug: songProfile ? songProfile.handle : 'suno-ai',
             avatar_url: songProfile ? (songProfile.avatar_url || withBase('/default-album.png')) : withBase('/default-album.png'),
             bio: songProfile ? (songProfile.is_admin ? 'Admin Creator' : 'AI Creator') : 'Suno AI generator',
             created_at: song.created_at

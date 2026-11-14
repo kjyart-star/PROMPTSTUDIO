@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { withBase } from '@/lib/basePath'
+import { passwordProblem, siteOrigin } from '@/lib/auth/siteOrigin'
 
 /**
  * 회원가입 — 로그인(`/api/auth/login`)과 같은 모양으로 맞춘다.
@@ -19,18 +20,13 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-    if (String(password).length < 6) {
-      return NextResponse.json(
-        { error: '비밀번호는 6자 이상이어야 합니다.' },
-        { status: 400 }
-      )
+    const problem = passwordProblem(String(password), String(email))
+    if (problem) {
+      return NextResponse.json({ error: problem }, { status: 400 })
     }
 
     // 확인 메일의 링크가 돌아올 곳. 구글 로그인 콜백과 같은 라우트를 쓴다.
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
-    const isLocal = host?.includes('localhost') || host?.includes('127.0.0.1')
-    const proto = request.headers.get('x-forwarded-proto') || (isLocal ? 'http' : 'https')
-    const origin = host ? `${proto}://${host}` : new URL(request.url).origin
+    const origin = siteOrigin(request)
     const redirectTo = `${origin}${withBase('/api/auth/callback')}?next=${encodeURIComponent(next || '/')}`
 
     const supabase = await createClient()

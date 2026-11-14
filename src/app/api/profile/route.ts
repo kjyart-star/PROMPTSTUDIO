@@ -1,3 +1,4 @@
+import { HANDLE_RE, handleClashesWithLegacySlug } from '@/lib/artistSlug'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -64,17 +65,22 @@ export async function PUT(request: Request) {
       handle 
     } = body
 
+    if (handle !== undefined && handle !== null) {
+      if (typeof handle !== 'string' || !HANDLE_RE.test(handle)) {
+        return NextResponse.json({ error: 'invalid_handle' }, { status: 400 })
+      }
+      if (await handleClashesWithLegacySlug(handle, user.id)) {
+        return NextResponse.json({ error: 'handle_taken' }, { status: 409 })
+      }
+    }
+
     const updateData: any = {}
     if (display_name !== undefined) updateData.display_name = display_name
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url
     if (banner_url !== undefined) updateData.banner_url = banner_url
     if (bio !== undefined) updateData.bio = bio
     if (tags !== undefined) updateData.tags = tags
-    if (followers !== undefined) updateData.followers = followers
-    if (following !== undefined) updateData.following = following
-    if (plays !== undefined) updateData.plays = plays
-    if (likes !== undefined) updateData.likes = likes
-    if (handle !== undefined) updateData.handle = handle
+    if (typeof handle === 'string') updateData.handle = handle
 
     const { data, error } = await supabase
       .from('profiles')

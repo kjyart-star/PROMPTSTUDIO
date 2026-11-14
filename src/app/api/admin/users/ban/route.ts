@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 // Helper to verify if the requesting user is an admin
 async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
@@ -13,7 +15,7 @@ async function checkAdmin(supabase: any, userId: string): Promise<boolean> {
     return false
   }
 
-  return !!data.is_admin
+  return !!data.is_admin && (await hasAdminSecondFactor(userId))
 }
 
 // PUT / POST: Ban or Unban a user (Admin only)
@@ -38,8 +40,21 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'target_user_id and is_banned are required' }, { status: 400 })
     }
 
+    if (typeof target_user_id !== 'string' || typeof is_banned !== 'boolean') {
+      return NextResponse.json({ error: 'invalid body' }, { status: 400 })
+    }
+    if (target_user_id === user.id) {
+      return NextResponse.json({ error: '본인 계정은 정지할 수 없습니다.' }, { status: 400 })
+    }
+
+    // 정지 컬럼은 사용자 세션 권한으로 못 바꾸게 막혀 있다(DB 트리거). 관리자 확인이 끝난 뒤 서비스 키로 쓴다.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) return NextResponse.json({ error: 'server_misconfigured' }, { status: 500 })
+    const admin = createServiceClient(url, key, { auth: { persistSession: false } })
+
     // 1. 프로필의 is_banned 상태 업데이트
-    const { error: profileError } = await supabase
+    const { error: profileError } = await admin
       .from('profiles')
       .update({ is_banned })
       .eq('id', target_user_id)
@@ -55,11 +70,11 @@ export async function PUT(request: Request) {
     // 2. 사용자를 차단(is_banned = true)하는 경우, 이 사용자가 올린 모든 음원 및 앨범 퍼블리싱 해제(비공개) 처리
     if (is_banned) {
       const [songErr, playlistErr] = await Promise.all([
-        supabase
+        admin
           .from('song_history')
           .update({ is_published: false })
           .eq('user_id', target_user_id),
-        supabase
+        admin
           .from('user_playlists')
           .update({ is_published: false })
           .eq('user_id', target_user_id)

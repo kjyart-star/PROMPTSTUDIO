@@ -12,10 +12,6 @@ export async function POST(request: Request) {
 
     // 1. 유저 권한 검증
     const { data: { user } } = await supabase.auth.getUser()
-    console.log('=== UPLOAD ROUTE DIAGNOSTIC ===')
-    console.log('User ID:', user?.id)
-    console.log('User Email:', user?.email)
-    
     if (!user) {
       console.log('Upload denied: Unauthorized (no user)')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

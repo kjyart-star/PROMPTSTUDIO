@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { hasAdminSecondFactor } from '@/lib/auth/adminSecond'
 import { createClient } from '@/lib/supabase/server'
 import { isStudioOpen, setStudioOpen, resetStudioOpenCache } from '@/lib/studio/openSwitch'
 
@@ -7,7 +8,7 @@ async function requireAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
   const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-  return !!profile?.is_admin
+  return !!profile?.is_admin && (await hasAdminSecondFactor(user.id))
 }
 
 /** 스튜디오 공개 스위치 읽기·쓰기 — 관리자만 */

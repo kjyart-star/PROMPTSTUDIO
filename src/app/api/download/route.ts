@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import NodeID3 from 'node-id3'
 import { createClient } from '@/lib/supabase/server'
 import { assertSafeUrl } from '@/lib/security/ssrf'
+import { MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, isAllowedDownloadHost, readCapped } from '@/lib/security/downloadHosts'
 
 export async function GET(request: NextRequest) {
   // Require an authenticated session — this endpoint proxies server-side
@@ -33,6 +34,10 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid or disallowed url' }, { status: 400 })
   }
+  // 우리 저장소·CDN·생성 공급자 CDN 만(개방형 프록시 방지, 감사 M-12)
+  if (!isAllowedDownloadHost(safeFileUrl)) {
+    return NextResponse.json({ error: 'Invalid or disallowed url' }, { status: 400 })
+  }
 
   try {
     // 1. Fetch Audio file
@@ -40,17 +45,18 @@ export async function GET(request: NextRequest) {
     if (!audioRes.ok) {
       throw new Error(`Failed to fetch audio file: ${audioRes.statusText}`)
     }
-    const audioArrayBuffer = await audioRes.arrayBuffer()
-    let audioBuffer = Buffer.from(audioArrayBuffer)
+    const capped = await readCapped(audioRes, MAX_AUDIO_BYTES)
+    if (!capped) return NextResponse.json({ error: 'File too large' }, { status: 413 })
+    let audioBuffer = capped
 
     // 2. Fetch Image file if provided
     if (imageUrl) {
       try {
         const safeImageUrl = await assertSafeUrl(imageUrl)
+        if (!isAllowedDownloadHost(safeImageUrl)) throw new Error('image host not allowed')
         const imageRes = await fetch(safeImageUrl, { redirect: 'error' })
-        if (imageRes.ok) {
-          const imageArrayBuffer = await imageRes.arrayBuffer()
-          const imageBuffer = Buffer.from(imageArrayBuffer)
+        const imageBuffer = imageRes.ok ? await readCapped(imageRes, MAX_IMAGE_BYTES) : null
+        if (imageRes.ok && imageBuffer) {
           const mimeType = imageRes.headers.get('Content-Type') || 'image/jpeg'
 
           // Write ID3 Tags with Album Art (APIC frame)
@@ -81,7 +87,7 @@ export async function GET(request: NextRequest) {
     headers.set('Content-Type', 'audio/mpeg')
     headers.set('Content-Length', audioBuffer.length.toString())
 
-    return new NextResponse(audioBuffer, {
+    return new NextResponse(new Uint8Array(audioBuffer), {
       status: 200,
       headers
     })

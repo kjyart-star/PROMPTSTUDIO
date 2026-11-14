@@ -205,7 +205,7 @@ export function LibraryClient({
         if (userIds.length > 0) {
           const { data: profiles, error } = await supabase
             .from('public_profiles')
-            .select('id, display_name, email, avatar_url')
+            .select('id, display_name, handle, avatar_url')
             .in('id', userIds)
           
           if (!error && profiles) {
@@ -676,8 +676,8 @@ export function LibraryClient({
           const dbPlayCount = Number(song.form?.play_count || 0)
 
           const originalProfile = trackProfiles[song.user_id]
-          const artistName = originalProfile ? (originalProfile.display_name || originalProfile.email?.split('@')[0]) : 'Me'
-          const artistSlug = originalProfile ? (originalProfile.email?.split('@')[0] || 'me') : 'me'
+          const artistName = originalProfile ? (originalProfile.display_name || originalProfile.handle) : 'Me'
+          const artistSlug = originalProfile ? (originalProfile.handle || 'me') : 'me'
           const artistAvatar = originalProfile?.avatar_url || withBase('/default-album.png')
 
           return {
