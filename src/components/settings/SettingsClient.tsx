@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { User, Users, Check, Upload, ArrowLeft, Settings, Sliders, Pencil, Plus, Globe, Info, X, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { withBase } from '@/lib/basePath'
-import { AccountDeleteDialog } from '@/components/account/AccountDeleteDialog'
 
 interface SettingsClientProps {
   user: any
@@ -54,7 +53,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
   // Toast notifications state
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null)
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const showToast = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
     setToast({ message, type })
@@ -179,20 +177,6 @@ export function SettingsClient({ user }: SettingsClientProps) {
     setAutoplay(val)
     localStorage.setItem('pref-autoplay', String(val))
     showToast(uiLanguage === 'KO' ? `자동 재생: ${val ? '켜짐' : '꺼짐'}` : uiLanguage === 'JA' ? `自動再生: ${val ? 'オン' : 'オフ'}` : `Autoplay: ${val ? 'ON' : 'OFF'}`, 'success')
-  }
-
-  const handleWithdraw = () => {
-    setConfirmDeleteOpen(true)
-  }
-
-  const afterWithdraw = async () => {
-    try {
-      await fetch(withBase('/api/auth/signout'), { method: 'POST' })
-      await createClient().auth.signOut()
-    } catch (err) {
-      console.error('SignOut error:', err)
-    }
-    window.location.href = withBase('/')
   }
 
   const saveProfile = async () => {
@@ -523,24 +507,21 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 <label className="text-xs font-bold text-red-500/80">{uiLanguage === 'KO' ? '위험 구역 (Danger Zone)' : uiLanguage === 'JA' ? '危険エリア' : 'Danger Zone'}</label>
                 <div className="flex items-center justify-between bg-red-500/5 border border-red-500/10 rounded-xl p-4">
                   <div className="flex flex-col gap-1 text-left">
-                    <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '계정 탈퇴' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}</span>
-                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '개인 정보는 바로 지워지고, 비공개 결과물은 30일 뒤 삭제됩니다.' : uiLanguage === 'JA' ? 'アカウントとすべてのデータを完全に削除します。' : 'Permanently delete your account and all data.'}</span>
+                    <span className="text-xs font-bold text-on-surface">{uiLanguage === 'KO' ? '쿠키플레이 계정 삭제' : uiLanguage === 'JA' ? 'アカウントを削除' : 'Delete Account'}</span>
+                    <span className="text-[10px] text-on-surface-variant">{uiLanguage === 'KO' ? '쿠키플레이 계정은 하나라서, 계정 설정에서 삭제하면 모든 서비스의 계정이 함께 삭제됩니다.' : uiLanguage === 'JA' ? 'アカウントとすべてのデータを完全に削除します。' : 'Permanently delete your account and all data.'}</span>
                   </div>
-                  <button 
-                    onClick={handleWithdraw}
+                  <a
+                    href="https://cookieplay.app/account/settings"
                     className="px-4 py-2 text-xs font-extrabold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
                   >
-                    {uiLanguage === 'KO' ? '탈퇴하기' : uiLanguage === 'JA' ? '削除する' : 'Delete'}
-                  </button>
+                    {uiLanguage === 'KO' ? '계정 설정으로 이동' : uiLanguage === 'JA' ? 'アカウント設定へ' : 'Go to account settings'}
+                  </a>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* 계정 삭제: 문구 입력 → 최종 확인 → 로그아웃 */}
-      {confirmDeleteOpen && <AccountDeleteDialog onClose={() => setConfirmDeleteOpen(false)} onDone={afterWithdraw} />}
 
     </div>
   )

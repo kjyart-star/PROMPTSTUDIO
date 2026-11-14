@@ -21,6 +21,7 @@
 - 라우트: `POST /music/api/account/delete`(`src/app/api/account/delete/route.ts`). 로그인 세션 쿠키 또는 `Authorization: Bearer`(쿠키드림 설정 화면이 같은 오리진에서 호출), 확인 문구 「계정 삭제」, Origin 이 있으면 `cookieplay.app` 계열만.
 - 순서(`src/lib/account/withdraw.ts`): ① 워커 `POST /v1/me/account/delete` 를 `done:true` 까지(최대 12회, 호출당 20초) ② `profiles` 익명화(이름 「탈퇴한 사용자」, handle `deleted-<12자>`, 이메일·사진·배너·소개·태그 비움 — 공개 곡·음원 행/파일은 그대로) ③ Supabase 로그인 계정을 삭제하지 않고 `ban_duration` 876000h 로 정지하고 소셜 메타데이터를 비운 뒤 세션을 모두 끊음. 한 단계가 실패하면 뒤 단계는 건드리지 않고 재시도 가능 오류(502)를 돌려주며, 같은 요청을 다시 보내면 이어진다.
 - `profiles.is_banned` 는 건드리지 않는다 — 켜면 M-7 CDN 게이트가 공개 곡까지 막는다(공개 음원은 남긴다는 규칙).
-- 화면: 쿠키뮤직 설정의 「계정 탈퇴」가 존재하지 않는 RPC `delete_user` 를 부르던 것을 `AccountDeleteDialog`(문구 입력 → 최종 확인 → 로그아웃)로 교체. 비공개 결과물 30일 뒤 삭제 고지 포함.
-- **철회 절차(30일 안)**: ① 워커 예정 삭제 취소 — owner 가 `POST /v1/admin/users/<id>/cancel-deletion` ② 로그인 정지 해제 — Supabase 대시보드 Authentication > Users > 해당 사용자 > Unban(또는 admin API `updateUserById(id, { ban_duration: 'none' })`) ③ `profiles` 의 이름·이메일은 복구되지 않으므로 본인이 다시 입력.
-- 남은 것(대표 작업): `auth.users` 의 원래 이메일은 철회 가능성 때문에 30일간 남는다. 30일 뒤 해당 사용자의 auth 계정 삭제 또는 이메일 익명화를 수동으로 진행(자동화는 아직 없음).
+- 화면: 쿠키플레이 계정은 하나라 삭제 버튼은 **쿠키플레이 공용 계정 설정(`cookieplay.app/account/settings`) 한 곳**에만 둔다. 쿠키뮤직 설정의 「계정 탈퇴」(존재하지 않는 RPC `delete_user` 를 부르던 것)는 그 화면으로 가는 링크로 바꿨다.
+- **철회(30일 안, 자동화)**: owner 가 워커 `POST /v1/admin/users/<id>/cancel-deletion` 한 번 — 삭제 예정 취소 + 이 앱의 내부 라우트 `POST /api/internal/account/restore` 로 로그인 정지 해제. 해제가 실패하면 응답에 `authRestored:false` 가 나오고 같은 호출을 다시 하면 해제만 재시도한다. `profiles` 의 이름·이메일은 복구되지 않으므로 본인이 다시 입력.
+- **유예 만료(자동)**: 워커 일일 크론이 R2 정리 뒤 `POST /api/internal/account/finalize` 를 불러 `auth.users` 의 원래 이메일을 `deleted-<12자>@deleted.invalid` 로 바꾼다(계정은 삭제하지 않는다 — 공개 곡이 FK 로 딸려 지워지지 않게). 실패하면 다음 날 다시 한다.
+- 내부 라우트 인증: 기존 서비스 토큰(`COOKIEPLAY_SERVICE_TOKEN` = 워커의 `cookiemusic` 토큰), 상수 시간 비교, 탈퇴 처리된 계정(`profiles.handle` 이 `deleted-` 로 시작)에만 동작, 사용자 세션으로는 열리지 않는다.
